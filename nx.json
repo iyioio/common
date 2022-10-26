@@ -8,33 +8,34 @@
         "default": {
             "runner": "nx/tasks-runners/default",
             "options": {
-                "cacheableOperations": [
-                    "build",
-                    "lint",
-                    "test",
-                    "e2e"
-                ]
+                "cacheableOperations": ["build", "lint", "test", "e2e"]
             }
         }
     },
     "targetDefaults": {
         "build": {
-            "dependsOn": [
-                "^build"
-            ],
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "lint": {
+            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
+        },
+        "test": {
             "inputs": [
-                "production",
-                "^production"
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
             ]
         }
     },
     "namedInputs": {
-        "default": [
-            "{projectRoot}/**/*",
-            "sharedGlobals"
-        ],
+        "default": ["{projectRoot}/**/*", "sharedGlobals"],
         "production": [
-            "default"
+            "default",
+            "!{projectRoot}/.eslintrc.json",
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/tsconfig.spec.json",
+            "!{projectRoot}/jest.config.[jt]s"
         ],
         "sharedGlobals": []
     },
