@@ -31,3 +31,8 @@ export type NoId<T>=Omit<T,'id'>;
 export type ValueKeyProvider<T>=(keyof T)|((value:T)=>string|number);
 
 export type StringOrEmpty=string|null|undefined;
+
+export interface ISubscription
+{
+    unsubscribe():void;
+}
