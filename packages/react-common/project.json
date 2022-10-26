@@ -1,0 +1,46 @@
+{
+    "name": "react-common",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/react-common/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/react-common",
+                "main": "packages/react-common/src/index.ts",
+                "tsConfig": "packages/react-common/tsconfig.lib.json",
+                "assets": ["packages/react-common/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs react-common {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/react-common/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/react-common"],
+            "options": {
+                "jestConfig": "packages/react-common/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": ["browser"]
+}
