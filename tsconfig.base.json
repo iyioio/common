@@ -16,6 +16,7 @@
         "baseUrl": ".",
         "paths": {
             "@iyio/common": ["packages/common/src/index.ts"],
+            "@iyio/key-value-store": ["packages/key-value-store/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"],
             "@iyio/rxjs": ["packages/rxjs/src/index.ts"],
             "@iyio/uuid": ["packages/uuid/src/index.ts"]

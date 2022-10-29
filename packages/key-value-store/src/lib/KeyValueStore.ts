@@ -1,8 +1,5 @@
-import { DependencyContainer, deps } from "./DependencyContainer";
-import { DisposedError } from "./errors";
+import { DependencyContainer, deps, DisposedError, ListPointer, Query, ValuePointer } from "@iyio/common";
 import { IKeyValueStoreProvider, KeyStoreProviderRef, KeyValueStoreFilter, KeyValueStoreOp, KeyValueStoreProviderMatch } from "./key-value-store-types";
-import { ListPointer, ValuePointer } from "./pointers";
-import { Query } from "./query-types";
 
 interface Provider
 {

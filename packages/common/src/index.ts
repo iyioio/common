@@ -10,8 +10,6 @@ export * from './lib/errors';
 export * from './lib/fs';
 export * from './lib/html';
 export * from './lib/jwt';
-export * from './lib/key-value-store-types';
-export * from './lib/KeyValueStore';
 export * from './lib/Lock';
 export * from './lib/mime';
 export * from './lib/NamedValue';

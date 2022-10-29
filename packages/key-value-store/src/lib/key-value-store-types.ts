@@ -1,9 +1,4 @@
-import { IOpDisposable } from "./common-types";
-import { ListPointer, ValuePointer } from "./pointers";
-import { Query } from "./query-types";
-import { TypeRef } from "./TypeRef";
-
-
+import { IOpDisposable, ListPointer, Query, TypeRef, ValuePointer } from "@iyio/common";
 
 export interface KeyValueStoreProviderMatch
 {
