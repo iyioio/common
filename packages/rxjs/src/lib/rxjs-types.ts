@@ -1,3 +1,3 @@
-import { BehaviorSubject } from "rxjs";
+import { ReadonlySubject as _ } from "@iyio/common";
 
-export type ReadonlySubject<T>=Omit<BehaviorSubject<T>,'next'>;
+export type ReadonlySubject<T>=_<T>;

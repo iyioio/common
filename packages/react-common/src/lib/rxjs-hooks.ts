@@ -1,4 +1,4 @@
-import { ReadonlySubject } from "@iyio/rxjs";
+import { ReadonlySubject } from "@iyio/common";
 import { useEffect, useState } from 'react';
 
 export function useSubject(subject:undefined):undefined;

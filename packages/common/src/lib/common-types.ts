@@ -36,3 +36,13 @@ export interface ISubscription
 {
     unsubscribe():void;
 }
+
+export interface IDisposable
+{
+    dispose():void;
+}
+
+export interface IOpDisposable
+{
+    dispose?():void;
+}
