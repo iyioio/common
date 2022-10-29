@@ -286,3 +286,12 @@ export const mergeObjAry=(ary:any[], aryMerge?:MergeObjsTest, maxDepth:number=10
     }
     return m;
 }
+
+export const getObjKeyCount=(obj:HashMap):number=>{
+    let c=0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for(const _ in obj){
+        c++;
+    }
+    return c;
+}

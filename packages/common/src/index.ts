@@ -18,8 +18,8 @@ export * from './lib/pointers';
 export * from './lib/PromiseCache';
 export * from './lib/PromiseSource';
 export * from './lib/query-types';
-export * from './lib/rxjs-stubs';
 export * from './lib/rxjs-types';
+export * from './lib/shared-pointers';
 export * from './lib/sql';
 export * from './lib/sql-query-builder';
 export * from './lib/string';
@@ -27,5 +27,6 @@ export * from './lib/TaskPool';
 export * from './lib/time';
 export * from './lib/type-conversion';
 export * from './lib/TypeRef';
+export * from './lib/uuid';
 export * from './lib/validation';
 

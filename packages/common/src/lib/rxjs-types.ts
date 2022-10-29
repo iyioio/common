@@ -1,3 +1,3 @@
-import { RxJsBehaviorSubject } from "./rxjs-stubs";
+import type { BehaviorSubject } from "rxjs";
 
-export type ReadonlySubject<T>=Omit<RxJsBehaviorSubject<T>,'next'>;
+export type ReadonlySubject<T>=Omit<BehaviorSubject<T>,'next'>;

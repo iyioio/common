@@ -1,5 +1,6 @@
 import { aryRemoveItem } from "./array";
 import { DisposeCallback } from "./common-types";
+import { CanceledError } from "./errors";
 
 export class CancelToken
 {
@@ -103,5 +104,12 @@ export class CancelToken
             return;
         }
         setTimeout(this.cancelNow,ms);
+    }
+
+    public throwIfCanceled(cancelMessage?:string)
+    {
+        if(this._isCanceled){
+            throw new CanceledError(cancelMessage);
+        }
     }
 }

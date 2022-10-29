@@ -1,19 +1,24 @@
-import { IOpDisposable, ListPointer, Query, TypeRef, ValuePointer } from "@iyio/common";
+import { CancelToken, IOpDisposable, ListPointer, Query, TypeRef, ValuePointer } from "@iyio/common";
 
-export interface KeyValueStoreProviderMatch
+export type KeyValueStoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';
+
+export interface KeyValueStoreMatch
 {
-    provider:IKeyValueStoreProvider;
+    /**
+     * The matched store
+     */
+    store:IKeyValueStore;
 
     /**
-     * The narrowed key after matching the provider
+     * The scoped key after matching the store
      */
-    key:string;
+    scopedKey:string;
 }
 
-export type KeyValueStoreOp='get'|'put'|'delete'|'query'|'watch'|'watchQuery';
 
-export interface KeyValueStoreFilter
+export interface KeyValueStoreKeyScope
 {
+
     keyBase?:string;
 
     keyReg?:RegExp;
@@ -21,23 +26,88 @@ export interface KeyValueStoreFilter
     keyRegIndex?:number;
 
     keyCondition?:(key:string)=>string|boolean;
+}
+
+export interface KeyValueStoreScope extends KeyValueStoreKeyScope
+{
 
     supports?(key:string,op:KeyValueStoreOp):boolean;
 }
 
-export interface KeyStoreProviderRef<T=any> extends KeyValueStoreFilter
+export interface KeyValueStoreProvider<T=any> extends KeyValueStoreScope
 {
-    providerType:TypeRef<IKeyValueStoreProvider<T>>;
+    providerType:TypeRef<IKeyValueStore<T>>;
 }
 
-export interface IKeyValueStoreProvider<T=any> extends KeyValueStoreFilter, IOpDisposable
+export interface CreateKeyValueResult<T=any>
 {
-    getAsync?(key:string):Promise<T|undefined>;
-    putAsync?(key:string,item:Partial<T>):Promise<T>;
-    deleteAsync?(key:string):Promise<boolean>;
-    queryAsync?(key:string,query:Query):Promise<T[]>;
+    key:string;
+    value:T;
+}
+
+export interface KeyValueStoreOpMethods<T=any>
+{
+    /**
+     * Returns a value by key
+     */
+    getAsync?(key:string,cancel?:CancelToken):Promise<T|undefined>;
+
+    /**
+     * Updates or creates a value with the given key
+     */
+    putAsync?(key:string,value:T,cancel?:CancelToken):Promise<T>;
+
+    /**
+     * Updates an existing value
+     */
+    patchAsync?(key:string,value:Partial<T>,cancel?:CancelToken):Promise<T>;
+
+    /**
+     * Creates a new value and returns the newly create value and its key.
+     * @param baseKey The key of the value minus its primary key value
+     * @param primaryKey The primary key property of the value
+     * @param value The value to be created
+     */
+    createAsync?(baseKey:string,primaryKey:(keyof T)|null|undefined,value:Partial<T>,cancel?:CancelToken):Promise<CreateKeyValueResult<T>>;
+
+    /**
+     * Creates a new value but does not return the created value. This function can be used as an
+     * optimization when you don't need the created value. If not defined createAsync will be used
+     * as a fallback.
+     * @param baseKey The key of the value minus its primary key value
+     * @param primaryKey The primary key property of the value
+     * @param value The value to be created
+     */
+    createNoReturnAsync?(baseKey:string,primaryKey:(keyof T)|null|undefined,value:Partial<T>,cancel?:CancelToken):Promise<void>;
+
+
+    /**
+     * Deletes a value by key. If the provider can not determine if the value was deleted
+     * undefined will be returned.
+     */
+    deleteAsync?(key:string,cancel?:CancelToken):Promise<boolean|undefined>;
+
+    /**
+     * Returns a collection of values based on the given query.
+     */
+    queryAsync?(baseKey:string,query:Query,cancel?:CancelToken):Promise<T[]>;
+
+    /**
+     * Watches a value with the given key. The returned pointer will update its value subject
+     * as the value changes.
+     */
     watch?(key:string):ValuePointer<T>|undefined;
-    watchQuery?(key:string,query:Query):ListPointer<T>|undefined;
+
+    /**
+     * Watches a collection of items based on the given query. Changes to the collection can be
+     * listened to by using the pointers changeCount.
+     */
+    watchQuery?(baseKey:string,query:Query):ListPointer<T>|undefined;
+
+}
+
+export interface IKeyValueStore<T=any> extends KeyValueStoreOpMethods<T>, KeyValueStoreScope, IOpDisposable
+{
 
 }
 
