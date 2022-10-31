@@ -1,12 +1,32 @@
+import { BreakFunction, shouldBreakFunction } from "./common-lib";
+import { SymStrHashMap } from "./common-types";
+import { DependencyNotFoundError } from "./errors";
 import { getTypeRefId, isTypeRef, TypeRef } from "./TypeRef";
+import { uuid } from "./uuid";
 
 export type DependencyLifetime='transient'|'singleton';//'scoped'
 
 export interface Dependency<T=any>
 {
-    id:symbol;
-    lifetime:DependencyLifetime;
-    create:(deps:DependencyContainer)=>T;
+    readonly id:symbol;
+    readonly type?:string;
+    readonly lifetime:DependencyLifetime;
+    readonly create?:(deps:DependencyContainer)=>T;
+    value?:T;
+    readonly metadata?:SymStrHashMap;
+}
+export const getDependencyValue=<T>(dep:Dependency<T>, container:DependencyContainer):T=>{
+    if(dep.value!==undefined){
+        return dep.value;
+    }
+    if(dep.create!==undefined){
+        const value=dep.create(container);
+        if(dep.lifetime==='singleton'){
+            dep.value=value;
+        }
+        return value;
+    }
+    throw new Error('Invalid Dependency object. value or create must be defined.');
 }
 
 export interface DependencyInstance<T>
@@ -18,83 +38,211 @@ export interface DependencyInstance<T>
 
 export class DependencyContainer
 {
-    private readonly deps:{[id:symbol]:Dependency}={};
 
-    private readonly singletons:{[name:symbol]:any}={};
+    public readonly id:string=uuid();
 
-    public require<T>(typeRef:symbol|TypeRef<T>):T{
+    private _count=0;
+    public get count(){return this._count}
 
-        return this.requireInstance<T>(getTypeRefId(typeRef))?.instance;
-    }
+    private readonly deps:{[id:symbol]:Dependency[]}={};
 
-    public requireInstance<T>(typeRef:symbol|TypeRef<T>):DependencyInstance<T>{
-        const inst=this.getInstance<T>(typeRef);
-        if(!inst){
-            throw new Error(`No dependency found by the id ${String(typeRef)}`);
+    public require<T>(typeRef:symbol|TypeRef<T>):T
+    {
+        const value=this.get<T>(getTypeRefId(typeRef));
+        if(value===undefined){
+            throw new DependencyNotFoundError(`typeRef = ${String(typeRef)}`);
         }
-        return inst;
+        return value;
     }
 
-    public get<T>(typeRef:symbol|TypeRef<T>):T|undefined{
-
-        return this.getInstance<T>(getTypeRefId(typeRef))?.instance;
+    public requireDependency<T>(typeRef:symbol|TypeRef<T>):Dependency<T>
+    {
+        const dep=this.getDependency(typeRef);
+        if(dep===undefined){
+            throw new DependencyNotFoundError(`typeRef = ${String(typeRef)}`);
+        }
+        return dep;
     }
 
-    public getInstance<T>(typeRef:symbol|TypeRef<T>):DependencyInstance<T>|undefined{
+    /**
+     * Returns all dependency values matching the ref
+     */
+    public getAll<T>(typeRef:symbol|TypeRef<T>,type?:string):T[]
+    {
 
         if(isTypeRef(typeRef)){
             typeRef=typeRef.refId;
         }
 
-        const dep=this.deps[typeRef] as Dependency<T>|undefined;
-        if(!dep){
+        const all:T[]=[];
+        const ary=this.deps[typeRef];
+        if(!ary){
+            return all;
+        }
+        for(const dep of ary){
+            if(type && dep.type!==type){
+                continue;
+            }
+            all.push(getDependencyValue(dep,this));
+        }
+        return all;
+
+    }
+
+    public forEach<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>void|boolean|BreakFunction):void
+    {
+
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+
+        const ary=this.deps[typeRef];
+        if(!ary){
+            return;
+        }
+        for(const dep of ary){
+            if(type && dep.type!==type){
+                continue;
+            }
+            const value=getDependencyValue(dep,this);
+            if(shouldBreakFunction(callback(value))){
+                return;
+            }
+        }
+    }
+
+    public async forEachAsync<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<void|boolean|BreakFunction>):Promise<void>
+    {
+
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+
+        const ary=this.deps[typeRef];
+        if(!ary){
+            return;
+        }
+        for(const dep of ary){
+            if(type && dep.type!==type){
+                continue;
+            }
+            const value=getDependencyValue(dep,this);
+            if(shouldBreakFunction(await callback(value))){
+                return;
+            }
+        }
+    }
+
+    public async getForEachAsync<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<TValue|false|BreakFunction>):Promise<TValue|undefined>
+    {
+
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+
+        const ary=this.deps[typeRef];
+        if(!ary){
             return undefined;
         }
-
-        switch(dep.lifetime){
-            //case 'scoped':
-            case 'transient':
-                return {
-                    id:dep.id,
-                    lifetime:dep.lifetime,
-                    instance:dep.create(this),
-                }
-
-            case 'singleton':{
-                let d=this.singletons[typeRef];
-                if(!d){
-                    d=dep.create(this);
-                    this.singletons[typeRef]=d;
-                }
-                return {
-                    id:dep.id,
-                    lifetime:dep.lifetime,
-                    instance:d,
-                }
+        for(const dep of ary){
+            if(type && dep.type!==type){
+                continue;
             }
-
+            const value=getDependencyValue(dep,this);
+            const callbackValue=await callback(value);
+            if(shouldBreakFunction(callbackValue)){
+                return undefined;
+            }
+            if(callbackValue!==undefined){
+                return callbackValue as any;
+            }
         }
+        return undefined;
+    }
+
+    /**
+     * Returns all dependency values matching the ref
+     */
+    public getAllDependencies<T>(typeRef:symbol|TypeRef<T>):Dependency<T>[]
+    {
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+        const ary=this.deps[typeRef];
+        return ary?[...ary]:[];
+
+    }
+
+    public get<T>(typeRef:symbol|TypeRef<T>):T|undefined
+    {
+        const dep=this.getDependency(typeRef);
+        return dep?getDependencyValue(dep,this):undefined;
+    }
+
+    public getDependency<T>(typeRef:symbol|TypeRef<T>):Dependency<T>|undefined
+    {
+
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+
+        return (this.deps[typeRef] as Dependency<T>[]|undefined)?.[0];
+    }
+
+    public getDependencyValue<T>(dep:Dependency<T>):T
+    {
+        return getDependencyValue(dep,this);
+    }
+
+    public getOrRegisterValue<T>(typeRef:symbol|TypeRef<T>,create:(deps:DependencyContainer)=>T):T
+    {
+        let dep=this.getDependency(typeRef);
+        if(!dep){
+            dep=this.registerValue(typeRef,create(this));
+        }
+        return getDependencyValue(dep,this);
     }
 
 
 
-    public register<T>(dep:Dependency<T>)
+    public register<T>(dep:Dependency<T>):Dependency<T>
     {
-        this.deps[dep.id]=dep;
+        let ary=this.deps[dep.id];
+        if(!ary){
+            ary=[];
+            this.deps[dep.id]=ary;
+        }
+        ary.push(dep);
+        this._count++;
+        return dep;
     }
 
     public registerSingleton<T>(typeRef:symbol|TypeRef<T>,create:(deps:DependencyContainer)=>T){
-        this.register<T>({
+        return this.register<T>({
             id:getTypeRefId(typeRef),
+            type:typeof typeRef === 'object'?typeRef.type:undefined,
             lifetime:'singleton',
             create
         });
     }
 
+    /**
+     * Registers a value as a singleton
+     */
+    public registerValue<T>(typeRef:symbol|TypeRef<T>,value:T){
+        return this.register<T>({
+            id:getTypeRefId(typeRef),
+            type:typeof typeRef === 'object'?typeRef.type:undefined,
+            lifetime:'singleton',
+            value
+        });
+    }
+
     public registerTransient<T>(typeRef:symbol|TypeRef<T>,create:(deps:DependencyContainer)=>T)
     {
-        this.register<T>({
+        return this.register<T>({
             id:getTypeRefId(typeRef),
+            type:typeof typeRef === 'object'?typeRef.type:undefined,
             lifetime:'transient',
             create
         });
@@ -109,5 +257,3 @@ export class DependencyContainer
     //     });
     // }
 }
-
-export const deps=new DependencyContainer();

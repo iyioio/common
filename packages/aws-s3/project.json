@@ -1,0 +1,46 @@
+{
+    "name": "aws-s3",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/aws-s3/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/aws-s3",
+                "main": "packages/aws-s3/src/index.ts",
+                "tsConfig": "packages/aws-s3/tsconfig.lib.json",
+                "assets": ["packages/aws-s3/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs aws-s3 {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/aws-s3/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/aws-s3"],
+            "options": {
+                "jestConfig": "packages/aws-s3/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

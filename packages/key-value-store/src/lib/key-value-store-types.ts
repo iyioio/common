@@ -108,6 +108,6 @@ export interface KeyValueStoreOpMethods<T=any>
 
 export interface IKeyValueStore<T=any> extends KeyValueStoreOpMethods<T>, KeyValueStoreScope, IOpDisposable
 {
-
+    getWatchCount?():number;
 }
 

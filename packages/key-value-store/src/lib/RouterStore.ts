@@ -4,7 +4,10 @@ import { CreateKeyValueResult, IKeyValueStore, KeyValueStoreMatch, KeyValueStore
 
 interface StoreRoute
 {
+    path:string;
+    depId?:symbol;
     provider?:KeyValueStoreProvider;
+    create?:(deps:DependencyContainer)=>IKeyValueStore;
     store?:IKeyValueStore;
 }
 
@@ -22,9 +25,9 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
 
-    public constructor(deps?:DependencyContainer)
+    public constructor(deps:DependencyContainer)
     {
-        this.deps=deps??new DependencyContainer();
+        this.deps=deps;
     }
 
     public dispose()
@@ -40,15 +43,44 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
         }
     }
 
+    public getWatchCount():number{
+        let c=0;
+        for(const r of this.routes){
+            if(r.store?.getWatchCount!==undefined){
+                c+=r.store.getWatchCount();
+            }
+        }
+        return c;
+    }
 
-    public registerRoute(provider:IKeyValueStore|KeyValueStoreProvider)
+
+    public mount(path:string,provider:IKeyValueStore|KeyValueStoreProvider|((deps:DependencyContainer)=>IKeyValueStore),depId?:symbol)
     {
+
+        if(path.startsWith('/')){
+            path=path.substring(1);
+        }
+
+        if(path && !path.endsWith('/')){
+            path+='/';
+        }
+
         if((provider as Partial<KeyValueStoreProvider>).providerType){
             this.routes.push({
+                path,
+                depId,
                 provider:provider as KeyValueStoreProvider
             });
+        }else if(typeof provider === 'function'){
+            this.routes.push({
+                path,
+                depId,
+                create:provider
+            })
         }else{
             this.routes.push({
+                path,
+                depId,
                 store: provider
             });
         }
@@ -60,17 +92,31 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
             throw new DisposedError('KeyStore disposed');
         }
 
-        for(const p of this.routes){
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
 
-            if(p.provider && !p.store && isKeyStoreScopeMatch(key,p.provider,op)){
-                p.store=this.deps.get(p.provider.providerType);
+        for(const route of this.routes){
+
+            if(key && route.path && !key.startsWith(route.path)){
+                continue;
             }
 
-            if(p.store){
-                const scopedKey=isKeyStoreScopeMatch(key,p.store,op);
+            const routeKey=key.substring(route.path.length);
+
+            if(!route.store){
+                if(route.create){
+                    route.store=route.create(this.deps);
+                }else if(route.provider && isKeyStoreScopeMatch(routeKey,route.provider,op)){
+                    route.store=this.deps.get(route.provider.providerType);
+                }
+            }
+
+            if(route.store){
+                const scopedKey=isKeyStoreScopeMatch(routeKey,route.store,op);
                 if(scopedKey!==false){
                     return {
-                        store:p.store,
+                        store:route.store,
                         scopedKey
                     }
                 }
@@ -82,6 +128,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public requireRouteMatch(key:string,op?:KeyValueStoreOp):KeyValueStoreMatch
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,op);
         if(!match){
             throw new Error(`No store found for key ${key}${op?` and op ${op}`:''}`)
@@ -91,6 +141,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public async getAsync<T>(key:string,cancel?:CancelToken):Promise<T|undefined>
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,'get');
         if(!match?.store.getAsync){
             return undefined;
@@ -100,11 +154,19 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
     }
 
     public supports(key:string,op:KeyValueStoreOp):boolean{
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         return this.getRouteMatch(key,op)?true:false;
     }
 
     public async putAsync<T>(key:string, value:T,cancel?:CancelToken):Promise<T>
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,'put');
         if(!match?.store.putAsync){
             throw new UnsupportedError(`put is not supported on key ${key}`);
@@ -115,6 +177,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public async patchAsync<T>(key:string,value:Partial<T>,cancel?:CancelToken):Promise<T>
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,'patch');
         if(!match?.store.patchAsync){
             throw new UnsupportedError(`patch is not supported on key ${key}`);
@@ -129,6 +195,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
         value:Partial<T>,cancel?:CancelToken)
         :Promise<CreateKeyValueResult<T>>
     {
+        if(baseKey.startsWith('/')){
+            baseKey=baseKey.substring(1);
+        }
+
         const match=this.getRouteMatch(baseKey,'create');
         if(!match?.store.createAsync){
             throw new UnsupportedError(`create is not supported on baseKey ${baseKey}`);
@@ -142,6 +212,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
         value:Partial<T>,cancel?:CancelToken)
         :Promise<void>
     {
+        if(baseKey.startsWith('/')){
+            baseKey=baseKey.substring(1);
+        }
+
         const match=this.getRouteMatch(baseKey,'create');
         if(!match?.store.createNoReturnAsync){
             await this.createAsync(baseKey,primaryKey,value,cancel);
@@ -152,6 +226,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public async deleteAsync(key:string,cancel?:CancelToken):Promise<boolean|undefined>
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,'delete');
         if(!match?.store.deleteAsync){
             return false;
@@ -162,6 +240,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public async queryAsync<T>(baseKey:string,query:Query,cancel?:CancelToken):Promise<T[]>
     {
+        if(baseKey.startsWith('/')){
+            baseKey=baseKey.substring(1);
+        }
+
         const match=this.getRouteMatch(baseKey,'query');
         if(!match?.store.queryAsync){
             return [];
@@ -172,6 +254,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public watch<T>(key:string):ValuePointer<T>|undefined
     {
+        if(key.startsWith('/')){
+            key=key.substring(1);
+        }
+
         const match=this.getRouteMatch(key,'watch');
         if(!match?.store.watch){
             return undefined;
@@ -182,6 +268,10 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     public watchQuery<T>(baseKey:string,query:Query):ListPointer<T>|undefined
     {
+        if(baseKey.startsWith('/')){
+            baseKey=baseKey.substring(1);
+        }
+
         const match=this.getRouteMatch(baseKey,'watchQuery');
         if(!match?.store.watchQuery){
             return undefined;
@@ -192,4 +282,5 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
 
 }
+
 

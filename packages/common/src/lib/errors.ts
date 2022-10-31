@@ -3,6 +3,9 @@ export enum ErrorType{
     disposed=2,
     canceled=3,
     unsupported=4,
+    configValueNotFound=5,
+    dependencyNotFound=6,
+    invalidOverloadCall=7
 }
 
 export abstract class BaseError extends Error
@@ -11,7 +14,7 @@ export abstract class BaseError extends Error
 
     public constructor(type:ErrorType,message?:string)
     {
-        super(message??ErrorType[type]);
+        super(ErrorType[type]+(message?' - '+message:''));
         this.cErrT=type;
     }
 }
@@ -37,5 +40,29 @@ export class UnsupportedError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.unsupported,message);
+    }
+}
+
+export class ConfigValueNotFoundError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.configValueNotFound,message);
+    }
+}
+
+export class DependencyNotFoundError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.dependencyNotFound,message);
+    }
+}
+
+export class InvalidOverloadCallError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.invalidOverloadCall,message);
     }
 }

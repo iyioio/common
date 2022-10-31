@@ -1,4 +1,4 @@
-import { CancelToken, delayAsync, getObjKeyCount, HashMap, SharedValuePointer, ValuePointer } from "@iyio/common";
+import { CancelToken, delayAsync, HashMap, SharedValuePointer, ValuePointer } from "@iyio/common";
 import { BaseStore } from "./BaseStore";
 import { KeyValueStoreKeyScope, KeyValueStoreOp } from "./key-value-store-types";
 
@@ -18,7 +18,7 @@ export interface MemoryStoreOptions extends KeyValueStoreKeyScope
 /**
  * Stores value in memory
  */
-export class MemoryStore<T=any> extends BaseStore
+export class MemoryStore<T=any> extends BaseStore<T>
 {
 
     public delay:number;
@@ -81,13 +81,6 @@ export class MemoryStore<T=any> extends BaseStore
         delete this.data[key];
         this.pointers[key]?._valueSource.next(undefined);
         return true;
-    }
-
-    private readonly pointers:HashMap<SharedValuePointer<T>>={};
-
-    public getWatchCount():number
-    {
-        return getObjKeyCount(this.pointers);
     }
 
     public watch(key:string):ValuePointer<T>|undefined

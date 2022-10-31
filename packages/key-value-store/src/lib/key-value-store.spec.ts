@@ -1,5 +1,7 @@
-import { shortUuid } from '@iyio/common';
+import { DependencyContainer, shortUuid, uuid } from '@iyio/common';
+import { IKeyValueStore } from './key-value-store-types';
 import { MemoryStore } from './MemoryStory';
+import { RouterStore } from './RouterStore';
 
 interface Person
 {
@@ -7,75 +9,123 @@ interface Person
     name:string;
 }
 
-describe('key value store',()=>{
+const frankKey='/people/frank';
+const createFrank=():Person=>({
+    id:shortUuid(),
+    name:'Frank'
+})
 
-    const frankKey='/people/frank';
-    const createFrank=():Person=>({
-        id:shortUuid(),
-        name:'Frank'
+const putGetDeleteAsync=async (mouthPath:string,store:IKeyValueStore& Required<Pick<IKeyValueStore,
+    'getAsync'|'putAsync'|'deleteAsync'>>)=>
+{
+    const frank=createFrank();
+
+    const key=mouthPath+frankKey;
+
+    await store.putAsync(key,frank);
+    expect(await store.getAsync(key)).toEqual(frank);
+
+    await store.deleteAsync(key);
+    expect(await store.getAsync(key)).toBeUndefined();
+}
+
+const watchAsync=async (mouthPath:string,store:IKeyValueStore & Required<Pick<IKeyValueStore,
+    'watch'|'getWatchCount'|'putAsync'|'deleteAsync'>>)=>
+{
+
+    expect(store.getWatchCount()).toBe(0);
+
+    const frank=createFrank();
+    const key=mouthPath+frankKey;
+
+    const pointer=store.watch(key);
+    let subValue:Person|undefined;
+    const unsub=pointer?.subject.subscribe((v)=>{
+        subValue=v;
     })
+    expect(pointer).toBeTruthy();
+    expect(pointer?.value).toBeUndefined();
+    expect(subValue).toBeUndefined();
+    expect(store.getWatchCount()).toBe(1);
 
 
-    test('put, get, delete',async ()=>{
-        const store=new MemoryStore<Person>({cloneValues:true});
+    await store.putAsync(key,frank);
+    expect(pointer?.value).toEqual(frank);
+    expect(subValue).toEqual(frank);
 
-        const frank=createFrank();
+    const pointer2=store.watch(key);
+    expect(pointer2).toBeTruthy();
+    expect(pointer2?.value).toEqual(frank);
+    expect(store.getWatchCount()).toBe(1);
 
-        await store.putAsync(frankKey,frank);
-        expect(await store.getAsync(frankKey)).toEqual(frank);
+    const bob:Person={
+        id:shortUuid(),
+        name:'Bob'
+    }
+    await store.putAsync(key,bob);
+    expect(pointer?.value).toEqual(bob);
+    expect(subValue).toEqual(bob);
 
-        await store.deleteAsync(frankKey);
-        expect(await store.getAsync(frankKey)).toBeUndefined();
+    await store.deleteAsync(key);
+    expect(pointer?.value).toBeUndefined();
+    expect(subValue).toBeUndefined();
 
+    unsub?.unsubscribe();
+
+    pointer?.dispose();
+    expect(store.getWatchCount()).toBe(1);
+    pointer2?.dispose();
+    expect(store.getWatchCount()).toBe(0);
+}
+
+const createMemoryStore=()=>new MemoryStore<Person>({cloneValues:true});
+
+const createRouterStore=(mountPath:string)=>{
+
+    const deps=new DependencyContainer();
+    const store=new RouterStore(deps);
+
+    store.mount(mountPath,createMemoryStore);
+
+    return store;
+}
+
+describe('MemoryStore',()=>{
+
+    it('should put, get, delete',async ()=>{
+        await putGetDeleteAsync('/',createMemoryStore());
     });
 
+    it('should watch',async ()=>{
+        await watchAsync('/',createMemoryStore());
+    });
 
-    test('watch',async ()=>{
+});
 
-        const store=new MemoryStore<Person>({cloneValues:true});
-        expect(store.getWatchCount()).toBe(0);
+describe('RouterStore',()=>{
 
-        const frank=createFrank();
+    const mountPath='/';
 
-        const pointer=store.watch(frankKey);
-        let subValue:Person|undefined;
-        const unsub=pointer?.subject.subscribe((v)=>{
-            subValue=v;
-        })
-        expect(pointer).toBeTruthy();
-        expect(pointer?.value).toBeUndefined();
-        expect(subValue).toBeUndefined();
-        expect(store.getWatchCount()).toBe(1);
+    it('should put, get, delete',async ()=>{
+        await putGetDeleteAsync(mountPath,createRouterStore(mountPath));
+    });
 
+    it('should watch',async ()=>{
+        await watchAsync(mountPath,createRouterStore(mountPath));
+    });
 
-        await store.putAsync(frankKey,frank);
-        expect(pointer?.value).toEqual(frank);
-        expect(subValue).toEqual(frank);
+})
 
-        const pointer2=store.watch(frankKey);
-        expect(pointer2).toBeTruthy();
-        expect(pointer2?.value).toEqual(frank);
-        expect(store.getWatchCount()).toBe(1);
+describe('RouterStore with mount path',()=>{
 
-        const bob:Person={
-            id:shortUuid(),
-            name:'Bob'
-        }
-        await store.putAsync(frankKey,bob);
-        expect(pointer?.value).toEqual(bob);
-        expect(subValue).toEqual(bob);
+    const mountPath='/apps/'+uuid();
 
-        await store.deleteAsync(frankKey);
-        expect(pointer?.value).toBeUndefined();
-        expect(subValue).toBeUndefined();
+    it('should put, get, delete',async ()=>{
+        await putGetDeleteAsync(mountPath,createRouterStore(mountPath));
+    });
 
-        unsub?.unsubscribe();
-
-        pointer?.dispose();
-        expect(store.getWatchCount()).toBe(1);
-        pointer2?.dispose();
-        expect(store.getWatchCount()).toBe(0);
-
-    })
+    it('should watch',async ()=>{
+        await watchAsync(mountPath,createRouterStore(mountPath));
+    });
 
 })

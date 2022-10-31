@@ -1,6 +1,6 @@
-import { DisposeCallback, ISubscription } from "./common-types";
+import { DisposeCallback, IDisposable, ISubscription } from "./common-types";
 
-export class DisposeContainer
+export class DisposeContainer implements IDisposable
 {
     private _isDisposing=false;
     public get isDisposing(){return this._isDisposing}

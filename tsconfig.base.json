@@ -15,6 +15,13 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
+            "@iyio/app-common": ["packages/app-common/src/index.ts"],
+            "@iyio/aws": ["packages/aws/src/index.ts"],
+            "@iyio/aws-credential-providers": [
+                "packages/aws-credential-providers/src/index.ts"
+            ],
+            "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
+            "@iyio/aws-s3": ["packages/aws-s3/src/index.ts"],
             "@iyio/common": ["packages/common/src/index.ts"],
             "@iyio/key-value-store": ["packages/key-value-store/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"]

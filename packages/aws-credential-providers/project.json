@@ -1,0 +1,48 @@
+{
+    "name": "aws-credential-providers",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/aws-credential-providers/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/aws-credential-providers",
+                "main": "packages/aws-credential-providers/src/index.ts",
+                "tsConfig": "packages/aws-credential-providers/tsconfig.lib.json",
+                "assets": ["packages/aws-credential-providers/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs aws-credential-providers {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "packages/aws-credential-providers/**/*.ts"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/aws-credential-providers"],
+            "options": {
+                "jestConfig": "packages/aws-credential-providers/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

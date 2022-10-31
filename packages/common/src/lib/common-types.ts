@@ -24,6 +24,10 @@ export type SideEffectCallback=((success:boolean)=>void|Promise<void>)|Promise<v
 
 export type HashMap<T=any>={[key:string]:T}
 
+export type SymHashMap<T=any>={[key:symbol]:T}
+
+export type SymStrHashMap<T=any>={[key:symbol|string]:T}
+
 export type FirstArg<T> = T extends (arg: infer A) => any ? A : never;
 
 export type NoId<T>=Omit<T,'id'>;
@@ -45,4 +49,15 @@ export interface IDisposable
 export interface IOpDisposable
 {
     dispose?():void;
+}
+
+
+export interface IInit
+{
+    init():Promise<void>|void;
+}
+
+export interface IOpInit
+{
+    init?():Promise<void>|void;
 }

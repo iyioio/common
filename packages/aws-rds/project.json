@@ -1,0 +1,46 @@
+{
+    "name": "aws-rds",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/aws-rds/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/aws-rds",
+                "main": "packages/aws-rds/src/index.ts",
+                "tsConfig": "packages/aws-rds/tsconfig.lib.json",
+                "assets": ["packages/aws-rds/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs aws-rds {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/aws-rds/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/aws-rds"],
+            "options": {
+                "jestConfig": "packages/aws-rds/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

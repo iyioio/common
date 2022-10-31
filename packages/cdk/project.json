@@ -1,0 +1,61 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/cdk/src",
+    "projectType": "application",
+    "targets": {
+        "deploy": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "cdk deploy"
+            }
+        },
+        "synth": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "cdk synth"
+            }
+        },
+        "bootstrap": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "cdk bootstrap"
+            }
+        },
+        "destroy": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "cdk destroy"
+            }
+        }
+    },
+    "tags": [],
+    "implicitDependencies": []
+}

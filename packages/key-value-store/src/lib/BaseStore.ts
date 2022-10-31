@@ -1,6 +1,7 @@
+import { getObjKeyCount, HashMap, SharedValuePointer } from "@iyio/common";
 import { IKeyValueStore, KeyValueStoreKeyScope } from "./key-value-store-types";
 
-export abstract class BaseStore implements IKeyValueStore
+export abstract class BaseStore<T> implements IKeyValueStore<T>
 {
 
     public keyBase?:string;
@@ -11,6 +12,8 @@ export abstract class BaseStore implements IKeyValueStore
 
     public keyCondition?:(key:string)=>string|boolean;
 
+    protected readonly pointers:HashMap<SharedValuePointer<T>>={};
+
     public constructor(keyFilter?:KeyValueStoreKeyScope)
     {
         if(keyFilter){
@@ -19,5 +22,10 @@ export abstract class BaseStore implements IKeyValueStore
             this.keyRegIndex=keyFilter.keyRegIndex;
             this.keyCondition=keyFilter.keyCondition;
         }
+    }
+
+    public getWatchCount():number
+    {
+        return getObjKeyCount(this.pointers);
     }
 }

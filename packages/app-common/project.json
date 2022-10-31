@@ -1,0 +1,46 @@
+{
+    "name": "app-common",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/app-common/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/app-common",
+                "main": "packages/app-common/src/index.ts",
+                "tsConfig": "packages/app-common/tsconfig.lib.json",
+                "assets": ["packages/app-common/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs app-common {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/app-common/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/app-common"],
+            "options": {
+                "jestConfig": "packages/app-common/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}
