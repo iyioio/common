@@ -1,6 +1,6 @@
 import { DependencyContainer, registerConfig } from "@iyio/common";
 
-describe('cognito-auth',()=>{
+describe('CognitoAuthProvider',()=>{
 
     it('should create cognito',()=>{
         const deps=new DependencyContainer();
@@ -8,8 +8,6 @@ describe('cognito-auth',()=>{
         registerConfig(deps,{
 
         })
-
-        const config=getConfig(deps);
     })
 
 

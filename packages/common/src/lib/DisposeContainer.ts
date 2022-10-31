@@ -1,4 +1,4 @@
-import { DisposeCallback, IDisposable, ISubscription } from "./common-types";
+import { DisposeCallback, IDisposable, IOpDisposable, ISubscription } from "./common-types";
 
 export class DisposeContainer implements IDisposable
 {
@@ -8,6 +8,25 @@ export class DisposeContainer implements IDisposable
     private readonly subs:ISubscription[]=[];
 
     private readonly cbs:DisposeCallback[]=[];
+
+    private readonly disposables:IDisposable[]=[];
+
+    public add(disposable:IOpDisposable):DisposeContainer
+    {
+        if(!disposable.dispose){
+            return this;
+        }
+        if(this._isDisposing){
+            try{
+                disposable.dispose?.();
+            }catch(ex){
+                console.warn('Dispose failed',ex);
+            }
+            return this;
+        }
+        this.disposables.push(disposable as IDisposable);
+        return this;
+    }
 
     public addSub(sub:ISubscription):DisposeContainer
     {
@@ -79,6 +98,13 @@ export class DisposeContainer implements IDisposable
                 cb();
             }catch(ex){
                 console.warn('Dispose callback failed',ex);
+            }
+        }
+        for(const d of this.disposables){
+            try{
+                d.dispose();
+            }catch(ex){
+                console.warn('Dispose failed',ex);
             }
         }
 

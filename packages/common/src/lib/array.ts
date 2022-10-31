@@ -12,6 +12,20 @@ export const aryRemoveItem=<T>(ary:T[],item:T):boolean=>
     return false;
 }
 
+export const aryRemoveFirst=<T>(ary:T[],condition:(item:T)=>boolean):boolean=>
+{
+    if(!ary){
+        return false;
+    }
+    for(let i=0;i<ary.length;i++){
+        if(condition(ary[i])){
+            ary.splice(i,1);
+            return true;
+        }
+    }
+    return false;
+}
+
 export const aryRemoveAll=<T>(ary:T[],item:T):number=>
 {
     if(!ary){

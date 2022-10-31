@@ -1,6 +1,6 @@
-import { DependencyContainer, HashMap, IDisposable, IInit } from "@iyio/common";
+import { DependencyContainer, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail } from "@iyio/common";
 import { store } from "@iyio/key-value-store";
-import { IAuthProvider, SignInResult, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
 import { User } from "./User";
 import { setUsr } from "./_internal.app-common";
 import { IAuthProviderRef } from "./_ref.app-common";
@@ -13,6 +13,7 @@ export class Auth implements IDisposable, IInit
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
+    protected readonly disposables:DisposeContainer=new DisposeContainer();
 
     private readonly deps:DependencyContainer;
 
@@ -39,6 +40,22 @@ export class Auth implements IDisposable, IInit
         }
     }
 
+    public dispose()
+    {
+        if(this._isDisposed){
+            return;
+        }
+        this._isDisposed=true;
+        this.disposables.dispose();
+    }
+
+    public async getUserAsync(providerData:UserAuthProviderData):Promise<User|undefined>
+    {
+        return await this.deps.getFirstAsync(IAuthProviderRef,providerData.type,async provider=>{
+            return await provider.getUserAsync?.(providerData);
+        }) ?? undefined;
+    }
+
     private async getProviderAsync(type:string):Promise<IAuthProvider|undefined>
     {
         let p=this.providers[type];
@@ -52,18 +69,50 @@ export class Auth implements IDisposable, IInit
             }
             p=(async ()=>{
                 await provider.init?.();
-                return p;
+                this.disposables.add(provider);
+                return provider;
             })()
             this.providers[type]=p;
         }
         return await p;
     }
 
-    public async signInWithEmailPasswordAsync(email:string,password:string):Promise<SignInResult>
+    public async deleteAsync(user:User):Promise<AuthDeleteResult>
     {
+        return await this.deps.getFirstAsync(IAuthProviderRef,user.providerData.type,async provider=>{
+            return await provider.deleteAsync?.(user);
+        }) ?? {
+            status:'error',
+            message:'No auth provider found'
+        }
+    }
+
+    public async signInEmailPasswordAsync(email:string,password:string):Promise<AuthSignInResult>
+    {
+        if(!isValidEmail(email)){
+            return {
+                success:false,
+                message:'Invalid email address'
+            }
+        }
         return await this.handlerSignInResultAsync(
-            await this.deps.getForEachAsync(IAuthProviderRef,null,async provider=>{
-                return await provider.signInWithEmailPasswordAsync?.(email,password);
+            await this.deps.getFirstAsync(IAuthProviderRef,null,async provider=>{
+                return await provider.signInEmailPasswordAsync?.(email,password);
+            })
+        );
+    }
+
+    public async registerEmailPasswordAsync(email:string,password:string):Promise<AuthRegisterResult>
+    {
+        if(!isValidEmail(email)){
+            return {
+                status:'error',
+                message:'Invalid email address'
+            }
+        }
+        return await this.handlerRegisterResultAsync(
+            await this.deps.getFirstAsync(IAuthProviderRef,null,async provider=>{
+                return await provider.registerEmailPasswordAsync?.(email,password);
             })
         );
     }
@@ -80,12 +129,37 @@ export class Auth implements IDisposable, IInit
         await this.setUserAsync(null,true);
     }
 
-    private async handlerSignInResultAsync(result:SignInResult|undefined):Promise<SignInResult>
+    private async handlerRegisterResultAsync(result:AuthRegisterResult|undefined):Promise<AuthRegisterResult>
+    {
+        if(!result){
+            return {
+                status:'error',
+                message:'No auth provider found'
+            }
+        }
+        switch(result.status){
+
+            case "success":
+                await this.handlerSignInResultAsync({
+                    success:true,
+                    user:result.user,
+                });
+                break;
+
+            case "verificationRequired":
+                await this.setUserAsync(null,true);
+                break;
+        }
+
+        return result;
+    }
+
+    private async handlerSignInResultAsync(result:AuthSignInResult|undefined):Promise<AuthSignInResult>
     {
         if(!result){
             return {
                 success:false,
-                errorMessage:'No auth provider found'
+                message:'No auth provider found'
             }
         }
 
@@ -98,6 +172,9 @@ export class Auth implements IDisposable, IInit
 
     private async setUserAsync(user:User|null,save:boolean)
     {
+        if(!user && !usr(this.deps)){
+            return;
+        }
         if(save){
             if(user){
                 await store(this.deps).putAsync<UserAuthProviderData>(providerDataKey,user.providerData);
@@ -106,13 +183,5 @@ export class Auth implements IDisposable, IInit
             }
         }
         setUsr(this.deps,user);
-    }
-
-    public dispose()
-    {
-        if(this._isDisposed){
-            return;
-        }
-        this._isDisposed=true;
     }
 }

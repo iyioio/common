@@ -80,7 +80,7 @@ export class DependencyContainer
             return all;
         }
         for(const dep of ary){
-            if(type && dep.type!==type){
+            if(type && dep.type && dep.type!==type){
                 continue;
             }
             all.push(getDependencyValue(dep,this));
@@ -101,7 +101,7 @@ export class DependencyContainer
             return;
         }
         for(const dep of ary){
-            if(type && dep.type!==type){
+            if(type && dep.type && dep.type!==type){
                 continue;
             }
             const value=getDependencyValue(dep,this);
@@ -123,7 +123,7 @@ export class DependencyContainer
             return;
         }
         for(const dep of ary){
-            if(type && dep.type!==type){
+            if(type && dep.type && dep.type!==type){
                 continue;
             }
             const value=getDependencyValue(dep,this);
@@ -133,7 +133,7 @@ export class DependencyContainer
         }
     }
 
-    public async getForEachAsync<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<TValue|false|BreakFunction>):Promise<TValue|undefined>
+    public async getFirstAsync<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<TValue|false|BreakFunction>):Promise<TValue|undefined>
     {
 
         if(isTypeRef(typeRef)){
@@ -145,11 +145,38 @@ export class DependencyContainer
             return undefined;
         }
         for(const dep of ary){
-            if(type && dep.type!==type){
+            if(type && dep.type && dep.type!==type){
                 continue;
             }
             const value=getDependencyValue(dep,this);
             const callbackValue=await callback(value);
+            if(shouldBreakFunction(callbackValue)){
+                return undefined;
+            }
+            if(callbackValue!==undefined){
+                return callbackValue as any;
+            }
+        }
+        return undefined;
+    }
+
+    public getFirst<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>TValue|false|BreakFunction):TValue|undefined
+    {
+
+        if(isTypeRef(typeRef)){
+            typeRef=typeRef.refId;
+        }
+
+        const ary=this.deps[typeRef];
+        if(!ary){
+            return undefined;
+        }
+        for(const dep of ary){
+            if(type && dep.type && dep.type!==type){
+                continue;
+            }
+            const value=getDependencyValue(dep,this);
+            const callbackValue=callback(value);
             if(shouldBreakFunction(callbackValue)){
                 return undefined;
             }
