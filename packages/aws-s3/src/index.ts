@@ -1,1 +1,1 @@
-export * from './lib/aws-s3';
+export * from './lib/S3Store';
