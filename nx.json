@@ -26,6 +26,9 @@
                 "^production",
                 "{workspaceRoot}/jest.preset.js"
             ]
+        },
+        "e2e": {
+            "inputs": ["default", "^production"]
         }
     },
     "namedInputs": {
@@ -46,8 +49,18 @@
     "generators": {
         "@nrwl/react": {
             "application": {
+                "style": "css",
+                "linter": "eslint",
                 "babel": true
+            },
+            "component": {
+                "style": "css"
+            },
+            "library": {
+                "style": "css",
+                "linter": "eslint"
             }
         }
-    }
+    },
+    "defaultProject": "react-tests"
 }

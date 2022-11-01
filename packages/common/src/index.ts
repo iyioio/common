@@ -34,4 +34,5 @@ export * from './lib/TypeRef';
 export * from './lib/uuid';
 export * from './lib/validation';
 export * from './lib/_ref.common';
+export * from './lib/_service.common';
 

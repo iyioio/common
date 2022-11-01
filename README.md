@@ -46,6 +46,7 @@ It's kinda like the Unix filesystem
 Many of the libraries in the IYIO framework use a handful of special filename prefixes to make it
 easy to find code of importance.
 
+- _config.* - Used to define configuration keys and values
 - _internal.* -  Used to define internal values for a library
 - _ref.* - Used to define TypeRefs
 - _service.* - Used to define global services and subjects

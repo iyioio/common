@@ -6,139 +6,20 @@ import { IConfigRef } from "./_ref.common";
 import { cf } from "./_service.common";
 
 
-
-
-// const depConfigMap:HashMap<DepConfig>={};
-// /**
-//  * Returns an IConfig for the given DependencyContainer.
-//  * @param deps if null globalDeps is used.
-//  */
-// export const getConfig=(deps:DependencyContainer|null):IConfig=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-//     let depConfig=depConfigMap[deps.id];
-//     if(!depConfig){
-//         depConfig=new DepConfig(deps);
-//         depConfigMap[deps.id]=depConfig;
-//     }
-
-//     return depConfig;
-// }
-
-// interface getConfigValueOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):string|undefined;
-//     (deps:DependencyContainer|null,key:string):string|undefined;
-// }
-// /**
-//  * Returns a config value from the given DependencyContainer.
-//  * @param deps if null globalDeps is used.
-//  */
-// export const getConfigValue:getConfigValueOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.get(key as any);
-// }
-
-// interface getConfigNumberOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):number|undefined;
-//     (deps:DependencyContainer|null,key:string):number|undefined;
-// }
-// export const getConfigNumber:getConfigNumberOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.getNumber(key as any);
-// }
-
-// interface getConfigBoolOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):boolean|undefined;
-//     (deps:DependencyContainer|null,key:string):boolean|undefined;
-// }
-// export const getConfigBool:getConfigBoolOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.getBool(key as any);
-// }
-
-
-// interface requireConfigValueOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):string;
-//     (deps:DependencyContainer|null,key:string):string;
-// }
-// /**
-//  * Returns a config value from the given DependencyContainer. If the config value does not exists
-//  * an error is thrown.
-//  * @param deps if null globalDeps is used.
-//  */
-// export const requireConfigValue:requireConfigValueOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.require(key as any);
-// }
-
-// interface requireConfigNumberOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):number;
-//     (deps:DependencyContainer|null,key:string):number;
-// }
-// export const requireConfigNumber:requireConfigNumberOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.requireNumber(key as any);
-// }
-
-// interface requireConfigBoolOverloads
-// {
-//     (deps:DependencyContainer|null,key:IConfigKey):boolean;
-//     (deps:DependencyContainer|null,key:string):boolean;
-// }
-// export const requireConfigBool:requireConfigBoolOverloads=(deps:DependencyContainer|null,key:string|IConfigKey)=>
-// {
-//     if(deps===null){
-//         deps=globalDeps;
-//     }
-
-//     const config=getConfig(deps);
-
-//     return config.requireBool(key as any);
-// }
-
+/**
+ * Used by the @iyio/babel-plugin-env to identify code to replace
+ */
+export const STATIC_ENV_VARS=Symbol('STATIC_ENV_VARS');
+export type StaticEnvVarsType=typeof STATIC_ENV_VARS;
 
 /**
  * Registers a config for the given DependencyContainer.
  * @param deps if null globalDeps is used.
  */
-export const registerConfig=(deps:DependencyContainer|null,config:IConfig|HashMap)=>{
+export const registerConfig=(deps:DependencyContainer|null,config:IConfig|HashMap|StaticEnvVarsType)=>{
+    if(typeof config === 'symbol'){
+        return;
+    }
     if(deps===null){
         deps=globalDeps;
     }
