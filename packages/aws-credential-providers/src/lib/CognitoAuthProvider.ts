@@ -1,8 +1,8 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, User, UserAuthProviderData, usr } from '@iyio/app-common';
-import { IAwsAuth } from '@iyio/aws';
-import { cf, DependencyContainer, HashMap, parseConfigBool } from '@iyio/common';
+import { AWS_REGION, IAwsAuth } from '@iyio/aws';
+import { DependencyContainer, HashMap, parseConfigBool } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { COGNITO_IDENTITY_POOL_ID, COGNITO_USER_POOL_CLIENT_ID, COGNITO_USER_POOL_ID } from './_config.aws-credential-providers';
 
@@ -31,7 +31,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
             UserPoolId:COGNITO_USER_POOL_ID.require(deps),
             ClientId:COGNITO_USER_POOL_CLIENT_ID.require(deps),
             identityPoolId:COGNITO_IDENTITY_POOL_ID.require(deps),
-            region:cf(deps).require('AWS_REGION'),
+            region:AWS_REGION.require(deps),
         }
     }
 

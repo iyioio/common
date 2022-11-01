@@ -49,4 +49,5 @@ easy to find code of importance.
 - _config.* - Used to define configuration keys and values
 - _internal.* -  Used to define internal values for a library
 - _ref.* - Used to define TypeRefs
+- _reg.* - Used to register TypeRef implementation
 - _service.* - Used to define global services and subjects

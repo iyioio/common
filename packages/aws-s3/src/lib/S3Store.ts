@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client, S3ClientConfig } from "@aws-sdk/client-s3";
-import { IAwsAuthRef } from '@iyio/aws';
-import { CancelToken, cf, DependencyContainer } from "@iyio/common";
+import { AWS_REGION, IAwsAuthRef } from '@iyio/aws';
+import { CancelToken, DependencyContainer } from "@iyio/common";
 import { BaseStore, BinaryStoreValue } from "@iyio/key-value-store";
 
 export interface S3StoreConfig
@@ -13,7 +13,7 @@ export class S3Store<T=any> extends BaseStore<T>
 
     public static clientConfigFromDeps(deps:DependencyContainer):S3ClientConfig{
         return {
-            region:cf(deps).get('AWS_REGION'),
+            region:AWS_REGION.require(deps),
             credentials:deps.get(IAwsAuthRef)?.getAuthProvider(deps),
         }
     }
