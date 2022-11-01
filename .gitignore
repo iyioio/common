@@ -42,3 +42,4 @@ Thumbs.db
 /tmp
 /Documents
 /.env.test
+/.env.e2e

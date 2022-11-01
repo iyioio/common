@@ -20,4 +20,5 @@ copy_env(){
 }
 
 generate_env '.env.test'
+copy_env '.env.test' '.env.e2e'
 

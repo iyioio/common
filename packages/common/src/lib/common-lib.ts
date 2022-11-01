@@ -4,6 +4,9 @@ export const isServerSide=typeof (globalThis as any).window === 'undefined';
 
 export const breakFunction=Symbol('breakFunction');
 export type BreakFunction=typeof breakFunction;
+export const continueFunction=Symbol('continueFunction');
+export type ContinueFunction=typeof continueFunction;
+export type FunctionLoopControl=BreakFunction|ContinueFunction;
 export const shouldBreakFunction=(value:any)=>value===breakFunction || value===false;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

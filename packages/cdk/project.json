@@ -13,7 +13,7 @@
             "executor": "nx:run-commands",
             "options": {
                 "cwd": "packages/cdk",
-                "command": "cdk deploy"
+                "command": "cdk deploy && ../../scripts/apply-config.sh"
             }
         },
         "synth": {

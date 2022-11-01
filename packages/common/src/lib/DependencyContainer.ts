@@ -1,4 +1,4 @@
-import { BreakFunction, shouldBreakFunction } from "./common-lib";
+import { FunctionLoopControl, shouldBreakFunction } from "./common-lib";
 import { SymStrHashMap } from "./common-types";
 import { DependencyNotFoundError } from "./errors";
 import { getTypeRefId, isTypeRef, TypeRef } from "./TypeRef";
@@ -89,7 +89,7 @@ export class DependencyContainer
 
     }
 
-    public forEach<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>void|boolean|BreakFunction):void
+    public forEach<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>void|boolean|FunctionLoopControl):void
     {
 
         if(isTypeRef(typeRef)){
@@ -111,7 +111,7 @@ export class DependencyContainer
         }
     }
 
-    public async forEachAsync<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<void|boolean|BreakFunction>):Promise<void>
+    public async forEachAsync<T>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<void|boolean|FunctionLoopControl>):Promise<void>
     {
 
         if(isTypeRef(typeRef)){
@@ -133,7 +133,7 @@ export class DependencyContainer
         }
     }
 
-    public async getFirstAsync<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<TValue|false|BreakFunction>):Promise<TValue|undefined>
+    public async getFirstAsync<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>Promise<TValue|false|FunctionLoopControl>):Promise<TValue|undefined>
     {
 
         if(isTypeRef(typeRef)){
@@ -160,7 +160,7 @@ export class DependencyContainer
         return undefined;
     }
 
-    public getFirst<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>TValue|false|BreakFunction):TValue|undefined
+    public getFirst<T,TValue>(typeRef:symbol|TypeRef<T>,type:string|null|undefined,callback:(value:T)=>TValue|false|FunctionLoopControl):TValue|undefined
     {
 
         if(isTypeRef(typeRef)){

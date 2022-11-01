@@ -10,7 +10,7 @@
                 "cypressConfig": "packages/react-tests-e2e/cypress.config.ts",
                 "devServerTarget": "react-tests:serve:development",
                 "testingType": "e2e",
-                "headed": true
+                "headed": false
             },
             "configurations": {
                 "production": {

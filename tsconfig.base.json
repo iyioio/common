@@ -22,6 +22,7 @@
             ],
             "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
             "@iyio/aws-s3": ["packages/aws-s3/src/index.ts"],
+            "@iyio/browser-mocks": ["packages/browser-mocks/src/index.ts"],
             "@iyio/common": ["packages/common/src/index.ts"],
             "@iyio/key-value-store": ["packages/key-value-store/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"]

@@ -1,4 +1,4 @@
-import { IOpDisposable, IOpInit } from "@iyio/common";
+import { IOpDisposable, IOpInit, SymStrHashMap } from "@iyio/common";
 import { User } from "./User";
 
 export type AuthSignInResult={
@@ -57,7 +57,7 @@ export interface UserAuthProviderData
     /**
      * Auth provider specific data
      */
-    readonly providerData?:any;
+    readonly providerData?:SymStrHashMap;
 }
 
 
@@ -67,6 +67,11 @@ export interface IAuthProvider extends IOpInit, IOpDisposable
      * A string use to distinguish auth provider types.
      */
     type:string;
+
+    /**
+     * Attempts to get or create a user using the given auth provider data.
+     */
+    getCurrentUser?():Promise<User|null>;
 
     /**
      * Attempts to get or create a user using the given auth provider data.

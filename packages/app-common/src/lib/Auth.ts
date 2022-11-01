@@ -1,4 +1,4 @@
-import { DependencyContainer, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail } from "@iyio/common";
+import { breakFunction, continueFunction, DependencyContainer, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail } from "@iyio/common";
 import { store } from "@iyio/key-value-store";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
 import { User } from "./User";
@@ -37,6 +37,16 @@ export class Auth implements IDisposable, IInit
             if(user){
                 await this.setUserAsync(user,false);
             }
+        }else{
+            await this.deps.forEachAsync(IAuthProviderRef,null,async p=>{
+                const user=await p.getCurrentUser?.();
+                if(user){
+                    await this.setUserAsync(user,false);
+                    return breakFunction;
+                }else{
+                    return continueFunction;
+                }
+            })
         }
     }
 

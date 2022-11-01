@@ -5,8 +5,10 @@
     "scripts": {},
     "private": true,
     "dependencies": {
+        "@aws-sdk/client-cognito-identity-provider": "^3.200.0",
         "@aws-sdk/credential-providers": "^3.199.0",
         "@iyio/nx-cdk": "^0.0.3",
+        "amazon-cognito-identity-js": "^5.2.12",
         "core-js": "^3.6.5",
         "react": "18.2.0",
         "react-dom": "18.2.0",
