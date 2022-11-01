@@ -3,13 +3,6 @@ import { IAwsAuthRef } from '@iyio/aws';
 import { CancelToken, cf, DependencyContainer } from "@iyio/common";
 import { BaseStore, BinaryStoreValue } from "@iyio/key-value-store";
 
-export const getS3ClientConfigFromDeps=(deps:DependencyContainer):S3ClientConfig=>{
-    return {
-        region:cf(deps).get('AWS_REGION'),
-        credentials:deps.get(IAwsAuthRef)?.getAuthProvider(),
-    }
-}
-
 export interface S3StoreConfig
 {
     bucket:string;
@@ -18,14 +11,24 @@ export interface S3StoreConfig
 export class S3Store<T=any> extends BaseStore<T>
 {
 
+    public static clientConfigFromDeps(deps:DependencyContainer):S3ClientConfig{
+        return {
+            region:cf(deps).get('AWS_REGION'),
+            credentials:deps.get(IAwsAuthRef)?.getAuthProvider(deps),
+        }
+    }
+
     public readonly client:S3Client;
 
     public readonly bucket:string;
 
-    public constructor(clientConfig:S3ClientConfig,{
+    public constructor(clientConfig:S3ClientConfig|DependencyContainer,{
         bucket
     }:S3StoreConfig){
         super();
+        if(clientConfig instanceof DependencyContainer){
+            clientConfig=S3Store.clientConfigFromDeps(clientConfig);
+        }
         this.bucket=bucket;
         this.client=new S3Client(clientConfig);
     }

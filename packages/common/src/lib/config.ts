@@ -44,7 +44,7 @@ export interface IConfigKey
     requireBool(deps?:DependencyContainer):boolean;
 }
 
-export const parseConfigBool=(value:string)=>{
+export const parseConfigBool=(value:string|null|undefined)=>{
     if(!value){
         return false;
     }

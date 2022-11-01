@@ -23,7 +23,8 @@ describe('CognitoAuthProvider',()=>{
 
         const deps=new DependencyContainer();
         registerConfig(deps,new EnvConfig());
-        deps.registerValue(IAuthProviderRef,new CognitoAuthProvider(deps));
+        const provider=new CognitoAuthProvider(deps)
+        deps.registerValue(IAuthProviderRef,provider);
         store(deps).mount('/',new MemoryStore());
 
         console.log(`Registering ${email}, ${password}`);

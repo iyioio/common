@@ -1,17 +1,17 @@
+import { useTempCognitoUser, _allIssuedCognitoCreds } from "@iyio/aws-credential-providers";
 import { cf, DependencyContainer, EnvConfig, registerConfig, shortUuid, uuid } from "@iyio/common";
-import { getS3ClientConfigFromDeps, S3Store } from './S3Store';
+import { S3Store } from './S3Store';
 
 describe('S3Store', () => {
 
-    it('should put, get and delete', async () => {
+    const putGetDeleteAsync=async (deps:DependencyContainer, onStore?:(store:S3Store)=>void)=>{
 
-        const deps=new DependencyContainer();
-        registerConfig(deps,new EnvConfig());
-
-        const store=new S3Store(getS3ClientConfigFromDeps(deps),{
+        const config=S3Store.clientConfigFromDeps(deps)
+        const store=new S3Store(config,{
             bucket:cf(deps).require('TEST_BUCKET_NAME')
         });
 
+        onStore?.(store);
 
         const key=shortUuid();
         const value={
@@ -37,5 +37,29 @@ describe('S3Store', () => {
         const get2R=await store.getAsync(key);
         expect(get2R).toBeUndefined();
 
+        return {store,config};
+    }
+
+    it('should put, get and delete', async () => {
+
+        const deps=new DependencyContainer();
+        registerConfig(deps,new EnvConfig());
+
+        await putGetDeleteAsync(deps);
+
+    });
+
+    it('should put, get and delete with cognito user',async ()=>{
+
+        const deps=new DependencyContainer();
+        registerConfig(deps,new EnvConfig());
+
+        await useTempCognitoUser(deps,async ()=>{
+
+            const {config}=await putGetDeleteAsync(deps);
+
+            expect(_allIssuedCognitoCreds.includes(config.credentials as any)).toBe(true);
+
+        })
     });
 });

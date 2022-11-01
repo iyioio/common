@@ -1,31 +1,93 @@
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, User, UserAuthProviderData } from '@iyio/app-common';
-import { DependencyContainer } from '@iyio/common';
-import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback } from 'amazon-cognito-identity-js';
-import { COGNITO_USER_POOL_CLIENT_ID, COGNITO_USER_POOL_ID } from './_config.aws-credential-providers';
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { Credentials, Provider } from "@aws-sdk/types";
+import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, User, UserAuthProviderData, usr } from '@iyio/app-common';
+import { IAwsAuth } from '@iyio/aws';
+import { cf, DependencyContainer, HashMap, parseConfigBool } from '@iyio/common';
+import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
+import { COGNITO_IDENTITY_POOL_ID, COGNITO_USER_POOL_CLIENT_ID, COGNITO_USER_POOL_ID } from './_config.aws-credential-providers';
+
+const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
+
+/**
+ * Used for testing
+ */
+export const _allIssuedCognitoCreds:Provider<Credentials>[]=[];
 
 
 const sessionKey=Symbol('cognitoSession');
 const userKey=Symbol('cognitoUser');
 
-export class CognitoAuthProvider implements IAuthProvider
+export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
 {
+    region:string;
+    identityPoolId:string;
+}
+
+export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
+{
+
+    public static configFromDeps(deps:DependencyContainer):CognitoAuthProviderConfig{
+        return {
+            UserPoolId:COGNITO_USER_POOL_ID.require(deps),
+            ClientId:COGNITO_USER_POOL_CLIENT_ID.require(deps),
+            identityPoolId:COGNITO_IDENTITY_POOL_ID.require(deps),
+            region:cf(deps).require('AWS_REGION'),
+        }
+    }
+
     public readonly type='CognitoAuthProvider';
+
+    private readonly config:CognitoAuthProviderConfig;
 
     private readonly userPool:CognitoUserPool;
 
-    private readonly deps:DependencyContainer;
-
-    private storage?:Storage;
-
-    constructor(deps:DependencyContainer, storage?:Storage)
+    constructor(config:CognitoAuthProviderConfig|DependencyContainer)
     {
-        this.deps=deps;
-        this.storage=storage;
-        this.userPool=new CognitoUserPool({
-            Storage:storage,
-            UserPoolId:COGNITO_USER_POOL_ID.require(this.deps),
-            ClientId:COGNITO_USER_POOL_CLIENT_ID.require(this.deps),
+        if(config instanceof DependencyContainer){
+            config=CognitoAuthProvider.configFromDeps(config);
+        }
+        this.userPool=new CognitoUserPool(config);
+        this.config=config;
+    }
+
+    private readonly providerMap:HashMap<Provider<Credentials>>={};
+    public getAuthProvider(deps?:DependencyContainer):Provider<Credentials>|undefined
+    {
+        const user=usr(deps);
+        if(!user){
+            return undefined;
+        }
+
+        const session:CognitoUserSession|undefined=user.providerData.providerData?.[sessionKey];
+        if(!session){
+            return undefined;
+        }
+
+        const token=session.getIdToken().getJwtToken();
+
+        let provider:Provider<Credentials>=this.providerMap[token];
+        if(provider){
+            return provider;
+        }
+
+        provider=fromCognitoIdentityPool({
+            identityPoolId:this.config.identityPoolId,
+            logins:{
+                [`cognito-idp.${this.config.region}.amazonaws.com/${this.config.UserPoolId}`]:token
+            },
+            clientConfig:{
+                region:this.config.region,
+            }
         });
+
+        const cached=cacheCreds(provider);
+
+        if(trackIssuedCreds){
+            _allIssuedCognitoCreds.push(cached);
+        }
+
+        return this.providerMap[token]=cached;
+
     }
 
     public async getCurrentUser():Promise<User|null>{
@@ -44,13 +106,6 @@ export class CognitoAuthProvider implements IAuthProvider
 
     private convertCognitoUserAsync(user:CognitoUser):Promise<User>
     {
-        if(this.storage){
-            user=new CognitoUser({
-                Storage:this.storage,
-                Username:user.getUsername(),
-                Pool:this.userPool
-            })
-        }
         return new Promise<User>((resolve,reject)=>{
             user.getSession((error:Error|null,session:CognitoUserSession|null)=>{
                 if(session){
@@ -204,4 +259,17 @@ export class CognitoAuthProvider implements IAuthProvider
         });
     }
 
+}
+
+const cacheCreds=(provider:Provider<Credentials>):Provider<Credentials>=>{
+    let credsPromise:Promise<Credentials>|null=null;
+    let t=Date.now();
+
+    return async ()=>{
+        if(!credsPromise || (Date.now()-t)>1000*60*3){
+            t=Date.now();
+            credsPromise=provider();
+        }
+        return await credsPromise;
+    }
 }

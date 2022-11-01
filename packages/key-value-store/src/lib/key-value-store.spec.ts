@@ -1,6 +1,6 @@
 import { DependencyContainer, shortUuid, uuid } from '@iyio/common';
 import { IKeyValueStore } from './key-value-store-types';
-import { MemoryStore } from './MemoryStory';
+import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
 
 interface Person
