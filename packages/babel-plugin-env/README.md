@@ -29,7 +29,7 @@ STATIC_ENV_VARS must be passed as an argument to the registerConfig for the subs
      - default = 'registerConfig'
 
  - prefix : string | null | false
-   - Environment variable must be prefixed with this value to be added.
+   - Environment variables must be prefixed with this value to be added.
    - default = 'NX_'
 
  - ignore : string[]
@@ -38,7 +38,7 @@ STATIC_ENV_VARS must be passed as an argument to the registerConfig for the subs
      
  - mode : 'keep' | 'drop' | 'both'
      - Determines what is done with the prefix
-     - default = 'keep'
+     - default = 'both'
 
 
 ## Workspace level configuration

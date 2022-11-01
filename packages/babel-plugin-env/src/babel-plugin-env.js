@@ -4,7 +4,7 @@ module.exports=function babelPluginEnv()
     const defaultFunc='registerConfig';
     const defaultPrefix='NX_';
     const defaultIgnore=[];
-    const defaultMode='keep';
+    const defaultMode='both';
 
 
     let envs=null;
