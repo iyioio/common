@@ -156,8 +156,26 @@ export class HasMapConfig extends BaseConfig
  */
 export class EnvConfig extends BaseConfig
 {
+
+    public readonly autoPrefix?:string;
+
+    public constructor(autoPrefix='NX_')
+    {
+        super();
+        this.autoPrefix=autoPrefix;
+    }
+
     protected getValueByKey(key:string):string|undefined{
-        return (globalThis as any).process?.env?.[key];
+        const env=(globalThis as any).process?.env;
+        const value=env?.[key];
+        if(value!==undefined){
+            return value;
+        }
+        if(this.autoPrefix){
+            return env?.[this.autoPrefix+key];
+        }else{
+            return undefined;
+        }
     }
 }
 
