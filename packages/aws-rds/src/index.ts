@@ -1,1 +1,1 @@
-export * from './lib/aws-rds';
+export * from './lib/RdsStore';
