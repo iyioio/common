@@ -5,7 +5,8 @@ export enum ErrorType{
     unsupported=4,
     configValueNotFound=5,
     dependencyNotFound=6,
-    invalidOverloadCall=7
+    invalidOverloadCall=7,
+    typeProviderNotFoundError=8,
 }
 
 export abstract class BaseError extends Error
@@ -64,5 +65,14 @@ export class InvalidOverloadCallError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.invalidOverloadCall,message);
+    }
+}
+
+
+export class TypeProviderNotFoundError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.typeProviderNotFoundError,message);
     }
 }

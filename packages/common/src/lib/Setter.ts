@@ -9,6 +9,7 @@ export interface SetValueRequest<T>
 
 export interface Setter<T>
 {
+    // todo - remove deps from here
     (deps:DependencyContainer,value:T):void;
     readonly subject:Subject<SetValueRequest<T>>
 }
