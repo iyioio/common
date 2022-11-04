@@ -459,10 +459,10 @@ describe('Scope',()=>{
     }
     const testValues=(scope:Scope,suffix:string='')=>{
 
-        const host=scope.defineString('TEST_HOST_NAME'+suffix);
-        const port=scope.defineNumber('TEST_PORT'+suffix);
-        const log=scope.defineBool('TEST_LOG'+suffix);
-        const data=scope.defineValue<JsonData>('TEST_JSON_DATA'+suffix);
+        const host=scope.defineStringParam('TEST_HOST_NAME'+suffix);
+        const port=scope.defineNumberParam('TEST_PORT'+suffix);
+        const log=scope.defineBoolParam('TEST_LOG'+suffix);
+        const data=scope.defineParam<JsonData>('TEST_JSON_DATA'+suffix);
 
         expect(host()).toBe(hostValue);
         expect(port()).toBe(portValue);
@@ -476,7 +476,7 @@ describe('Scope',()=>{
     it('should provide values using hashmap',()=>{
 
         const scope=createScope();
-        scope.provideValues({
+        scope.provideParams({
             TEST_HOST_NAME:hostValue,
             TEST_PORT:portValue.toString(),
             TEST_LOG:logValue.toString(),
@@ -489,7 +489,7 @@ describe('Scope',()=>{
     it('should provide values using env',()=>{
 
         const scope=createScope();
-        scope.provideValues(new EnvValueProvider())
+        scope.provideParams(new EnvValueProvider())
 
         testValues(scope);
     })
@@ -497,7 +497,7 @@ describe('Scope',()=>{
     it('should provide values using env with NX_ prefix',()=>{
 
         const scope=createScope();
-        scope.provideValues(new EnvValueProvider())
+        scope.provideParams(new EnvValueProvider())
 
         testValues(scope,'_T2');
     })
@@ -505,7 +505,7 @@ describe('Scope',()=>{
     it('should provide values using env with IY_ prefix',()=>{
 
         const scope=createScope();
-        scope.provideValues(new EnvValueProvider('IY_'))
+        scope.provideParams(new EnvValueProvider('IY_'))
 
         testValues(scope,'_T3');
     })

@@ -12,7 +12,7 @@ describe('CognitoAuthProvider',()=>{
     it('should get config from env',()=>{
 
         const scope=createScope();
-        scope.provideValues(new EnvValueProvider());
+        scope.provideParams(new EnvValueProvider());
 
         expect(scope(cognitoIdentityPoolIdParam)).toBeTruthy();
         expect(scope(cognitoUserPoolClientIdParam)).toBeTruthy();
@@ -22,7 +22,7 @@ describe('CognitoAuthProvider',()=>{
     it('should register user',async ()=>{
 
         const scope=createScope();
-        scope.provideValues(new EnvValueProvider());
+        scope.provideParams(new EnvValueProvider());
 
         bootCognitoAuthProvider(scope);
 

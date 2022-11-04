@@ -102,9 +102,9 @@ export interface TypeProviderOptions<T=any>
     isFactory?:boolean;
 }
 
-export interface ValueProvider
+export interface ParamProvider
 {
-    getValue(name:string):string|undefined;
+    getParam(name:string):string|undefined;
 }
 
 export interface Scope
@@ -220,38 +220,38 @@ export interface Scope
      * Provides values that can be retired by types defined with defineValue, defaultString,
      * defineNumber or defineBool or the getProvidedValue method.
      */
-    provideValues(valueProvider:ValueProvider|HashMap<string>):void;
+    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
 
     /**
      * Returns a provided string value by name.
      */
-    getProvidedValue(name:string):string|undefined;
+    getParam(name:string):string|undefined;
 
     /**
      * Returns a provided string value by name or throw an error
      */
-    requireProvidedValue(name:string):string;
+    requireParam(name:string):string;
 
     /**
      * Defines a type that has its value provided by a value provider. If no valueConverted is
      * provided JSON.parse will be used.
      */
-    defineValue<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>;
+    defineParam<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>;
 
     /**
      * Defines a type that has its value provided as a string by a value provider.
      */
-    defineString(name:string,defaultValue?:string):TypeDef<string>;
+    defineStringParam(name:string,defaultValue?:string):TypeDef<string>;
 
     /**
      * Defines a type that has its value provided as a number by a value provider.
      */
-    defineNumber(name:string,defaultValue?:number):TypeDef<number>;
+    defineNumberParam(name:string,defaultValue?:number):TypeDef<number>;
 
     /**
      * Defines a type that has its value provided as a boolean by a value provider.
      */
-    defineBool(name:string,defaultValue?:boolean):TypeDef<boolean>;
+    defineBoolParam(name:string,defaultValue?:boolean):TypeDef<boolean>;
 }
 
 /**

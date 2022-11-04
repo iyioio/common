@@ -3,7 +3,7 @@ import { asArray } from "./array";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { TypeProviderNotFoundError } from "./errors";
-import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ReadonlyObservableTypeDef, Scope, TypeDef, TypeProvider, TypeProviderOptions, ValueProvider } from "./scope-types";
+import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
@@ -89,15 +89,15 @@ export const createScope=(parent?:Scope):Scope=>
         }
     }
 
-    const getProvidedValue=(name:string):string|undefined=>{
+    const getParam=(name:string):string|undefined=>{
         const providers=providerMap[vp.id];
         if(!providers){
             return undefined;
         }
         for(const p of providers){
-            const valueP:ValueProvider|HashMap<string>=getProviderValue(p);
-            if(typeof valueP.getValue === 'function'){
-                const value=valueP.getValue(name);
+            const valueP:ParamProvider|HashMap<string>=getProviderValue(p);
+            if(typeof valueP.getParam === 'function'){
+                const value=valueP.getParam(name);
                 if(value!==undefined){
                     return value;
                 }
@@ -108,11 +108,11 @@ export const createScope=(parent?:Scope):Scope=>
                 }
             }
         }
-        return parent?.getProvidedValue(name);
+        return parent?.getParam(name);
     }
 
-    const requireProvidedValue=(name:string):string=>{
-        const value=getProvidedValue(name);
+    const requireParam=(name:string):string=>{
+        const value=getParam(name);
         if(value===undefined){
             throw new Error(`Unable to get provided param value - ${name}`)
         }
@@ -141,7 +141,7 @@ export const createScope=(parent?:Scope):Scope=>
         }
 
         if(type.valueConverter){
-            const provided=getProvidedValue(type.typeName);
+            const provided=getParam(type.typeName);
             if(provided!==undefined){
                 return type[TypeDefStaticValue]=type.valueConverter(provided);
             }
@@ -356,12 +356,12 @@ export const createScope=(parent?:Scope):Scope=>
         }) as ReadonlyObservableTypeDef<T>
     )
 
-    const provideValues=(valueProvider:ValueProvider|HashMap<string>):void=>
+    const provideParams=(valueProvider:ParamProvider|HashMap<string>):void=>
     {
         provideForType(vp,()=>valueProvider);
     }
 
-    const defineValue=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>
+    const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>
     (
         _defineType<T>({
             name,
@@ -370,11 +370,11 @@ export const createScope=(parent?:Scope):Scope=>
         })
     )
 
-    const defineString=(name:string,defaultValue?:string):TypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
+    const defineStringParam=(name:string,defaultValue?:string):TypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
 
-    const defineNumber=(name:string,defaultValue?:number):TypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
+    const defineNumberParam=(name:string,defaultValue?:number):TypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
 
-    const defineBool=(name:string,defaultValue?:boolean):TypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
+    const defineBoolParam=(name:string,defaultValue?:boolean):TypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
 
 
 
@@ -470,15 +470,15 @@ export const createScope=(parent?:Scope):Scope=>
     self.defineType=defineType;
     self.provideForType=provideForType;
     self.provideForService=provideForType;
-    self.requireProvidedValue=requireProvidedValue;
     self.defineObservable=defineObservable as any;
     self.defineReadonlyObservable=defineReadonlyObservable as any;
-    self.provideValues=provideValues;
-    self.getProvidedValue=getProvidedValue;
-    self.defineValue=defineValue;
-    self.defineString=defineString;
-    self.defineNumber=defineNumber;
-    self.defineBool=defineBool;
+    self.provideParams=provideParams;
+    self.getParam=getParam;
+    self.requireParam=requireParam;
+    self.defineParam=defineParam;
+    self.defineStringParam=defineStringParam;
+    self.defineNumberParam=defineNumberParam;
+    self.defineBoolParam=defineBoolParam;
     self.parent=parent;
 
     (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
@@ -490,7 +490,7 @@ export const createScope=(parent?:Scope):Scope=>
 }
 
 export const rootScope=createScope();
-const vp=rootScope.defineType<ValueProvider|HashMap<string>>('vp')
+const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp')
 
 export const defineType=<T>(
     name:string,
@@ -523,27 +523,27 @@ export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>|ScopedSe
     rootScope.defineReadonlyObservable(name,setter,defaultValue)
 )) as defineReadonlyObservableOverloads;
 
-export const provideValues=(valueProvider:ValueProvider|HashMap<string>):void=>(
-    rootScope.provideValues(valueProvider)
+export const provideParams=(valueProvider:ParamProvider|HashMap<string>):void=>(
+    rootScope.provideParams(valueProvider)
 )
 
-export const defineValue=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>(
-    rootScope.defineValue(name,valueConverter,defaultValue)
+export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>(
+    rootScope.defineParam(name,valueConverter,defaultValue)
 )
 
-export const defineString=(name:string,defaultValue?:string):TypeDef<string>=>(
-    rootScope.defineString(name,defaultValue)
+export const defineStringParam=(name:string,defaultValue?:string):TypeDef<string>=>(
+    rootScope.defineStringParam(name,defaultValue)
 )
 
-export const defineNumber=(name:string,defaultValue?:number):TypeDef<number>=>(
-    rootScope.defineNumber(name,defaultValue)
+export const defineNumberParam=(name:string,defaultValue?:number):TypeDef<number>=>(
+    rootScope.defineNumberParam(name,defaultValue)
 )
 
-export const defineBool=(name:string,defaultValue?:boolean):TypeDef<boolean>=>(
-    rootScope.defineBool(name,defaultValue)
+export const defineBoolParam=(name:string,defaultValue?:boolean):TypeDef<boolean>=>(
+    rootScope.defineBoolParam(name,defaultValue)
 )
 
-export class EnvValueProvider implements ValueProvider
+export class EnvValueProvider implements ParamProvider
 {
 
     public readonly autoPrefix?:string;
@@ -553,7 +553,7 @@ export class EnvValueProvider implements ValueProvider
         this.autoPrefix=autoPrefix;
     }
 
-    public getValue(name:string):string|undefined{
+    public getParam(name:string):string|undefined{
         const env=(globalThis as any).process?.env;
         const value=env?.[name];
         if(value!==undefined){
