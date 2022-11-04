@@ -6,7 +6,7 @@ export interface PromiseSource<T>
     reject:(reason:any)=>void;
 }
 
-export const createPromiseSource=<T>()=>
+export const createPromiseSource=<T>():PromiseSource<T>=>
 {
     let resolve:any;
     let reject:any;

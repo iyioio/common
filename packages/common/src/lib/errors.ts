@@ -7,6 +7,7 @@ export enum ErrorType{
     dependencyNotFound=6,
     invalidOverloadCall=7,
     typeProviderNotFoundError=8,
+    scopeInited=9
 }
 
 export abstract class BaseError extends Error
@@ -74,5 +75,13 @@ export class TypeProviderNotFoundError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.typeProviderNotFoundError,message);
+    }
+}
+
+export class ScopeInitedError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.scopeInited,message);
     }
 }

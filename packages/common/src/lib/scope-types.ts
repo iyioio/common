@@ -121,6 +121,8 @@ export interface Scope
      */
     readonly parent?:Scope;
 
+    readonly initPromise:Promise<void>
+
     /**
      * Returns a scoped value for the given type. This is an alias of the to method.
      */

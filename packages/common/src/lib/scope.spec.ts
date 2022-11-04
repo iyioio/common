@@ -1,4 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
+import { CancelToken } from './CancelToken';
+import { delayAsync } from './common-lib';
 import { createScope, defineService, EnvValueProvider } from './scope-lib';
 import { Scope } from './scope-types';
 import { createScopedSetter } from './Setter';
@@ -522,6 +524,76 @@ describe('Scope',()=>{
         });
 
         testValues(scope,'_T3');
+    })
+
+    it('should init and dispose',async ()=>{
+
+        const debugOrder=false;
+        const log=(msg:string,order:number)=>{
+            if(debugOrder){
+                console.log(msg,order);
+            }
+        }
+
+        const cancel=new CancelToken();
+        let beforeCreate=-1;
+        let initCall=-1;
+        let afterReturn=-1;
+        let initComplete=-1;
+        let initedAll=-1;
+        let afterAwaitInitPromise=-1;
+        let disposed=-1;
+        let afterCallCancel=-1;
+
+        let callIndex=0;
+
+        log('beforeCreate',callIndex);
+        beforeCreate=callIndex++;
+        const scope=createScope(()=>{
+
+            return {
+                async init(){
+                    log('initCall',callIndex);
+                    initCall=callIndex++;
+                    await delayAsync(10);
+                    log('initComplete',callIndex);
+                    initComplete=callIndex++;
+                },
+                onAllInited(){
+                    log('initedAll',callIndex);
+                    initedAll=callIndex++;
+                },
+                dispose(){
+                    log('disposed',callIndex);
+                    disposed=callIndex++;
+                }
+            }
+        },cancel);
+
+        log('afterReturn',callIndex);
+        afterReturn=callIndex++;
+
+        await scope.initPromise;
+
+        log('afterAwaitInitPromise',callIndex);
+        afterAwaitInitPromise=callIndex++;
+
+        cancel.cancelNow();
+
+        log('afterCallCancel',callIndex);
+        afterCallCancel=callIndex++;
+
+        let expectIndex=0;
+        expect(beforeCreate).toBe(expectIndex++);
+        expect(initCall).toBe(expectIndex++);
+        expect(afterReturn).toBe(expectIndex++);
+        expect(initComplete).toBe(expectIndex++);
+        expect(initedAll).toBe(expectIndex++);
+        expect(afterAwaitInitPromise).toBe(expectIndex++);
+        expect(disposed).toBe(expectIndex++);
+        expect(afterCallCancel).toBe(expectIndex++);
+
+
     })
 
 })

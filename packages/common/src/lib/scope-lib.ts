@@ -3,7 +3,8 @@ import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
-import { TypeProviderNotFoundError } from "./errors";
+import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
+import { createPromiseSource, PromiseSource } from "./PromiseSource";
 import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
@@ -18,6 +19,9 @@ interface TypeProviderInternal
 const isTypeDefSymbol=Symbol('isTypeDefSymbol');
 
 export const isTypeDef=(value:any):value is TypeDef<any>=>(value && value[isTypeDefSymbol])?true:false;
+
+let rootPromiseSource:PromiseSource<void>|null=null;
+let rootInitScopeOptions:InitScopeOptions|null=null;
 
 interface DefineTypeOptions<T>
 {
@@ -40,6 +44,16 @@ interface ScopeInternal
 
 export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new CancelToken(), parent?:Scope):Scope=>
 {
+
+
+    const initPromiseSource=createPromiseSource<void>();
+    const isRoot=!rootPromiseSource;
+    if(isRoot){
+        rootPromiseSource=initPromiseSource;
+    }
+
+    let isInited=false;
+    initPromiseSource.promise.then(()=>isInited=true);
 
     const providerMap:SymHashMap<TypeProviderInternal[]>={};
 
@@ -385,6 +399,11 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         tags:string|string[]=[]
     ):FluentTypeProvider<P>=>{
 
+        if(isInited){
+            throw new ScopeInitedError(
+                'Can not provide type implementations or params after a scope is initialized')
+        }
+
         let providers=providerMap[type.id];
         if(!providers){
             providers=[];
@@ -501,19 +520,28 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     self.recreate=recreate;
     self.parent=parent;
 
+    self.initPromise=initPromiseSource.promise;
+
     (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
     (self as unknown as ScopeInternal)[isTypeDefSymbol]=true;
 
     const scope:Scope=self;
 
-    if(rootModule){
-        initScopeAsync({
-            scope,
-            cancel,
-            provideForType,
-            provideParams,
-            rootModule,
-        })
+    const initOptions:InitScopeOptions={
+        scope,
+        cancel,
+        provideForType,
+        provideParams,
+        rootModule
+    }
+    if(isRoot){
+        rootInitScopeOptions=initOptions;
+    }else if(rootModule){
+        initScopeAsync(initOptions)
+            .then(()=>initPromiseSource.resolve())
+            .catch(r=>initPromiseSource.reject(r));
+    }else{
+        initPromiseSource.resolve();
     }
 
     return scope;
@@ -529,7 +557,7 @@ interface InitScopeOptions
         provider:TypeProvider<P>|TypeProviderOptions<P>,
         tags?:string|string[]
     ):FluentTypeProvider<P>;
-    rootModule:ScopeModule;
+    rootModule?:ScopeModule;
 }
 
 const initScopeAsync=async ({
@@ -539,6 +567,10 @@ const initScopeAsync=async ({
     provideParams,
     rootModule
 }:InitScopeOptions)=>{
+
+    if(!rootModule){
+        return;
+    }
 
     const disposeList:((scope:Scope)=>void)[]=[];
     const disposeModules=()=>{
@@ -575,7 +607,7 @@ const initScopeAsync=async ({
         let lastPriority=lifecycles[0]?.priority??0;
         for(const lc of lifecycles){
 
-            if(lastPriority!==lc.priority??0){
+            if((lastPriority!==lc.priority??0) && initPromises.length){
                 await Promise.all(initPromises);
                 cancel.throwIfCanceled();
                 lastPriority=lc.priority??0;
@@ -606,21 +638,21 @@ const initScopeAsync=async ({
 }
 
 const rootCancel=new CancelToken();
-let _rootReg:ScopeRegistration|undefined;
-export const rootScope=createScope(reg=>{
-    _rootReg=reg;
-},rootCancel);
-const rootReg:ScopeRegistration=_rootReg as any;
+export const rootScope=createScope(undefined,rootCancel);
 const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp');
 
 export const initRootScope=(rootModule?:ScopeModule)=>{
-    initScopeAsync({
-        scope:rootScope,
-        cancel:rootCancel,
-        provideForType:rootReg.provideForType,
-        provideParams:rootReg.provideParams,
-        rootModule:rootModule??(()=>{/* */}),
-    })
+    if(!rootInitScopeOptions || !rootPromiseSource){
+        throw new Error(
+            'Root scope not properly created. rootInitScopeOptions or rootPromiseSource not set');
+    }
+    if(rootInitScopeOptions && rootModule){
+        initScopeAsync(rootInitScopeOptions)
+            .then(()=>rootPromiseSource?.resolve())
+            .catch(r=>rootPromiseSource?.reject(r));
+    }else{
+        rootPromiseSource?.resolve();
+    }
 }
 
 export const defineType=<T>(
