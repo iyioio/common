@@ -52,7 +52,8 @@
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "react-tests:build",
-                "hmr": true
+                "hmr": true,
+                "port": 4204
             },
             "configurations": {
                 "development": {

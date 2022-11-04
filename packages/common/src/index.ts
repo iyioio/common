@@ -10,6 +10,7 @@ export * from './lib/fs';
 export * from './lib/html';
 export * from './lib/jwt';
 export * from './lib/Lock';
+export * from './lib/macros';
 export * from './lib/mime';
 export * from './lib/NamedValue';
 export * from './lib/object';

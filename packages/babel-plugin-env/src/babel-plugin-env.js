@@ -1,7 +1,7 @@
 module.exports=function babelPluginEnv()
 {
     const defaultIdentifier='STATIC_ENV_VARS';
-    const defaultFunc='registerConfig';
+    const defaultFunc='__macro__';
     const defaultPrefix='NX_';
     const defaultIgnore=[];
     const defaultMode='both';
