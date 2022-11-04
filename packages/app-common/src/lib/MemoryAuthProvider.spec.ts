@@ -10,9 +10,11 @@ describe('MemoryAuthProvider',()=>{
     const password=shortUuid();
 
     const getScope=()=>{
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(IAuthProviderType,()=>new MemoryAuthProvider());
+        });
         scope(storeService).mount('/',new MemoryStore())
-        scope.provideForType(IAuthProviderType,()=>new MemoryAuthProvider());
+
         return scope;
     }
 

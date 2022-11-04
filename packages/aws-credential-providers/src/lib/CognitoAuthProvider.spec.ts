@@ -1,7 +1,7 @@
 import { authService } from "@iyio/app-common";
 import { createScope, EnvValueProvider, shortUuid } from "@iyio/common";
 import { MemoryStore, storeService } from "@iyio/key-value-store";
-import { bootCognitoAuthProvider } from './_boot.aws-credential-providers';
+import { cognitoAuthProviderModule } from './_modules.aws-credential-providers';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 
 describe('CognitoAuthProvider',()=>{
@@ -11,8 +11,10 @@ describe('CognitoAuthProvider',()=>{
 
     it('should get config from env',()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider());
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider());
+        });
+
 
         expect(scope(cognitoIdentityPoolIdParam)).toBeTruthy();
         expect(scope(cognitoUserPoolClientIdParam)).toBeTruthy();
@@ -21,10 +23,10 @@ describe('CognitoAuthProvider',()=>{
 
     it('should register user',async ()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider());
-
-        bootCognitoAuthProvider(scope);
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider());
+            cognitoAuthProviderModule(reg);
+        });
 
         const store=scope(storeService);
         const auth=scope(authService);

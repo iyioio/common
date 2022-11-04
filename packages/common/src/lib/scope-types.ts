@@ -1,4 +1,5 @@
 import { BehaviorSubject } from "rxjs";
+import { CancelToken } from "./CancelToken";
 import { FunctionLoopControl } from "./common-lib";
 import { HashMap } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
@@ -125,6 +126,23 @@ export interface Scope
     <T>(setter:ScopedSetter<T>):ScopedSetter<T>;
 
     /**
+     * Creates a scope with the current scope as its parent. Child scope will fallback to getting
+     * values with the child can not find one.
+     * @param appendModule If defined the the module will be included after the root module of the
+     *                     current scope
+     */
+    createChild(appendModule?:ScopeModule):Scope;
+
+    /**
+     * Creates a new scope using the current scopes root module. This will create a new scope with
+     * the same registered types and params but will have its own set of unique values. The new
+     * scope will be completely independent of the current scope.
+     * @param appendModule If defined the the module will be included after the root module of the
+     *                     current scope
+     */
+    recreate(appendModule?:ScopeModule,cancel?:CancelToken):Scope;
+
+    /**
      * Gets a value or throws an error if no provider is found
      */
     require<T>(type:TypeDef<T>,tag?:string):T;
@@ -178,24 +196,6 @@ export interface Scope
     defineType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>;
 
     /**
-     * Provides a value for the given type
-     */
-    provideForType<T,P extends T>(
-        type:TypeDef<T>,
-        provider:TypeProvider<P>|TypeProviderOptions<P>,
-        tags?:string|string[]
-    ):FluentTypeProvider<P>;
-
-    /**
-     * Provides a value for the given type. Alias for provideForType
-     */
-    provideForService<T,P extends T>(
-        type:TypeDef<T>,
-        provider:TypeProvider<P>|TypeProviderOptions<P>,
-        tags?:string|string[]
-    ):FluentTypeProvider<P>;
-
-    /**
      * Defines a type with an observable value
      */
     defineObservable<T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
@@ -214,13 +214,6 @@ export interface Scope
      * Defines a type with a readonly observable value that can optionally be undefined
      */
     defineReadonlyObservable<T>(name:string,setter:Setter<T>|ScopedSetter<T>):ReadonlyObservableTypeDef<T|undefined>;
-
-
-    /**
-     * Provides values that can be retired by types defined with defineValue, defaultString,
-     * defineNumber or defineBool or the getProvidedValue method.
-     */
-    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
 
     /**
      * Returns a provided string value by name.
@@ -274,3 +267,45 @@ export interface FluentTypeProvider<P>
 }
 
 export type FluentProviderType<T,P>=P extends T?T:never;
+
+export interface ScopeRegistration
+{
+    scope:Scope;
+
+    readonly cancel:CancelToken;
+
+    /**
+     * Provides values that can be retired by types defined with defineValue, defaultString,
+     * defineNumber or defineBool or the getProvidedValue method.
+     */
+    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
+
+    /**
+     * Provides a value for the given type
+     */
+    provideForType<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+
+    /**
+     * Provides a value for the given type. Alias for provideForType
+     */
+    provideForService<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+
+    use(module:ScopeModule):void;
+}
+
+export interface ScopeModuleLifecycle
+{
+    priority?:number;
+    init?(scope:Scope,cancel:CancelToken):void|Promise<void>;
+    onAllInited?(scope:Scope):void;
+    dispose?(scope:Scope):void;
+}
+export type ScopeModule=(reg:ScopeRegistration)=>ScopeModuleLifecycle|void;

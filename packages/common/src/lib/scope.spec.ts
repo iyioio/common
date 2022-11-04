@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { createScope, EnvValueProvider } from './scope-lib';
+import { createScope, defineType, EnvValueProvider } from './scope-lib';
 import { Scope } from './scope-types';
 import { createScopedSetter } from './Setter';
 
@@ -50,6 +50,13 @@ class Car implements ICar, IStatusChecker
 
 }
 
+const ICarType=defineType<ICar>("ICarType");
+const ICarType1=defineType<ICar>("ICarType1");
+const ICarType2=defineType<ICar>("ICarType2");
+const ICarType3=defineType<ICar>("ICarType3");
+
+const IStatusCheckerType=defineType<IStatusChecker>("IStatusCheckerType");
+
 interface JsonData
 {
     name:string;
@@ -60,11 +67,13 @@ describe('Scope',()=>{
 
     it('should define type',()=>{
 
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car())
+        });
 
-        const car=scope.defineType<ICar>("car");
+        const car=scope.to(ICarType);
 
-        scope.provideForType(car,()=>new Car());
+
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -117,11 +126,11 @@ describe('Scope',()=>{
 
     it('should create singleton',()=>{
 
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car())
+        });
 
-        const car=scope.defineType<ICar>("car");
-
-        scope.provideForType(car,()=>new Car());
+        const car=scope.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -136,14 +145,14 @@ describe('Scope',()=>{
 
     it('should create using fluent',()=>{
 
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car())
+                .andFor(IStatusCheckerType);
+        });
 
-        const car=scope.defineType<ICar>("car");
-        const statusChecker=scope.defineType<IStatusChecker>("statusChecker");
+        const car=scope.to(ICarType);
+        const statusChecker=scope.to(IStatusCheckerType);
 
-        scope
-            .provideForType(car,()=>new Car())
-            .andFor(statusChecker);
 
         expect(car()).toBeInstanceOf(Car);
         expect(statusChecker()).toBeInstanceOf(Car);
@@ -154,14 +163,14 @@ describe('Scope',()=>{
 
     it('should create factory',()=>{
 
-        const scope=createScope();
-
-        const car=scope.defineType<ICar>("car");
-
-        scope.provideForType(car,{
-            provider:()=>new Car(),
-            isFactory:true
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,{
+                provider:()=>new Car(),
+                isFactory:true
+            });
         });
+
+        const car=scope.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -176,13 +185,13 @@ describe('Scope',()=>{
 
     it('should get all',()=>{
 
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car('a'));
+            reg.provideForType(ICarType,()=>new Car('b'));
+            reg.provideForType(ICarType,()=>new Car('c'));
+        });
 
-        const car=scope.defineType<ICar>("car");
-
-        scope.provideForType(car,()=>new Car('a'));
-        scope.provideForType(car,()=>new Car('b'));
-        scope.provideForType(car,()=>new Car('c'));
+        const car=scope.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -195,13 +204,14 @@ describe('Scope',()=>{
 
     it('should get tagged',()=>{
 
-        const scope=createScope();
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car('a'),'fast');
+            reg.provideForType(ICarType,()=>new Car('b'));
+            reg.provideForType(ICarType,()=>new Car('c'),['fast','first']);
+        });
 
-        const car=scope.defineType<ICar>("car");
+        const car=scope.to(ICarType);
 
-        scope.provideForType(car,()=>new Car('a'),'fast');
-        scope.provideForType(car,()=>new Car('b'));
-        scope.provideForType(car,()=>new Car('c'),['fast','first']);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -213,14 +223,15 @@ describe('Scope',()=>{
 
     it('should get tagged with parent',()=>{
 
-        const parent=createScope();
-        const scope=createScope(parent);
+        const parent=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car('c'),['fast','first']);
+        });
+        const scope=parent.createChild(reg=>{
+            reg.provideForType(ICarType,()=>new Car('a'),'fast');
+            reg.provideForType(ICarType,()=>new Car('b'));
+        });
 
-        const car=scope.defineType<ICar>("car");
-
-        scope.provideForType(car,()=>new Car('a'),'fast');
-        scope.provideForType(car,()=>new Car('b'));
-        parent.provideForType(car,()=>new Car('c'),['fast','first']);
+        const car=scope.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -371,12 +382,12 @@ describe('Scope',()=>{
 
     it('should get value from parent',()=>{
 
-        const scope=createScope();
-        const dec=createScope(createScope(createScope(createScope(scope))));
+        const scope=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car());
+        });
+        const dec=scope.createChild().createChild().createChild();
 
-        const car=dec.defineType<ICar>("car");
-
-        scope.provideForType(car,()=>new Car());
+        const car=dec.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -399,13 +410,14 @@ describe('Scope',()=>{
 
     it('should scope type',()=>{
 
-        const scopeA=createScope();
-        const scopeB=createScope();
+        const scopeA=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car('a'));
+        });
+        const scopeB=createScope(reg=>{
+            reg.provideForType(ICarType,()=>new Car('b'));
+        });
 
-        const car=scopeA.defineType<ICar>("car");
-
-        scopeA.provideForType(car,()=>new Car('a'));
-        scopeB.provideForType(car,()=>new Car('b'));
+        const car=scopeA.to(ICarType);
 
         expect(car()).toBeInstanceOf(Car);
         expect(car().name).toBe('a');
@@ -418,32 +430,30 @@ describe('Scope',()=>{
 
     it('should map types',()=>{
 
-        const scopeA=createScope();
-        const scopeB=createScope();
+        const scopeA=createScope(reg=>{
+            reg.provideForType(ICarType1,()=>new Car('A1'));
+            reg.provideForType(ICarType2,()=>new Car('A2'));
+            reg.provideForType(ICarType3,()=>new Car('A3'));
+        });
+        const scopeB=createScope(reg=>{
+            reg.provideForType(ICarType1,()=>new Car('B1'));
+            reg.provideForType(ICarType2,()=>new Car('B2'));
+            reg.provideForType(ICarType3,()=>new Car('B3'));
+        });
 
-        const car1=scopeA.defineType<ICar>("car");
-        const car2=scopeA.defineType<ICar>("car");
-        const car3=scopeA.defineType<ICar>("car");
+        const [source1,source2,source3]=scopeA.map(ICarType1,ICarType2,ICarType3);
 
-        scopeA.provideForType(car1,()=>new Car('A1'));
-        scopeA.provideForType(car2,()=>new Car('A2'));
-        scopeA.provideForType(car3,()=>new Car('A3'));
+        const [mapped1,mapped2,mapped3]=scopeB.map(ICarType1,ICarType2,ICarType3);
 
-        scopeB.provideForType(car1,()=>new Car('B1'));
-        scopeB.provideForType(car2,()=>new Car('B2'));
-        scopeB.provideForType(car3,()=>new Car('B3'));
-
-        const [mapped1,mapped2,mapped3]=scopeB.map(car1,car2,car3);
-
-        expect(car1().name).toBe('A1');
-        expect(car2().name).toBe('A2');
-        expect(car3().name).toBe('A3');
+        expect(source1().name).toBe('A1');
+        expect(source2().name).toBe('A2');
+        expect(source3().name).toBe('A3');
 
         expect(mapped1().name).toBe('B1');
         expect(mapped2().name).toBe('B2');
         expect(mapped3().name).toBe('B3');
 
-        const [remapped1,remapped2,remapped3]=scopeB.map(car1,car2,car3);
+        const [remapped1,remapped2,remapped3]=scopeB.map(ICarType1,ICarType2,ICarType3);
         expect(mapped1).toBe(remapped1);
         expect(mapped2).toBe(remapped2);
         expect(mapped3).toBe(remapped3);
@@ -475,37 +485,41 @@ describe('Scope',()=>{
 
     it('should provide values using hashmap',()=>{
 
-        const scope=createScope();
-        scope.provideParams({
-            TEST_HOST_NAME:hostValue,
-            TEST_PORT:portValue.toString(),
-            TEST_LOG:logValue.toString(),
-            TEST_JSON_DATA:JSON.stringify(dataValue),
-        })
+        const scope=createScope(reg=>{
+            reg.provideParams({
+                TEST_HOST_NAME:hostValue,
+                TEST_PORT:portValue.toString(),
+                TEST_LOG:logValue.toString(),
+                TEST_JSON_DATA:JSON.stringify(dataValue),
+            })
+        });
 
         testValues(scope);
     })
 
     it('should provide values using env',()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider())
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider())
+        });
 
         testValues(scope);
     })
 
     it('should provide values using env with NX_ prefix',()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider())
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider())
+        });
 
         testValues(scope,'_T2');
     })
 
     it('should provide values using env with IY_ prefix',()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider('IY_'))
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider('IY_'))
+        });
 
         testValues(scope,'_T3');
     })

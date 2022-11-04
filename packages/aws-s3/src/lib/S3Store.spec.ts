@@ -41,8 +41,9 @@ describe('S3Store', () => {
 
     it('should put, get and delete', async () => {
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider());
+        const scope=createScope(reg=>{
+            reg.provideParams(new EnvValueProvider());
+        });
 
         await putGetDeleteAsync(scope);
 
@@ -50,10 +51,9 @@ describe('S3Store', () => {
 
     it('should put, get and delete with cognito user',async ()=>{
 
-        const scope=createScope();
-        scope.provideParams(new EnvValueProvider());
-
-        await useTempCognitoUser(scope,async ()=>{
+        await useTempCognitoUser(reg=>{
+            reg.provideParams(new EnvValueProvider());
+        },async scope=>{
 
             const {config}=await putGetDeleteAsync(scope);
 

@@ -1,9 +1,10 @@
 import { BehaviorSubject } from "rxjs";
 import { asArray } from "./array";
+import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { TypeProviderNotFoundError } from "./errors";
-import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
+import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
@@ -37,7 +38,7 @@ interface ScopeInternal
     [isTypeDefSymbol]:boolean;
 }
 
-export const createScope=(parent?:Scope):Scope=>
+export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new CancelToken(), parent?:Scope):Scope=>
 {
 
     const providerMap:SymHashMap<TypeProviderInternal[]>={};
@@ -456,6 +457,25 @@ export const createScope=(parent?:Scope):Scope=>
     }
 
 
+    const createChild=(appendModule?:ScopeModule):Scope=>createScope((reg)=>{
+        if(rootModule){
+            reg.use(rootModule);
+        }
+        if(appendModule){
+            reg.use(appendModule);
+        }
+    },cancel,parent);
+
+    const recreate=(appendModule?:ScopeModule,cancel:CancelToken=new CancelToken()):Scope=>createScope((reg)=>{
+        if(rootModule){
+            reg.use(rootModule);
+        }
+        if(appendModule){
+            reg.use(appendModule);
+        }
+    },cancel);
+
+
     self.require=require;
     self.get=get;
     self.getType=getType;
@@ -468,17 +488,16 @@ export const createScope=(parent?:Scope):Scope=>
     self.to=to;
     self.map=map;
     self.defineType=defineType;
-    self.provideForType=provideForType;
-    self.provideForService=provideForType;
     self.defineObservable=defineObservable as any;
     self.defineReadonlyObservable=defineReadonlyObservable as any;
-    self.provideParams=provideParams;
     self.getParam=getParam as any;
     self.requireParam=requireParam;
     self.defineParam=defineParam;
     self.defineStringParam=defineStringParam;
     self.defineNumberParam=defineNumberParam;
     self.defineBoolParam=defineBoolParam;
+    self.createChild=createChild;
+    self.recreate=recreate;
     self.parent=parent;
 
     (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
@@ -486,24 +505,127 @@ export const createScope=(parent?:Scope):Scope=>
 
     const scope:Scope=self;
 
+    if(rootModule){
+        initScopeAsync({
+            scope,
+            cancel,
+            provideForType,
+            provideParams,
+            rootModule,
+        })
+    }
+
     return scope;
 }
 
-export const rootScope=createScope();
-const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp')
+interface InitScopeOptions
+{
+    scope:Scope;
+    cancel:CancelToken;
+    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
+    provideForType<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+    rootModule:ScopeModule;
+}
+
+const initScopeAsync=async ({
+    scope,
+    cancel,
+    provideForType,
+    provideParams,
+    rootModule
+}:InitScopeOptions)=>{
+
+    const disposeList:((scope:Scope)=>void)[]=[];
+    const disposeModules=()=>{
+        while(disposeList.length){
+            try{
+                disposeList.shift()?.(scope);
+            }catch(ex){
+                console.warn('Dispose module failed',ex);
+            }
+        }
+    }
+    cancel.onCancelOrNextTick(disposeModules)
+    try{
+        const lifecycles:ScopeModuleLifecycle[]=[];
+        const reg:ScopeRegistration={
+            scope,
+            cancel,
+            provideParams,
+            provideForType,
+            provideForService:provideForType,
+            use(module:ScopeModule){
+                const lifecycle=module(reg);
+                if(lifecycle){
+                    lifecycles.push(lifecycle);
+                }
+
+            }
+        }
+        reg.use(rootModule);
+        lifecycles.sort((a,b)=>(b.priority??0)-(a.priority??0));
+
+        let initPromises:Promise<void>[]=[];
+
+        let lastPriority=lifecycles[0]?.priority??0;
+        for(const lc of lifecycles){
+
+            if(lastPriority!==lc.priority??0){
+                await Promise.all(initPromises);
+                cancel.throwIfCanceled();
+                lastPriority=lc.priority??0;
+                initPromises=[];
+            }
+
+            cancel.throwIfCanceled();
+            if(lc.dispose){
+                disposeList.push(lc.dispose);
+            }
+            const init=lc.init?.(scope,cancel);
+            if(init){
+                initPromises.push(init);
+            }
+        }
+
+        await Promise.all(initPromises);
+        cancel.throwIfCanceled();
+
+        for(const lc of lifecycles){
+            lc.onAllInited?.(scope);
+        }
+
+    }catch(ex){
+        console.error('Scope initialization failed',ex);
+        disposeModules();
+    }
+}
+
+const rootCancel=new CancelToken();
+let _rootReg:ScopeRegistration|undefined;
+export const rootScope=createScope(reg=>{
+    _rootReg=reg;
+},rootCancel);
+const rootReg:ScopeRegistration=_rootReg as any;
+const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp');
+
+export const initRootScope=(rootModule?:ScopeModule)=>{
+    initScopeAsync({
+        scope:rootScope,
+        cancel:rootCancel,
+        provideForType:rootReg.provideForType,
+        provideParams:rootReg.provideParams,
+        rootModule:rootModule??(()=>{/* */}),
+    })
+}
 
 export const defineType=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
-
-export const provideForType=<T,P extends T>(
-        type:TypeDef<T>,
-        provider:TypeProvider<P>|TypeProviderOptions<P>,
-        tags:string|string[]=[]
-    ):FluentTypeProvider<P>=>(
-    rootScope.provideForType<T,P>(type,provider,tags)
-);
 
 interface defineObservableOverloads
 {
@@ -522,10 +644,6 @@ interface defineReadonlyObservableOverloads
 export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue:TypeProvider<T>):ReadonlyObservableTypeDef<T>=>(
     rootScope.defineReadonlyObservable(name,setter,defaultValue)
 )) as defineReadonlyObservableOverloads;
-
-export const provideParams=(valueProvider:ParamProvider|HashMap<string>):void=>(
-    rootScope.provideParams(valueProvider)
-)
 
 export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>(
     rootScope.defineParam(name,valueConverter,defaultValue)

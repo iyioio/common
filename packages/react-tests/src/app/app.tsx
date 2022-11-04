@@ -1,8 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getParam, provideParams, STATIC_ENV_VARS, __macro__ } from '@iyio/common';
+import { getParam, initRootScope, STATIC_ENV_VARS, __macro__ } from '@iyio/common';
 
 
-provideParams(__macro__(STATIC_ENV_VARS));
+initRootScope(reg=>reg.provideParams(__macro__(STATIC_ENV_VARS)));
 
 export function App() {
     return (
