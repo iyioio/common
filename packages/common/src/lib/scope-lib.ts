@@ -89,7 +89,7 @@ export const createScope=(parent?:Scope):Scope=>
         }
     }
 
-    const getParam=(name:string):string|undefined=>{
+    const getParam=(name:string,defaultValue?:string):string|undefined=>{
         const providers=providerMap[vp.id];
         if(!providers){
             return undefined;
@@ -108,7 +108,7 @@ export const createScope=(parent?:Scope):Scope=>
                 }
             }
         }
-        return parent?.getParam(name);
+        return parent?.getParam(name)??defaultValue;
     }
 
     const requireParam=(name:string):string=>{
@@ -473,7 +473,7 @@ export const createScope=(parent?:Scope):Scope=>
     self.defineObservable=defineObservable as any;
     self.defineReadonlyObservable=defineReadonlyObservable as any;
     self.provideParams=provideParams;
-    self.getParam=getParam;
+    self.getParam=getParam as any;
     self.requireParam=requireParam;
     self.defineParam=defineParam;
     self.defineStringParam=defineStringParam;
@@ -542,6 +542,17 @@ export const defineNumberParam=(name:string,defaultValue?:number):TypeDef<number
 export const defineBoolParam=(name:string,defaultValue?:boolean):TypeDef<boolean>=>(
     rootScope.defineBoolParam(name,defaultValue)
 )
+
+interface getParamOverloads
+{
+    (name:string):string|undefined;
+    (name:string,defaultValue:string):string;
+}
+export const getParam=((name:string,defaultValue?:string):string|undefined=>(
+    rootScope.getParam(name,defaultValue as any)
+)) as getParamOverloads;
+
+export const requireParam=(name:string)=>rootScope.requireParam(name);
 
 export class EnvValueProvider implements ParamProvider
 {

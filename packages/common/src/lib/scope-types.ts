@@ -225,7 +225,13 @@ export interface Scope
     /**
      * Returns a provided string value by name.
      */
+    getParam(name:string,defaultValue:string):string;
+
+    /**
+     * Returns a provided string value by name.
+     */
     getParam(name:string):string|undefined;
+
 
     /**
      * Returns a provided string value by name or throw an error
