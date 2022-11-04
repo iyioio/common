@@ -2,7 +2,7 @@ import { BehaviorSubject } from 'rxjs';
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
 import { createScope, defineService, EnvValueProvider } from './scope-lib';
-import { Scope } from './scope-types';
+import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
 
 
@@ -592,6 +592,33 @@ describe('Scope',()=>{
         expect(afterAwaitInitPromise).toBe(expectIndex++);
         expect(disposed).toBe(expectIndex++);
         expect(afterCallCancel).toBe(expectIndex++);
+
+
+    })
+
+    it('should prevent late registration',async ()=>{
+
+        let reg:ScopeRegistration|undefined;
+
+        const scope=createScope(_reg=>{
+            reg=_reg;
+            return {
+                async init(){
+                    await delayAsync(1);
+                },
+            }
+        });
+
+        await scope.initPromise;
+
+        expect(reg).toBeTruthy();
+
+        try{
+            reg?.provideForType(ICarType,()=>new Car('b'));
+            fail('Late registration should have failed')
+        }catch{
+            //
+        }
 
 
     })
