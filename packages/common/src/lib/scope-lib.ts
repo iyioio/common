@@ -519,6 +519,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     self.createChild=createChild;
     self.recreate=recreate;
     self.parent=parent;
+    self.isInited=()=>isInited;
 
     self.initPromise=initPromiseSource.promise;
 

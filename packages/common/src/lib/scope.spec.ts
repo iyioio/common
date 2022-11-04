@@ -570,10 +570,14 @@ describe('Scope',()=>{
             }
         },cancel);
 
+        expect(scope.isInited()).toBe(false);
+
         log('afterReturn',callIndex);
         afterReturn=callIndex++;
 
         await scope.initPromise;
+
+        expect(scope.isInited()).toBe(true);
 
         log('afterAwaitInitPromise',callIndex);
         afterAwaitInitPromise=callIndex++;
