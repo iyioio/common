@@ -1,25 +1,25 @@
-import { DependencyContainer, shortUuid } from "@iyio/common";
-import { MemoryStore, store } from "@iyio/key-value-store";
+import { createScope, Scope, shortUuid } from "@iyio/common";
+import { MemoryStore, storeService } from "@iyio/key-value-store";
 import { AuthRegisterStatus } from "./auth-types";
 import { MemoryAuthProvider } from './MemoryAuthProvider';
-import { IAuthProviderRef } from './_ref.app-common';
-import { auth, usr } from './_service.app-common';
+import { authService, currentUser, IAuthProviderType } from './_types.app-common';
 
 describe('MemoryAuthProvider',()=>{
 
     const email='ricky.bobby@gofast.net';
     const password=shortUuid();
 
-    const getDeps=()=>{
-        const deps=new DependencyContainer();
-        store(deps).mount('/',new MemoryStore())
-        deps.registerSingleton(IAuthProviderRef,()=>new MemoryAuthProvider());
-        return deps;
+    const getScope=()=>{
+        const scope=createScope();
+        scope(storeService).mount('/',new MemoryStore())
+        scope.provideForType(IAuthProviderType,()=>new MemoryAuthProvider());
+        return scope;
     }
 
-    const registerAsync=async (deps:DependencyContainer,email:string,password:string,keepSignedIn:boolean)=>{
+    const registerAsync=async (scope:Scope,email:string,password:string,keepSignedIn:boolean)=>{
 
-        const result=await auth(deps).registerEmailPasswordAsync(email,password);
+        const auth=scope(authService);
+        const result=await auth.registerEmailPasswordAsync(email,password);
         expect(result.status).toBe<AuthRegisterStatus>('success');
 
         const user=result.status==='success'?result.user:undefined;
@@ -28,12 +28,13 @@ describe('MemoryAuthProvider',()=>{
             return;
         }
 
-        expect((await auth(deps).getUserAsync(user.providerData))?.id).toEqual(user.id);
-        expect(usr(deps)?.id).toEqual(user.id);
+        expect((await auth.getUserAsync(user.providerData))?.id).toEqual(user.id);
+        const value=scope(currentUser);
+        expect(value?.id).toEqual(user.id);
 
         if(!keepSignedIn){
-            await auth(deps).signOutAsync();
-            expect(usr(deps)).toBe(null);
+            await auth.signOutAsync();
+            expect(scope(currentUser)).toBe(null);
         }
 
         return user;
@@ -41,38 +42,40 @@ describe('MemoryAuthProvider',()=>{
 
     it('should register',async ()=>{
 
-        const deps=getDeps();
+        const scope=getScope();
 
-        await registerAsync(deps,email,password,true);
+        await registerAsync(scope,email,password,true);
 
     });
 
     it('should sign-out',async ()=>{
 
-        const deps=getDeps();
+        const scope=getScope();
 
-        await registerAsync(deps,email,password,false);
+        await registerAsync(scope,email,password,false);
 
     });
 
     it('should sign-in',async ()=>{
 
-        const deps=getDeps();
+        const scope=getScope();
 
-        await registerAsync(deps,email,password,false);
+        await registerAsync(scope,email,password,false);
 
-        const result=await auth(deps).signInEmailPasswordAsync(email,password);
+        const auth=scope(authService);
+        const result=await auth.signInEmailPasswordAsync(email,password);
         expect(result.success).toBe(true);
 
     });
 
     it('should not sign-in with incorrect password',async ()=>{
 
-        const deps=getDeps();
+        const scope=getScope();
 
-        await registerAsync(deps,email,password,false);
+        await registerAsync(scope,email,password,false);
 
-        const result=await auth(deps).signInEmailPasswordAsync(email,'incorrect!Pa55w0rd!');
+        const auth=scope(authService);
+        const result=await auth.signInEmailPasswordAsync(email,'incorrect!Pa55w0rd!');
         expect(result.success).toBe(false);
 
     });

@@ -30,3 +30,12 @@ export const delayAsync=(delayMs:number):Promise<void>=>
 
 export const hasFlag=<T extends number>(flags:T|undefined|null, searchFlag:T):boolean=>
     flags===null || flags===undefined?false:(flags&searchFlag)===searchFlag;
+
+
+export const parseConfigBool=(value:string|null|undefined)=>{
+    if(!value){
+        return false;
+    }
+    value=value.toLowerCase();
+    return value==='true' || value==='yes' || value==='1';
+}

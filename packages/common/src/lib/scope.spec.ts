@@ -1,8 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
-import { globalDeps } from './globalDeps';
 import { createScope, EnvValueProvider } from './scope-lib';
 import { Scope } from './scope-types';
-import { createSetter } from './Setter';
+import { createScopedSetter } from './Setter';
 
 
 type Speed='fast'|'slow';
@@ -19,7 +18,12 @@ interface ICar
     turn(direction:Direction):void;
 }
 
-class Car implements ICar
+interface IStatusChecker
+{
+    status(your:string):string;
+}
+
+class Car implements ICar, IStatusChecker
 {
     name:string;
     speed?: Speed | undefined;
@@ -35,6 +39,13 @@ class Car implements ICar
     }
     turn(direction: Direction): void {
         this.direction=direction;
+    }
+    status(your:string):string{
+        if(your!=='first'){
+            return 'last';
+        }else{
+            return 'first';
+        }
     }
 
 }
@@ -53,7 +64,7 @@ describe('Scope',()=>{
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car());
+        scope.provideForType(car,()=>new Car());
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -67,13 +78,50 @@ describe('Scope',()=>{
 
     })
 
+    it('should define type with default provider',()=>{
+
+        const scope=createScope();
+
+        const car=scope.defineType<ICar>("car",()=>new Car());
+
+        expect(car()).toBeInstanceOf(Car);
+
+    })
+
+    it('should define type with default provider and re-scope',()=>{
+
+        const scopeA=createScope();
+        const scopeB=createScope();
+
+        const carA=scopeA.defineType<ICar>("car",()=>new Car());
+        const carB=scopeB.to(carA);
+
+        expect(carB()).toBeInstanceOf(Car);
+        expect(carA()).toBeInstanceOf(Car);
+        expect(carB()).not.toBe(carA());
+
+    })
+
+    it('should get re-scoped value',()=>{
+
+        const scopeA=createScope();
+        const scopeB=createScope();
+
+        const carA=scopeA.defineType<ICar>("car",()=>new Car());
+
+        expect(scopeB(carA)).toBeInstanceOf(Car);
+        expect(carA()).toBeInstanceOf(Car);
+        expect(scopeB(carA)).not.toBe(carA());
+
+    })
+
     it('should create singleton',()=>{
 
         const scope=createScope();
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car());
+        scope.provideForType(car,()=>new Car());
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -86,13 +134,31 @@ describe('Scope',()=>{
 
     })
 
+    it('should create using fluent',()=>{
+
+        const scope=createScope();
+
+        const car=scope.defineType<ICar>("car");
+        const statusChecker=scope.defineType<IStatusChecker>("statusChecker");
+
+        scope
+            .provideForType(car,()=>new Car())
+            .andFor(statusChecker);
+
+        expect(car()).toBeInstanceOf(Car);
+        expect(statusChecker()).toBeInstanceOf(Car);
+
+        expect(car()).toBe(statusChecker());
+
+    })
+
     it('should create factory',()=>{
 
         const scope=createScope();
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,{
+        scope.provideForType(car,{
             provider:()=>new Car(),
             isFactory:true
         });
@@ -114,9 +180,9 @@ describe('Scope',()=>{
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car('a'));
-        scope.provideType(car,()=>new Car('b'));
-        scope.provideType(car,()=>new Car('c'));
+        scope.provideForType(car,()=>new Car('a'));
+        scope.provideForType(car,()=>new Car('b'));
+        scope.provideForType(car,()=>new Car('c'));
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -133,9 +199,9 @@ describe('Scope',()=>{
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car('a'),'fast');
-        scope.provideType(car,()=>new Car('b'));
-        scope.provideType(car,()=>new Car('c'),['fast','first']);
+        scope.provideForType(car,()=>new Car('a'),'fast');
+        scope.provideForType(car,()=>new Car('b'));
+        scope.provideForType(car,()=>new Car('c'),['fast','first']);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -152,9 +218,9 @@ describe('Scope',()=>{
 
         const car=scope.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car('a'),'fast');
-        scope.provideType(car,()=>new Car('b'));
-        parent.provideType(car,()=>new Car('c'),['fast','first']);
+        scope.provideForType(car,()=>new Car('a'),'fast');
+        scope.provideForType(car,()=>new Car('b'));
+        parent.provideForType(car,()=>new Car('c'),['fast','first']);
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -170,29 +236,96 @@ describe('Scope',()=>{
 
         const car=scope.defineObservable<ICar>("car");
 
-        expect(car()).toBeInstanceOf(BehaviorSubject);
+        expect(car()).toBeUndefined()
+        expect(car.subject).toBeInstanceOf(BehaviorSubject);
 
         let carValue:ICar|undefined=undefined;
-        const sub=car().subscribe(v=>{
+        const sub=car.subject.subscribe(v=>{
             carValue=v;
         })
 
         expect(carValue).toBeUndefined();
 
         const carA=new Car();
-        car().next(carA);
+        car.subject.next(carA);
         expect(carValue).toBe(carA);
+        expect(car()).toBe(carA);
 
         const carB=new Car();
-        car().next(carB);
+        car.subject.next(carB);
         expect(carValue).toBe(carB);
+        expect(car()).toBe(carB);
 
-        car().next(undefined);
+        car.subject.next(undefined);
         expect(carValue).toBeUndefined();
+        expect(car()).toBeUndefined();
 
         sub.unsubscribe();
-        car().next(new Car());
+        const carC=new Car();
+        car.subject.next(carC);
         expect(carValue).toBeUndefined();
+        expect(car()).toBe(carC);
+
+    })
+
+    it('should get direct scoped observable',()=>{
+
+        const scopeA=createScope();
+        const scopeB=createScope();
+
+        const car=scopeA.defineObservable<ICar>("car",()=>new Car());
+
+        expect(car.subject).toBeInstanceOf(BehaviorSubject);
+
+        const carA=scopeA(car);
+        const carB=scopeB(car);
+
+        expect(carA).toBeInstanceOf(Car);
+        expect(carB).toBeInstanceOf(Car);
+
+        expect(scopeA.subject(car)).toBeInstanceOf(BehaviorSubject);
+        expect(scopeB.subject(car)).toBeInstanceOf(BehaviorSubject);
+
+        expect(scopeA.subject(car)).toBe(scopeA.subject(car));
+        expect(scopeA.subject(car)).not.toBe(scopeB.subject(car));
+
+    })
+
+    it('should create observable',()=>{
+
+        const scope=createScope();
+
+        const car=scope.defineObservable<ICar>("car");
+
+        expect(car()).toBeUndefined()
+        expect(car.subject).toBeInstanceOf(BehaviorSubject);
+
+        let carValue:ICar|undefined=undefined;
+        const sub=car.subject.subscribe(v=>{
+            carValue=v;
+        })
+
+        expect(carValue).toBeUndefined();
+
+        const carA=new Car();
+        car.subject.next(carA);
+        expect(carValue).toBe(carA);
+        expect(car()).toBe(carA);
+
+        const carB=new Car();
+        car.subject.next(carB);
+        expect(carValue).toBe(carB);
+        expect(car()).toBe(carB);
+
+        car.subject.next(undefined);
+        expect(carValue).toBeUndefined();
+        expect(car()).toBeUndefined();
+
+        sub.unsubscribe();
+        const carC=new Car();
+        car.subject.next(carC);
+        expect(carValue).toBeUndefined();
+        expect(car()).toBe(carC);
 
     })
 
@@ -200,32 +333,39 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const setCar=createSetter<Car|undefined>();
+        const setCar=createScopedSetter<Car|undefined>(scope);
         const car=scope.defineReadonlyObservable("car",setCar);
 
-        expect(car()).toBeInstanceOf(BehaviorSubject);
+
+        expect(car()).toBeUndefined()
+        expect(car.subject).toBeInstanceOf(BehaviorSubject);
 
         let carValue:ICar|undefined=undefined;
-        const sub=car().subscribe(v=>{
+        const sub=car.subject.subscribe(v=>{
             carValue=v;
         })
 
         expect(carValue).toBeUndefined();
 
         const carA=new Car();
-        setCar(globalDeps,carA);
+        setCar(carA);
         expect(carValue).toBe(carA);
+        expect(car()).toBe(carA);
 
         const carB=new Car();
-        setCar(globalDeps,carB);
+        setCar(carB);
         expect(carValue).toBe(carB);
+        expect(car()).toBe(carB);
 
-        setCar(globalDeps,undefined);
+        setCar(undefined);
         expect(carValue).toBeUndefined();
+        expect(car()).toBeUndefined();
 
         sub.unsubscribe();
-        setCar(globalDeps,new Car());
+        const carC=new Car();
+        setCar(carC);
         expect(carValue).toBeUndefined();
+        expect(car()).toBe(carC);
 
     })
 
@@ -236,7 +376,7 @@ describe('Scope',()=>{
 
         const car=dec.defineType<ICar>("car");
 
-        scope.provideType(car,()=>new Car());
+        scope.provideForType(car,()=>new Car());
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -264,8 +404,8 @@ describe('Scope',()=>{
 
         const car=scopeA.defineType<ICar>("car");
 
-        scopeA.provideType(car,()=>new Car('a'));
-        scopeB.provideType(car,()=>new Car('b'));
+        scopeA.provideForType(car,()=>new Car('a'));
+        scopeB.provideForType(car,()=>new Car('b'));
 
         expect(car()).toBeInstanceOf(Car);
         expect(car().name).toBe('a');
@@ -285,13 +425,13 @@ describe('Scope',()=>{
         const car2=scopeA.defineType<ICar>("car");
         const car3=scopeA.defineType<ICar>("car");
 
-        scopeA.provideType(car1,()=>new Car('A1'));
-        scopeA.provideType(car2,()=>new Car('A2'));
-        scopeA.provideType(car3,()=>new Car('A3'));
+        scopeA.provideForType(car1,()=>new Car('A1'));
+        scopeA.provideForType(car2,()=>new Car('A2'));
+        scopeA.provideForType(car3,()=>new Car('A3'));
 
-        scopeB.provideType(car1,()=>new Car('B1'));
-        scopeB.provideType(car2,()=>new Car('B2'));
-        scopeB.provideType(car3,()=>new Car('B3'));
+        scopeB.provideForType(car1,()=>new Car('B1'));
+        scopeB.provideForType(car2,()=>new Car('B2'));
+        scopeB.provideForType(car3,()=>new Car('B3'));
 
         const [mapped1,mapped2,mapped3]=scopeB.map(car1,car2,car3);
 

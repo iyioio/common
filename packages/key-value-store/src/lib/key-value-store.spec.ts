@@ -1,4 +1,4 @@
-import { DependencyContainer, shortUuid, uuid } from '@iyio/common';
+import { createScope, shortUuid, uuid } from '@iyio/common';
 import { IKeyValueStore } from './key-value-store-types';
 import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
@@ -82,8 +82,8 @@ const createMemoryStore=()=>new MemoryStore<Person>({cloneValues:true});
 
 const createRouterStore=(mountPath:string)=>{
 
-    const deps=new DependencyContainer();
-    const store=new RouterStore(deps);
+    const scope=createScope();
+    const store=new RouterStore(scope);
 
     store.mount(mountPath,createMemoryStore);
 

@@ -1,10 +1,14 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, User, UserAuthProviderData, usr } from '@iyio/app-common';
-import { AWS_REGION, IAwsAuth } from '@iyio/aws';
-import { DependencyContainer, HashMap, parseConfigBool } from '@iyio/common';
+import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, currentUser, IAuthProvider, User, UserAuthProviderData } from '@iyio/app-common';
+import { awsRegionParam, IAwsAuth } from '@iyio/aws';
+import { HashMap, parseConfigBool, Scope } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
-import { COGNITO_IDENTITY_POOL_ID, COGNITO_USER_POOL_CLIENT_ID, COGNITO_USER_POOL_ID } from './_config.aws-credential-providers';
+import {
+    cognitoIdentityPoolIdParam,
+    cognitoUserPoolClientIdParam,
+    cognitoUserPoolIdParam
+} from './_types.aws-credential-providers';
 
 const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
 
@@ -26,34 +30,31 @@ export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
 export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
 {
 
-    public static configFromDeps(deps:DependencyContainer):CognitoAuthProviderConfig{
-        return {
-            UserPoolId:COGNITO_USER_POOL_ID.require(deps),
-            ClientId:COGNITO_USER_POOL_CLIENT_ID.require(deps),
-            identityPoolId:COGNITO_IDENTITY_POOL_ID.require(deps),
-            region:AWS_REGION.require(deps),
-        }
+    public static fromScope(scope:Scope){
+        return new CognitoAuthProvider({
+            UserPoolId:scope(cognitoUserPoolIdParam),
+            ClientId:scope(cognitoUserPoolClientIdParam),
+            identityPoolId:scope(cognitoIdentityPoolIdParam),
+            region:scope(awsRegionParam),
+        });
     }
 
     public readonly type='CognitoAuthProvider';
 
-    private readonly config:CognitoAuthProviderConfig;
+    public readonly config:Readonly<CognitoAuthProviderConfig>;
 
     private readonly userPool:CognitoUserPool;
 
-    constructor(config:CognitoAuthProviderConfig|DependencyContainer)
+    constructor(config:CognitoAuthProviderConfig)
     {
-        if(config instanceof DependencyContainer){
-            config=CognitoAuthProvider.configFromDeps(config);
-        }
         this.userPool=new CognitoUserPool(config);
         this.config=config;
     }
 
     private readonly providerMap:HashMap<Provider<Credentials>>={};
-    public getAuthProvider(deps?:DependencyContainer):Provider<Credentials>|undefined
+    public getAuthProvider(scope:Scope):Provider<Credentials>|undefined
     {
-        const user=usr(deps);
+        const user=scope(currentUser);
         if(!user){
             return undefined;
         }

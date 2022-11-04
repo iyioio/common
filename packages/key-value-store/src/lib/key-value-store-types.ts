@@ -1,4 +1,4 @@
-import { CancelToken, IOpDisposable, ListPointer, Query, TypeRef, ValuePointer } from "@iyio/common";
+import { CancelToken, IOpDisposable, ListPointer, Query, TypeDef, ValuePointer } from "@iyio/common";
 
 export type KeyValueStoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';
 
@@ -36,7 +36,7 @@ export interface KeyValueStoreScope extends KeyValueStoreKeyScope
 
 export interface KeyValueStoreProvider<T=any> extends KeyValueStoreScope
 {
-    providerType:TypeRef<IKeyValueStore<T>>;
+    providerType:TypeDef<IKeyValueStore<T>>;
 }
 
 export interface CreateKeyValueResult<T=any>

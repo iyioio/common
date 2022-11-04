@@ -1,4 +1,4 @@
-import { CancelToken, DependencyContainer, DisposedError, ListPointer, Query, UnsupportedError, ValuePointer } from "@iyio/common";
+import { CancelToken, DisposedError, ListPointer, Query, Scope, UnsupportedError, ValuePointer } from "@iyio/common";
 import { isKeyStoreScopeMatch } from "./key-value-store-lib";
 import { CreateKeyValueResult, IKeyValueStore, KeyValueStoreMatch, KeyValueStoreOp, KeyValueStoreOpMethods, KeyValueStoreProvider } from "./key-value-store-types";
 
@@ -7,7 +7,7 @@ interface StoreRoute
     path:string;
     depId?:symbol;
     provider?:KeyValueStoreProvider;
-    create?:(deps:DependencyContainer)=>IKeyValueStore;
+    create?:(scope:Scope)=>IKeyValueStore;
     store?:IKeyValueStore;
 }
 
@@ -19,15 +19,15 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
     private readonly routes:StoreRoute[]=[];
 
-    private readonly deps:DependencyContainer;
+    private readonly scope:Scope;
 
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
 
-    public constructor(deps:DependencyContainer)
+    public constructor(scope:Scope)
     {
-        this.deps=deps;
+        this.scope=scope;
     }
 
     public dispose()
@@ -54,7 +54,7 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
     }
 
 
-    public mount(path:string,provider:IKeyValueStore|KeyValueStoreProvider|((deps:DependencyContainer)=>IKeyValueStore),depId?:symbol)
+    public mount(path:string,provider:IKeyValueStore|KeyValueStoreProvider|((scope:Scope)=>IKeyValueStore),depId?:symbol)
     {
 
         if(path.startsWith('/')){
@@ -106,9 +106,9 @@ export class RouterStore implements IKeyValueStore, Required<KeyValueStoreOpMeth
 
             if(!route.store){
                 if(route.create){
-                    route.store=route.create(this.deps);
+                    route.store=route.create(this.scope);
                 }else if(route.provider && isKeyStoreScopeMatch(routeKey,route.provider,op)){
-                    route.store=this.deps.get(route.provider.providerType);
+                    route.store=this.scope.require(route.provider.providerType);
                 }
             }
 

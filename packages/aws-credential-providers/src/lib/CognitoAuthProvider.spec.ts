@@ -1,8 +1,8 @@
-import { auth, IAuthProviderRef } from "@iyio/app-common";
-import { DependencyContainer, EnvConfig, registerConfig, shortUuid } from "@iyio/common";
-import { MemoryStore, store } from "@iyio/key-value-store";
-import { CognitoAuthProvider } from './CognitoAuthProvider';
-import { COGNITO_IDENTITY_POOL_ID, COGNITO_USER_POOL_CLIENT_ID, COGNITO_USER_POOL_ID } from './_config.aws-credential-providers';
+import { authService } from "@iyio/app-common";
+import { createScope, EnvValueProvider, shortUuid } from "@iyio/common";
+import { MemoryStore, storeService } from "@iyio/key-value-store";
+import { bootCognitoAuthProvider } from './_boot.aws-credential-providers';
+import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 
 describe('CognitoAuthProvider',()=>{
 
@@ -11,25 +11,29 @@ describe('CognitoAuthProvider',()=>{
 
     it('should get config from env',()=>{
 
-        const deps=new DependencyContainer();
-        registerConfig(deps,new EnvConfig());
+        const scope=createScope();
+        scope.provideValues(new EnvValueProvider());
 
-        expect(COGNITO_IDENTITY_POOL_ID.get(deps)).toBeTruthy();
-        expect(COGNITO_USER_POOL_CLIENT_ID.get(deps)).toBeTruthy();
-        expect(COGNITO_USER_POOL_ID.get(deps)).toBeTruthy();
+        expect(scope(cognitoIdentityPoolIdParam)).toBeTruthy();
+        expect(scope(cognitoUserPoolClientIdParam)).toBeTruthy();
+        expect(scope(cognitoUserPoolIdParam)).toBeTruthy();
     })
 
     it('should register user',async ()=>{
 
-        const deps=new DependencyContainer();
-        registerConfig(deps,new EnvConfig());
-        const provider=new CognitoAuthProvider(deps)
-        deps.registerValue(IAuthProviderRef,provider);
-        store(deps).mount('/',new MemoryStore());
+        const scope=createScope();
+        scope.provideValues(new EnvValueProvider());
+
+        bootCognitoAuthProvider(scope);
+
+        const store=scope(storeService);
+        const auth=scope(authService);
+
+        store.mount('/',new MemoryStore());
 
         console.log(`Registering ${email}, ${password}`);
 
-        const result=await auth(deps).registerEmailPasswordAsync(email,password);
+        const result=await auth.registerEmailPasswordAsync(email,password);
 
         if(result.status!=='success'){
             console.log(result);
@@ -37,7 +41,7 @@ describe('CognitoAuthProvider',()=>{
             return;
         }
 
-        const deleteResult=await auth(deps).deleteAsync(result.user);
+        const deleteResult=await auth.deleteAsync(result.user);
         if(deleteResult.status==='error'){
             fail('Failed to delete user');
             return;
@@ -52,3 +56,5 @@ describe('CognitoAuthProvider',()=>{
 
 
 })
+
+

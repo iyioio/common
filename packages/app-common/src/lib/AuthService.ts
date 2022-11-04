@@ -1,35 +1,63 @@
-import { breakFunction, continueFunction, DependencyContainer, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail } from "@iyio/common";
-import { store } from "@iyio/key-value-store";
+import { breakFunction, continueFunction, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail, ReadonlySubject, Scope, ScopedSetter, TypeDef } from "@iyio/common";
+import { RouterStore, storeService } from "@iyio/key-value-store";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
 import { User } from "./User";
-import { setUsr } from "./_internal.app-common";
-import { IAuthProviderRef } from "./_ref.app-common";
-import { usr } from "./_service.app-common";
+import { _setUser } from "./_internal.app-common";
+import { currentUser, IAuthProviderType } from "./_types.app-common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 
-export class Auth implements IDisposable, IInit
+export interface AuthServiceOptions
 {
+    currentUser:ReadonlySubject<User|null>;
+    setUser:ScopedSetter<User|null>;
+    providers:TypeDef<IAuthProvider>;
+    store:RouterStore;
+}
+
+export class AuthService implements IDisposable, IInit
+{
+
+    public static fromScope(scope:Scope){
+        return new AuthService({
+            currentUser:scope.subject(currentUser),
+            setUser:scope(_setUser),
+            providers:scope.to(IAuthProviderType),
+            store:scope(storeService)
+        })
+    }
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
     protected readonly disposables:DisposeContainer=new DisposeContainer();
 
-    private readonly deps:DependencyContainer;
 
     private readonly providers:HashMap<Promise<IAuthProvider>>={};
 
-    private getUser(){return usr(this.deps)}
+    private readonly currentUser:ReadonlySubject<User|null>;
+    private readonly setUser:ScopedSetter<User|null>;
 
-    public constructor(deps:DependencyContainer)
+    private readonly store:RouterStore;
+
+    private readonly authProviders:TypeDef<IAuthProvider>;
+
+    public constructor({
+        currentUser,
+        setUser,
+        providers,
+        store
+    }:AuthServiceOptions)
     {
-        this.deps=deps;
+        this.currentUser=currentUser;
+        this.setUser=setUser;
+        this.authProviders=providers;
+        this.store=store;
     }
 
 
     public async init():Promise<void>
     {
-        const userData=await store(this.deps).getAsync<UserAuthProviderData>(providerDataKey);
+        const userData=await this.store.getAsync<UserAuthProviderData>(providerDataKey);
 
         if(userData){
             const provider=await this.getProviderAsync(userData.type);
@@ -38,7 +66,7 @@ export class Auth implements IDisposable, IInit
                 await this.setUserAsync(user,false);
             }
         }else{
-            await this.deps.forEachAsync(IAuthProviderRef,null,async p=>{
+            await this.authProviders.forEachAsync(null,async p=>{
                 const user=await p.getCurrentUser?.();
                 if(user){
                     await this.setUserAsync(user,false);
@@ -61,7 +89,7 @@ export class Auth implements IDisposable, IInit
 
     public async getUserAsync(providerData:UserAuthProviderData):Promise<User|undefined>
     {
-        return await this.deps.getFirstAsync(IAuthProviderRef,providerData.type,async provider=>{
+        return await this.authProviders.getFirstAsync(null,async provider=>{
             return await provider.getUserAsync?.(providerData);
         }) ?? undefined;
     }
@@ -73,7 +101,7 @@ export class Auth implements IDisposable, IInit
             if(this._isDisposed){
                 return undefined;
             }
-            const provider=this.deps.getAll(IAuthProviderRef,type)[0];
+            const provider=this.authProviders.get(type);
             if(!provider){
                 return undefined;
             }
@@ -89,7 +117,7 @@ export class Auth implements IDisposable, IInit
 
     public async deleteAsync(user:User):Promise<AuthDeleteResult>
     {
-        return await this.deps.getFirstAsync(IAuthProviderRef,user.providerData.type,async provider=>{
+        return await this.authProviders.getFirstAsync(null,async provider=>{
             return await provider.deleteAsync?.(user);
         }) ?? {
             status:'error',
@@ -106,7 +134,7 @@ export class Auth implements IDisposable, IInit
             }
         }
         return await this.handlerSignInResultAsync(
-            await this.deps.getFirstAsync(IAuthProviderRef,null,async provider=>{
+            await this.authProviders.getFirstAsync(null,async provider=>{
                 return await provider.signInEmailPasswordAsync?.(email,password);
             })
         );
@@ -121,7 +149,7 @@ export class Auth implements IDisposable, IInit
             }
         }
         return await this.handlerRegisterResultAsync(
-            await this.deps.getFirstAsync(IAuthProviderRef,null,async provider=>{
+            await this.authProviders.getFirstAsync(null,async provider=>{
                 return await provider.registerEmailPasswordAsync?.(email,password);
             })
         );
@@ -129,7 +157,7 @@ export class Auth implements IDisposable, IInit
 
     public async signOutAsync():Promise<void>
     {
-        const user=this.getUser();
+        const user=this.currentUser.value;
         if(!user){
             return;
         }
@@ -182,16 +210,16 @@ export class Auth implements IDisposable, IInit
 
     private async setUserAsync(user:User|null,save:boolean)
     {
-        if(!user && !usr(this.deps)){
+        if(!user && !this.currentUser.value){
             return;
         }
         if(save){
             if(user){
-                await store(this.deps).putAsync<UserAuthProviderData>(providerDataKey,user.providerData);
+                await this.store.putAsync<UserAuthProviderData>(providerDataKey,user.providerData);
             }else{
-                await store(this.deps).deleteAsync(providerDataKey);
+                await this.store.deleteAsync(providerDataKey);
             }
         }
-        setUsr(this.deps,user);
+        this.setUser(user);
     }
 }

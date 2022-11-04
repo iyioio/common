@@ -51,3 +51,11 @@ easy to find code of importance.
 - _ref.* - Used to define TypeRefs
 - _reg.* - Used to register TypeRef implementation
 - _service.* - Used to define global services and subjects
+
+## Naming conventions
+- services - {name}Service
+- observables - current{name}
+- parameter / config - {name}Param
+- setters - _set{name}
+- providers - {full type name}Type
+- other - {full type name}Type

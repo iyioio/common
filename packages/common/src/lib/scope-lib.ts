@@ -1,20 +1,40 @@
 import { BehaviorSubject } from "rxjs";
 import { asArray } from "./array";
+import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
-import { parseConfigBool } from "./config";
 import { TypeProviderNotFoundError } from "./errors";
-import { ReadonlySubject } from "./rxjs-types";
-import { Scope, TypeDef, TypeProvider, TypeProviderOptions, ValueProvider } from "./scope-types";
-import { Setter } from "./Setter";
-import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ReadonlyObservableTypeDef, Scope, TypeDef, TypeProvider, TypeProviderOptions, ValueProvider } from "./scope-types";
+import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
+import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
 interface TypeProviderInternal
 {
     readonly type:TypeDef<any>;
     readonly provider:TypeProvider<any>;
     readonly tags:string[];
-    readonly isFactory:boolean;
-    value?:any;
+}
+
+const isTypeDefSymbol=Symbol('isTypeDefSymbol');
+
+export const isTypeDef=(value:any):value is TypeDef<any>=>(value && value[isTypeDefSymbol])?true:false;
+
+interface DefineTypeOptions<T>
+{
+    name:string;
+    defaultValue?:T;
+    defaultStaticValue?:T;
+    valueConverter?:(str:string)=>T;
+    id?:symbol;
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>;
+    createSubject?:boolean;
+    subjectDefault?:TypeProvider<T>;
+    subjectSetter?:Setter<T>|ScopedSetter<T>;
+}
+
+interface ScopeInternal
+{
+    [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
+    [isTypeDefSymbol]:boolean;
 }
 
 export const createScope=(parent?:Scope):Scope=>
@@ -22,38 +42,51 @@ export const createScope=(parent?:Scope):Scope=>
 
     const providerMap:SymHashMap<TypeProviderInternal[]>={};
 
-    const types:SymHashMap={};
+    const types:SymHashMap<TypeDef<any>>={};
 
-    const self=<T>(type:TypeDef<T>):T=>require(type);
+    const self=<T>(typeOrSetter:TypeDef<T>|Setter<T>|ScopedSetter<T>,tag?:string):T|ScopedSetter<T>=>{
+        if(isSetterOrScopedSetter(typeOrSetter)){
+            if(isScopedSetter(typeOrSetter)){
+                return createScopedSetter(scope,typeOrSetter.setter);
+            }else{
+                return createScopedSetter(scope,typeOrSetter);
+            }
+        }else{
+            return require(typeOrSetter as TypeDef<T>,tag);
+        }
+    }
 
-    const require=<T>(type:TypeDef<T>):T=>
+    const require=<T>(type:TypeDef<T>,tag?:string):T=>
     {
-        const value=get(type);
+        const value=get(type,tag);
         if(value===undefined){
+            if((type as ObservableTypeDef<T>).subject){
+                return undefined as T;
+            }
             throw new TypeProviderNotFoundError(`type = ${type.typeName}`)
         }
         return value;
     }
 
 
-    const getValue=(provider:TypeProviderInternal|undefined):any=>
-    {
-        if(!provider){
-            return undefined;
-        }
-        if(provider.value!==undefined){
-            return provider.value;
-        }
-        const value=provider.provider(scope);
-        if(!provider.isFactory){
-            provider.value=value;
-        }
-        return value;
-    }
+    const getProviderValue=(provider:TypeProviderInternal|undefined):any=>provider?.provider(scope);
 
-    const getProvider=(type:TypeDef<any>):TypeProviderInternal|undefined=>
+    const getProvider=(type:TypeDef<any>,tag?:string):TypeProviderInternal|undefined=>
     {
-        return providerMap[type.id]?.[0];
+        const providers=providerMap[type.id];
+        if(tag){
+            if(!providers){
+                return undefined;
+            }
+            for(const p of providers){
+                if(p.tags.includes(tag)){
+                    return p;
+                }
+            }
+            return undefined;
+        }else{
+            return providers?providers[providers.length-1]:undefined;
+        }
     }
 
     const getProvidedValue=(name:string):string|undefined=>{
@@ -62,7 +95,7 @@ export const createScope=(parent?:Scope):Scope=>
             return undefined;
         }
         for(const p of providers){
-            const valueP:ValueProvider|HashMap<string>=getValue(p);
+            const valueP:ValueProvider|HashMap<string>=getProviderValue(p);
             if(typeof valueP.getValue === 'function'){
                 const value=valueP.getValue(name);
                 if(value!==undefined){
@@ -78,7 +111,29 @@ export const createScope=(parent?:Scope):Scope=>
         return parent?.getProvidedValue(name);
     }
 
-    const get=<T>(type:TypeDef<T>):T|undefined=>{
+    const requireProvidedValue=(name:string):string=>{
+        const value=getProvidedValue(name);
+        if(value===undefined){
+            throw new Error(`Unable to get provided param value - ${name}`)
+        }
+        return value;
+    }
+
+    const subject=<T>(type:ObservableTypeDef<T>|ReadonlyObservableTypeDef<T>):BehaviorSubject<T>=>{
+        if(type.scope!==scope){
+            return subject(to(type));
+        }
+        return type.subject as BehaviorSubject<T>;
+    }
+
+    const getType=(id:symbol):TypeDef<any>|undefined=>types[id];
+
+    const get=<T>(type:TypeDef<T>,tag?:string):T|undefined=>{
+
+        if(type.scope!==scope){
+            return get(to(type));
+        }
+
         const staticValue=type[TypeDefStaticValue];
 
         if(staticValue!==undefined){
@@ -93,7 +148,7 @@ export const createScope=(parent?:Scope):Scope=>
             return type[TypeDefDefaultValue];
         }
 
-        let value=getValue(getProvider(type));
+        let value=getProviderValue(getProvider(type,tag));
 
         if(value===undefined){
             if(parent){
@@ -116,7 +171,7 @@ export const createScope=(parent?:Scope):Scope=>
                 if(tag!==undefined && !p.tags.includes(tag)){
                     continue;
                 }
-                const value=getValue(p);
+                const value=getProviderValue(p);
                 if(value!==undefined){
                     values.push(value);
                 }
@@ -131,16 +186,81 @@ export const createScope=(parent?:Scope):Scope=>
         return values;
     }
 
-    const to=<T>(type:TypeDef<T>):TypeDef<T>=>
+    const forEach=<T>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>void|boolean|FunctionLoopControl):void=>
     {
-        const existing=types[type.id];
-        if(existing){
-            return existing;
+        const providers=providerMap[typeRef.id];
+        if(!providers){
+            return;
         }
-        const scopedType=_defineType<T>(type.typeName,type[TypeDefDefaultValue],type.valueConverter,type.id);
-        scopedType[TypeDefStaticValue]=type[TypeDefStaticValue];
-        return scopedType;
+        for(const p of providers){
+            if(tag && !p.tags.includes(tag)){
+                continue;
+            }
+            if(shouldBreakFunction(callback(getProviderValue(p),scope))){
+                break;
+            }
+        }
     }
+
+    const forEachAsync=async <T>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<void|boolean|FunctionLoopControl>):Promise<void>=>
+    {
+        const providers=providerMap[typeRef.id];
+        if(!providers){
+            return;
+        }
+        for(const p of providers){
+            if(tag && !p.tags.includes(tag)){
+                continue;
+            }
+            if(shouldBreakFunction(await callback(getProviderValue(p),scope))){
+                break;
+            }
+        }
+    }
+
+    const getFirst=<T,TValue>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl):TValue|undefined=>
+    {
+        const providers=providerMap[typeRef.id];
+        if(!providers){
+            return undefined;
+        }
+        for(const p of providers){
+            if(tag && !p.tags.includes(tag)){
+                continue;
+            }
+            const value=callback(getProviderValue(p),scope);
+            if(shouldBreakFunction(value)){
+                break;
+            }
+            if(value!==false && value!==continueFunction){
+                return value as TValue;
+            }
+        }
+        return undefined;
+    }
+
+    const getFirstAsync=async <T,TValue>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>):Promise<TValue|undefined>=>
+    {
+        const providers=providerMap[typeRef.id];
+        if(!providers){
+            return undefined;
+        }
+        for(const p of providers){
+            if(tag && !p.tags.includes(tag)){
+                continue;
+            }
+            const value=await callback(getProviderValue(p),scope);
+            if(shouldBreakFunction(value)){
+                break;
+            }
+            if(value!==false && value!==continueFunction){
+                return value as TValue;
+            }
+        }
+        return undefined;
+    }
+
+    const to=<T,D extends TypeDef<T>>(type:D):D=>type.clone(scope) as D;
 
     const map=<T extends TypeDef<any>[]>(...types:T):T=>{
         const mapped:TypeDef<any>[]=[];
@@ -152,43 +272,135 @@ export const createScope=(parent?:Scope):Scope=>
         return mapped as T;
     }
 
-    const _defineType=<T>(name:string,defaultValue?:T,valueConverter?:(str:string)=>T,id?:symbol):TypeDef<T>=>
-    {
-        const type=()=>require(typeDef);
-        type.id=id??Symbol(name);
-        type.typeName=name;
-        type.scope=scope;
-        type.get=()=>get(typeDef);
-        type.all=(tag?:string)=>getAll(typeDef,tag);
-        type.require=type;
-        type.valueConverter=valueConverter;
-        if(defaultValue!==undefined){
-            (type as any)[TypeDefDefaultValue]=defaultValue;
+    const _defineType=<T>({
+        name,
+        defaultValue,
+        id=Symbol(),
+        valueConverter,
+        defaultProvider,
+        createSubject,
+        subjectDefault,
+        subjectSetter
+    }:DefineTypeOptions<T>):TypeDef<T>=>{
+        if(types[id]){
+            return types[id];
         }
-        const typeDef:TypeDef<T>=type;
-        types[type.id]=type;
+        const typeSelf=(tag?:string)=>require(typeDef,tag);
+        typeSelf.clone=(scope:Scope):TypeDef<T>=>(
+            (scope as unknown as ScopeInternal)[ScopeDefineType]({
+                name,
+                defaultValue,
+                valueConverter,
+                id,
+                defaultProvider,
+                createSubject,
+                subjectDefault,
+                subjectSetter
+            })
+        )
+        typeSelf.id=id;
+        typeSelf.typeName=name;
+        typeSelf.scope=scope;
+        typeSelf.get=(tag?:string)=>get(typeDef,tag);
+        typeSelf.all=(tag?:string)=>getAll(typeDef,tag);
+        typeSelf.forEach=(tag:string|null|undefined,callback:(value:T,scope:Scope)=>void|boolean|FunctionLoopControl)=>scope.forEach<T>(typeDef,tag,callback);
+        typeSelf.forEachAsync=(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<void|boolean|FunctionLoopControl>)=>scope.forEachAsync<T>(typeDef,tag,callback);
+        typeSelf.getFirstAsync=<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>)=>scope.getFirstAsync<T,TValue>(typeDef,tag,callback);
+        typeSelf.getFirst=<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl)=>scope.getFirst<T,TValue>(typeDef,tag,callback);
+        typeSelf.require=(tag?:string)=>require(typeDef,tag);
+        typeSelf.valueConverter=valueConverter;
+        if(defaultValue!==undefined){
+            (typeSelf as any)[TypeDefDefaultValue]=defaultValue;
+        }
+        const typeDef:TypeDef<T>=typeSelf;
+        types[id]=typeSelf;
+        if(defaultProvider){
+            provideForType(typeDef,defaultProvider);
+        }
+        if(createSubject){
+            const subject=new BehaviorSubject<T>(subjectDefault?.(scope) as any);
+            typeSelf.subject=subject;
+            subject.subscribe(v=>(typeSelf as TypeDef<T>)[TypeDefStaticValue]=v);
+            if(subjectSetter){
+                subjectSetter.subject.subscribe(v=>{
+                    if(v.scope===scope){
+                        subject.next(v.value)
+                    }
+                });
+            }
+            (typeSelf as TypeDef<T>)[TypeDefStaticValue]=subjectDefault?.(scope);
+        }
         return typeDef;
     }
 
-    const defineType=<T>(name:string):TypeDef<T>=>_defineType(name);
+    const defineType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>=>(
+        _defineType<T>({name,defaultProvider})
+    )
 
-    const provideType=<T>(type:TypeDef<T>,provider:TypeProvider<T>|TypeProviderOptions<T>,tags:string|string[]=[]):void=>
+    const defineObservable=<T>(name:string,defaultValue?:TypeProvider<T>):ObservableTypeDef<T>=>
+    (
+        _defineType({
+            name,
+            createSubject:true,
+            subjectDefault:defaultValue,
+        }) as ObservableTypeDef<T>
+    )
+
+    const defineReadonlyObservable=<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue?:TypeProvider<T>):ReadonlyObservableTypeDef<T>=>
+    (
+        _defineType({
+            name,
+            createSubject:true,
+            subjectDefault:defaultValue,
+            subjectSetter:setter,
+        }) as ReadonlyObservableTypeDef<T>
+    )
+
+    const provideValues=(valueProvider:ValueProvider|HashMap<string>):void=>
     {
+        provideForType(vp,()=>valueProvider);
+    }
+
+    const defineValue=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>
+    (
+        _defineType<T>({
+            name,
+            defaultValue,
+            valueConverter:valueConverter?str=>valueConverter(str,scope):(str=>JSON.parse(str))
+        })
+    )
+
+    const defineString=(name:string,defaultValue?:string):TypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
+
+    const defineNumber=(name:string,defaultValue?:number):TypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
+
+    const defineBool=(name:string,defaultValue?:boolean):TypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
+
+
+
+    const provideForType=<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags:string|string[]=[]
+    ):FluentTypeProvider<P>=>{
+
         let providers=providerMap[type.id];
         if(!providers){
             providers=[];
             providerMap[type.id]=providers;
         }
 
+        let cached:T|undefined=undefined;
+        let sourceProvider:TypeProvider<P>;
+        let isFactory:boolean;
         tags=[...asArray(tags)]
+
         if(typeof provider === 'function'){
-            providers.push({
-                type,
-                provider,
-                tags,
-                isFactory:false,
-            })
+            sourceProvider=provider;
+            isFactory=false;
         }else{
+            sourceProvider=provider.provider;
+            isFactory=provider.isFactory??false;
             if(provider.tags){
                 for(const t of provider.tags){
                     tags.push(t);
@@ -197,57 +409,68 @@ export const createScope=(parent?:Scope):Scope=>
             if(provider.tag){
                 tags.push(provider.tag);
             }
-            providers.push({
-                type,
-                provider:provider.provider,
-                tags,
-                isFactory:provider.isFactory??false,
-
-            })
         }
+        const _provider:TypeProvider<T>=(scope)=>{
+            if(isFactory){
+                return sourceProvider(scope);
+            }
+            if(cached!==undefined){
+                return cached;
+            }
+            cached=sourceProvider(scope);
+            return cached;
+        }
+
+        providers.push({
+            type,
+            provider:_provider,
+            tags,
+        })
+
+        const fluent:FluentTypeProvider<P>={
+            andFor<T>(
+                type:TypeDef<FluentProviderType<T,P>>,
+                tags:string|string[]=[]
+            ):FluentTypeProvider<P>{
+
+                tags=asArray(tags);
+
+                let providers=providerMap[type.id];
+                if(!providers){
+                    providers=[];
+                    providerMap[type.id]=providers;
+                }
+                providers.push({
+                    type,
+                    provider:_provider,
+                    tags,
+                })
+
+                return fluent;
+            },
+            getValue(){
+                return _provider(scope) as P
+            }
+        }
+        return fluent;
     }
-
-    const defineObservable=<T>(name:string,defaultValue:T):TypeDef<BehaviorSubject<T>>=>
-    {
-        const subject=new BehaviorSubject<T>(defaultValue);
-        const type=defineType<BehaviorSubject<T>>(name);
-        type[TypeDefStaticValue]=subject;
-        return type;
-    }
-
-    const defineReadonlyObservable=<T>(name:string,setter:Setter<T>,defaultValue:T):TypeDef<ReadonlySubject<T>>=>
-    {
-        const subject=new BehaviorSubject<T>(defaultValue);
-        const type=defineType<ReadonlySubject<T>>(name);
-        type[TypeDefStaticValue]=subject;
-        setter.subject.subscribe(v=>subject.next(v.value));
-        return type;
-    }
-
-    const provideValues=(valueProvider:ValueProvider|HashMap<string>):void=>
-    {
-        provideType(vp,()=>valueProvider);
-    }
-
-    const defineValue=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>
-    (
-        _defineType<T>(name,defaultValue,valueConverter?str=>valueConverter(str,scope):(str=>JSON.parse(str)))
-    )
-
-    const defineString=(name:string,defaultValue?:string):TypeDef<string>=>_defineType<string>(name,defaultValue,str=>str);
-
-    const defineNumber=(name:string,defaultValue?:number):TypeDef<number>=>_defineType<number>(name,defaultValue,str=>Number(str));
-
-    const defineBool=(name:string,defaultValue?:boolean):TypeDef<boolean>=>_defineType<boolean>(name,defaultValue,parseConfigBool);
 
 
     self.require=require;
     self.get=get;
+    self.getType=getType;
     self.getAll=getAll;
+    self.forEach=forEach;
+    self.forEachAsync=forEachAsync;
+    self.getFirstAsync=getFirstAsync;
+    self.getFirst=getFirst;
+    self.subject=subject;
     self.to=to;
     self.map=map;
     self.defineType=defineType;
-    self.provideType=provideType;
+    self.provideForType=provideForType;
+    self.provideForService=provideForType;
+    self.requireProvidedValue=requireProvidedValue;
     self.defineObservable=defineObservable as any;
     self.defineReadonlyObservable=defineReadonlyObservable as any;
     self.provideValues=provideValues;
@@ -258,6 +481,9 @@ export const createScope=(parent?:Scope):Scope=>
     self.defineBool=defineBool;
     self.parent=parent;
 
+    (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
+    (self as unknown as ScopeInternal)[isTypeDefSymbol]=true;
+
     const scope:Scope=self;
 
     return scope;
@@ -266,27 +492,34 @@ export const createScope=(parent?:Scope):Scope=>
 export const rootScope=createScope();
 const vp=rootScope.defineType<ValueProvider|HashMap<string>>('vp')
 
-export const defineType=<T>(name:string):TypeDef<T>=>rootScope.defineType<T>(name);
+export const defineType=<T>(
+    name:string,
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
+    :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
-export const provideType=<T>(type:TypeDef<T>,provider:TypeProvider<T>|TypeProviderOptions<T>,tags:string|string[]=[]):void=>(
-    rootScope.provideType<T>(type,provider,tags)
+export const provideForType=<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags:string|string[]=[]
+    ):FluentTypeProvider<P>=>(
+    rootScope.provideForType<T,P>(type,provider,tags)
 );
 
 interface defineObservableOverloads
 {
-    <T>(name:string,defaultValue:T):TypeDef<BehaviorSubject<T>>;
-    <T>(name:string):TypeDef<BehaviorSubject<T|undefined>>;
+    <T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
+    <T>(name:string):ObservableTypeDef<T|undefined>;
 }
-export const defineObservable=(<T>(name:string,defaultValue:T):TypeDef<BehaviorSubject<T>>=>(
+export const defineObservable=(<T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>=>(
     rootScope.defineObservable(name,defaultValue)
 )) as defineObservableOverloads;
 
 interface defineReadonlyObservableOverloads
 {
-    <T>(name:string,setter:Setter<T>,defaultValue:T):TypeDef<ReadonlySubject<T>>;
-    <T>(name:string,setter:Setter<T>):TypeDef<ReadonlySubject<T|undefined>>;
+    <T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue:TypeProvider<T>):ReadonlyObservableTypeDef<T>;
+    <T>(name:string,setter:Setter<T>|ScopedSetter<T>):ReadonlyObservableTypeDef<T|undefined>;
 }
-export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>,defaultValue:T):TypeDef<ReadonlySubject<T>>=>(
+export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue:TypeProvider<T>):ReadonlyObservableTypeDef<T>=>(
     rootScope.defineReadonlyObservable(name,setter,defaultValue)
 )) as defineReadonlyObservableOverloads;
 

@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client, S3ClientConfig } from "@aws-sdk/client-s3";
-import { AWS_REGION, IAwsAuthRef } from '@iyio/aws';
-import { CancelToken, DependencyContainer } from "@iyio/common";
+import { awsRegionParam, IAwsAuthType } from '@iyio/aws';
+import { CancelToken, Scope } from "@iyio/common";
 import { BaseStore, BinaryStoreValue } from "@iyio/key-value-store";
 
 export interface S3StoreConfig
@@ -11,26 +11,27 @@ export interface S3StoreConfig
 export class S3Store<T=any> extends BaseStore<T>
 {
 
-    public static clientConfigFromDeps(deps:DependencyContainer):S3ClientConfig{
-        return {
-            region:AWS_REGION.require(deps),
-            credentials:deps.get(IAwsAuthRef)?.getAuthProvider(deps),
-        }
+    public static fromScope<T=any>(scope:Scope,config:S3StoreConfig)
+    {
+        return new S3Store<T>({
+            region:scope(awsRegionParam),
+            credentials:scope.get(IAwsAuthType)?.getAuthProvider(scope)
+        },config)
     }
 
     public readonly client:S3Client;
 
     public readonly bucket:string;
 
-    public constructor(clientConfig:S3ClientConfig|DependencyContainer,{
+    public readonly clientConfig:Readonly<S3ClientConfig>;
+
+    public constructor(clientConfig:S3ClientConfig,{
         bucket
     }:S3StoreConfig){
         super();
-        if(clientConfig instanceof DependencyContainer){
-            clientConfig=S3Store.clientConfigFromDeps(clientConfig);
-        }
         this.bucket=bucket;
         this.client=new S3Client(clientConfig);
+        this.clientConfig=clientConfig;
     }
 
     public async getAsync(key:string,cancel?:CancelToken):Promise<T|undefined>
