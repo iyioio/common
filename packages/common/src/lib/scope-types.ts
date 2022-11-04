@@ -6,12 +6,23 @@ import { ReadonlySubject } from "./rxjs-types";
 import { ScopedSetter, Setter } from "./Setter";
 import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
-export interface ObservableTypeDef<T> extends TypeDef<T>
+
+export interface CallableTypeDef<T> extends TypeDef<T>
+{
+
+    /**
+     * Provides a value for the type. If no matching provider is found by the scope of the type
+     * an error will be thrown.
+     */
+    (tag?:string):T;
+}
+
+export interface ObservableTypeDef<T> extends CallableTypeDef<T>
 {
     readonly subject:BehaviorSubject<T>;
 }
 
-export interface ReadonlyObservableTypeDef<T> extends TypeDef<T>
+export interface ReadonlyObservableTypeDef<T> extends CallableTypeDef<T>
 {
     readonly subject:ReadonlySubject<T>;
 }
@@ -52,12 +63,6 @@ export interface TypeDef<T>
      * Clones the type
      */
     readonly clone:(scope:Scope)=>TypeDef<T>;
-
-    /**
-     * Provides a value for the type. If no matching provider is found by the scope of the type
-     * an error will be thrown.
-     */
-    (tag?:string):T;
 
     /**
      * Provides a value for the type. If no matching provider is found by the scope of the type
@@ -196,6 +201,11 @@ export interface Scope
     defineType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>;
 
     /**
+     * Defines a new type
+     */
+    defineService<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>;
+
+    /**
      * Defines a type with an observable value
      */
     defineObservable<T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
@@ -235,22 +245,22 @@ export interface Scope
      * Defines a type that has its value provided by a value provider. If no valueConverted is
      * provided JSON.parse will be used.
      */
-    defineParam<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>;
+    defineParam<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>;
 
     /**
      * Defines a type that has its value provided as a string by a value provider.
      */
-    defineStringParam(name:string,defaultValue?:string):TypeDef<string>;
+    defineStringParam(name:string,defaultValue?:string):CallableTypeDef<string>;
 
     /**
      * Defines a type that has its value provided as a number by a value provider.
      */
-    defineNumberParam(name:string,defaultValue?:number):TypeDef<number>;
+    defineNumberParam(name:string,defaultValue?:number):CallableTypeDef<number>;
 
     /**
      * Defines a type that has its value provided as a boolean by a value provider.
      */
-    defineBoolParam(name:string,defaultValue?:boolean):TypeDef<boolean>;
+    defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
 }
 
 /**

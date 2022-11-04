@@ -4,7 +4,7 @@ import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { TypeProviderNotFoundError } from "./errors";
-import { FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
+import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
@@ -282,9 +282,9 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         createSubject,
         subjectDefault,
         subjectSetter
-    }:DefineTypeOptions<T>):TypeDef<T>=>{
+    }:DefineTypeOptions<T>):CallableTypeDef<T>=>{
         if(types[id]){
-            return types[id];
+            return types[id] as CallableTypeDef<T>;
         }
         const typeSelf=(tag?:string)=>require(typeDef,tag);
         typeSelf.clone=(scope:Scope):TypeDef<T>=>(
@@ -313,7 +313,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         if(defaultValue!==undefined){
             (typeSelf as any)[TypeDefDefaultValue]=defaultValue;
         }
-        const typeDef:TypeDef<T>=typeSelf;
+        const typeDef:CallableTypeDef<T>=typeSelf;
         types[id]=typeSelf;
         if(defaultProvider){
             provideForType(typeDef,defaultProvider);
@@ -334,7 +334,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         return typeDef;
     }
 
-    const defineType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>=>(
+    const defineType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
         _defineType<T>({name,defaultProvider})
     )
 
@@ -362,7 +362,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         provideForType(vp,()=>valueProvider);
     }
 
-    const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>
+    const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>
     (
         _defineType<T>({
             name,
@@ -371,11 +371,11 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         })
     )
 
-    const defineStringParam=(name:string,defaultValue?:string):TypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
+    const defineStringParam=(name:string,defaultValue?:string):CallableTypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
 
-    const defineNumberParam=(name:string,defaultValue?:number):TypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
+    const defineNumberParam=(name:string,defaultValue?:number):CallableTypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
 
-    const defineBoolParam=(name:string,defaultValue?:boolean):TypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
+    const defineBoolParam=(name:string,defaultValue?:boolean):CallableTypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
 
 
 
@@ -488,6 +488,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     self.to=to;
     self.map=map;
     self.defineType=defineType;
+    self.defineService=defineType;
     self.defineObservable=defineObservable as any;
     self.defineReadonlyObservable=defineReadonlyObservable as any;
     self.getParam=getParam as any;
@@ -627,6 +628,11 @@ export const defineType=<T>(
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
+export const defineService=<T>(
+    name:string,
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
+    :CallableTypeDef<T>=>rootScope.defineService<T>(name,defaultProvider);
+
 interface defineObservableOverloads
 {
     <T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
@@ -645,19 +651,19 @@ export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>|ScopedSe
     rootScope.defineReadonlyObservable(name,setter,defaultValue)
 )) as defineReadonlyObservableOverloads;
 
-export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):TypeDef<T>=>(
+export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>(
     rootScope.defineParam(name,valueConverter,defaultValue)
 )
 
-export const defineStringParam=(name:string,defaultValue?:string):TypeDef<string>=>(
+export const defineStringParam=(name:string,defaultValue?:string):CallableTypeDef<string>=>(
     rootScope.defineStringParam(name,defaultValue)
 )
 
-export const defineNumberParam=(name:string,defaultValue?:number):TypeDef<number>=>(
+export const defineNumberParam=(name:string,defaultValue?:number):CallableTypeDef<number>=>(
     rootScope.defineNumberParam(name,defaultValue)
 )
 
-export const defineBoolParam=(name:string,defaultValue?:boolean):TypeDef<boolean>=>(
+export const defineBoolParam=(name:string,defaultValue?:boolean):CallableTypeDef<boolean>=>(
     rootScope.defineBoolParam(name,defaultValue)
 )
 

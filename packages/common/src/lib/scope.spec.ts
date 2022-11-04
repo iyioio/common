@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { createScope, defineType, EnvValueProvider } from './scope-lib';
+import { createScope, defineService, EnvValueProvider } from './scope-lib';
 import { Scope } from './scope-types';
 import { createScopedSetter } from './Setter';
 
@@ -50,12 +50,12 @@ class Car implements ICar, IStatusChecker
 
 }
 
-const ICarType=defineType<ICar>("ICarType");
-const ICarType1=defineType<ICar>("ICarType1");
-const ICarType2=defineType<ICar>("ICarType2");
-const ICarType3=defineType<ICar>("ICarType3");
+const ICarType=defineService<ICar>("ICarType");
+const ICarType1=defineService<ICar>("ICarType1");
+const ICarType2=defineService<ICar>("ICarType2");
+const ICarType3=defineService<ICar>("ICarType3");
 
-const IStatusCheckerType=defineType<IStatusChecker>("IStatusCheckerType");
+const IStatusCheckerType=defineService<IStatusChecker>("IStatusCheckerType");
 
 interface JsonData
 {
@@ -91,7 +91,7 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const car=scope.defineType<ICar>("car",()=>new Car());
+        const car=scope.defineService<ICar>("car",()=>new Car());
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -102,7 +102,7 @@ describe('Scope',()=>{
         const scopeA=createScope();
         const scopeB=createScope();
 
-        const carA=scopeA.defineType<ICar>("car",()=>new Car());
+        const carA=scopeA.defineService<ICar>("car",()=>new Car());
         const carB=scopeB.to(carA);
 
         expect(carB()).toBeInstanceOf(Car);
@@ -116,7 +116,7 @@ describe('Scope',()=>{
         const scopeA=createScope();
         const scopeB=createScope();
 
-        const carA=scopeA.defineType<ICar>("car",()=>new Car());
+        const carA=scopeA.defineService<ICar>("car",()=>new Car());
 
         expect(scopeB(carA)).toBeInstanceOf(Car);
         expect(carA()).toBeInstanceOf(Car);
