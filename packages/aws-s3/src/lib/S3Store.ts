@@ -15,7 +15,7 @@ export class S3Store<T=any> extends BaseStore<T>
     {
         return new S3Store<T>({
             region:awsRegionParam(scope),
-            credentials:scope.get(IAwsAuthType)?.getAuthProvider(scope)
+            credentials:scope.get(IAwsAuthType)?.getAuthProvider()
         },config)
     }
 

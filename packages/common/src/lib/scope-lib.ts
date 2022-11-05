@@ -845,7 +845,7 @@ export const getParam=((name:string,defaultValue?:string):string|undefined=>(
 
 export const requireParam=(name:string)=>rootScope.requireParam(name);
 
-export class EnvValueProvider implements ParamProvider
+export class EnvParamProvider implements ParamProvider
 {
 
     public readonly autoPrefix?:string;

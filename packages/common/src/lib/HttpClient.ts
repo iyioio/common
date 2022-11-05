@@ -1,17 +1,17 @@
 import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { HttpBaseUrlPrefixNotFoundError } from "./errors";
-import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
+import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, IHttpRequestSigner } from "./http-types";
 import { JwtProvider } from "./jwt";
 import { deleteUndefined } from "./object";
 import { Scope, TypeDef } from "./scope-types";
-import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, HttpFetcherType, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, HttpRequestSignerType, httpRetryDelayMsParam, JwtProviderType } from "./_types.common";
+import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam, IHttpFetcherType, IHttpRequestSignerType, JwtProviderType } from "./_types.common";
 
 export interface HttpClientOptions
 {
     baseUrlMap?:HashMap<string>;
 
-    signers?:TypeDef<HttpRequestSigner>;
+    signers?:TypeDef<IHttpRequestSigner>;
 
     fetchers?:TypeDef<HttpFetcher>;
 
@@ -44,9 +44,9 @@ export class HttpClient
 
         return {
             baseUrlMap,
-            signers:scope.to(HttpRequestSignerType),
+            signers:scope.to(IHttpRequestSignerType),
             jwtProviders:scope.to(JwtProviderType),
-            fetchers:scope.to(HttpFetcherType),
+            fetchers:scope.to(IHttpFetcherType),
             baseUrlPrefix:scope.get(httpBaseUrlPrefixParam)??'@',
             logRequests:scope.get(httpLogRequestsParam),
             logResponses:scope.get(httpLogResponsesParam),
@@ -66,7 +66,7 @@ export class HttpClient
     {
         this.options={...options};
         if(!options.fetchers){
-            options.fetchers=HttpFetcherType;
+            options.fetchers=IHttpFetcherType;
         }
     }
 
@@ -150,6 +150,10 @@ export class HttpClient
             try{
                 response=await fetcher.fetchAsync(baseRequest);
 
+                if(returnFetchResponse){
+                    return response as any;
+                }
+
                 if(response.status==404 && returnUndefinedFor404){
                     return undefined;
                 }
@@ -174,10 +178,6 @@ export class HttpClient
 
         if(!response.ok){
             throw new Error(`Request failed with a status of ${response.status}. uri=${uri}`)
-        }
-
-        if(returnFetchResponse){
-            return response as any;
         }
 
         if(!parseResponse || !response.headers.get('Content-Type')?.includes('/json')){

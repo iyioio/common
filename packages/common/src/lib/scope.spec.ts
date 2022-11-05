@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
-import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, EnvValueProvider, initRootScope, rootScope } from './scope-lib';
+import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, EnvParamProvider, initRootScope, rootScope } from './scope-lib';
 import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
 import { ScopeReset } from './_internal.common';
@@ -528,7 +528,7 @@ describe('Scope',()=>{
     it('should provide values using env',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvValueProvider())
+            reg.provideParams(new EnvParamProvider())
         });
 
         testValues(scope);
@@ -537,7 +537,7 @@ describe('Scope',()=>{
     it('should provide values using env with NX_ prefix',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvValueProvider())
+            reg.provideParams(new EnvParamProvider())
         });
 
         testValues(scope,'_T2');

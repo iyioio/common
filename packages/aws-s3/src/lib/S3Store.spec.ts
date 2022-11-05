@@ -1,5 +1,5 @@
 import { useTempCognitoUser, _allIssuedCognitoCreds } from "@iyio/aws-credential-providers";
-import { createScope, EnvValueProvider, Scope, shortUuid, uuid } from "@iyio/common";
+import { createScope, EnvParamProvider, Scope, shortUuid, uuid } from "@iyio/common";
 import { S3Store } from './S3Store';
 
 describe('S3Store', () => {
@@ -42,7 +42,7 @@ describe('S3Store', () => {
     it('should put, get and delete', async () => {
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvValueProvider());
+            reg.provideParams(new EnvParamProvider());
         });
 
         await putGetDeleteAsync(scope);
@@ -52,7 +52,7 @@ describe('S3Store', () => {
     it('should put, get and delete with cognito user',async ()=>{
 
         await useTempCognitoUser(reg=>{
-            reg.provideParams(new EnvValueProvider());
+            reg.provideParams(new EnvParamProvider());
         },async scope=>{
 
             const {config}=await putGetDeleteAsync(scope);

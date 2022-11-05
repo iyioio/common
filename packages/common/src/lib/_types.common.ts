@@ -1,5 +1,5 @@
 import { HashMap } from "./common-types";
-import { HttpFetcher, HttpRequestSigner } from "./http-types";
+import { HttpFetcher, IHttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
@@ -12,8 +12,8 @@ export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
 // HTTP
 
 export const http=defineService<HttpClient>('http',scope=>HttpClient.fromScope(scope));
-export const HttpRequestSignerType=defineType<HttpRequestSigner>('HttpRequestSigner');
-export const HttpFetcherType=defineType<HttpFetcher>('HttpFetcher',()=>new HttpDefaultFetcher());
+export const IHttpRequestSignerType=defineType<IHttpRequestSigner>('IHttpRequestSignerType');
+export const IHttpFetcherType=defineType<HttpFetcher>('IHttpFetcherType',()=>new HttpDefaultFetcher());
 
 export const httpBaseUrlMapParam=defineParam<HashMap<string>>('HTTP_BASE_URL_MAP',stringToHashMap);
 export const httpBaseUrlPrefixParam=defineStringParam('HTTP_BASE_URL_PREFIX');

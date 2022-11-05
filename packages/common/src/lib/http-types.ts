@@ -9,7 +9,7 @@ export interface BaseHttpRequest
     headers?:{[name:string]:string};
 }
 
-export interface HttpRequestSigner
+export interface IHttpRequestSigner
 {
     canSign(request:BaseHttpRequest):boolean;
 

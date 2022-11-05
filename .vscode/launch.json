@@ -1,16 +1,31 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Debug tests single run",
-      "type": "node",
-      "request": "launch",
-      "env": { "CI": "true" },
-      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
-      "args": [],
-      "cwd": "${workspaceRoot}/packages/node-common",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "node-common tests",
+            "type": "node",
+            "request": "launch",
+            "env": {
+                "CI": "true"
+            },
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+            "args": [],
+            "cwd": "${workspaceRoot}/packages/node-common",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "aws-tests tests",
+            "type": "node",
+            "request": "launch",
+            "env": {
+                "CI": "true"
+            },
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+            "args": [],
+            "cwd": "${workspaceRoot}/packages/aws-tests",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        }
+    ]
 }

@@ -2,7 +2,7 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, currentUser, IAuthProvider, User, UserAuthProviderData } from '@iyio/app-common';
 import { awsRegionParam, IAwsAuth } from '@iyio/aws';
-import { HashMap, parseConfigBool, Scope } from '@iyio/common';
+import { HashMap, parseConfigBool, ReadonlySubject, Scope } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import {
     cognitoIdentityPoolIdParam,
@@ -25,6 +25,7 @@ export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
 {
     region:string;
     identityPoolId:string;
+    currentUser:ReadonlySubject<User|null>;
 }
 
 export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
@@ -36,6 +37,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
             ClientId:cognitoUserPoolClientIdParam(scope),
             identityPoolId:cognitoIdentityPoolIdParam(scope),
             region:awsRegionParam(scope),
+            currentUser:scope.subject(currentUser)
         });
     }
 
@@ -45,16 +47,19 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
 
     private readonly userPool:CognitoUserPool;
 
+    private readonly currentUser:ReadonlySubject<User|null>;
+
     constructor(config:CognitoAuthProviderConfig)
     {
         this.userPool=new CognitoUserPool(config);
         this.config=config;
+        this.currentUser=config.currentUser;
     }
 
     private readonly providerMap:HashMap<Provider<Credentials>>={};
-    public getAuthProvider(scope:Scope):Provider<Credentials>|undefined
+    public getAuthProvider():Provider<Credentials>|undefined
     {
-        const user=currentUser(scope);
+        const user=this.currentUser.value;
         if(!user){
             return undefined;
         }
