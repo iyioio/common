@@ -13,8 +13,9 @@ export interface CallableTypeDef<T> extends TypeDef<T>
     /**
      * Provides a value for the type. If no matching provider is found by the scope of the type
      * an error will be thrown.
+     * @param scope If provided the returned value will be scoped to the provided scope
      */
-    (tag?:string):T;
+    (scope?:Scope):T;
 }
 
 export interface ObservableTypeDef<T> extends CallableTypeDef<T>
@@ -126,13 +127,18 @@ export interface Scope
     isInited():boolean;
 
     /**
-     * Returns a scoped value for the given type. This is an alias of the to method.
+     * Returns an array of types scoped to this scope
      */
-    <T>(type:TypeDef<T>,tag?:string):T;
+    map<T extends TypeDef<any>[]>(...types:T):T;
 
-    <T>(setter:Setter<T>):ScopedSetter<T>;
+    /**
+     * Returns a new type scoped to this scope
+     */
+    to<T,D extends TypeDef<T>>(type:D):D;
 
-    <T>(setter:ScopedSetter<T>):ScopedSetter<T>;
+    to<T>(setter:Setter<T>):ScopedSetter<T>;
+
+    to<T>(setter:ScopedSetter<T>):ScopedSetter<T>;
 
     /**
      * Creates a scope with the current scope as its parent. Child scope will fallback to getting
@@ -188,16 +194,6 @@ export interface Scope
     getFirstAsync<T,TValue>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>):Promise<TValue|undefined>;
 
     getFirst<T,TValue>(typeRef:TypeDef<T>,tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl):TValue|undefined;
-
-    /**
-     * Returns a new type scoped to this scope
-     */
-    to<T,D extends TypeDef<T>>(type:D):D;
-
-    /**
-     * Returns an array of types scoped to this scope
-     */
-    map<T extends TypeDef<any>[]>(...types:T):T;
 
     /**
      * Returns a provided string value by name.

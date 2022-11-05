@@ -16,9 +16,9 @@ describe('CognitoAuthProvider',()=>{
         });
 
 
-        expect(scope(cognitoIdentityPoolIdParam)).toBeTruthy();
-        expect(scope(cognitoUserPoolClientIdParam)).toBeTruthy();
-        expect(scope(cognitoUserPoolIdParam)).toBeTruthy();
+        expect(cognitoIdentityPoolIdParam(scope)).toBeTruthy();
+        expect(cognitoUserPoolClientIdParam(scope)).toBeTruthy();
+        expect(cognitoUserPoolIdParam(scope)).toBeTruthy();
     })
 
     it('should register user',async ()=>{
@@ -28,8 +28,8 @@ describe('CognitoAuthProvider',()=>{
             cognitoAuthProviderModule(reg);
         });
 
-        const store=scope(storeService);
-        const auth=scope(authService);
+        const store=storeService(scope);
+        const auth=authService(scope);
 
         store.mount('/',new MemoryStore());
 

@@ -21,9 +21,9 @@ export class AuthService implements IDisposable, IInit
     public static fromScope(scope:Scope){
         return new AuthService({
             currentUser:scope.subject(currentUser),
-            setUser:scope(_setUser),
+            setUser:scope.to(_setUser),
             providers:scope.to(IAuthProviderType),
-            store:scope(storeService)
+            store:scope.require(storeService)
         })
     }
 

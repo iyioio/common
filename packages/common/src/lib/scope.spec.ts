@@ -121,9 +121,9 @@ describe('Scope',()=>{
 
         const carA=scopeA.to(defineService<ICar>("car",()=>new Car()));
 
-        expect(scopeB(carA)).toBeInstanceOf(Car);
+        expect(carA(scopeB)).toBeInstanceOf(Car);
         expect(carA()).toBeInstanceOf(Car);
-        expect(scopeB(carA)).not.toBe(carA());
+        expect(carA(scopeB)).not.toBe(carA());
 
     })
 
@@ -139,7 +139,7 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const car=scope(ICarTypeWithDefault);
+        const car=ICarTypeWithDefault(scope);
 
         expect(car).toBeInstanceOf(Car);
 
@@ -309,8 +309,8 @@ describe('Scope',()=>{
 
         expect(car.subject).toBeInstanceOf(BehaviorSubject);
 
-        const carA=scopeA(car);
-        const carB=scopeB(car);
+        const carA=car(scopeA);
+        const carB=car(scopeB);
 
         expect(carA).toBeInstanceOf(Car);
         expect(carB).toBeInstanceOf(Car);
@@ -440,7 +440,7 @@ describe('Scope',()=>{
 
         expect(car()).toBeInstanceOf(Car);
         expect(car().name).toBe('a');
-        expect(scopeB(car).name).toBe('b');
+        expect(car(scopeB).name).toBe('b');
         expect(scopeB.to(car).require().name).toBe('b');
 
         expect(scopeB.to(car)).toBe(scopeB.to(car))
@@ -493,12 +493,11 @@ describe('Scope',()=>{
         const log=defineBoolParam('TEST_LOG'+suffix);
         const data=defineParam<JsonData>('TEST_JSON_DATA'+suffix);
 
-        expect(scope(host)).toBe(hostValue);
-        expect(scope(port)).toBe(portValue);
-        expect(scope(log)).toBe(logValue);
-        expect(scope(data)).toEqual(dataValue);
-
-        expect(scope(data)).toBe(scope(data));
+        expect(host(scope)).toBe(hostValue);
+        expect(port(scope)).toBe(portValue);
+        expect(log(scope)).toBe(logValue);
+        expect(data(scope)).toEqual(dataValue);
+        expect(data(scope)).toBe(data(scope));
 
     }
 

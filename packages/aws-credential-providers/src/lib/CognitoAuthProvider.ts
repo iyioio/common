@@ -32,10 +32,10 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
 
     public static fromScope(scope:Scope){
         return new CognitoAuthProvider({
-            UserPoolId:scope(cognitoUserPoolIdParam),
-            ClientId:scope(cognitoUserPoolClientIdParam),
-            identityPoolId:scope(cognitoIdentityPoolIdParam),
-            region:scope(awsRegionParam),
+            UserPoolId:cognitoUserPoolIdParam(scope),
+            ClientId:cognitoUserPoolClientIdParam(scope),
+            identityPoolId:cognitoIdentityPoolIdParam(scope),
+            region:awsRegionParam(scope),
         });
     }
 
@@ -54,7 +54,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
     private readonly providerMap:HashMap<Provider<Credentials>>={};
     public getAuthProvider(scope:Scope):Provider<Credentials>|undefined
     {
-        const user=scope(currentUser);
+        const user=currentUser(scope);
         if(!user){
             return undefined;
         }

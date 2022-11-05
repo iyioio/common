@@ -13,14 +13,14 @@ describe('MemoryAuthProvider',()=>{
         const scope=createScope(reg=>{
             reg.provideForType(IAuthProviderType,()=>new MemoryAuthProvider());
         });
-        scope(storeService).mount('/',new MemoryStore())
+        storeService(scope).mount('/',new MemoryStore())
 
         return scope;
     }
 
     const registerAsync=async (scope:Scope,email:string,password:string,keepSignedIn:boolean)=>{
 
-        const auth=scope(authService);
+        const auth=scope.require(authService);
         const result=await auth.registerEmailPasswordAsync(email,password);
         expect(result.status).toBe<AuthRegisterStatus>('success');
 
@@ -31,12 +31,12 @@ describe('MemoryAuthProvider',()=>{
         }
 
         expect((await auth.getUserAsync(user.providerData))?.id).toEqual(user.id);
-        const value=scope(currentUser);
+        const value=currentUser(scope);
         expect(value?.id).toEqual(user.id);
 
         if(!keepSignedIn){
             await auth.signOutAsync();
-            expect(scope(currentUser)).toBe(null);
+            expect(currentUser(scope)).toBe(null);
         }
 
         return user;
@@ -64,7 +64,7 @@ describe('MemoryAuthProvider',()=>{
 
         await registerAsync(scope,email,password,false);
 
-        const auth=scope(authService);
+        const auth=scope.require(authService);
         const result=await auth.signInEmailPasswordAsync(email,password);
         expect(result.success).toBe(true);
 
@@ -76,7 +76,7 @@ describe('MemoryAuthProvider',()=>{
 
         await registerAsync(scope,email,password,false);
 
-        const auth=scope(authService);
+        const auth=scope.require(authService);
         const result=await auth.signInEmailPasswordAsync(email,'incorrect!Pa55w0rd!');
         expect(result.success).toBe(false);
 

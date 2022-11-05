@@ -16,7 +16,7 @@ interface TypeProviderInternal
     readonly tags:string[];
 }
 
-interface BaseScopeInternal extends Scope
+interface ScopeInternal extends Scope
 {
     /**
      * Defines a new type
@@ -69,12 +69,9 @@ interface BaseScopeInternal extends Scope
      */
     defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
 
-
-}
-
-interface ScopeInternal extends BaseScopeInternal
-{
     [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
+
+
 }
 
 const isTypeDefSymbol=Symbol('isTypeDefSymbol');
@@ -113,7 +110,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
     const types:SymHashMap<TypeDef<any>>={};
 
-    const self=<T>(typeOrSetter:TypeDef<T>|Setter<T>|ScopedSetter<T>,tag?:string):T|ScopedSetter<T>=>{
+    const to=<T,D extends TypeDef<T>>(typeOrSetter:D|Setter<T>|ScopedSetter<T>):D|ScopedSetter<T>=>{
         if(isSetterOrScopedSetter(typeOrSetter)){
             if(isScopedSetter(typeOrSetter)){
                 return createScopedSetter(scope,typeOrSetter.setter);
@@ -121,7 +118,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                 return createScopedSetter(scope,typeOrSetter);
             }
         }else{
-            return require(typeOrSetter as TypeDef<T>,tag);
+            return toType(typeOrSetter as D);
         }
     }
 
@@ -190,7 +187,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
     const subject=<T>(type:ObservableTypeDef<T>|ReadonlyObservableTypeDef<T>):BehaviorSubject<T>=>{
         if(type.scope!==scope){
-            return subject(to(type));
+            return subject(toType(type));
         }
         return type.subject as BehaviorSubject<T>;
     }
@@ -200,7 +197,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     const get=<T>(type:TypeDef<T>,tag?:string):T|undefined=>{
 
         if(type.scope!==scope){
-            return get(to(type));
+            return get(toType(type));
         }
 
         const staticValue=type[TypeDefStaticValue];
@@ -329,13 +326,13 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         return undefined;
     }
 
-    const to=<T,D extends TypeDef<T>>(type:D):D=>type.clone(scope) as D;
+    const toType=<T,D extends TypeDef<T>>(type:D):D=>type.clone(scope) as D;
 
     const map=<T extends TypeDef<any>[]>(...types:T):T=>{
         const mapped:TypeDef<any>[]=[];
 
         for(const type of types){
-            mapped.push(to(type))
+            mapped.push(toType(type))
         }
 
         return mapped as T;
@@ -354,7 +351,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         if(types[id]){
             return types[id] as CallableTypeDef<T>;
         }
-        const typeSelf=(tag?:string)=>require(typeDef,tag);
+        const typeSelf=(scope?:Scope)=>scope?scope.to(typeDef).require():require(typeDef);
         typeSelf.clone=(scope:Scope):TypeDef<T>=>(
             (scope as unknown as ScopeInternal)[ScopeDefineType]({
                 name,
@@ -558,37 +555,35 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     },cancel);
 
 
-    self.require=require;
-    self.get=get;
-    self.getType=getType;
-    self.getAll=getAll;
-    self.forEach=forEach;
-    self.forEachAsync=forEachAsync;
-    self.getFirstAsync=getFirstAsync;
-    self.getFirst=getFirst;
-    self.subject=subject;
-    self.to=to;
-    self.map=map;
-    self.defineType=defineType;
-    self.defineService=defineType;
-    self.defineObservable=defineObservable as any;
-    self.defineReadonlyObservable=defineReadonlyObservable as any;
-    self.getParam=getParam as any;
-    self.requireParam=requireParam;
-    self.defineParam=defineParam;
-    self.defineStringParam=defineStringParam;
-    self.defineNumberParam=defineNumberParam;
-    self.defineBoolParam=defineBoolParam;
-    self.createChild=createChild;
-    self.recreate=recreate;
-    self.parent=parent;
-    self.isInited=isInited;
-
-    self.initPromise=initPromiseSource.promise;
-
-    (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
-
-    const scope:BaseScopeInternal=self;
+    const scope:ScopeInternal=Object.freeze({
+        require,
+        get,
+        getType,
+        getAll,
+        forEach,
+        forEachAsync,
+        getFirstAsync,
+        getFirst,
+        subject,
+        to,
+        map,
+        defineType,
+        defineService:defineType,
+        defineObservable,
+        defineReadonlyObservable,
+        getParam:getParam as any,
+        requireParam,
+        defineParam,
+        defineStringParam,
+        defineNumberParam,
+        defineBoolParam,
+        createChild,
+        recreate,
+        parent,
+        isInited,
+        initPromise:initPromiseSource.promise,
+        [ScopeDefineType]:_defineType
+    })
 
     const initOptions:InitScopeOptions={
         scope,

@@ -17,14 +17,14 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
             .getValue();
     });
 
-    scope(storeService).mount('/',new MemoryStore());
+    storeService(scope).mount('/',new MemoryStore());
 
     const email=`unit-test.${shortUuid()}@iyio.io`;
     const password='P1!p-'+shortUuid();
 
     console.log(`Registering ${email}, ${password}`);
 
-    const result=await scope(authService).registerEmailPasswordAsync(email,password);
+    const result=await authService(scope).registerEmailPasswordAsync(email,password);
 
     if(result.status!=='success'){
         console.log(result);
@@ -38,7 +38,7 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
 
     }finally{
 
-        const deleteResult=await scope(authService).deleteAsync(result.user);
+        const deleteResult=await authService(scope).deleteAsync(result.user);
         if(deleteResult.status==='error'){
             fail('Failed to delete user');
         }else if(deleteResult.status==='pending'){
