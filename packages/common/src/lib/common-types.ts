@@ -61,3 +61,8 @@ export interface IOpInit
 {
     init?():Promise<void>|void;
 }
+
+export interface OpValueContainer<T>
+{
+    value?:T;
+}

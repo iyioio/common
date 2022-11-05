@@ -7,7 +7,7 @@ import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource, PromiseSource } from "./PromiseSource";
 import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
-import { ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+import { ScopeDefineCallableType, ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
 interface TypeProviderInternal
 {
@@ -70,6 +70,7 @@ interface ScopeInternal extends Scope
     defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
 
     [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
+    [ScopeDefineCallableType]<T>(options:DefineTypeOptions<T>):CallableTypeDef<T>;
 
 
 }
@@ -92,6 +93,7 @@ interface DefineTypeOptions<T>
     createSubject?:boolean;
     subjectDefault?:TypeProvider<T>;
     subjectSetter?:Setter<T>|ScopedSetter<T>;
+    isCallable?:boolean;
 }
 
 
@@ -200,7 +202,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             return get(toType(type));
         }
 
-        const staticValue=type[TypeDefStaticValue];
+        const staticValue=type[TypeDefStaticValue].value;
 
         if(staticValue!==undefined){
             return staticValue;
@@ -209,7 +211,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         if(type.valueConverter){
             const provided=getParam(type.typeName);
             if(provided!==undefined){
-                return type[TypeDefStaticValue]=type.valueConverter(provided);
+                return type[TypeDefStaticValue].value=type.valueConverter(provided);
             }
             return type[TypeDefDefaultValue];
         }
@@ -338,6 +340,35 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         return mapped as T;
     }
 
+    const _defineCallableType=<T>(options:DefineTypeOptions<T>):CallableTypeDef<T>=>
+    {
+        const id=options.id??Symbol();
+        options.id=id;
+        options.isCallable=true;
+        if(types[id]){
+            return types[id] as CallableTypeDef<T>;
+        }
+
+        const typeDef=_defineType(options);
+        const callable=(
+            (scope?:Scope)=>scope?scope.to(callable).require():require(callable)
+        ) as CallableTypeDef<T>;
+
+        for(const e in typeDef){
+            (callable as any)[e]=(typeDef as any)[e];
+        }
+        const symbols=Object.getOwnPropertySymbols(typeDef);
+        for(const s of symbols){
+            (callable as any)[s]=(typeDef as any)[s];
+        }
+
+        Object.freeze(callable);
+
+        types[id]=callable;
+        return callable;
+
+    }
+
     const _defineType=<T>({
         name,
         defaultValue,
@@ -346,47 +377,52 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         defaultProvider,
         createSubject,
         subjectDefault,
-        subjectSetter
-    }:DefineTypeOptions<T>):CallableTypeDef<T>=>{
+        subjectSetter,
+        isCallable
+    }:DefineTypeOptions<T>):TypeDef<T>=>{
         if(types[id]){
-            return types[id] as CallableTypeDef<T>;
+            return types[id];
         }
-        const typeSelf=(scope?:Scope)=>scope?scope.to(typeDef).require():require(typeDef);
-        typeSelf.clone=(scope:Scope):TypeDef<T>=>(
-            (scope as unknown as ScopeInternal)[ScopeDefineType]({
-                name,
-                defaultValue,
-                valueConverter,
-                id,
-                defaultProvider,
-                createSubject,
-                subjectDefault,
-                subjectSetter
-            })
-        )
-        typeSelf.id=id;
-        typeSelf.typeName=name;
-        typeSelf.scope=scope;
-        typeSelf.get=(tag?:string)=>get(typeDef,tag);
-        typeSelf.all=(tag?:string)=>getAll(typeDef,tag);
-        typeSelf.forEach=(tag:string|null|undefined,callback:(value:T,scope:Scope)=>void|boolean|FunctionLoopControl)=>scope.forEach<T>(typeDef,tag,callback);
-        typeSelf.forEachAsync=(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<void|boolean|FunctionLoopControl>)=>scope.forEachAsync<T>(typeDef,tag,callback);
-        typeSelf.getFirstAsync=<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>)=>scope.getFirstAsync<T,TValue>(typeDef,tag,callback);
-        typeSelf.getFirst=<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl)=>scope.getFirst<T,TValue>(typeDef,tag,callback);
-        typeSelf.require=(tag?:string)=>require(typeDef,tag);
-        typeSelf.valueConverter=valueConverter;
-        if(defaultValue!==undefined){
-            (typeSelf as any)[TypeDefDefaultValue]=defaultValue;
+        const typeDef:TypeDef<T>={
+            clone:(scope:Scope):TypeDef<T>=>{
+                const options:DefineTypeOptions<T>={
+                    name,
+                    defaultValue,
+                    valueConverter,
+                    id,
+                    defaultProvider,
+                    createSubject,
+                    subjectDefault,
+                    subjectSetter
+                }
+                if(isCallable){
+                    return (scope as ScopeInternal)[ScopeDefineCallableType](options);
+                }else{
+                    return (scope as ScopeInternal)[ScopeDefineType](options);
+                }
+            },
+            id:id,
+            typeName:name,
+            scope:scope,
+            get:(tag?:string)=>get(typeDef,tag),
+            all:(tag?:string)=>getAll(typeDef,tag),
+            forEach:(tag:string|null|undefined,callback:(value:T,scope:Scope)=>void|boolean|FunctionLoopControl)=>scope.forEach<T>(typeDef,tag,callback),
+            forEachAsync:(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<void|boolean|FunctionLoopControl>)=>scope.forEachAsync<T>(typeDef,tag,callback),
+            getFirstAsync:<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>)=>scope.getFirstAsync<T,TValue>(typeDef,tag,callback),
+            getFirst:<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl)=>scope.getFirst<T,TValue>(typeDef,tag,callback),
+            require:(tag?:string)=>require(typeDef,tag),
+            valueConverter:valueConverter,
+            [TypeDefDefaultValue]:defaultValue,
+            [TypeDefStaticValue]:{},
         }
-        const typeDef:CallableTypeDef<T>=typeSelf;
-        types[id]=typeSelf;
+        types[id]=typeDef;
         if(defaultProvider){
             _provideForType(typeDef,defaultProvider,[],true);
         }
         if(createSubject){
             const subject=new BehaviorSubject<T>(subjectDefault?.(scope) as any);
-            typeSelf.subject=subject;
-            subject.subscribe(v=>(typeSelf as TypeDef<T>)[TypeDefStaticValue]=v);
+            (typeDef as any).subject=subject;
+            subject.subscribe(v=>typeDef[TypeDefStaticValue].value=v);
             if(subjectSetter){
                 subjectSetter.subject.subscribe(v=>{
                     if(v.scope===scope){
@@ -394,18 +430,23 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                     }
                 });
             }
-            (typeSelf as TypeDef<T>)[TypeDefStaticValue]=subjectDefault?.(scope);
+            typeDef[TypeDefStaticValue].value=subjectDefault?.(scope);
         }
+        Object.freeze(typeDef);
         return typeDef;
     }
 
-    const defineType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
+    const defineType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>=>(
         _defineType<T>({name,defaultProvider})
+    )
+
+    const defineService=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
+        _defineCallableType<T>({name,defaultProvider})
     )
 
     const defineObservable=<T>(name:string,defaultValue?:TypeProvider<T>):ObservableTypeDef<T>=>
     (
-        _defineType({
+        _defineCallableType({
             name,
             createSubject:true,
             subjectDefault:defaultValue,
@@ -414,7 +455,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
     const defineReadonlyObservable=<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue?:TypeProvider<T>):ReadonlyObservableTypeDef<T>=>
     (
-        _defineType({
+        _defineCallableType({
             name,
             createSubject:true,
             subjectDefault:defaultValue,
@@ -429,18 +470,18 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
     const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>
     (
-        _defineType<T>({
+        _defineCallableType<T>({
             name,
             defaultValue,
             valueConverter:valueConverter?str=>valueConverter(str,scope):(str=>JSON.parse(str))
         })
     )
 
-    const defineStringParam=(name:string,defaultValue?:string):CallableTypeDef<string>=>_defineType<string>({name,defaultValue,valueConverter:str=>str});
+    const defineStringParam=(name:string,defaultValue?:string):CallableTypeDef<string>=>_defineCallableType<string>({name,defaultValue,valueConverter:str=>str});
 
-    const defineNumberParam=(name:string,defaultValue?:number):CallableTypeDef<number>=>_defineType<number>({name,defaultValue,valueConverter:str=>Number(str)});
+    const defineNumberParam=(name:string,defaultValue?:number):CallableTypeDef<number>=>_defineCallableType<number>({name,defaultValue,valueConverter:str=>Number(str)});
 
-    const defineBoolParam=(name:string,defaultValue?:boolean):CallableTypeDef<boolean>=>_defineType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
+    const defineBoolParam=(name:string,defaultValue?:boolean):CallableTypeDef<boolean>=>_defineCallableType<boolean>({name,defaultValue,valueConverter:parseConfigBool});
 
 
 
@@ -568,7 +609,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         to,
         map,
         defineType,
-        defineService:defineType,
+        defineService,
         defineObservable,
         defineReadonlyObservable,
         getParam:getParam as any,
@@ -582,7 +623,8 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         parent,
         isInited,
         initPromise:initPromiseSource.promise,
-        [ScopeDefineType]:_defineType
+        [ScopeDefineType]:_defineType,
+        [ScopeDefineCallableType]:_defineCallableType,
     })
 
     const initOptions:InitScopeOptions={

@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 import { CancelToken } from "./CancelToken";
 import { FunctionLoopControl } from "./common-lib";
-import { HashMap } from "./common-types";
+import { HashMap, OpValueContainer } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 import { ScopedSetter, Setter } from "./Setter";
 import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
@@ -53,17 +53,17 @@ export interface TypeDef<T>
     /**
      * Used to cache the value of the type
      */
-    [TypeDefStaticValue]?:T;
+    readonly [TypeDefStaticValue]:OpValueContainer<T>;
 
     /**
      * The default value of the type
      */
-    [TypeDefDefaultValue]?:T;
+    readonly [TypeDefDefaultValue]?:T;
 
     /**
      * Clones the type
      */
-    readonly clone:(scope:Scope)=>TypeDef<T>;
+    clone(scope:Scope):TypeDef<T>;
 
     /**
      * Provides a value for the type. If no matching provider is found by the scope of the type
