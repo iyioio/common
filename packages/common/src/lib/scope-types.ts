@@ -122,7 +122,7 @@ export interface Scope
      */
     readonly parent?:Scope;
 
-    readonly initPromise:Promise<void>;
+    getInitPromise():Promise<void>;
 
     isInited():boolean;
 

@@ -1,9 +1,10 @@
 import { BehaviorSubject } from 'rxjs';
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
-import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, EnvValueProvider } from './scope-lib';
+import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, EnvValueProvider, initRootScope, rootScope } from './scope-lib';
 import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
+import { ScopeReset } from './_internal.common';
 
 
 type Speed='fast'|'slow';
@@ -59,6 +60,15 @@ const ICarType3=defineService<ICar>("ICarType3");
 const ICarTypeWithDefault=defineService<ICar>("ICarType3",()=>new Car());
 
 const IStatusCheckerType=defineService<IStatusChecker>("IStatusCheckerType");
+
+
+const ICarTypeRoot1=defineService<ICar>("ICarTypeRoot1");
+const ICarTypeRoot2=defineService<ICar>("ICarTypeRoot1");
+const ICarTypeRootWidthDefault=defineService<ICar>("ICarTypeRoot1",()=>new Car());
+
+const resetScope=(scope:Scope)=>{
+    (scope as any)[ScopeReset]();
+}
 
 interface JsonData
 {
@@ -582,7 +592,7 @@ describe('Scope',()=>{
         log('afterReturn',callIndex);
         afterReturn=callIndex++;
 
-        await scope.initPromise;
+        await scope.getInitPromise();
 
         expect(scope.isInited()).toBe(true);
 
@@ -620,7 +630,7 @@ describe('Scope',()=>{
             }
         });
 
-        await scope.initPromise;
+        await scope.getInitPromise();
 
         expect(reg).toBeTruthy();
 
@@ -630,7 +640,69 @@ describe('Scope',()=>{
         }catch{
             //
         }
+    })
 
+    const testRoot=async (test:()=>Promise<void>|void)=>{
+        try{
+            resetScope(rootScope);
+
+            await test();
+
+        }finally{
+            resetScope(rootScope);
+        }
+    }
+
+    it('should reset root',async ()=>{
+
+        await testRoot(()=>{
+            const check=()=>{
+                expect(ICarTypeRoot1.get()).toBeUndefined();
+                expect(ICarTypeRoot2.get()).toBeUndefined();
+                const defaultCarValue=ICarTypeRootWidthDefault();
+                expect(defaultCarValue).toBeInstanceOf(Car);
+                expect(defaultCarValue).toBe(ICarTypeRootWidthDefault());
+                return defaultCarValue;
+            }
+
+            const a=check();
+
+            resetScope(rootScope);
+
+            const b=check();
+
+            resetScope(rootScope);
+
+            expect(a).not.toBe(b);
+        })
+
+    })
+
+    it('should init root',async ()=>{
+
+
+        testRoot(async ()=>{
+
+            initRootScope(reg=>{
+                reg.provideForType(ICarTypeRoot1,()=>new Car('a'));
+                reg.provideForType(ICarTypeRoot2,()=>new Car('b'));
+                return {
+                    init:async ()=>{
+                        await delayAsync(10)
+                    }
+                }
+            })
+
+            expect(rootScope.isInited()).toBe(false);
+
+            await rootScope.getInitPromise();
+
+            expect(rootScope.isInited()).toBe(true);
+
+            expect(ICarTypeRoot1().name).toBe('a');
+            expect(ICarTypeRoot2().name).toBe('b');
+
+        });
 
     })
 

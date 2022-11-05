@@ -4,13 +4,14 @@ import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
-import { createPromiseSource, PromiseSource } from "./PromiseSource";
+import { createPromiseSource } from "./PromiseSource";
 import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
-import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
 const ScopeDefineType=Symbol('ScopeDefineType');
-const ScopeDefineCallableType=Symbol('ScopeDefineType');
+const ScopeDefineCallableType=Symbol('ScopeDefineCallableType');
+const ScopeInit=Symbol('ScopeInit');
 
 interface TypeProviderInternal
 {
@@ -18,6 +19,11 @@ interface TypeProviderInternal
     readonly provider:TypeProvider<any>;
     readonly tags:string[];
 }
+
+const isTypeDefSymbol=Symbol('isTypeDefSymbol');
+
+export const isTypeDef=(value:any):value is TypeDef<any>=>(value && value[isTypeDefSymbol])?true:false;
+
 
 interface ScopeInternal extends Scope
 {
@@ -72,18 +78,27 @@ interface ScopeInternal extends Scope
      */
     defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
 
+    /**
+     * Exposes the internal defaultType function
+     */
     [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
+
+    /**
+     * Exposes the internal defaultCallableType function
+     */
     [ScopeDefineCallableType]<T>(options:DefineTypeOptions<T>):CallableTypeDef<T>;
+
+    /**
+     * Resets the state of the scope. This function should only be used for testing.
+     */
+    [ScopeReset]():void;
+
+    [ScopeInit](rootModule?:ScopeModule):void;
 
 
 }
 
-const isTypeDefSymbol=Symbol('isTypeDefSymbol');
 
-export const isTypeDef=(value:any):value is TypeDef<any>=>(value && value[isTypeDefSymbol])?true:false;
-
-let rootPromiseSource:PromiseSource<void>|null=null;
-let rootInitScopeOptions:InitScopeOptions|null=null;
 
 interface DefineTypeOptions<T>
 {
@@ -99,21 +114,20 @@ interface DefineTypeOptions<T>
     isCallable?:boolean;
 }
 
+let isCreatingRoot=false;
 
 export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new CancelToken(), parent?:Scope):Scope=>
 {
+    // state vars
+    let providerMap:SymHashMap<TypeProviderInternal[]>={};
+    let types:SymHashMap<TypeDef<any>>={};
+    let initPromiseSource=createPromiseSource<void>();
+    let initCalled=false;
 
-    const initPromiseSource=createPromiseSource<void>();
-    const isRoot=!rootPromiseSource;
-    if(isRoot){
-        rootPromiseSource=initPromiseSource;
-    }
+    const isRoot=isCreatingRoot;
+    isCreatingRoot=false;
 
     const isInited=()=>initPromiseSource.getStatus()==='resolved';
-
-    const providerMap:SymHashMap<TypeProviderInternal[]>={};
-
-    const types:SymHashMap<TypeDef<any>>={};
 
     const to=<T,D extends TypeDef<T>>(typeOrSetter:D|Setter<T>|ScopedSetter<T>):D|ScopedSetter<T>=>{
         if(isSetterOrScopedSetter(typeOrSetter)){
@@ -161,7 +175,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     }
 
     const getParam=(name:string,defaultValue?:string):string|undefined=>{
-        const providers=providerMap[vp.id];
+        const providers=providerMap[ParamProviderType.id];
         if(!providers){
             return undefined;
         }
@@ -468,7 +482,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
     const provideParams=(valueProvider:ParamProvider|HashMap<string>):void=>
     {
-        provideForType(vp,()=>valueProvider);
+        provideForType(ParamProviderType,()=>valueProvider);
     }
 
     const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>
@@ -599,6 +613,41 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     },cancel);
 
 
+
+    const init=(rootModule:ScopeModule|undefined)=>{
+        if(initCalled){
+            throw new Error('Scope already inited');
+        }
+        initCalled=true;
+        if(rootModule){
+            initScopeAsync({
+                scope,
+                cancel,
+                provideForType,
+                provideParams,
+                rootModule
+            }).then(()=>initPromiseSource.resolve()).catch(r=>initPromiseSource.reject(r));
+        }else{
+            initPromiseSource.resolve();
+        }
+    }
+
+    const reset=()=>{
+        const currentTypes=types;
+        providerMap={};
+        types={};
+        initPromiseSource=createPromiseSource<void>();
+        const typeIds=Object.getOwnPropertySymbols(currentTypes);
+        for(const id of typeIds){
+            currentTypes[id].clone(scope);
+        }
+        initCalled=false;
+        if(!isRoot){
+            init(rootModule);
+        }
+    }
+
+
     const scope:ScopeInternal=Object.freeze({
         require,
         get,
@@ -625,26 +674,15 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         recreate,
         parent,
         isInited,
-        initPromise:initPromiseSource.promise,
+        getInitPromise:()=>initPromiseSource.promise,
         [ScopeDefineType]:_defineType,
         [ScopeDefineCallableType]:_defineCallableType,
+        [ScopeReset]:reset,
+        [ScopeInit]:init
     })
 
-    const initOptions:InitScopeOptions={
-        scope,
-        cancel,
-        provideForType,
-        provideParams,
-        rootModule
-    }
-    if(isRoot){
-        rootInitScopeOptions=initOptions;
-    }else if(rootModule){
-        initScopeAsync(initOptions)
-            .then(()=>initPromiseSource.resolve())
-            .catch(r=>initPromiseSource.reject(r));
-    }else{
-        initPromiseSource.resolve();
+    if(!isRoot){
+        init(rootModule);
     }
 
     return scope;
@@ -740,22 +778,16 @@ const initScopeAsync=async ({
     }
 }
 
+
 const rootCancel=new CancelToken();
-export const rootScope=createScope(undefined,rootCancel) as ScopeInternal;
-const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp');
+isCreatingRoot=true;
+export const rootScope=createScope(undefined,rootCancel,undefined) as ScopeInternal;
+isCreatingRoot=false;
+const ParamProviderType=rootScope.defineType<ParamProvider|HashMap<string>>('ParamProvider');
 
 export const initRootScope=(rootModule?:ScopeModule)=>{
-    if(!rootInitScopeOptions || !rootPromiseSource){
-        throw new Error(
-            'Root scope not properly created. rootInitScopeOptions or rootPromiseSource not set');
-    }
-    if(rootInitScopeOptions && rootModule){
-        initScopeAsync(rootInitScopeOptions)
-            .then(()=>rootPromiseSource?.resolve())
-            .catch(r=>rootPromiseSource?.reject(r));
-    }else{
-        rootPromiseSource?.resolve();
-    }
+
+    rootScope[ScopeInit](rootModule);
 }
 
 export const defineType=<T>(
