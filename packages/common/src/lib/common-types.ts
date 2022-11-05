@@ -66,3 +66,5 @@ export interface OpValueContainer<T>
 {
     value?:T;
 }
+
+export type EmptyFunction=()=>void;

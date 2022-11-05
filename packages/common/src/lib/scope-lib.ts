@@ -170,7 +170,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             }
             return undefined;
         }else{
-            return providers?providers[providers.length-1]:undefined;
+            return providers?providers[0]:undefined;
         }
     }
 
@@ -317,7 +317,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             if(shouldBreakFunction(value)){
                 break;
             }
-            if(value!==false && value!==continueFunction){
+            if(value!==false && value!==continueFunction && value!==undefined){
                 return value as TValue;
             }
         }
@@ -559,7 +559,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             return cached;
         }
 
-        providers.push({
+        providers.unshift({
             type,
             provider:_provider,
             tags,
@@ -578,7 +578,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                     providers=[];
                     providerMap[type.id]=providers;
                 }
-                providers.push({
+                providers.unshift({
                     type,
                     provider:_provider,
                     tags,

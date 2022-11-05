@@ -1,0 +1,46 @@
+{
+    "name": "node-common",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/node-common/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/node-common",
+                "main": "packages/node-common/src/index.ts",
+                "tsConfig": "packages/node-common/tsconfig.lib.json",
+                "assets": ["packages/node-common/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs node-common {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/node-common/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/node-common"],
+            "options": {
+                "jestConfig": "packages/node-common/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": ["node"]
+}

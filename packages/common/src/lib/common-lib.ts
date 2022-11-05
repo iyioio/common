@@ -1,3 +1,4 @@
+import { EmptyFunction } from "./common-types";
 
 
 export const isServerSide=typeof (globalThis as any).window === 'undefined';
@@ -38,4 +39,8 @@ export const parseConfigBool=(value:string|null|undefined)=>{
     }
     value=value.toLowerCase();
     return value==='true' || value==='yes' || value==='1';
+}
+
+export const emptyFunction:EmptyFunction=()=>{
+    // do nothing;
 }

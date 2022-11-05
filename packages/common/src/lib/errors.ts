@@ -7,7 +7,8 @@ export enum ErrorType{
     dependencyNotFound=6,
     invalidOverloadCall=7,
     typeProviderNotFoundError=8,
-    scopeInited=9
+    scopeInited=9,
+    httpBaseUrlPrefixNotFoundError=10,
 }
 
 export abstract class BaseError extends Error
@@ -83,5 +84,13 @@ export class ScopeInitedError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.scopeInited,message);
+    }
+}
+
+export class HttpBaseUrlPrefixNotFoundError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.httpBaseUrlPrefixNotFoundError,message);
     }
 }

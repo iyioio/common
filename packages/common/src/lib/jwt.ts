@@ -10,3 +10,8 @@ export const parseJwt=(token:string)=>{
         return null;
     }
 }
+
+/**
+ * Provides a JWT for a given url or undefine if the provider does not have a token for the uri
+ */
+export type JwtProvider=(uri:string)=>string|undefined;
