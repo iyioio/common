@@ -31,7 +31,7 @@ export interface HttpClientOptions
 export class HttpClient
 {
 
-    public static fromScope(scope:Scope):HttpClient{
+    public static optionsFromScope(scope:Scope):HttpClientOptions{
 
         const apiBaseUrl=apiBaseUrlParam.get();
         let baseUrlMap=httpBaseUrlMapParam.get();
@@ -42,7 +42,7 @@ export class HttpClient
             }
         }
 
-        return new HttpClient({
+        return {
             baseUrlMap,
             signers:scope.to(HttpRequestSignerType),
             jwtProviders:scope.to(JwtProviderType),
@@ -52,7 +52,12 @@ export class HttpClient
             logResponses:scope.get(httpLogResponsesParam),
             maxRetries:scope.get(httpMaxRetriesParam),
             retryDelay:scope.get(httpRetryDelayMsParam),
-        });
+        };
+    }
+
+    public static fromScope(scope:Scope):HttpClient{
+
+        return new HttpClient(HttpClient.optionsFromScope(scope));
     }
 
     private readonly options:HttpClientOptions;
