@@ -7,7 +7,10 @@ import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource, PromiseSource } from "./PromiseSource";
 import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
-import { ScopeDefineCallableType, ScopeDefineType, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+
+const ScopeDefineType=Symbol('ScopeDefineType');
+const ScopeDefineCallableType=Symbol('ScopeDefineType');
 
 interface TypeProviderInternal
 {
