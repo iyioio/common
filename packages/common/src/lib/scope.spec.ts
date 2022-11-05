@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
-import { createScope, defineService, EnvValueProvider } from './scope-lib';
+import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, EnvValueProvider } from './scope-lib';
 import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
 
@@ -56,6 +56,7 @@ const ICarType=defineService<ICar>("ICarType");
 const ICarType1=defineService<ICar>("ICarType1");
 const ICarType2=defineService<ICar>("ICarType2");
 const ICarType3=defineService<ICar>("ICarType3");
+const ICarTypeWithDefault=defineService<ICar>("ICarType3",()=>new Car());
 
 const IStatusCheckerType=defineService<IStatusChecker>("IStatusCheckerType");
 
@@ -93,7 +94,7 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const car=scope.defineService<ICar>("car",()=>new Car());
+        const car=scope.to(defineService<ICar>("car",()=>new Car()));
 
         expect(car()).toBeInstanceOf(Car);
 
@@ -104,7 +105,7 @@ describe('Scope',()=>{
         const scopeA=createScope();
         const scopeB=createScope();
 
-        const carA=scopeA.defineService<ICar>("car",()=>new Car());
+        const carA=scopeA.to(defineService<ICar>("car",()=>new Car()));
         const carB=scopeB.to(carA);
 
         expect(carB()).toBeInstanceOf(Car);
@@ -118,11 +119,29 @@ describe('Scope',()=>{
         const scopeA=createScope();
         const scopeB=createScope();
 
-        const carA=scopeA.defineService<ICar>("car",()=>new Car());
+        const carA=scopeA.to(defineService<ICar>("car",()=>new Car()));
 
         expect(scopeB(carA)).toBeInstanceOf(Car);
         expect(carA()).toBeInstanceOf(Car);
         expect(scopeB(carA)).not.toBe(carA());
+
+    })
+
+    it('should init without module',async ()=>{
+
+        const scope=createScope();
+
+        expect(scope.isInited()).toBe(true);
+
+    })
+
+    it('should re-scope with default provider',()=>{
+
+        const scope=createScope();
+
+        const car=scope(ICarTypeWithDefault);
+
+        expect(car).toBeInstanceOf(Car);
 
     })
 
@@ -247,7 +266,7 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const car=scope.defineObservable<ICar>("car");
+        const car=scope.to(defineObservable<ICar>("car"));
 
         expect(car()).toBeUndefined()
         expect(car.subject).toBeInstanceOf(BehaviorSubject);
@@ -286,7 +305,7 @@ describe('Scope',()=>{
         const scopeA=createScope();
         const scopeB=createScope();
 
-        const car=scopeA.defineObservable<ICar>("car",()=>new Car());
+        const car=scopeA.to(defineObservable<ICar>("car",()=>new Car()));
 
         expect(car.subject).toBeInstanceOf(BehaviorSubject);
 
@@ -308,7 +327,7 @@ describe('Scope',()=>{
 
         const scope=createScope();
 
-        const car=scope.defineObservable<ICar>("car");
+        const car=scope.to(defineObservable<ICar>("car"));
 
         expect(car()).toBeUndefined()
         expect(car.subject).toBeInstanceOf(BehaviorSubject);
@@ -347,7 +366,7 @@ describe('Scope',()=>{
         const scope=createScope();
 
         const setCar=createScopedSetter<Car|undefined>(scope);
-        const car=scope.defineReadonlyObservable("car",setCar);
+        const car=scope.to(defineReadonlyObservable("car",setCar));
 
 
         expect(car()).toBeUndefined()
@@ -397,9 +416,7 @@ describe('Scope',()=>{
 
     it('should fail to require non provided type',()=>{
 
-        const scope=createScope();
-
-        const car=scope.defineType<ICar>("car");
+        const car=defineType<ICar>("car");
 
         try{
             car.require();
@@ -471,17 +488,17 @@ describe('Scope',()=>{
     }
     const testValues=(scope:Scope,suffix:string='')=>{
 
-        const host=scope.defineStringParam('TEST_HOST_NAME'+suffix);
-        const port=scope.defineNumberParam('TEST_PORT'+suffix);
-        const log=scope.defineBoolParam('TEST_LOG'+suffix);
-        const data=scope.defineParam<JsonData>('TEST_JSON_DATA'+suffix);
+        const host=defineStringParam('TEST_HOST_NAME'+suffix);
+        const port=defineNumberParam('TEST_PORT'+suffix);
+        const log=defineBoolParam('TEST_LOG'+suffix);
+        const data=defineParam<JsonData>('TEST_JSON_DATA'+suffix);
 
-        expect(host()).toBe(hostValue);
-        expect(port()).toBe(portValue);
-        expect(log()).toBe(logValue);
-        expect(data()).toEqual(dataValue);
+        expect(scope(host)).toBe(hostValue);
+        expect(scope(port)).toBe(portValue);
+        expect(scope(log)).toBe(logValue);
+        expect(scope(data)).toEqual(dataValue);
 
-        expect(data()).toBe(data());
+        expect(scope(data)).toBe(scope(data));
 
     }
 
@@ -515,15 +532,6 @@ describe('Scope',()=>{
         });
 
         testValues(scope,'_T2');
-    })
-
-    it('should provide values using env with IY_ prefix',()=>{
-
-        const scope=createScope(reg=>{
-            reg.provideParams(new EnvValueProvider('IY_'))
-        });
-
-        testValues(scope,'_T3');
     })
 
     it('should init and dispose',async ()=>{

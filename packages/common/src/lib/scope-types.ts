@@ -200,36 +200,6 @@ export interface Scope
     map<T extends TypeDef<any>[]>(...types:T):T;
 
     /**
-     * Defines a new type
-     */
-    defineType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>;
-
-    /**
-     * Defines a new type
-     */
-    defineService<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>;
-
-    /**
-     * Defines a type with an observable value
-     */
-    defineObservable<T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
-
-    /**
-     * Defines a type with an observable value that can optionally be undefined
-     */
-    defineObservable<T>(name:string):ObservableTypeDef<T|undefined>;
-
-    /**
-     * Defines a type with a readonly observable value
-     */
-    defineReadonlyObservable<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue:TypeProvider<T>):ReadonlyObservableTypeDef<T>;
-
-    /**
-     * Defines a type with a readonly observable value that can optionally be undefined
-     */
-    defineReadonlyObservable<T>(name:string,setter:Setter<T>|ScopedSetter<T>):ReadonlyObservableTypeDef<T|undefined>;
-
-    /**
      * Returns a provided string value by name.
      */
     getParam(name:string,defaultValue:string):string;
@@ -244,27 +214,6 @@ export interface Scope
      * Returns a provided string value by name or throw an error
      */
     requireParam(name:string):string;
-
-    /**
-     * Defines a type that has its value provided by a value provider. If no valueConverted is
-     * provided JSON.parse will be used.
-     */
-    defineParam<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>;
-
-    /**
-     * Defines a type that has its value provided as a string by a value provider.
-     */
-    defineStringParam(name:string,defaultValue?:string):CallableTypeDef<string>;
-
-    /**
-     * Defines a type that has its value provided as a number by a value provider.
-     */
-    defineNumberParam(name:string,defaultValue?:number):CallableTypeDef<number>;
-
-    /**
-     * Defines a type that has its value provided as a boolean by a value provider.
-     */
-    defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
 }
 
 /**

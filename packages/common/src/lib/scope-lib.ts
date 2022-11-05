@@ -16,6 +16,67 @@ interface TypeProviderInternal
     readonly tags:string[];
 }
 
+interface BaseScopeInternal extends Scope
+{
+    /**
+     * Defines a new type
+     */
+    defineType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>;
+
+    /**
+     * Defines a new type
+     */
+    defineService<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>;
+
+    /**
+     * Defines a type with an observable value
+     */
+    defineObservable<T>(name:string,defaultValue:TypeProvider<T>):ObservableTypeDef<T>;
+
+    /**
+     * Defines a type with an observable value that can optionally be undefined
+     */
+    defineObservable<T>(name:string):ObservableTypeDef<T|undefined>;
+
+    /**
+     * Defines a type with a readonly observable value
+     */
+    defineReadonlyObservable<T>(name:string,setter:Setter<T>|ScopedSetter<T>,defaultValue:TypeProvider<T>):ReadonlyObservableTypeDef<T>;
+
+    /**
+     * Defines a type with a readonly observable value that can optionally be undefined
+     */
+    defineReadonlyObservable<T>(name:string,setter:Setter<T>|ScopedSetter<T>):ReadonlyObservableTypeDef<T|undefined>;
+
+    /**
+     * Defines a type that has its value provided by a value provider. If no valueConverted is
+     * provided JSON.parse will be used.
+     */
+    defineParam<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>;
+
+    /**
+     * Defines a type that has its value provided as a string by a value provider.
+     */
+    defineStringParam(name:string,defaultValue?:string):CallableTypeDef<string>;
+
+    /**
+     * Defines a type that has its value provided as a number by a value provider.
+     */
+    defineNumberParam(name:string,defaultValue?:number):CallableTypeDef<number>;
+
+    /**
+     * Defines a type that has its value provided as a boolean by a value provider.
+     */
+    defineBoolParam(name:string,defaultValue?:boolean):CallableTypeDef<boolean>;
+
+
+}
+
+interface ScopeInternal extends BaseScopeInternal
+{
+    [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
+}
+
 const isTypeDefSymbol=Symbol('isTypeDefSymbol');
 
 export const isTypeDef=(value:any):value is TypeDef<any>=>(value && value[isTypeDefSymbol])?true:false;
@@ -36,15 +97,9 @@ interface DefineTypeOptions<T>
     subjectSetter?:Setter<T>|ScopedSetter<T>;
 }
 
-interface ScopeInternal
-{
-    [ScopeDefineType]<T>(options:DefineTypeOptions<T>):TypeDef<T>;
-    [isTypeDefSymbol]:boolean;
-}
 
 export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new CancelToken(), parent?:Scope):Scope=>
 {
-
 
     const initPromiseSource=createPromiseSource<void>();
     const isRoot=!rootPromiseSource;
@@ -52,8 +107,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         rootPromiseSource=initPromiseSource;
     }
 
-    let isInited=false;
-    initPromiseSource.promise.then(()=>isInited=true);
+    const isInited=()=>initPromiseSource.getStatus()==='resolved';
 
     const providerMap:SymHashMap<TypeProviderInternal[]>={};
 
@@ -330,7 +384,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         const typeDef:CallableTypeDef<T>=typeSelf;
         types[id]=typeSelf;
         if(defaultProvider){
-            provideForType(typeDef,defaultProvider);
+            _provideForType(typeDef,defaultProvider,[],true);
         }
         if(createSubject){
             const subject=new BehaviorSubject<T>(subjectDefault?.(scope) as any);
@@ -398,8 +452,17 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         provider:TypeProvider<P>|TypeProviderOptions<P>,
         tags:string|string[]=[]
     ):FluentTypeProvider<P>=>{
+        return _provideForType(type,provider,tags);
+    }
 
-        if(isInited){
+    const _provideForType=<T,P extends T>(
+        type:TypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags:string|string[]=[],
+        allowInited=false
+    ):FluentTypeProvider<P>=>{
+
+        if(!allowInited && isInited()){
             throw new ScopeInitedError(
                 'Can not provide type implementations or params after a scope is initialized')
         }
@@ -519,14 +582,13 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
     self.createChild=createChild;
     self.recreate=recreate;
     self.parent=parent;
-    self.isInited=()=>isInited;
+    self.isInited=isInited;
 
     self.initPromise=initPromiseSource.promise;
 
     (self as unknown as ScopeInternal)[ScopeDefineType]=_defineType;
-    (self as unknown as ScopeInternal)[isTypeDefSymbol]=true;
 
-    const scope:Scope=self;
+    const scope:BaseScopeInternal=self;
 
     const initOptions:InitScopeOptions={
         scope,
@@ -639,7 +701,7 @@ const initScopeAsync=async ({
 }
 
 const rootCancel=new CancelToken();
-export const rootScope=createScope(undefined,rootCancel);
+export const rootScope=createScope(undefined,rootCancel) as ScopeInternal;
 const vp=rootScope.defineType<ParamProvider|HashMap<string>>('vp');
 
 export const initRootScope=(rootModule?:ScopeModule)=>{

@@ -8,8 +8,7 @@
       "env": { "CI": "true" },
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
       "args": [],
-      "cwd": "${workspaceRoot}/packages/app-common",
-      "protocol": "inspector",
+      "cwd": "${workspaceRoot}/packages/common",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
