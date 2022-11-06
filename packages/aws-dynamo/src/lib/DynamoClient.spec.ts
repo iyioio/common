@@ -1,38 +1,39 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
-import { createScope, EnvParamProvider, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
-import { S3Store } from './S3Store';
+import { createScope, EnvParamProvider, generateRandomTestStoreItem, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
+import { testDynamoDbTable } from './dynamo-test-lib';
+import { DynamoClient } from './DynamoClient';
 
-describe('S3Store', () => {
 
-    const putGetDeleteAsync=async (scope:Scope, onStore?:(store:S3Store)=>void)=>{
 
-        const store=S3Store.fromScope(scope,{
-            bucket:scope.requireParam('TEST_BUCKET_NAME')
-        });
+
+describe('DynamoStore', () => {
+
+    const putGetDeleteAsync=async (scope:Scope, onStore?:(store:DynamoClient)=>void)=>{
+
+        const store=DynamoClient.fromScope(scope);
+
+        const tableName=testDynamoDbTable(scope);
 
         onStore?.(store);
 
         const key=shortUuid();
-        const value={
-            id:shortUuid(),
-            name:uuid(),
-        }
+        const item=generateRandomTestStoreItem();
 
         console.log(`put ${key}`);
-        await store.putAsync(key,value);
+        await store.putAsync(tableName,'id',item);
 
 
         console.log(`get ${key}`);
-        const getR=await store.getAsync(key);
-        expect(getR).toEqual(value);
+        const getR=await store.getAsync(tableName,{id:item.id});
+        expect(getR).toEqual(item);
 
 
         console.log(`delete ${key}`);
-        await store.deleteAsync(key);
+        await store.deleteAsync(tableName,{id:item.id});
 
 
         console.log(`check ${key}`);
-        const get2R=await store.getAsync(key);
+        const get2R=await store.getAsync(tableName,{id:item.id});
         expect(get2R).toBeUndefined();
 
         return {store,config:store.clientConfig};
@@ -69,12 +70,13 @@ describe('S3Store', () => {
          await useTempCognitoUser(reg=>{
             reg.provideParams(new EnvParamProvider());
         },async scope=>{
-            const basePath='s3/test-items'
+            const basePath='dynamo/test-items';
+            const tableName=testDynamoDbTable(scope);
             await testMountedStoreAsync(scope,basePath,{
                     path:basePath,
-                    store:S3Store.fromScope(scope,{
-                    bucket:scope.requireParam('TEST_BUCKET_NAME')
-                })
+                    store:DynamoClient.fromScope(scope,{
+                        tableName
+                    }).getStoreAdapter()
             })
 
         })

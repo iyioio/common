@@ -6,9 +6,11 @@
     "private": true,
     "dependencies": {
         "@aws-sdk/client-cognito-identity-provider": "^3.200.0",
+        "@aws-sdk/client-dynamodb": "^3.204.0",
         "@aws-sdk/client-rds-data": "^3.204.0",
         "@aws-sdk/client-s3": "^3.200.0",
         "@aws-sdk/credential-providers": "^3.199.0",
+        "@aws-sdk/util-dynamodb": "^3.204.0",
         "@iyio/nx-cdk": "^0.0.3",
         "amazon-cognito-identity-js": "^5.2.12",
         "core-js": "^3.6.5",

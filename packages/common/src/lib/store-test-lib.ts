@@ -2,9 +2,12 @@ import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-
 import { HashMap } from "./common-types";
 import { deepCompare } from './object';
 import { StoreRoute } from "./RouterStore";
+import { defineBoolParam } from './scope-lib';
 import { Scope } from './scope-types';
 import { uuid } from "./uuid";
 import { storeService } from './_types.common';
+
+const keepTestStoreItemsParam=defineBoolParam('keepTestStoreItems',false);
 
 export interface TestStoreItem
 {
@@ -63,10 +66,14 @@ export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:Stor
         throw new Error('Returned item should be the same as source item - '+JSON.stringify({sourceItem,item},null,4))
     }
 
-    await rootStore.deleteAsync(realKey);
-    item=await rootStore.getAsync<TestStoreItem>(realKey);
-    if(item!==undefined){
-        throw new Error(`Item at ${realKey} should have been deleted`);
+    if(keepTestStoreItemsParam(scope)){
+        console.warn(`!!!!!!. Keeping test items in store. key = ${realKey}`,item,sourceItem)
+    }else{
+        await rootStore.deleteAsync(realKey);
+        item=await rootStore.getAsync<TestStoreItem>(realKey);
+        if(item!==undefined){
+            throw new Error(`Item at ${realKey} should have been deleted`);
+        }
     }
 
 }

@@ -6,7 +6,6 @@
             "type": "node",
             "request": "launch",
             "env": {
-                "CI": "true"
             },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
             "args": [],
@@ -19,11 +18,22 @@
             "type": "node",
             "request": "launch",
             "env": {
-                "CI": "true"
             },
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
             "args": [],
             "cwd": "${workspaceRoot}/packages/aws-tests",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "aws-dynamo tests",
+            "type": "node",
+            "request": "launch",
+            "env": {
+            },
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+            "args": [],
+            "cwd": "${workspaceRoot}/packages/aws-dynamo",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         }

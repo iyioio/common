@@ -1,12 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-// import * as efs from 'aws-cdk-lib/aws-efs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-// import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
-// import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { createAuthFunc } from './createAuthFunc';
 import { createDbCluster } from './createDbCluster';
+import { createDynamoTables } from './createDynamoTables';
 import { createUserPool } from './createUserPool';
 
 export class TestResourcesStack extends cdk.Stack {
@@ -26,7 +24,9 @@ export class TestResourcesStack extends cdk.Stack {
 
         createAuthFunc(this,cognitoUserRole);
 
-        const dbCluster=createDbCluster(this,vpc)
+        createDbCluster(this,vpc);
+
+        createDynamoTables(this,cognitoUserRole);
 
     }
 }
