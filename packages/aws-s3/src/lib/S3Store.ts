@@ -18,8 +18,6 @@ export class S3Store<T=any> extends BaseStore<T>
         },config)
     }
 
-    public readonly client:S3Client;
-
     public readonly bucket:string;
 
     public readonly clientConfig:Readonly<S3ClientConfig>;
@@ -29,8 +27,17 @@ export class S3Store<T=any> extends BaseStore<T>
     }:S3StoreConfig){
         super();
         this.bucket=bucket;
-        this.client=new S3Client(clientConfig);
+
         this.clientConfig=clientConfig;
+    }
+
+    private client:S3Client|null=null;
+    public getClient():S3Client{
+        if(this.client){
+            return this.client;
+        }
+        this.client=new S3Client(this.clientConfig);
+        return this.client;
     }
 
     public async getAsync(key:string,cancel?:CancelToken):Promise<T|undefined>
@@ -38,7 +45,7 @@ export class S3Store<T=any> extends BaseStore<T>
         let r:GetObjectCommandOutput;
 
         try{
-            r=await this.client.send(new GetObjectCommand({
+            r=await this.getClient().send(new GetObjectCommand({
                 Key:key,
                 Bucket:this.bucket,
             }));
@@ -79,7 +86,7 @@ export class S3Store<T=any> extends BaseStore<T>
 
     public async putAsync(key:string,value:T):Promise<void>
     {
-        await this.client.send((value instanceof BinaryStoreValue)?
+        await this.getClient().send((value instanceof BinaryStoreValue)?
             new PutObjectCommand({
                 Key:key,
                 Bucket:this.bucket,
@@ -98,7 +105,7 @@ export class S3Store<T=any> extends BaseStore<T>
 
     public async deleteAsync(key:string):Promise<boolean|undefined>
     {
-        await this.client.send(new DeleteObjectCommand({
+        await this.getClient().send(new DeleteObjectCommand({
             Key:key,
             Bucket:this.bucket,
         }));

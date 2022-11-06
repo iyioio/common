@@ -47,7 +47,7 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
     }
 
     private client:RDSDataClient|null=null;
-    private getClient():RDSDataClient{
+    public getClient():RDSDataClient{
         if(this.client){
             return this.client;
         }
