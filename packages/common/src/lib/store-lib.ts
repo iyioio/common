@@ -1,4 +1,4 @@
-import { KeyValueStoreOp, KeyValueStoreScope } from "./key-value-store-types";
+import { StoreOp, StoreScope } from "./store-types";
 
 /**
  * Checks if the key matches the scope and returns the scoped key.
@@ -9,7 +9,7 @@ import { KeyValueStoreOp, KeyValueStoreScope } from "./key-value-store-types";
  *          The scoped key may be an empty string so make sure to explicity check for a false value
  *          to indicate the scope was matched or not.
  */
-export const isKeyStoreScopeMatch=(key:string,scope:KeyValueStoreScope,op?:KeyValueStoreOp):string|false=>
+export const isStoreScopeMatch=(key:string,scope:StoreScope,op?:StoreOp):string|false=>
 {
     if(scope.keyBase){
         if(!scope.keyBase.startsWith(key)){

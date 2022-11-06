@@ -5,14 +5,14 @@ import { Query } from "./query-types";
 import { TypeDef } from "./scope-types";
 
 
-export type KeyValueStoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';
+export type StoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';
 
-export interface KeyValueStoreMatch
+export interface StoreMatch
 {
     /**
      * The matched store
      */
-    store:IKeyValueStore;
+    store:IStore;
 
     /**
      * The scoped key after matching the store
@@ -21,7 +21,7 @@ export interface KeyValueStoreMatch
 }
 
 
-export interface KeyValueStoreKeyScope
+export interface StoreKeyScope
 {
 
     keyBase?:string;
@@ -33,24 +33,24 @@ export interface KeyValueStoreKeyScope
     keyCondition?:(key:string)=>string|boolean;
 }
 
-export interface KeyValueStoreScope extends KeyValueStoreKeyScope
+export interface StoreScope extends StoreKeyScope
 {
 
-    supports?(key:string,op:KeyValueStoreOp):boolean;
+    supports?(key:string,op:StoreOp):boolean;
 }
 
-export interface KeyValueStoreProvider<T=any> extends KeyValueStoreScope
+export interface StoreProvider<T=any> extends StoreScope
 {
-    providerType:TypeDef<IKeyValueStore<T>|IWithKeyStoreAdapter<T>>;
+    providerType:TypeDef<IStore<T>|IWithStoreAdapter<T>>;
 }
 
-export interface CreateKeyValueResult<T=any>
+export interface CreateStoreValueResult<T=any>
 {
     key:string;
     value:T;
 }
 
-export interface KeyValueStoreOpMethods<T=any>
+export interface StoreOpMethods<T=any>
 {
     /**
      * Returns a value by key
@@ -73,7 +73,7 @@ export interface KeyValueStoreOpMethods<T=any>
      * @param primaryKey The primary key property of the value
      * @param value The value to be created
      */
-    createAsync?<TK extends T=T>(baseKey:string,primaryKey:(keyof TK)|null|undefined,value:Partial<TK>,cancel?:CancelToken):Promise<CreateKeyValueResult<TK>>;
+    createAsync?<TK extends T=T>(baseKey:string,primaryKey:(keyof TK)|null|undefined,value:Partial<TK>,cancel?:CancelToken):Promise<CreateStoreValueResult<TK>>;
 
     /**
      * Creates a new value but does not return the created value. This function can be used as an
@@ -111,30 +111,30 @@ export interface KeyValueStoreOpMethods<T=any>
 
 }
 
-export interface IKeyValueStore<T=any> extends KeyValueStoreOpMethods<T>, KeyValueStoreScope, IOpDisposable
+export interface IStore<T=any> extends StoreOpMethods<T>, StoreScope, IOpDisposable
 {
     getWatchCount?():number;
 }
 
-export const isIWithKeyStoreAdapter=(value:any):value is IWithKeyStoreAdapter=>(
-    typeof (value as Partial<IWithKeyStoreAdapter>)?.getStoreAdapter === 'function'
+export const isIWithStoreAdapter=(value:any):value is IWithStoreAdapter=>(
+    typeof (value as Partial<IWithStoreAdapter>)?.getStoreAdapter === 'function'
 )
 
-export interface IWithKeyStoreAdapter<T=any>
+export interface IWithStoreAdapter<T=any>
 {
-    getStoreAdapter():IKeyValueStore<T>;
+    getStoreAdapter():IStore<T>;
 }
 
 
-export type BinaryValueType=Uint8Array;
+export type StoreBinaryValueType=Uint8Array;
 
 export class BinaryStoreValue
 {
-    public readonly content:BinaryValueType;
+    public readonly content:StoreBinaryValueType;
     public readonly contentType:string;
     public readonly length?:number;
 
-    public constructor(contentType:string,content:BinaryValueType,length?:number)
+    public constructor(contentType:string,content:StoreBinaryValueType,length?:number)
     {
         this.contentType=contentType;
         this.content=content;

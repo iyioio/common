@@ -1,7 +1,7 @@
-import { IKeyValueStore } from './key-value-store-types';
 import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
 import { createScope } from './scope-lib';
+import { IStore } from './store-types';
 import { shortUuid, uuid } from './uuid';
 
 interface Person
@@ -16,7 +16,7 @@ const createFrank=():Person=>({
     name:'Frank'
 })
 
-const putGetDeleteAsync=async (mouthPath:string,store:IKeyValueStore& Required<Pick<IKeyValueStore,
+const putGetDeleteAsync=async (mouthPath:string,store:IStore& Required<Pick<IStore,
     'getAsync'|'putAsync'|'deleteAsync'>>)=>
 {
     const frank=createFrank();
@@ -30,7 +30,7 @@ const putGetDeleteAsync=async (mouthPath:string,store:IKeyValueStore& Required<P
     expect(await store.getAsync(key)).toBeUndefined();
 }
 
-const watchAsync=async (mouthPath:string,store:IKeyValueStore & Required<Pick<IKeyValueStore,
+const watchAsync=async (mouthPath:string,store:IStore & Required<Pick<IStore,
     'watch'|'getWatchCount'|'putAsync'|'deleteAsync'>>)=>
 {
 

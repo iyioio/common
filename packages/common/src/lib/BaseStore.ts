@@ -1,9 +1,9 @@
 import { HashMap } from "./common-types";
-import { IKeyValueStore, KeyValueStoreKeyScope } from "./key-value-store-types";
 import { getObjKeyCount } from "./object";
 import { SharedValuePointer } from "./shared-pointers";
+import { IStore, StoreKeyScope } from "./store-types";
 
-export abstract class BaseStore<T> implements IKeyValueStore<T>
+export abstract class BaseStore<T> implements IStore<T>
 {
 
     public keyBase?:string;
@@ -16,7 +16,7 @@ export abstract class BaseStore<T> implements IKeyValueStore<T>
 
     protected readonly pointers:HashMap<SharedValuePointer<T>>={};
 
-    public constructor(keyFilter?:KeyValueStoreKeyScope)
+    public constructor(keyFilter?:StoreKeyScope)
     {
         if(keyFilter){
             this.keyBase=keyFilter.keyBase;

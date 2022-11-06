@@ -1,13 +1,13 @@
 import { BaseStore } from "./BaseStore";
 import { InvalidStoreKeyError } from "./errors";
-import { CreateKeyValueResult, KeyValueStoreKeyScope } from "./key-value-store-types";
 import { Query } from "./query-types";
 import { sql, sqlName } from "./sql-lib";
 import { buildQuery, convertStorePathToSelectQuery, convertStorePathToSqlInsert, SqlInsertInfo } from "./sql-query-builder";
 import { ISqlClient } from "./sql-types";
+import { CreateStoreValueResult, StoreKeyScope } from "./store-types";
 
 
-export interface SqlStoreAdapterOptions extends KeyValueStoreKeyScope
+export interface SqlStoreAdapterOptions extends StoreKeyScope
 {
     /**
      * If defined store operations will be limited to the specified table.
@@ -88,7 +88,7 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
         await this.client.updateAsync(pathInfo.table,value,pathInfo.keyName as any);
     }
 
-    public async createAsync<TK extends T=T>(baseKey:string,primaryKey:(keyof TK)|null|undefined,value:Partial<TK>):Promise<CreateKeyValueResult<TK>>
+    public async createAsync<TK extends T=T>(baseKey:string,primaryKey:(keyof TK)|null|undefined,value:Partial<TK>):Promise<CreateStoreValueResult<TK>>
     {
         const pathInfo=this.requirePathInfoForInsert(baseKey,value);
 

@@ -1,6 +1,6 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { awsRegionParam, IAwsAuth, IAwsAuthType } from "@iyio/aws";
-import { defineStringParam, IWithKeyStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef } from '@iyio/common';
+import { defineStringParam, IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
@@ -16,7 +16,7 @@ export interface RdsClientOptions
 }
 
 
-export class RdsClient<T=any> extends SqlBaseClient implements IWithKeyStoreAdapter<T>
+export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter<T>
 {
 
     public static optionsFromScope(scope:Scope):RdsClientOptions{

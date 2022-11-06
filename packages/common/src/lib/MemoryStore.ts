@@ -2,11 +2,11 @@ import { BaseStore } from "./BaseStore";
 import { CancelToken } from "./CancelToken";
 import { delayAsync } from "./common-lib";
 import { HashMap } from "./common-types";
-import { KeyValueStoreKeyScope, KeyValueStoreOp } from "./key-value-store-types";
 import { ValuePointer } from "./pointers";
 import { SharedValuePointer } from "./shared-pointers";
+import { StoreKeyScope, StoreOp } from "./store-types";
 
-export interface MemoryStoreOptions extends KeyValueStoreKeyScope
+export interface MemoryStoreOptions extends StoreKeyScope
 {
     /**
      * Number of milliseconds to delay memory store operations. Default is 0.
@@ -39,7 +39,7 @@ export class MemoryStore<T=any> extends BaseStore<T>
     }
 
 
-    supports(key: string, op: KeyValueStoreOp): boolean {
+    supports(key: string, op: StoreOp): boolean {
         switch(op){
             case 'get':
             case 'put':
