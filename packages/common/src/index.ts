@@ -28,6 +28,8 @@ export * from './lib/Setter';
 export * from './lib/shared-pointers';
 export * from './lib/sql';
 export * from './lib/sql-query-builder';
+export * from './lib/sql-types';
+export * from './lib/SqlBaseClient';
 export * from './lib/string';
 export * from './lib/string-converters';
 export * from './lib/TaskPool';

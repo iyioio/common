@@ -4,6 +4,7 @@ import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
 import { defineBoolParam, defineNumberParam, defineParam, defineService, defineStringParam, defineType } from "./scope-lib";
+import { ISqlClient } from "./sql-types";
 import { stringToHashMap } from "./string-converters";
 
 
@@ -26,3 +27,8 @@ export const httpRetryDelayMsParam=defineNumberParam('HTTP_RETRY_DELAY_MS',500);
 // JWP
 
 export const JwtProviderType=defineType<JwtProvider>('JwtProvider');
+
+
+
+// SQL
+export const sqlService=defineService<ISqlClient>('sqlService');

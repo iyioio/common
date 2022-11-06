@@ -1,1 +1,1 @@
-export * from './lib/aws-tests';
+export * from './lib/aws-test-common';

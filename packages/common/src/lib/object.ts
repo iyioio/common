@@ -295,3 +295,13 @@ export const getObjKeyCount=(obj:HashMap):number=>{
     }
     return c;
 }
+
+export const objGetFirstValue=(obj:HashMap):any=>{
+    if(!obj){
+        return undefined;
+    }
+    for(const e in obj){
+        return obj[e];
+    }
+    return undefined;
+}

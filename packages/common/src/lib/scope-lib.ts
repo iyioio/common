@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
-import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
+import { continueFunction, FunctionLoopControl, nameToEnvName, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource } from "./PromiseSource";
@@ -857,12 +857,13 @@ export class EnvParamProvider implements ParamProvider
 
     public getParam(name:string):string|undefined{
         const env=(globalThis as any).process?.env;
-        const value=env?.[name];
+        const envName=nameToEnvName(name);
+        const value=env?.[name] ?? env?.[envName];
         if(value!==undefined){
             return value;
         }
         if(this.autoPrefix){
-            return env?.[this.autoPrefix+name];
+            return env?.[this.autoPrefix+name] ?? env?.[this.autoPrefix+envName];
         }else{
             return undefined;
         }

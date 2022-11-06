@@ -43,3 +43,4 @@ Thumbs.db
 /Documents
 /.env.test
 /.env.e2e
+.env.local

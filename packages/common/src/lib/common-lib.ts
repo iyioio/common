@@ -44,3 +44,5 @@ export const parseConfigBool=(value:string|null|undefined)=>{
 export const emptyFunction:EmptyFunction=()=>{
     // do nothing;
 }
+
+export const nameToEnvName=(name:string)=>name?name.replace(/[A-Z]+/g,m=>'_'+m).toUpperCase():'';
