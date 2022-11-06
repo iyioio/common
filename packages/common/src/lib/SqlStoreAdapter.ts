@@ -2,7 +2,7 @@ import { BaseStore } from "./BaseStore";
 import { InvalidStoreKeyError } from "./errors";
 import { Query } from "./query-types";
 import { sql, sqlName } from "./sql-lib";
-import { buildQuery, convertStorePathToSelectQuery, convertStorePathToSqlInsert, SqlInsertInfo } from "./sql-query-builder";
+import { buildQuery, convertStorePathToSelectQuery, convertStorePathToSqlPathInfo, SqlPathInfo } from "./sql-query-builder";
 import { ISqlClient } from "./sql-types";
 import { CreateStoreValueResult, StoreKeyScope } from "./store-types";
 
@@ -13,6 +13,12 @@ export interface SqlStoreAdapterOptions extends StoreKeyScope
      * If defined store operations will be limited to the specified table.
      */
     tableName?:string;
+
+    /**
+     * The name of the primary key for the specified table.
+     * @default 'id'
+     */
+    primaryKey?:string;
 }
 
 export class SqlStoreAdapter<T=any> extends BaseStore<T>
@@ -31,7 +37,7 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
 
     public async getAsync<TK extends T=T>(key:string):Promise<TK|undefined>
     {
-        const query=convertStorePathToSelectQuery(key,this.options.tableName);
+        const query=convertStorePathToSelectQuery(key,this.options.tableName,this.options.primaryKey);
         if(!query){
             throw new InvalidStoreKeyError(`key = ${key}`);
         }
@@ -43,13 +49,13 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
 
     }
 
-    private requirePathInfoForInsert(key:string,value:any):SqlInsertInfo{
+    private requirePathInfoForInsert(key:string,value:any):SqlPathInfo{
 
         if(!value){
             throw new Error('value required for getting path info');
         }
 
-        const pathInfo=convertStorePathToSqlInsert(key,this.options.tableName);
+        const pathInfo=convertStorePathToSqlPathInfo(key,this.options.tableName,this.options.primaryKey);
         if(!pathInfo){
             throw new InvalidStoreKeyError(`key = ${key}`);
         }
@@ -74,7 +80,7 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
 
     public async patchAsync<TK extends T=T>(key:string,value:Partial<TK>):Promise<void>
     {
-        const pathInfo=convertStorePathToSqlInsert(key,this.options.tableName);
+        const pathInfo=convertStorePathToSqlPathInfo(key,this.options.tableName,this.options.primaryKey);
         if(!pathInfo?.keyName || !pathInfo.keyValue){
             throw new InvalidStoreKeyError(`key = ${key}`);
         }
@@ -107,7 +113,7 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
 
     public async deleteAsync(key:string):Promise<boolean|undefined>
     {
-        const pathInfo=convertStorePathToSqlInsert(key,this.options.tableName);
+        const pathInfo=convertStorePathToSqlPathInfo(key,this.options.tableName,this.options.primaryKey);
         if(!pathInfo?.keyName || !pathInfo.keyValue){
             throw new InvalidStoreKeyError(`key = ${key}`);
         }
@@ -121,7 +127,7 @@ export class SqlStoreAdapter<T=any> extends BaseStore<T>
 
     public async queryAsync<TK extends T=T>(baseKey:string,query:Query):Promise<TK[]>
     {
-        const pathInfo=convertStorePathToSqlInsert(baseKey,this.options.tableName);
+        const pathInfo=convertStorePathToSqlPathInfo(baseKey,this.options.tableName,this.options.primaryKey);
         if(!pathInfo?.keyName || !pathInfo.keyValue){
             throw new InvalidStoreKeyError(`key = ${baseKey}`);
         }

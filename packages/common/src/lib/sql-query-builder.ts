@@ -191,51 +191,68 @@ const appendCol=(ctx:QueryBuildCtx,col:QueryCol)=>{
 
 /**
  * Converts a key value store path to a select query
- * path format -         /{tableName}/{keyName}/{keyValue}
- * example path -        /messages/id/aab76047-5c68-4b82-b53f-06f384f0d145
- * translated query -    select * from "message" where "id" = 'aab76047-5c68-4b82-b53f-06f384f0d145'
+ * path format -                /{tableName}/(${keyName}/)?{keyValue}
+ * path with default prop -     /messages/aab76047-5c68-4b82-b53f-06f384f0d145
+ * query width default prop -   select * from "message" where "id" = 'aab76047-5c68-4b82-b53f-06f384f0d145'
+ * path with name prop -        /messages/$name/bob
+ * query width name prop -      select * from "message" where "name" = 'bob'
  */
-export const convertStorePathToSelectQuery=(path:string,scopedTable?:string):Query|undefined=>
+export const convertStorePathToSelectQuery=(path:string,scopedTable?:string,defaultProp:string='id'):Query|undefined=>
 {
-    if(path.startsWith('/')){
-        path=path.substring(1);
-    }
-    if(scopedTable){
-        path=scopedTable+'/'+path;
-    }
-    const [table,keyName,keyValue]=path.split('/',3);
+    const info=convertStorePathToSqlPathInfo(path,scopedTable,defaultProp);
 
-    if(!table || !keyName || keyValue===undefined){
-        return undefined;
+    if(!info?.keyName || !info.keyValue){
+        return undefined
     }
 
     return {
-        table,
+        table:info.table,
         condition:{
-            left:{col:{name:keyName}},
+            left:{col:{name:info.keyName}},
             op:'=',
-            right:{value:keyValue}
+            right:{value:info.keyValue}
         }
     }
 }
 
-export interface SqlInsertInfo
+export interface SqlPathInfo
 {
     table:string;
     keyName?:string;
     keyValue?:string;
 }
-export const convertStorePathToSqlInsert=(path:string,scopedTable?:string):SqlInsertInfo|undefined=>{
+/**
+ * Converts a key value store path to a SqlPathInfo object
+ * path format - /{tableName}/(${keyName}/)?{keyValue}
+ */
+export const convertStorePathToSqlPathInfo=(path:string,scopedTable?:string,defaultProp:string='id'):SqlPathInfo|undefined=>{
+
     if(path.startsWith('/')){
         path=path.substring(1);
     }
     if(scopedTable){
-        path=scopedTable+'/'+path;
+        path=scopedTable.replace(/\//g,'')+'/'+path;
     }
-    const [table,keyName,keyValue]=path.split('/',3);
+    const [table,propOrValue,customKeyValue]=path.split('/');
 
     if(!table){
         return undefined;
+    }
+
+    if(!propOrValue){
+        return {
+            table
+        }
+    }
+
+    let keyName:string;
+    let keyValue:string|undefined;
+    if(propOrValue.startsWith('$')){
+        keyName=propOrValue.substring(1);
+        keyValue=customKeyValue;
+    }else{
+        keyName=defaultProp;
+        keyValue=propOrValue;
     }
 
     return {table,keyName,keyValue}

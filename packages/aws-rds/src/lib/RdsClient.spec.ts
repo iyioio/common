@@ -6,6 +6,7 @@ import { RdsClient } from "./RdsClient";
 
 const keepTable=parseConfigBool(process.env['NX_KEEP_RDS_TEST_TABLES']);
 const skipTest=parseConfigBool(process.env['NX_SKIP_RDS_TEST']);
+const logQueries=parseConfigBool(process.env['NX_LOG_RDS_TEST_QUERIES']);
 
 if(skipTest){
     describe('!!!!!!!!!!!! skipping RdsStore !!!!!!!!!!!!',()=>{
@@ -28,6 +29,7 @@ describe('RdsStore',()=>{
             scope.provideParams(new EnvParamProvider());
         })
         const client=sqlService(scope) as RdsClient;
+        client.log=logQueries;
 
         expect(client).toBeInstanceOf(RdsClient);
 
@@ -109,7 +111,7 @@ describe('RdsStore',()=>{
 
         const {item}=await insertReturnAsync(client);
 
-        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`${tableName}/id/${item.id}`);
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`${tableName}/${item.id}`);
 
         expect(item).toEqual(item2);
 
@@ -121,7 +123,31 @@ describe('RdsStore',()=>{
 
         const {item}=await insertReturnAsync(client);
 
-        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`id/${item.id}`);
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(item.id);
+
+        expect(item).toEqual(item2);
+
+    })
+
+    it('should get as store with tableName and stringValue',async ()=>{
+
+        const {client}=getScope({tableName});
+
+        const {item}=await insertReturnAsync(client);
+
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`$stringValue/${item.stringValue}`);
+
+        expect(item).toEqual(item2);
+
+    })
+
+    it('should get as store with tableName and numberValue',async ()=>{
+
+        const {client}=getScope({tableName});
+
+        const {item}=await insertReturnAsync(client);
+
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`$numberValue/${item.numberValue}`);
 
         expect(item).toEqual(item2);
 

@@ -43,8 +43,8 @@ export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:Stor
         basePath=basePath.substring(0,basePath.length-1);
     }
 
-    const missingKey=`${uuid()}/id/${sourceItem.id}`;
-    const realKey=`${basePath}/id/${sourceItem.id}`;
+    const missingKey=`${uuid()}/${sourceItem.id}`;
+    const realKey=`${basePath}/${sourceItem.id}`;
 
     let item=await rootStore.getAsync<TestStoreItem>(missingKey);
 
