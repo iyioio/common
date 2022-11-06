@@ -19,7 +19,10 @@ const formatName=(name)=>{
     return (name[0]==='_'?name.substring(1):name).toUpperCase();
 }
 
-for(const e in outputs){
+const keys=Object.keys(outputs);
+keys.sort((a,b)=>a.localeCompare(b))
+
+for(const e of keys){
     console.log('NX_'+formatName(e)+'='+outputs[e]);
 }
 
