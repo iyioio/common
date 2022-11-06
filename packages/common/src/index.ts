@@ -37,6 +37,7 @@ export * from './lib/sql-query-builder';
 export * from './lib/sql-types';
 export * from './lib/SqlBaseClient';
 export * from './lib/SqlStoreAdapter';
+export * from './lib/store-test-lib';
 export * from './lib/store-types';
 export * from './lib/string';
 export * from './lib/string-converters';

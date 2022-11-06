@@ -1,5 +1,5 @@
 import { useTempCognitoUser, _allIssuedCognitoCreds } from "@iyio/aws-credential-providers";
-import { createScope, EnvParamProvider, Scope, shortUuid, uuid } from "@iyio/common";
+import { createScope, EnvParamProvider, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
 import { S3Store } from './S3Store';
 
 describe('S3Store', () => {
@@ -60,4 +60,21 @@ describe('S3Store', () => {
 
         })
     });
+
+
+
+    it('should meet standard mount operations',async ()=>{
+         await useTempCognitoUser(reg=>{
+            reg.provideParams(new EnvParamProvider());
+        },async scope=>{
+            const basePath='s3/test-items'
+            await testMountedStoreAsync(scope,basePath,{
+                    path:basePath,
+                    store:S3Store.fromScope(scope,{
+                    bucket:scope.requireParam('TEST_BUCKET_NAME')
+                })
+            })
+
+        })
+    })
 });

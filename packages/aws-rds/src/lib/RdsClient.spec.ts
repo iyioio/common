@@ -1,29 +1,7 @@
 import { awsModule } from "@iyio/aws";
-import { createScope, EnvParamProvider, HashMap, parseConfigBool, shortUuid, sql, sqlName, sqlService, SqlStoreAdapterOptions, uuid } from "@iyio/common";
-import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
+import { createScope, EnvParamProvider, generateRandomTestStoreItem, parseConfigBool, shortUuid, sql, sqlName, sqlService, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
+
 import { RdsClient } from "./RdsClient";
-
-interface Item
-{
-    id:string;
-    stringValue?:string;
-    numberValue?:number;
-    data?:HashMap;
-}
-
-const randomName=()=>uniqueNamesGenerator({
-  dictionaries: [adjectives, colors, animals]
-});
-
-const randomItem=():Item=>({
-    id:uuid(),
-    stringValue:randomName(),
-    numberValue:Math.round(Math.random()*100),
-    data:{
-        ok:randomName(),
-        noWay:randomName()
-    }
-})
 
 
 const keepTable=parseConfigBool(process.env['NX_KEEP_RDS_TEST_TABLES']);
@@ -92,9 +70,9 @@ describe('RdsStore',()=>{
     },timeout)
 
     const insertReturnAsync=async (client:RdsClient)=>{
-        const sourceItem=randomItem();
+        const sourceItem=generateRandomTestStoreItem();
 
-        const item=await client.insertReturnAsync<Item>(tableName,sourceItem);
+        const item=await client.insertReturnAsync<TestStoreItem>(tableName,sourceItem);
 
         expect(sourceItem).toEqual(item);
 
@@ -115,7 +93,7 @@ describe('RdsStore',()=>{
 
         const {item}=await insertReturnAsync(client);
 
-        await client.deleteAsync<Item>(tableName,'id',item.id);
+        await client.deleteAsync<TestStoreItem>(tableName,'id',item.id);
 
         const check=await client.selectFirstOrDefaultAsync(sql`
             SELECT * FROM ${sqlName(tableName)} WHERE "id" = ${item.id} LIMIT 1
@@ -131,7 +109,7 @@ describe('RdsStore',()=>{
 
         const {item}=await insertReturnAsync(client);
 
-        const item2=await client.getStoreAdapter().getAsync<Item>(`${tableName}/id/${item.id}`);
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`${tableName}/id/${item.id}`);
 
         expect(item).toEqual(item2);
 
@@ -143,10 +121,36 @@ describe('RdsStore',()=>{
 
         const {item}=await insertReturnAsync(client);
 
-        const item2=await client.getStoreAdapter().getAsync<Item>(`id/${item.id}`);
+        const item2=await client.getStoreAdapter().getAsync<TestStoreItem>(`id/${item.id}`);
 
         expect(item).toEqual(item2);
 
+    })
+
+
+
+    it('should meet standard mount operations',async ()=>{
+
+        const {scope,client}=getScope();
+
+        const basePath='sql-data/items/no-table'
+        await testMountedStoreAsync(scope,basePath+'/'+tableName,{
+            path:basePath,
+            store:client.getStoreAdapter()
+        })
+    })
+
+
+
+    it('should meet standard mount operations with tableName',async ()=>{
+
+        const {scope,client}=getScope({tableName});
+
+        const basePath='sql-data/items/with-table'
+        await testMountedStoreAsync(scope,basePath,{
+            path:basePath,
+            store:client.getStoreAdapter()
+        })
     })
 
 })
