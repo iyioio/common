@@ -1,1 +1,1 @@
-export * from './lib/RdsStore';
+export * from './lib/RdsClient';

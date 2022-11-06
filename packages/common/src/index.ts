@@ -26,7 +26,7 @@ export * from './lib/scope-lib';
 export * from './lib/scope-types';
 export * from './lib/Setter';
 export * from './lib/shared-pointers';
-export * from './lib/sql';
+export * from './lib/sql-lib';
 export * from './lib/sql-query-builder';
 export * from './lib/sql-types';
 export * from './lib/SqlBaseClient';

@@ -32,10 +32,11 @@ export interface ISqlClient
     insertAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<void>;
     insertReturnAsync<T>(table:string,value:NoId<T>):Promise<T>;
     insertReturnAsync<T>(table:string,values:NoId<T>[]):Promise<T[]>;
-    insertReturnAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<T[]|T>
+    insertReturnAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<T[]|T>;
     selectAsync<T>(query:string):Promise<T[]>;
     selectFirstOrDefaultAsync<T>(query:string):Promise<T|undefined>;
     selectColAsync<T>(query:string):Promise<T[]>;
+    deleteAsync<T>(table:string,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
     execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
     updateAsync<T>(table:string,item:T,primaryKey:keyof T,onlyChanged?:T):Promise<boolean|null>;
 }

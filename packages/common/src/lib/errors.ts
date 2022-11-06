@@ -9,6 +9,7 @@ export enum ErrorType{
     typeProviderNotFoundError=8,
     scopeInited=9,
     httpBaseUrlPrefixNotFoundError=10,
+    invalidStoreKeyError=11,
 }
 
 export abstract class BaseError extends Error
@@ -92,5 +93,13 @@ export class HttpBaseUrlPrefixNotFoundError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.httpBaseUrlPrefixNotFoundError,message);
+    }
+}
+
+export class InvalidStoreKeyError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.invalidStoreKeyError,message);
     }
 }

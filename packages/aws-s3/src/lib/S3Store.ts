@@ -78,7 +78,7 @@ export class S3Store<T=any> extends BaseStore<T>
     }
 
 
-    public async putAsync(key:string,value:T):Promise<T>
+    public async putAsync(key:string,value:T):Promise<void>
     {
         await this.client.send((value instanceof BinaryStoreValue)?
             new PutObjectCommand({
@@ -95,8 +95,6 @@ export class S3Store<T=any> extends BaseStore<T>
                 ContentType:'application/json',
             })
         )
-
-        return value;
     }
 
     public async deleteAsync(key:string):Promise<boolean|undefined>

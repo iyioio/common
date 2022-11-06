@@ -1,0 +1,157 @@
+import { awsModule } from "@iyio/aws";
+import { createScope, EnvParamProvider, HashMap, parseConfigBool, shortUuid, sql, sqlName, sqlService, uuid } from "@iyio/common";
+import { SqlStoreAdapterOptions } from "@iyio/key-value-store";
+import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
+import { RdsClient } from "./RdsClient";
+
+interface Item
+{
+    id:string;
+    stringValue?:string;
+    numberValue?:number;
+    data?:HashMap;
+}
+
+const randomName=()=>uniqueNamesGenerator({
+  dictionaries: [adjectives, colors, animals]
+});
+
+const randomItem=():Item=>({
+    id:uuid(),
+    stringValue:randomName(),
+    numberValue:Math.round(Math.random()*100),
+    data:{
+        ok:randomName(),
+        noWay:randomName()
+    }
+})
+
+
+const keepTable=parseConfigBool(process.env['NX_KEEP_RDS_TEST_TABLES']);
+const skipTest=parseConfigBool(process.env['NX_SKIP_RDS_TEST']);
+
+if(skipTest){
+    describe('!!!!!!!!!!!! skipping RdsStore !!!!!!!!!!!!',()=>{
+        it('should do nothing',()=>{
+           console.warn('Skipping RdsStore test because NX_SKIP_RDS_TEST is set to true')
+        })
+    })
+}else{
+
+
+
+describe('RdsStore',()=>{
+    const tableName="TestTable_"+shortUuid().replace(/\W/g,'_');
+
+    const getScope=(storeOptions?:SqlStoreAdapterOptions)=>{
+
+        const scope=createScope(scope=>{
+            scope.use(awsModule);
+            scope.provideForService(sqlService,scope=>RdsClient.fromScope(scope,storeOptions));
+            scope.provideParams(new EnvParamProvider());
+        })
+        const client=sqlService(scope) as RdsClient;
+
+        expect(client).toBeInstanceOf(RdsClient);
+
+        return {scope,client:client}
+
+    }
+
+    const timeout=1000*60*3;
+
+    beforeAll(async ()=>{
+
+        const {client}=getScope();
+
+        console.log(`Creating table ${tableName}`)
+
+        console.log('Waking up database. This may take some time.')
+
+        await client.execAsync(sql`
+            CREATE TABLE ${sqlName(tableName)} (
+                "id" uuid PRIMARY KEY,
+                "stringValue" VARCHAR(255),
+                "numberValue" int,
+                "data" jsonb
+
+            );
+        `)
+    },timeout);
+
+    afterAll(async ()=>{
+        if(keepTable){
+            console.log(`Keeping table ${tableName}`)
+        }else{
+            const {client}=getScope();
+            console.log(`Dropping table ${tableName}`)
+            await client.execAsync(sql`
+                DROP TABLE ${sqlName(tableName)};
+            `)
+        }
+
+    },timeout)
+
+    const insertReturnAsync=async (client:RdsClient)=>{
+        const sourceItem=randomItem();
+
+        const item=await client.insertReturnAsync<Item>(tableName,sourceItem);
+
+        expect(sourceItem).toEqual(item);
+
+        return {item,sourceItem};
+    }
+
+    it('should insert and get record',async ()=>{
+
+        const {client}=getScope();
+
+        await insertReturnAsync(client);
+
+    })
+
+    it('should delete record',async ()=>{
+
+        const {client}=getScope();
+
+        const {item}=await insertReturnAsync(client);
+
+        await client.deleteAsync<Item>(tableName,'id',item.id);
+
+        const check=await client.selectFirstOrDefaultAsync(sql`
+            SELECT * FROM ${sqlName(tableName)} WHERE "id" = ${item.id} LIMIT 1
+        `)
+
+        expect(check).toBeUndefined();
+
+    })
+
+    it('should get as store',async ()=>{
+
+        const {client}=getScope();
+
+        const {item}=await insertReturnAsync(client);
+
+        const item2=await client.getStoreAdapter().getAsync<Item>(`${tableName}/id/${item.id}`);
+
+        expect(item).toEqual(item2);
+
+    })
+
+    it('should get as store with tableName',async ()=>{
+
+        const {client}=getScope({tableName});
+
+        const {item}=await insertReturnAsync(client);
+
+        const item2=await client.getStoreAdapter().getAsync<Item>(`id/${item.id}`);
+
+        expect(item).toEqual(item2);
+
+    })
+
+})
+
+
+
+}

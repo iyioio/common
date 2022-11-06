@@ -1,3 +1,4 @@
+
 export const escapeSqlString=(value:string)=>"'"+value.replace(/'/g,"''")+"'";
 export const escapeSqlName=(value:string)=>'"'+value.replace(/"/g,'""')+'"';
 
@@ -74,3 +75,4 @@ export const escapeSqlValue=(value:any):string=>{
 
     }
 }
+

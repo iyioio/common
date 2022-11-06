@@ -19,8 +19,7 @@ describe('S3Store', () => {
         }
 
         console.log(`put ${key}`);
-        const putR=await store.putAsync(key,value);
-        expect(putR).toEqual(value);
+        await store.putAsync(key,value);
 
 
         console.log(`get ${key}`);

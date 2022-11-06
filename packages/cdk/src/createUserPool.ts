@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 export const createUserPool=(scope:Construct)=>{
@@ -36,6 +37,7 @@ export const createUserPool=(scope:Construct)=>{
                 `),
                 handler: 'index.handler',
                 runtime: lambda.Runtime.NODEJS_16_X,
+                logRetention:logs.RetentionDays.ONE_WEEK
             })
         }
     });

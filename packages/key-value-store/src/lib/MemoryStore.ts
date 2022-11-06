@@ -56,20 +56,20 @@ export class MemoryStore<T=any> extends BaseStore<T>
         }
     }
 
-    public async getAsync(key:string,cancel?:CancelToken):Promise<T|undefined>
+    public async getAsync<TK extends T=T>(key:string,cancel?:CancelToken):Promise<TK|undefined>
     {
         await this._delayAsync(cancel);
         return this.data[key];
     }
 
-    public async putAsync(key:string,value:T,cancel?:CancelToken):Promise<T>
+    public async putAsync<TK extends T=T>(key:string,value:TK,cancel?:CancelToken):Promise<void>
     {
         if(this.cloneValues){
             value={...value};
         }
         await this._delayAsync(cancel);
         this.pointers[key]?._valueSource.next(value);
-        return this.data[key]=value;
+        this.data[key]=value;
     }
 
     public async deleteAsync(key:string,cancel?:CancelToken):Promise<boolean>
@@ -83,7 +83,7 @@ export class MemoryStore<T=any> extends BaseStore<T>
         return true;
     }
 
-    public watch(key:string):ValuePointer<T>|undefined
+    public watch<TK extends T=T>(key:string):ValuePointer<TK>|undefined
     {
         let ptr:SharedValuePointer<T>|undefined=this.pointers[key];
         if(!ptr){
@@ -93,7 +93,7 @@ export class MemoryStore<T=any> extends BaseStore<T>
             this.pointers[key]=ptr;
         }
         ptr.usage++;
-        return ptr;
+        return ptr as any as SharedValuePointer<TK>;
 
     }
 

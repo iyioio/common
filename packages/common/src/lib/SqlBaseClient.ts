@@ -1,6 +1,6 @@
 import { NoId } from "./common-types";
 import { deepCompare, objGetFirstValue } from "./object";
-import { escapeSqlName, escapeSqlValue } from "./sql";
+import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
 import { ISqlClient, SqlResult } from "./sql-types";
 
 
@@ -205,6 +205,15 @@ export abstract class SqlBaseClient implements ISqlClient
         }
 
         return ary;
+    }
+
+    public async deleteAsync<T>(table:string,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>
+    {
+        const r=await this.execAsync(sql`
+            DELETE FROM ${sqlName(table)} WHERE ${sqlName(colName.toString())} = ${colValue}
+        `);
+
+        return r.updates>0;
     }
 
     /**

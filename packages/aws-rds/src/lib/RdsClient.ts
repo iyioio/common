@@ -1,13 +1,13 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { awsRegionParam, IAwsAuth, IAwsAuthType } from "@iyio/aws";
 import { defineStringParam, Scope, SqlBaseClient, SqlResult, SqlRow, TypeDef } from '@iyio/common';
-import { IKeyValueStore, KeyValueStoreKeyScope } from "@iyio/key-value-store";
+import { IWithKeyStoreAdapter, SqlStoreAdapter, SqlStoreAdapterOptions } from "@iyio/key-value-store";
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
 export const rdsDatabaseParam=defineStringParam('rdsDatabase');
 
-export interface RdsStoreOptions
+export interface RdsClientOptions
 {
     awsAuth:TypeDef<IAwsAuth>;
     clusterArn:string;
@@ -16,10 +16,11 @@ export interface RdsStoreOptions
     region:string;
 }
 
-export class RdsStore<T=any> extends SqlBaseClient implements IKeyValueStore<T>
+
+export class RdsClient<T=any> extends SqlBaseClient implements IWithKeyStoreAdapter<T>
 {
 
-    public static optionsFromScope(scope:Scope):RdsStoreOptions{
+    public static optionsFromScope(scope:Scope):RdsClientOptions{
         return {
             awsAuth:scope.to(IAwsAuthType),
             clusterArn:scope.require(rdsClusterArnParam),
@@ -29,30 +30,21 @@ export class RdsStore<T=any> extends SqlBaseClient implements IKeyValueStore<T>
         }
     }
 
-    public static fromScope(scope:Scope){
-        return new RdsStore(RdsStore.optionsFromScope(scope));
+    public static fromScope(scope:Scope,storeAdapterOptions?:SqlStoreAdapterOptions){
+        return new RdsClient(RdsClient.optionsFromScope(scope),storeAdapterOptions);
     }
 
-    private readonly options:RdsStoreOptions;
+    private readonly options:RdsClientOptions;
 
-    public keyBase?:string;
+    private readonly storeAdapterOptions:SqlStoreAdapterOptions;
 
-    public keyReg?:RegExp;
-
-    public keyRegIndex?:number;
-
-    public keyCondition?:(key:string)=>string|boolean;
-
-    public constructor(options:RdsStoreOptions,keyFilter?:KeyValueStoreKeyScope)
+    public constructor(
+        options:RdsClientOptions,
+        storeAdapterOptions:SqlStoreAdapterOptions={})
     {
         super();
-        this.options={...options}
-        if(keyFilter){
-            this.keyBase=keyFilter.keyBase;
-            this.keyReg=keyFilter.keyReg;
-            this.keyRegIndex=keyFilter.keyRegIndex;
-            this.keyCondition=keyFilter.keyCondition;
-        }
+        this.options={...options};
+        this.storeAdapterOptions={...storeAdapterOptions};
     }
 
     private client:RDSDataClient|null=null;
@@ -65,6 +57,16 @@ export class RdsStore<T=any> extends SqlBaseClient implements IKeyValueStore<T>
             credentials:this.options.awsAuth.get()?.getAuthProvider()
         })
         return this.client;
+    }
+
+    private storeAdapter:SqlStoreAdapter|null=null;
+    public getStoreAdapter():SqlStoreAdapter<T>
+    {
+        if(this.storeAdapter){
+            return this.storeAdapter;
+        }
+        this.storeAdapter=new SqlStoreAdapter(this,this.storeAdapterOptions);
+        return this.storeAdapter;
     }
 
 
@@ -141,41 +143,7 @@ export class RdsStore<T=any> extends SqlBaseClient implements IKeyValueStore<T>
         return result;
     }
 
-    // public async getAsync(key:string,cancel?:CancelToken):Promise<T|undefined>
-    // {
-    //     //
-    // }
 
-    // public async putAsync(key:string,value:T,cancel?:CancelToken):Promise<T>
-    // {
-    //     //
-    // }
-
-    // public async patchAsync(key:string,value:Partial<T>,cancel?:CancelToken):Promise<T>
-    // {
-    //     //
-    // }
-
-    // public async createAsync(baseKey:string,primaryKey:(keyof T)|null|undefined,value:Partial<T>,cancel?:CancelToken):Promise<CreateKeyValueResult<T>>
-    // {
-    //     //
-    // }
-
-    // public async createNoReturnAsync(baseKey:string,primaryKey:(keyof T)|null|undefined,value:Partial<T>,cancel?:CancelToken):Promise<void>
-    // {
-    //     //
-    // }
-
-    // public async deleteAsync(key:string,cancel?:CancelToken):Promise<boolean|undefined>
-    // {
-    //     //
-    // }
-
-    // public async queryAsync(baseKey:string,query:Query,cancel?:CancelToken):Promise<T[]>
-    // {
-    //     //
-
-    // }
 }
 
 /**

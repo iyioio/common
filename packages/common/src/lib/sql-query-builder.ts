@@ -1,6 +1,6 @@
 import { asType } from "./common-lib";
 import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
-import { escapeSqlName, escapeSqlValue } from "./sql";
+import { escapeSqlName, escapeSqlValue } from "./sql-lib";
 
 /**
  * Builds a SQL query string from the specified Query object.
@@ -186,4 +186,57 @@ const appendCol=(ctx:QueryBuildCtx,col:QueryCol)=>{
     }else{
         ctx.sql.push(escapeSqlName(col.name));
     }
+}
+
+
+/**
+ * Converts a key value store path to a select query
+ * path format -         /{tableName}/{keyName}/{keyValue}
+ * example path -        /messages/id/aab76047-5c68-4b82-b53f-06f384f0d145
+ * translated query -    select * from "message" where "id" = 'aab76047-5c68-4b82-b53f-06f384f0d145'
+ */
+export const convertStorePathToSelectQuery=(path:string,scopedTable?:string):Query|undefined=>
+{
+    if(path.startsWith('/')){
+        path=path.substring(1);
+    }
+    if(scopedTable){
+        path=scopedTable+'/'+path;
+    }
+    const [table,keyName,keyValue]=path.split('/',3);
+
+    if(!table || !keyName || keyValue===undefined){
+        return undefined;
+    }
+
+    return {
+        table,
+        condition:{
+            left:{col:{name:keyName}},
+            op:'=',
+            right:{value:keyValue}
+        }
+    }
+}
+
+export interface SqlInsertInfo
+{
+    table:string;
+    keyName?:string;
+    keyValue?:string;
+}
+export const convertStorePathToSqlInsert=(path:string,scopedTable?:string):SqlInsertInfo|undefined=>{
+    if(path.startsWith('/')){
+        path=path.substring(1);
+    }
+    if(scopedTable){
+        path=scopedTable+'/'+path;
+    }
+    const [table,keyName,keyValue]=path.split('/',3);
+
+    if(!table){
+        return undefined;
+    }
+
+    return {table,keyName,keyValue}
 }
