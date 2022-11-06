@@ -1,6 +1,10 @@
-import { CancelToken, delayAsync, HashMap, SharedValuePointer, ValuePointer } from "@iyio/common";
 import { BaseStore } from "./BaseStore";
+import { CancelToken } from "./CancelToken";
+import { delayAsync } from "./common-lib";
+import { HashMap } from "./common-types";
 import { KeyValueStoreKeyScope, KeyValueStoreOp } from "./key-value-store-types";
+import { ValuePointer } from "./pointers";
+import { SharedValuePointer } from "./shared-pointers";
 
 export interface MemoryStoreOptions extends KeyValueStoreKeyScope
 {

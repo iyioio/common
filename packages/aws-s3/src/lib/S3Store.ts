@@ -1,7 +1,6 @@
 import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client, S3ClientConfig } from "@aws-sdk/client-s3";
 import { awsRegionParam, IAwsAuthType } from '@iyio/aws';
-import { CancelToken, Scope } from "@iyio/common";
-import { BaseStore, BinaryStoreValue } from "@iyio/key-value-store";
+import { BaseStore, BinaryStoreValue, CancelToken, Scope } from "@iyio/common";
 
 export interface S3StoreConfig
 {

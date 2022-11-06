@@ -25,7 +25,6 @@
             "@iyio/aws-tests": ["packages/aws-tests/src/index.ts"],
             "@iyio/browser-mocks": ["packages/browser-mocks/src/index.ts"],
             "@iyio/common": ["packages/common/src/index.ts"],
-            "@iyio/key-value-store": ["packages/key-value-store/src/index.ts"],
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"]
         }

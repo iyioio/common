@@ -1,7 +1,6 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { awsRegionParam, IAwsAuth, IAwsAuthType } from "@iyio/aws";
-import { defineStringParam, Scope, SqlBaseClient, SqlResult, SqlRow, TypeDef } from '@iyio/common';
-import { IWithKeyStoreAdapter, SqlStoreAdapter, SqlStoreAdapterOptions } from "@iyio/key-value-store";
+import { defineStringParam, IWithKeyStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');

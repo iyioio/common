@@ -1,7 +1,6 @@
 import { authService, IAuthProviderType, User } from "@iyio/app-common";
 import { IAwsAuthType } from "@iyio/aws";
-import { createScope, Scope, ScopeModule, shortUuid } from "@iyio/common";
-import { MemoryStore, storeService } from "@iyio/key-value-store";
+import { createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeService } from "@iyio/common";
 import { fail } from "assert";
 import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
 

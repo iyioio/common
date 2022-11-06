@@ -3,6 +3,8 @@ import { HttpFetcher, IHttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
+import { IKeyValueStore, KeyValueStoreProvider } from "./key-value-store-types";
+import { RouterStore } from "./RouterStore";
 import { defineBoolParam, defineNumberParam, defineParam, defineService, defineStringParam, defineType } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { stringToHashMap } from "./string-converters";
@@ -11,7 +13,6 @@ import { stringToHashMap } from "./string-converters";
 export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
 
 // HTTP
-
 export const http=defineService<HttpClient>('http',scope=>HttpClient.fromScope(scope));
 export const IHttpRequestSignerType=defineType<IHttpRequestSigner>('IHttpRequestSignerType');
 export const IHttpFetcherType=defineType<HttpFetcher>('IHttpFetcherType',()=>new HttpDefaultFetcher());
@@ -25,10 +26,14 @@ export const httpRetryDelayMsParam=defineNumberParam('HTTP_RETRY_DELAY_MS',500);
 
 
 // JWP
-
 export const JwtProviderType=defineType<JwtProvider>('JwtProvider');
 
 
 
 // SQL
 export const sqlService=defineService<ISqlClient>('sqlService');
+
+
+// Store
+export const storeService=defineService<RouterStore>("storeService",scope=>new RouterStore(scope));
+export const IKeyValueStoreType=defineType<IKeyValueStore|KeyValueStoreProvider>("IKeyValueStoreType");

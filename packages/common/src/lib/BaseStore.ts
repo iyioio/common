@@ -1,5 +1,7 @@
-import { getObjKeyCount, HashMap, SharedValuePointer } from "@iyio/common";
+import { HashMap } from "./common-types";
 import { IKeyValueStore, KeyValueStoreKeyScope } from "./key-value-store-types";
+import { getObjKeyCount } from "./object";
+import { SharedValuePointer } from "./shared-pointers";
 
 export abstract class BaseStore<T> implements IKeyValueStore<T>
 {

@@ -1,6 +1,5 @@
 import { awsModule } from "@iyio/aws";
-import { createScope, EnvParamProvider, HashMap, parseConfigBool, shortUuid, sql, sqlName, sqlService, uuid } from "@iyio/common";
-import { SqlStoreAdapterOptions } from "@iyio/key-value-store";
+import { createScope, EnvParamProvider, HashMap, parseConfigBool, shortUuid, sql, sqlName, sqlService, SqlStoreAdapterOptions, uuid } from "@iyio/common";
 import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
 import { RdsClient } from "./RdsClient";
 

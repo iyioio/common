@@ -1,6 +1,10 @@
-import { CancelToken, DisposedError, ListPointer, Query, Scope, UnsupportedError, ValuePointer } from "@iyio/common";
+import { CancelToken } from "./CancelToken";
+import { DisposedError, UnsupportedError } from "./errors";
 import { isKeyStoreScopeMatch } from "./key-value-store-lib";
 import { CreateKeyValueResult, IKeyValueStore, isIWithKeyStoreAdapter, IWithKeyStoreAdapter, KeyValueStoreMatch, KeyValueStoreOp, KeyValueStoreOpMethods, KeyValueStoreProvider } from "./key-value-store-types";
+import { ListPointer, ValuePointer } from "./pointers";
+import { Query } from "./query-types";
+import { Scope } from "./scope-types";
 
 interface StoreRoute
 {

@@ -1,4 +1,9 @@
-import { CancelToken, IOpDisposable, ListPointer, Query, TypeDef, ValuePointer } from "@iyio/common";
+import { CancelToken } from "./CancelToken";
+import { IOpDisposable } from "./common-types";
+import { ListPointer, ValuePointer } from "./pointers";
+import { Query } from "./query-types";
+import { TypeDef } from "./scope-types";
+
 
 export type KeyValueStoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';
 
@@ -118,4 +123,21 @@ export const isIWithKeyStoreAdapter=(value:any):value is IWithKeyStoreAdapter=>(
 export interface IWithKeyStoreAdapter<T=any>
 {
     getStoreAdapter():IKeyValueStore<T>;
+}
+
+
+export type BinaryValueType=Uint8Array;
+
+export class BinaryStoreValue
+{
+    public readonly content:BinaryValueType;
+    public readonly contentType:string;
+    public readonly length?:number;
+
+    public constructor(contentType:string,content:BinaryValueType,length?:number)
+    {
+        this.contentType=contentType;
+        this.content=content;
+        this.length=length;
+    }
 }

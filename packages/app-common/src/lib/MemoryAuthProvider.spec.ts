@@ -1,5 +1,4 @@
-import { createScope, Scope, shortUuid } from "@iyio/common";
-import { MemoryStore, storeService } from "@iyio/key-value-store";
+import { createScope, MemoryStore, Scope, shortUuid, storeService } from "@iyio/common";
 import { AuthRegisterStatus } from "./auth-types";
 import { MemoryAuthProvider } from './MemoryAuthProvider';
 import { authService, currentUser, IAuthProviderType } from './_types.app-common';

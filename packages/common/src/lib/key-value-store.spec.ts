@@ -1,7 +1,8 @@
-import { createScope, shortUuid, uuid } from '@iyio/common';
 import { IKeyValueStore } from './key-value-store-types';
 import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
+import { createScope } from './scope-lib';
+import { shortUuid, uuid } from './uuid';
 
 interface Person
 {
