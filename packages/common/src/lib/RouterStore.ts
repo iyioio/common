@@ -77,6 +77,8 @@ export class RouterStore<T=any> implements IStore<T>, Required<StoreOpMethods<T>
             ...route,
             path:this.formatPath(route.path),
         });
+
+        this.sortRoutes();
     }
 
     public mount(path:string,provider:IStore|IWithStoreAdapter|StoreProvider|((scope:Scope)=>IStore|IWithStoreAdapter))
@@ -104,6 +106,13 @@ export class RouterStore<T=any> implements IStore<T>, Required<StoreOpMethods<T>
                 store: provider
             });
         }
+
+        this.sortRoutes();
+    }
+
+    private sortRoutes()
+    {
+        this.routes.sort((a,b)=>b.path.length-a.path.length);
     }
 
     public getRouteMatch(key:string,op?:StoreOp):StoreMatch|undefined
