@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: 'babel-plugin-env',
+    displayName: 'babel-plugin-macros',
     preset: '../../jest.preset.js',
     globals: {
         'ts-jest': {
@@ -12,5 +12,5 @@ export default {
         '^.+\\.[tj]s$': 'ts-jest',
     },
     moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageDirectory: '../../coverage/packages/babel-plugin-env',
+    coverageDirectory: '../../coverage/packages/babel-plugin-macros',
 };

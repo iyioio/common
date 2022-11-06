@@ -1,4 +1,4 @@
 {
     "babelrcRoots": ["*"],
-    "plugins": ["./packages/babel-plugin-env/src/babel-plugin-env"]
+    "plugins": ["./packages/babel-plugin-macros/src/babel-plugin-macros"]
 }

@@ -1,5 +1,5 @@
 {
-    "name": "@iyio/babel-plugin-env",
+    "name": "@iyio/babel-plugin-macros",
     "version": "0.0.7",
     "type": "commonjs"
 }

@@ -1,4 +1,4 @@
-# IYIO babel-plugin-env
+# IYIO babel-plugin-macros
 Used to register environment variables with the @iyio/common registerConfig function
 
 ## Usage
@@ -48,7 +48,7 @@ To enable the plugin workspace wide add the plugin to the root babel.config.json
 ``` json
 {
     "babelrcRoots": ["*"],
-    "plugins": ["@iyio/babel-plugin-env"]
+    "plugins": ["@iyio/babel-plugin-macros"]
 }
 ```
 
@@ -61,7 +61,7 @@ To enable the plugin in a NextJS project add the plugin to the .babelrc file in 
 ``` json
 {
     "presets": ["@nrwl/next/babel"],
-    "plugins": ["@iyio/babel-plugin-env"]
+    "plugins": ["@iyio/babel-plugin-macros"]
 }
 ```
 
