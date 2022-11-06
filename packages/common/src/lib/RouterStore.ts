@@ -6,10 +6,9 @@ import { Scope } from "./scope-types";
 import { isStoreScopeMatch } from "./store-lib";
 import { CreateStoreValueResult, isIWithStoreAdapter, IStore, IWithStoreAdapter, StoreMatch, StoreOp, StoreOpMethods, StoreProvider } from "./store-types";
 
-interface StoreRoute
+export interface StoreRoute
 {
     path:string;
-    depId?:symbol;
     provider?:StoreProvider;
     create?:(scope:Scope)=>IStore|IWithStoreAdapter;
     store?:IStore;
@@ -57,10 +56,7 @@ export class RouterStore<T=any> implements IStore<T>, Required<StoreOpMethods<T>
         return c;
     }
 
-
-    public mount(path:string,provider:IStore|IWithStoreAdapter|StoreProvider|((scope:Scope)=>IStore|IWithStoreAdapter),depId?:symbol)
-    {
-
+    private formatPath(path:string){
         if(path.startsWith('/')){
             path=path.substring(1);
         }
@@ -68,29 +64,43 @@ export class RouterStore<T=any> implements IStore<T>, Required<StoreOpMethods<T>
         if(path && !path.endsWith('/')){
             path+='/';
         }
+        return path;
+    }
+
+    public mountRoute(route:StoreRoute)
+    {
+        if(!route.create && !route.provider && !route.store){
+            throw new Error('Invalid StoreRoute. create, provider or store required');
+        }
+
+        this.routes.push({
+            ...route,
+            path:this.formatPath(route.path),
+        });
+    }
+
+    public mount(path:string,provider:IStore|IWithStoreAdapter|StoreProvider|((scope:Scope)=>IStore|IWithStoreAdapter))
+    {
+        path=this.formatPath(path);
 
         if((provider as Partial<StoreProvider>).providerType){
             this.routes.push({
                 path,
-                depId,
                 provider:provider as StoreProvider
             });
         }else if(typeof provider === 'function'){
             this.routes.push({
                 path,
-                depId,
                 create:provider
             })
         }else if(isIWithStoreAdapter(provider)){
             this.routes.push({
                 path,
-                depId,
                 store: provider.getStoreAdapter()
             });
         }else{
             this.routes.push({
                 path,
-                depId,
                 store: provider
             });
         }
