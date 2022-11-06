@@ -1,3 +1,6 @@
+import { IAuthProvider } from "./auth-types";
+import { AuthService } from "./AuthService";
+import { BaseUser } from "./BaseUser";
 import { HashMap } from "./common-types";
 import { HttpFetcher, IHttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
@@ -5,9 +8,10 @@ import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
 import { IKeyValueStore, KeyValueStoreProvider } from "./key-value-store-types";
 import { RouterStore } from "./RouterStore";
-import { defineBoolParam, defineNumberParam, defineParam, defineService, defineStringParam, defineType } from "./scope-lib";
+import { defineBoolParam, defineNumberParam, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { stringToHashMap } from "./string-converters";
+import { _setUser } from "./_internal.common";
 
 
 export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
@@ -37,3 +41,9 @@ export const sqlService=defineService<ISqlClient>('sqlService');
 // Store
 export const storeService=defineService<RouterStore>("storeService",scope=>new RouterStore(scope));
 export const IKeyValueStoreType=defineType<IKeyValueStore|KeyValueStoreProvider>("IKeyValueStoreType");
+
+
+// Auth
+export const authService=defineService<AuthService>('auth',scope=>AuthService.fromScope(scope));
+export const currentUser=defineReadonlyObservable<BaseUser|null>('currentUser',_setUser,()=>null);
+export const IAuthProviderType=defineType<IAuthProvider>("IAuthProviderType");

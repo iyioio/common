@@ -1,6 +1,9 @@
 export * from './lib/array';
+export * from './lib/auth-types';
+export * from './lib/AuthService';
 export * from './lib/base64';
 export * from './lib/BaseStore';
+export * from './lib/BaseUser';
 export * from './lib/CancelToken';
 export * from './lib/common-lib';
 export * from './lib/common-types';
@@ -43,5 +46,4 @@ export * from './lib/type-conversion';
 export * from './lib/uuid';
 export * from './lib/validation';
 export * from './lib/_types.common';
-
 

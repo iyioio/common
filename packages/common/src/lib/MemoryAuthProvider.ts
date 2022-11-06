@@ -1,12 +1,14 @@
-import { aryRemoveFirst, delayAsync, shortUuid } from "@iyio/common";
+import { aryRemoveFirst } from "./array";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
-import { User } from "./User";
+import { BaseUser } from "./BaseUser";
+import { delayAsync } from "./common-lib";
+import { shortUuid } from "./uuid";
 
 interface MemoryUserRecord
 {
     password?:string;
     email?:string;
-    user:User;
+    user:BaseUser;
 }
 
 export class MemoryAuthProvider implements IAuthProvider
@@ -40,12 +42,12 @@ export class MemoryAuthProvider implements IAuthProvider
         }
     }
 
-    public async getUserAsync(data: UserAuthProviderData): Promise<User | null> {
+    public async getUserAsync(data: UserAuthProviderData): Promise<BaseUser | null> {
         await this.delayAsync();
         return this.users.find(u=>u.user.id===data.userId)?.user??null;
     }
 
-    public async deleteAsync(user:User):Promise<AuthDeleteResult|undefined>{
+    public async deleteAsync(user:BaseUser):Promise<AuthDeleteResult|undefined>{
         await this.delayAsync();
         const deleted=aryRemoveFirst(this.users,r=>r.user.id===user.id);
         if(deleted){
@@ -93,7 +95,7 @@ export class MemoryAuthProvider implements IAuthProvider
         const record:MemoryUserRecord={
             email,
             password,
-            user:new User(id,email,{
+            user:new BaseUser(id,email,{
                 userId:id,
                 type:this.type,
             })

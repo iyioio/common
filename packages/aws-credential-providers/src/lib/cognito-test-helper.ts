@@ -1,10 +1,9 @@
-import { authService, IAuthProviderType, User } from "@iyio/app-common";
 import { IAwsAuthType } from "@iyio/aws";
-import { createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeService } from "@iyio/common";
+import { authService, BaseUser, createScope, IAuthProviderType, MemoryStore, Scope, ScopeModule, shortUuid, storeService } from "@iyio/common";
 import { fail } from "assert";
 import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
 
-export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user:User,config:CognitoAuthProviderConfig)=>Promise<void>)=>{
+export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user:BaseUser,config:CognitoAuthProviderConfig)=>Promise<void>)=>{
 
     let provider:CognitoAuthProvider|undefined=undefined;
 

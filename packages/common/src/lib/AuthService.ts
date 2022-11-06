@@ -1,15 +1,22 @@
-import { breakFunction, continueFunction, DisposeContainer, HashMap, IDisposable, IInit, isValidEmail, ReadonlySubject, RouterStore, Scope, ScopedSetter, storeService, TypeDef } from "@iyio/common";
 import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
-import { User } from "./User";
-import { _setUser } from "./_internal.app-common";
-import { currentUser, IAuthProviderType } from "./_types.app-common";
+import { BaseUser } from "./BaseUser";
+import { breakFunction, continueFunction } from "./common-lib";
+import { HashMap, IDisposable, IInit } from "./common-types";
+import { DisposeContainer } from "./DisposeContainer";
+import { RouterStore } from "./RouterStore";
+import { ReadonlySubject } from "./rxjs-types";
+import { Scope, TypeDef } from "./scope-types";
+import { ScopedSetter } from "./Setter";
+import { isValidEmail } from "./validation";
+import { _setUser } from "./_internal.common";
+import { currentUser, IAuthProviderType, storeService } from "./_types.common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 
 export interface AuthServiceOptions
 {
-    currentUser:ReadonlySubject<User|null>;
-    setUser:ScopedSetter<User|null>;
+    currentUser:ReadonlySubject<BaseUser|null>;
+    setUser:ScopedSetter<BaseUser|null>;
     providers:TypeDef<IAuthProvider>;
     store:RouterStore;
 }
@@ -33,8 +40,8 @@ export class AuthService implements IDisposable, IInit
 
     private readonly providers:HashMap<Promise<IAuthProvider>>={};
 
-    private readonly currentUser:ReadonlySubject<User|null>;
-    private readonly setUser:ScopedSetter<User|null>;
+    private readonly currentUser:ReadonlySubject<BaseUser|null>;
+    private readonly setUser:ScopedSetter<BaseUser|null>;
 
     private readonly store:RouterStore;
 
@@ -86,7 +93,7 @@ export class AuthService implements IDisposable, IInit
         this.disposables.dispose();
     }
 
-    public async getUserAsync(providerData:UserAuthProviderData):Promise<User|undefined>
+    public async getUserAsync(providerData:UserAuthProviderData):Promise<BaseUser|undefined>
     {
         return await this.authProviders.getFirstAsync(null,async provider=>{
             return await provider.getUserAsync?.(providerData);
@@ -114,7 +121,7 @@ export class AuthService implements IDisposable, IInit
         return await p;
     }
 
-    public async deleteAsync(user:User):Promise<AuthDeleteResult>
+    public async deleteAsync(user:BaseUser):Promise<AuthDeleteResult>
     {
         return await this.authProviders.getFirstAsync(null,async provider=>{
             return await provider.deleteAsync?.(user);
@@ -207,7 +214,7 @@ export class AuthService implements IDisposable, IInit
         return result;
     }
 
-    private async setUserAsync(user:User|null,save:boolean)
+    private async setUserAsync(user:BaseUser|null,save:boolean)
     {
         if(!user && !this.currentUser.value){
             return;

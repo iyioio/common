@@ -1,8 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, currentUser, IAuthProvider, User, UserAuthProviderData } from '@iyio/app-common';
 import { awsRegionParam, IAwsAuth } from '@iyio/aws';
-import { HashMap, parseConfigBool, ReadonlySubject, Scope } from '@iyio/common';
+import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, BaseUser, currentUser, HashMap, IAuthProvider, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import {
     cognitoIdentityPoolIdParam,
@@ -25,7 +24,7 @@ export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
 {
     region:string;
     identityPoolId:string;
-    currentUser:ReadonlySubject<User|null>;
+    currentUser:ReadonlySubject<BaseUser|null>;
 }
 
 export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
@@ -47,7 +46,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
 
     private readonly userPool:CognitoUserPool;
 
-    private readonly currentUser:ReadonlySubject<User|null>;
+    private readonly currentUser:ReadonlySubject<BaseUser|null>;
 
     constructor(config:CognitoAuthProviderConfig)
     {
@@ -96,7 +95,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
 
     }
 
-    public async getCurrentUser():Promise<User|null>{
+    public async getCurrentUser():Promise<BaseUser|null>{
         try{
 
             const cognitoUser=this.userPool.getCurrentUser();
@@ -110,13 +109,13 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
         return null;
     }
 
-    private convertCognitoUserAsync(user:CognitoUser):Promise<User>
+    private convertCognitoUserAsync(user:CognitoUser):Promise<BaseUser>
     {
-        return new Promise<User>((resolve,reject)=>{
+        return new Promise<BaseUser>((resolve,reject)=>{
             user.getSession((error:Error|null,session:CognitoUserSession|null)=>{
                 if(session){
                     const id=user.getUsername();
-                    resolve(new User(id,id,{
+                    resolve(new BaseUser(id,id,{
                         type:this.type,
                         userId:id,
                         providerData:{
@@ -131,14 +130,14 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
         })
     }
 
-    public async getUserAsync(data: UserAuthProviderData):Promise<User|null> {
+    public async getUserAsync(data: UserAuthProviderData):Promise<BaseUser|null> {
         const user:CognitoUser|undefined=data.providerData?.[userKey];
         if(!user){
             return null;
         }
         return await this.convertCognitoUserAsync(user);
     }
-    public async deleteAsync(user: User): Promise<AuthDeleteResult | undefined> {
+    public async deleteAsync(user: BaseUser): Promise<AuthDeleteResult | undefined> {
         const cUser:CognitoUser|undefined=user.providerData.providerData?.[userKey];
         if(!cUser){
             return;
@@ -159,7 +158,7 @@ export class CognitoAuthProvider implements IAuthProvider, IAwsAuth
         })
         });
     }
-    public async signOutAsync(user: User): Promise<void> {
+    public async signOutAsync(user: BaseUser): Promise<void> {
         const cUser:CognitoUser|undefined=user.providerData.providerData?.[userKey];
         if(!cUser){
             return;

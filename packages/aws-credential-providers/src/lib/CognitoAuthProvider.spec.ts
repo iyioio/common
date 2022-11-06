@@ -1,5 +1,4 @@
-import { authService } from "@iyio/app-common";
-import { createScope, EnvParamProvider, MemoryStore, shortUuid, storeService } from "@iyio/common";
+import { authService, createScope, EnvParamProvider, MemoryStore, shortUuid, storeService } from "@iyio/common";
 import { cognitoAuthProviderModule } from './_modules.aws-credential-providers';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 

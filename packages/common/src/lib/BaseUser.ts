@@ -1,10 +1,12 @@
-import { DisposeContainer, IDisposable, IInit, ReadonlySubject, SymStrHashMap } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
 import { UserAuthProviderData } from "./auth-types";
+import { IDisposable, IInit, SymStrHashMap } from "./common-types";
+import { DisposeContainer } from "./DisposeContainer";
+import { ReadonlySubject } from "./rxjs-types";
 
 
 
-export class User implements IDisposable, IInit
+export class BaseUser implements IDisposable, IInit
 {
     public readonly id:string;
 

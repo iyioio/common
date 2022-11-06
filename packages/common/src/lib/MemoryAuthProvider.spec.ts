@@ -1,7 +1,10 @@
-import { createScope, MemoryStore, Scope, shortUuid, storeService } from "@iyio/common";
 import { AuthRegisterStatus } from "./auth-types";
 import { MemoryAuthProvider } from './MemoryAuthProvider';
-import { authService, currentUser, IAuthProviderType } from './_types.app-common';
+import { MemoryStore } from "./MemoryStore";
+import { createScope } from "./scope-lib";
+import { Scope } from "./scope-types";
+import { shortUuid } from "./uuid";
+import { authService, currentUser, IAuthProviderType, storeService } from "./_types.common";
 
 describe('MemoryAuthProvider',()=>{
 

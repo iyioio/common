@@ -1,9 +1,9 @@
-import { IOpDisposable, IOpInit, SymStrHashMap } from "@iyio/common";
-import { User } from "./User";
+import { BaseUser } from "./BaseUser";
+import { IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
 
 export type AuthSignInResult={
     success:true;
-    user:User;
+    user:BaseUser;
 } | {
     success:false;
     message:string;
@@ -12,7 +12,7 @@ export type AuthSignInResult={
 
 export type AuthRegisterResult={
     status:'success',
-    user:User;
+    user:BaseUser;
 } | {
     status:'verificationRequired',
     message:string;
@@ -71,22 +71,22 @@ export interface IAuthProvider extends IOpInit, IOpDisposable
     /**
      * Attempts to get or create a user using the given auth provider data.
      */
-    getCurrentUser?():Promise<User|null>;
+    getCurrentUser?():Promise<BaseUser|null>;
 
     /**
      * Attempts to get or create a user using the given auth provider data.
      */
-    getUserAsync(data:UserAuthProviderData):Promise<User|null>;
+    getUserAsync(data:UserAuthProviderData):Promise<BaseUser|null>;
 
     /**
      * Deletes the user
      */
-    deleteAsync(user:User):Promise<AuthDeleteResult|undefined>;
+    deleteAsync(user:BaseUser):Promise<AuthDeleteResult|undefined>;
 
     /**
      * Signs out the given user
      */
-    signOutAsync(user:User):Promise<void>;
+    signOutAsync(user:BaseUser):Promise<void>;
 
     /**
      * Signs in  a user using their email and password. Undefined can be returned to indicate the
