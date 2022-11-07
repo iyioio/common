@@ -1,14 +1,14 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
 import { createScope, EnvParamProvider, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
-import { S3Store } from './S3Store';
+import { S3Client } from './S3Client';
 
 describe('S3Store', () => {
 
-    const putGetDeleteAsync=async (scope:Scope, onStore?:(store:S3Store)=>void)=>{
+    const putGetDeleteAsync=async (scope:Scope, onStore?:(store:S3Client)=>void)=>{
 
-        const store=S3Store.fromScope(scope,{
-            bucket:scope.requireParam('TEST_BUCKET_NAME')
-        });
+        const store=S3Client.fromScope(scope);
+
+        const bucket=scope.requireParam('TEST_BUCKET_NAME')
 
         onStore?.(store);
 
@@ -19,20 +19,20 @@ describe('S3Store', () => {
         }
 
         console.log(`put ${key}`);
-        await store.putAsync(key,value);
+        await store.putAsync(bucket,key,value);
 
 
         console.log(`get ${key}`);
-        const getR=await store.getAsync(key);
+        const getR=await store.getAsync(bucket,key);
         expect(getR).toEqual(value);
 
 
         console.log(`delete ${key}`);
-        await store.deleteAsync(key);
+        await store.deleteAsync(bucket,key);
 
 
         console.log(`check ${key}`);
-        const get2R=await store.getAsync(key);
+        const get2R=await store.getAsync(bucket,key);
         expect(get2R).toBeUndefined();
 
         return {store,config:store.clientConfig};
@@ -71,10 +71,10 @@ describe('S3Store', () => {
         },async scope=>{
             const basePath='s3/test-items'
             await testMountedStoreAsync(scope,basePath,{
-                    path:basePath,
-                    store:S3Store.fromScope(scope,{
+                path:basePath,
+                store:S3Client.fromScope(scope,{
                     bucket:scope.requireParam('TEST_BUCKET_NAME')
-                })
+                }).getStoreAdapter()
             })
 
         })
