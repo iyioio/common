@@ -1,4 +1,4 @@
-import { createScope, emptyFunction, http } from "@iyio/common";
+import { createScope, emptyFunction, httpClient } from "@iyio/common";
 import { createServer } from 'node:http';
 import { nodeCommonModule } from './_modules.node-common';
 
@@ -60,9 +60,9 @@ describe('http',()=>{
             scope.use(nodeCommonModule);
         });
 
-        const httpClient=http(scope);
+        const http=httpClient(scope);
 
-        const ok=await httpClient.getAsync<OkInterface>(url);
+        const ok=await http.getAsync<OkInterface>(url);
 
         expect(ok).toEqual(defaultOk);
 

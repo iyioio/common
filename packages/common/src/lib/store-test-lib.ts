@@ -5,7 +5,7 @@ import { StoreRoute } from "./RouterStore";
 import { defineBoolParam } from './scope-lib';
 import { Scope } from './scope-types';
 import { uuid } from "./uuid";
-import { storeService } from './_types.common';
+import { rootStore } from './_types.common';
 
 const keepTestStoreItemsParam=defineBoolParam('keepTestStoreItems',false);
 
@@ -36,9 +36,9 @@ export const generateRandomTestStoreItem=():TestStoreItem=>({
  */
 export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:StoreRoute)=>{
 
-    const rootStore=storeService(scope);
+    const root=rootStore(scope);
 
-    rootStore.mountRoute(route);
+    root.mountRoute(route);
 
     const sourceItem=generateRandomTestStoreItem();
 
@@ -49,19 +49,19 @@ export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:Stor
     const missingKey=`${uuid()}/${sourceItem.id}`;
     const realKey=`${basePath}/${sourceItem.id}`;
 
-    let item=await rootStore.getAsync<TestStoreItem>(missingKey);
+    let item=await root.getAsync<TestStoreItem>(missingKey);
 
     if(item!==undefined){
         throw new Error(`An item should have not been returned for missing key - ${missingKey}`);
     }
 
-    item=await rootStore.getAsync<TestStoreItem>(realKey);
+    item=await root.getAsync<TestStoreItem>(realKey);
     if(item!==undefined){
         throw new Error(`An item should not exists at ${realKey} yet`);
     }
 
-    await rootStore.putAsync(realKey,sourceItem);
-    item=await rootStore.getAsync<TestStoreItem>(realKey);
+    await root.putAsync(realKey,sourceItem);
+    item=await root.getAsync<TestStoreItem>(realKey);
     if(!deepCompare(sourceItem,item)){
         throw new Error('Returned item should be the same as source item - '+JSON.stringify({sourceItem,item},null,4))
     }
@@ -69,8 +69,8 @@ export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:Stor
     if(keepTestStoreItemsParam(scope)){
         console.warn(`!!!!!!. Keeping test items in store. key = ${realKey}`,item,sourceItem)
     }else{
-        await rootStore.deleteAsync(realKey);
-        item=await rootStore.getAsync<TestStoreItem>(realKey);
+        await root.deleteAsync(realKey);
+        item=await root.getAsync<TestStoreItem>(realKey);
         if(item!==undefined){
             throw new Error(`Item at ${realKey} should have been deleted`);
         }

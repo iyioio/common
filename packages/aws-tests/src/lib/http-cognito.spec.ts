@@ -1,6 +1,6 @@
 import { awsModule } from '@iyio/aws';
 import { useTempCognitoUser } from '@iyio/aws-credential-providers';
-import { createScope, defineStringParam, EnvParamProvider, http } from "@iyio/common";
+import { createScope, defineStringParam, EnvParamProvider, httpClient as http } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
 
 const authFuncUrl=defineStringParam('AUTH_FUNC_URL');

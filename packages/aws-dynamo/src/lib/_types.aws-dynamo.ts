@@ -1,4 +1,4 @@
-import { defineService } from "@iyio/common";
+import { defineClient } from "@iyio/common";
 import { DynamoClient } from "./DynamoClient";
 
-export const dynamoClient=defineService<DynamoClient>('dynamoClient',scope=>DynamoClient.fromScope(scope))
+export const dynamoClient=defineClient<DynamoClient>('dynamoClient',scope=>DynamoClient.fromScope(scope))

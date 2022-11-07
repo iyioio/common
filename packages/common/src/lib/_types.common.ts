@@ -7,7 +7,7 @@ import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
 import { RouterStore } from "./RouterStore";
-import { defineBoolParam, defineNumberParam, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType } from "./scope-lib";
+import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { IStore, StoreProvider } from "./store-types";
 import { stringToHashMap } from "./string-converters";
@@ -17,7 +17,7 @@ import { _setUser } from "./_internal.common";
 export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
 
 // HTTP
-export const http=defineService<HttpClient>('http',scope=>HttpClient.fromScope(scope));
+export const httpClient=defineClient<HttpClient>('httpClient',scope=>HttpClient.fromScope(scope));
 export const IHttpRequestSignerType=defineType<IHttpRequestSigner>('IHttpRequestSignerType');
 export const IHttpFetcherType=defineType<HttpFetcher>('IHttpFetcherType',()=>new HttpDefaultFetcher());
 
@@ -35,11 +35,11 @@ export const JwtProviderType=defineType<JwtProvider>('JwtProvider');
 
 
 // SQL
-export const sqlService=defineService<ISqlClient>('sqlService');
+export const sqlClient=defineClient<ISqlClient>('sqlService');
 
 
 // Store
-export const storeService=defineService<RouterStore>("storeService",scope=>new RouterStore(scope));
+export const rootStore=defineService<RouterStore>("storeService",scope=>new RouterStore(scope));
 export const IStoreType=defineType<IStore|StoreProvider>("IStoreType");
 
 

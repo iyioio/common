@@ -35,7 +35,7 @@ interface ScopeInternal extends Scope
     /**
      * Defines a new type
      */
-    defineService<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>;
+    defineCallableType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>;
 
     /**
      * Defines a type with an observable value
@@ -457,7 +457,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         _defineType<T>({name,defaultProvider})
     )
 
-    const defineService=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
+    const defineCallableType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
         _defineCallableType<T>({name,defaultProvider})
     )
 
@@ -661,7 +661,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         to,
         map,
         defineType,
-        defineService,
+        defineCallableType,
         defineObservable,
         defineReadonlyObservable,
         getParam:getParam as any,
@@ -795,10 +795,20 @@ export const defineType=<T>(
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
+export const defineCallableType=<T>(
+    name:string,
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
+    :CallableTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
+
 export const defineService=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
-    :CallableTypeDef<T>=>rootScope.defineService<T>(name,defaultProvider);
+    :CallableTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
+
+export const defineClient=<T>(
+    name:string,
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
+    :CallableTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
 
 interface defineObservableOverloads
 {
