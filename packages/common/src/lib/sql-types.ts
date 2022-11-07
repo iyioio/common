@@ -41,6 +41,12 @@ export interface ISqlClient
     updateAsync<T>(table:string,item:T,primaryKey:keyof T,onlyChanged?:T):Promise<boolean|null>;
 }
 
+export interface SqlExecCommand
+{
+    sql:string;
+    includeResultMetadata?:boolean;
+    noLogResult?:boolean;
+}
 
 
 
