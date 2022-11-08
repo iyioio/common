@@ -1,5 +1,5 @@
 
-export type ClassNameValue=string|false|number|null|undefined|{[className:string]:boolean|number|string|null|undefined}|ClassNameValue[];
+export type ClassNameValue=string|false|number|null|undefined|{[className:string]:any}|ClassNameValue[];
 /**
  * Joins classes names together. Falsy values are ignored. Values can also be arrays of class name
  * values recursively or objects where the keys of the object will be used as class names if the
