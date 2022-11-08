@@ -1,4 +1,4 @@
-import { authService, createScope, EnvParamProvider, MemoryStore, rootStore, shortUuid } from "@iyio/common";
+import { authService, createScope, EnvParamProvider, MemoryStore, shortUuid, storeRoot } from "@iyio/common";
 import { cognitoAuthProviderModule } from './_modules.aws-credential-providers';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 
@@ -26,7 +26,7 @@ describe('CognitoAuthProvider',()=>{
             cognitoAuthProviderModule(reg);
         });
 
-        const store=rootStore(scope);
+        const store=storeRoot(scope);
         const auth=authService(scope);
 
         store.mount('/',new MemoryStore());

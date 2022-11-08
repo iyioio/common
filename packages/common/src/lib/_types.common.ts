@@ -39,7 +39,7 @@ export const sqlClient=defineClient<ISqlClient>('sqlService');
 
 
 // Store
-export const rootStore=defineService<RouterStore>("storeService",scope=>new RouterStore(scope));
+export const storeRoot=defineService<RouterStore>("storeRoot",scope=>new RouterStore(scope));
 export const IStoreType=defineType<IStore|StoreProvider>("IStoreType");
 
 

@@ -5,7 +5,7 @@ import { StoreRoute } from "./RouterStore";
 import { defineBoolParam } from './scope-lib';
 import { Scope } from './scope-types';
 import { uuid } from "./uuid";
-import { rootStore } from './_types.common';
+import { storeRoot } from './_types.common';
 
 const keepTestStoreItemsParam=defineBoolParam('keepTestStoreItems',false);
 
@@ -36,7 +36,7 @@ export const generateRandomTestStoreItem=():TestStoreItem=>({
  */
 export const testMountedStoreAsync=async (scope:Scope,basePath:string,route:StoreRoute)=>{
 
-    const root=rootStore(scope);
+    const root=storeRoot(scope);
 
     root.mountRoute(route);
 

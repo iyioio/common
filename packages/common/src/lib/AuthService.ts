@@ -9,7 +9,7 @@ import { Scope, TypeDef } from "./scope-types";
 import { ScopedSetter } from "./Setter";
 import { isValidEmail } from "./validation";
 import { _setUser } from "./_internal.common";
-import { currentUser, IAuthProviderType, rootStore } from "./_types.common";
+import { currentUser, IAuthProviderType, storeRoot } from "./_types.common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 
@@ -29,7 +29,7 @@ export class AuthService implements IDisposable, IInit
             currentUser:scope.subject(currentUser),
             setUser:scope.to(_setUser),
             providers:scope.to(IAuthProviderType),
-            store:scope.require(rootStore)
+            store:scope.require(storeRoot)
         })
     }
 
