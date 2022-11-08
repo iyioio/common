@@ -1,25 +1,25 @@
 import { Sha256 } from '@aws-crypto/sha256-browser';
 import { HttpRequest } from '@aws-sdk/protocol-http';
 import { SignatureV4 } from "@aws-sdk/signature-v4";
-import { BaseHttpRequest, IHttpRequestSigner, Scope, TypeDef } from '@iyio/common';
-import { IAwsAuth } from './aws-auth';
-import { awsHttpSignerServiceParam, awsRegionParam, IAwsAuthType } from './_types.aws';
+import { BaseHttpRequest, HttpRequestSigner, Scope, TypeDef } from '@iyio/common';
+import { AwsAuthProvider } from './aws-auth';
+import { AwsAuthProviders, awsHttpSignerServiceParam, awsRegionParam } from './_types.aws';
 
 
 
 export interface AwsHttpRequestSignerOptions
 {
-    awsAuthProviders:TypeDef<IAwsAuth>;
+    awsAuthProviders:TypeDef<AwsAuthProvider>;
     region:string;
     service:string;//lambda
 }
 
-export class AwsHttpRequestSigner implements IHttpRequestSigner
+export class AwsHttpRequestSigner implements HttpRequestSigner
 {
 
     public static optionsFromScope(scope:Scope):AwsHttpRequestSignerOptions{
         return {
-            awsAuthProviders:scope.to(IAwsAuthType),
+            awsAuthProviders:scope.to(AwsAuthProviders),
             region:scope.require(awsRegionParam),
             service:scope.require(awsHttpSignerServiceParam),
         }

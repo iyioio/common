@@ -1,5 +1,5 @@
 import { Credentials, Provider } from "@aws-sdk/types";
-export interface IAwsAuth
+export interface AwsAuthProvider
 {
     /**
      * Returns a credentials provider or throws an error.

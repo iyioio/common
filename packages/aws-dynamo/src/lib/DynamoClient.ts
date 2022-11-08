@@ -1,6 +1,6 @@
 import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-import { awsRegionParam, IAwsAuthType } from '@iyio/aws';
+import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { IWithStoreAdapter, Scope } from "@iyio/common";
 import { createItemUpdateInputOrNull } from "./dynamo-lib";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
@@ -14,7 +14,7 @@ export class DynamoClient implements IWithStoreAdapter
     {
         return new DynamoClient({
             region:awsRegionParam(scope),
-            credentials:scope.get(IAwsAuthType)?.getAuthProvider()
+            credentials:scope.get(AwsAuthProviders)?.getAuthProvider()
         },storeAdapterOptions)
     }
 

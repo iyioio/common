@@ -1,5 +1,5 @@
-import { IAwsAuthType } from "@iyio/aws";
-import { authService, BaseUser, createScope, IAuthProviderType, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot } from "@iyio/common";
+import { AwsAuthProviders } from "@iyio/aws";
+import { authService, BaseUser, createScope, IAuthProviders, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot } from "@iyio/common";
 import { fail } from "assert";
 import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
 
@@ -10,8 +10,8 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
     const scope=createScope(reg=>{
         reg.use(module);
         provider=reg
-            .provideForType(IAuthProviderType,scope=>CognitoAuthProvider.fromScope(scope))
-            .andFor(IAwsAuthType)
+            .provideForType(IAuthProviders,scope=>CognitoAuthProvider.fromScope(scope))
+            .andFor(AwsAuthProviders)
             .getValue();
     });
 

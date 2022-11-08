@@ -1,7 +1,7 @@
-import { defineStringParam, defineType } from "@iyio/common";
-import { IAwsAuth } from "./aws-auth";
+import { defineProvider, defineStringParam } from "@iyio/common";
+import { AwsAuthProvider } from "./aws-auth";
 
-export const IAwsAuthType=defineType<IAwsAuth>("IAwsAuthType");
+export const AwsAuthProviders=defineProvider<AwsAuthProvider>("AwsAuthProviders");
 
 export const awsRegionParam=defineStringParam('AWS_REGION');
 export const awsProfileParam=defineStringParam('ASW_PROFILE');

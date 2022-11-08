@@ -1,5 +1,5 @@
 import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client as AwsS3Client, S3ClientConfig } from "@aws-sdk/client-s3";
-import { awsRegionParam, IAwsAuthType } from '@iyio/aws';
+import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { BaseStore, BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope } from "@iyio/common";
 import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
 
@@ -12,7 +12,7 @@ export class S3Client<T=any> extends BaseStore<T> implements IWithStoreAdapter
     {
         return new S3Client<T>({
             region:awsRegionParam(scope),
-            credentials:scope.get(IAwsAuthType)?.getAuthProvider()
+            credentials:scope.get(AwsAuthProviders)?.getAuthProvider()
         },storeAdapterOptions)
     }
 

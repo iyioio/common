@@ -1,17 +1,17 @@
 import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { HttpBaseUrlPrefixNotFoundError } from "./errors";
-import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, IHttpRequestSigner } from "./http-types";
+import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
 import { JwtProvider } from "./jwt";
 import { deleteUndefined } from "./object";
 import { Scope, TypeDef } from "./scope-types";
-import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam, IHttpFetcherType, IHttpRequestSignerType, JwtProviderType } from "./_types.common";
+import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, HttpFetchers, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, HttpRequestSigners, httpRetryDelayMsParam, JwtProviders } from "./_types.common";
 
 export interface HttpClientOptions
 {
     baseUrlMap?:HashMap<string>;
 
-    signers?:TypeDef<IHttpRequestSigner>;
+    signers?:TypeDef<HttpRequestSigner>;
 
     fetchers?:TypeDef<HttpFetcher>;
 
@@ -44,9 +44,9 @@ export class HttpClient
 
         return {
             baseUrlMap,
-            signers:scope.to(IHttpRequestSignerType),
-            jwtProviders:scope.to(JwtProviderType),
-            fetchers:scope.to(IHttpFetcherType),
+            signers:scope.to(HttpRequestSigners),
+            jwtProviders:scope.to(JwtProviders),
+            fetchers:scope.to(HttpFetchers),
             baseUrlPrefix:scope.get(httpBaseUrlPrefixParam)??'@',
             logRequests:scope.get(httpLogRequestsParam),
             logResponses:scope.get(httpLogResponsesParam),
@@ -66,7 +66,7 @@ export class HttpClient
     {
         this.options={...options};
         if(!options.fetchers){
-            options.fetchers=IHttpFetcherType;
+            options.fetchers=HttpFetchers;
         }
     }
 

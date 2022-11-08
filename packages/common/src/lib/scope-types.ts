@@ -268,3 +268,13 @@ export interface ScopeModuleLifecycle
     dispose?(scope:Scope):void;
 }
 export type ScopeModule=(reg:ScopeRegistration)=>ScopeModuleLifecycle|void;
+
+
+
+export type ProviderTypeDef<T>=TypeDef<T>;
+
+export type ServiceTypeDef<T>=CallableTypeDef<T>;
+
+export type ClientTypeDef<T>=CallableTypeDef<T>;
+
+export type ParamTypeDef<T>=CallableTypeDef<T>;

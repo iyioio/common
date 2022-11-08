@@ -4,7 +4,7 @@ import { MemoryStore } from "./MemoryStore";
 import { createScope } from "./scope-lib";
 import { Scope } from "./scope-types";
 import { shortUuid } from "./uuid";
-import { authService, currentUser, IAuthProviderType, storeRoot } from "./_types.common";
+import { authService, currentUser, IAuthProviders, storeRoot } from "./_types.common";
 
 describe('MemoryAuthProvider',()=>{
 
@@ -13,7 +13,7 @@ describe('MemoryAuthProvider',()=>{
 
     const getScope=()=>{
         const scope=createScope(reg=>{
-            reg.provideForType(IAuthProviderType,()=>new MemoryAuthProvider());
+            reg.provideForType(IAuthProviders,()=>new MemoryAuthProvider());
         });
         storeRoot(scope).mount('/',new MemoryStore())
 

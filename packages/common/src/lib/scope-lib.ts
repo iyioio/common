@@ -1,11 +1,11 @@
 import { BehaviorSubject } from "rxjs";
 import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
-import { continueFunction, FunctionLoopControl, nameToEnvName, parseConfigBool, shouldBreakFunction } from "./common-lib";
+import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
 import { HashMap, SymHashMap } from "./common-types";
 import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource } from "./PromiseSource";
-import { CallableTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
+import { CallableTypeDef, ClientTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
@@ -795,6 +795,11 @@ export const defineType=<T>(
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
+export const defineProvider=<T>(
+    name:string,
+    defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
+    :ProviderTypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
+
 export const defineCallableType=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
@@ -803,12 +808,12 @@ export const defineCallableType=<T>(
 export const defineService=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
-    :CallableTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
+    :ServiceTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
 
 export const defineClient=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
-    :CallableTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
+    :ClientTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
 
 interface defineObservableOverloads
 {
@@ -828,19 +833,19 @@ export const defineReadonlyObservable=(<T>(name:string,setter:Setter<T>|ScopedSe
     rootScope.defineReadonlyObservable(name,setter,defaultValue)
 )) as defineReadonlyObservableOverloads;
 
-export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>(
+export const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):ParamTypeDef<T>=>(
     rootScope.defineParam(name,valueConverter,defaultValue)
 )
 
-export const defineStringParam=(name:string,defaultValue?:string):CallableTypeDef<string>=>(
+export const defineStringParam=(name:string,defaultValue?:string):ParamTypeDef<string>=>(
     rootScope.defineStringParam(name,defaultValue)
 )
 
-export const defineNumberParam=(name:string,defaultValue?:number):CallableTypeDef<number>=>(
+export const defineNumberParam=(name:string,defaultValue?:number):ParamTypeDef<number>=>(
     rootScope.defineNumberParam(name,defaultValue)
 )
 
-export const defineBoolParam=(name:string,defaultValue?:boolean):CallableTypeDef<boolean>=>(
+export const defineBoolParam=(name:string,defaultValue?:boolean):ParamTypeDef<boolean>=>(
     rootScope.defineBoolParam(name,defaultValue)
 )
 
@@ -855,27 +860,4 @@ export const getParam=((name:string,defaultValue?:string):string|undefined=>(
 
 export const requireParam=(name:string)=>rootScope.requireParam(name);
 
-export class EnvParamProvider implements ParamProvider
-{
 
-    public readonly autoPrefix?:string;
-
-    public constructor(autoPrefix='NX_')
-    {
-        this.autoPrefix=autoPrefix;
-    }
-
-    public getParam(name:string):string|undefined{
-        const env=(globalThis as any).process?.env;
-        const envName=nameToEnvName(name);
-        const value=env?.[name] ?? env?.[envName];
-        if(value!==undefined){
-            return value;
-        }
-        if(this.autoPrefix){
-            return env?.[this.autoPrefix+name] ?? env?.[this.autoPrefix+envName];
-        }else{
-            return undefined;
-        }
-    }
-}

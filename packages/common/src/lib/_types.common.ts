@@ -2,12 +2,12 @@ import { IAuthProvider } from "./auth-types";
 import { AuthService } from "./AuthService";
 import { BaseUser } from "./BaseUser";
 import { HashMap } from "./common-types";
-import { HttpFetcher, IHttpRequestSigner } from "./http-types";
+import { HttpFetcher, HttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
 import { RouterStore } from "./RouterStore";
-import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType } from "./scope-lib";
+import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineProvider, defineReadonlyObservable, defineService, defineStringParam } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { IStore, StoreProvider } from "./store-types";
 import { stringToHashMap } from "./string-converters";
@@ -18,8 +18,8 @@ export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
 
 // HTTP
 export const httpClient=defineClient<HttpClient>('httpClient',scope=>HttpClient.fromScope(scope));
-export const IHttpRequestSignerType=defineType<IHttpRequestSigner>('IHttpRequestSignerType');
-export const IHttpFetcherType=defineType<HttpFetcher>('IHttpFetcherType',()=>new HttpDefaultFetcher());
+export const HttpRequestSigners=defineProvider<HttpRequestSigner>('HttpRequestSigners');
+export const HttpFetchers=defineProvider<HttpFetcher>('HttpFetchers',()=>new HttpDefaultFetcher());
 
 export const httpBaseUrlMapParam=defineParam<HashMap<string>>('HTTP_BASE_URL_MAP',stringToHashMap);
 export const httpBaseUrlPrefixParam=defineStringParam('HTTP_BASE_URL_PREFIX');
@@ -30,20 +30,20 @@ export const httpRetryDelayMsParam=defineNumberParam('HTTP_RETRY_DELAY_MS',500);
 
 
 // JWP
-export const JwtProviderType=defineType<JwtProvider>('JwtProvider');
+export const JwtProviders=defineProvider<JwtProvider>('JwtProviders');
 
 
 
 // SQL
-export const sqlClient=defineClient<ISqlClient>('sqlService');
+export const sqlClient=defineClient<ISqlClient>('sqlClient');
 
 
 // Store
 export const storeRoot=defineService<RouterStore>("storeRoot",scope=>new RouterStore(scope));
-export const IStoreType=defineType<IStore|StoreProvider>("IStoreType");
+export const StoreProviders=defineProvider<StoreProvider|IStore>("StoreProviders");
 
 
 // Auth
 export const authService=defineService<AuthService>('auth',scope=>AuthService.fromScope(scope));
 export const currentUser=defineReadonlyObservable<BaseUser|null>('currentUser',_setUser,()=>null);
-export const IAuthProviderType=defineType<IAuthProvider>("IAuthProviderType");
+export const IAuthProviders=defineProvider<IAuthProvider>("IAuthProviders");

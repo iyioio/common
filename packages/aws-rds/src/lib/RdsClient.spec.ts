@@ -39,6 +39,15 @@ describe('RdsStore',()=>{
 
     const timeout=1000*60*3;
 
+    const clearTableAsync=async ()=>{
+
+        const {client}=getScope();
+        console.log(`---- Clear ${tableName} ----`)
+        await client.execAsync(sql`DELETE FROM ${sqlName(tableName)}`)
+    }
+
+    afterEach(clearTableAsync);
+
     beforeAll(async ()=>{
 
         const {client}=getScope();

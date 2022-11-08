@@ -1,5 +1,5 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
-import { awsRegionParam, IAwsAuth, IAwsAuthType } from "@iyio/aws";
+import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
 import { defineStringParam, IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
@@ -8,7 +8,7 @@ export const rdsDatabaseParam=defineStringParam('rdsDatabase');
 
 export interface RdsClientOptions
 {
-    awsAuth:TypeDef<IAwsAuth>;
+    awsAuth:TypeDef<AwsAuthProvider>;
     clusterArn:string;
     secretArn:string;
     database:string;
@@ -21,7 +21,7 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
 
     public static optionsFromScope(scope:Scope):RdsClientOptions{
         return {
-            awsAuth:scope.to(IAwsAuthType),
+            awsAuth:scope.to(AwsAuthProviders),
             clusterArn:scope.require(rdsClusterArnParam),
             secretArn:scope.require(rdsSecretArnParam),
             database:scope.require(rdsDatabaseParam),

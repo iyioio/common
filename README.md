@@ -57,5 +57,5 @@ easy to find code of importance.
 - observables - current{name}
 - parameter / config - {name}Param
 - setters - _set{name}
-- providers - {full type name}Type
+- providers - {full type name}s
 - other - {full type name}Type
