@@ -1,5 +1,46 @@
-# IYIO Common
-A framework agnostic TypeScript application framework 🤔
+# IYIO - (a work in progress)
+A TypeScript application framework that tries not to get in the way 🤓. IYIO has a heavy focus on 
+convention over configuration and at the same time allows for fine tuned control over the resources
+in your application.
+
+## Core Concepts
+- Scopes
+- Type Definition - Provide metadata for the types in your application
+- Dependency injection
+- Services
+- Providers
+- Clients
+- Observability
+- Params
+- Data stores
+
+## Scopes
+Scope are independent collections of resources that share a common environnement.
+
+
+## Type Definitions
+Type Definitions (TypeDef&lt;T&gt;) are used to define metadata for a given type in your application
+and can even provide a default implementation for a type.
+
+### Type Definition Naming Convention
+- services - {name}Service
+- observables - current{name}
+- parameter / config - {name}Param
+- setters - _set{name}
+- providers - {full type name}s
+- other - {full type name}Type
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+# OLD Below
 
 ## Type Refs
 TypeRefs are a way to reference a type using a const variable and allow for fluid type inference
