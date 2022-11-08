@@ -1,7 +1,7 @@
 import { nameToEnvName } from "./common-lib";
 import { ParamProvider } from "./scope-types";
 
-export class EnvParamProvider implements ParamProvider
+export class EnvParams implements ParamProvider
 {
 
     public readonly autoPrefix?:string;

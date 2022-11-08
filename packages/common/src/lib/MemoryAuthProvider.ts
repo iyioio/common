@@ -1,5 +1,5 @@
 import { aryRemoveFirst } from "./array";
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData } from "./auth-types";
 import { BaseUser } from "./BaseUser";
 import { delayAsync } from "./common-lib";
 import { shortUuid } from "./uuid";
@@ -11,7 +11,7 @@ interface MemoryUserRecord
     user:BaseUser;
 }
 
-export class MemoryAuthProvider implements IAuthProvider
+export class MemoryAuthProvider implements AuthProvider
 {
 
     public readonly type='MemoryAuthProvider';

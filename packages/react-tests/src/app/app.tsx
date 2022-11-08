@@ -2,7 +2,7 @@
 import { getParam, initRootScope, STATIC_ENV_VARS, __macro__ } from '@iyio/common';
 
 
-initRootScope(reg=>reg.provideParams(__macro__(STATIC_ENV_VARS)));
+initRootScope(reg=>reg.addParams(__macro__(STATIC_ENV_VARS)));
 
 export function App() {
     return (

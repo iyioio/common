@@ -9,7 +9,7 @@ export * from './lib/common-lib';
 export * from './lib/common-types';
 export * from './lib/css';
 export * from './lib/DisposeContainer';
-export * from './lib/EnvParamProvider';
+export * from './lib/EnvParams';
 export * from './lib/errors';
 export * from './lib/fs';
 export * from './lib/html';

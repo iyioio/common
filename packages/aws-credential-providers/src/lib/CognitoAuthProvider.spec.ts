@@ -1,4 +1,4 @@
-import { authService, createScope, EnvParamProvider, MemoryStore, shortUuid, storeRoot } from "@iyio/common";
+import { authService, createScope, EnvParams, MemoryStore, shortUuid, storeRoot } from "@iyio/common";
 import { cognitoAuthProviderModule } from './_modules.aws-credential-providers';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 
@@ -10,7 +10,7 @@ describe('CognitoAuthProvider',()=>{
     it('should get config from env',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         });
 
 
@@ -22,7 +22,7 @@ describe('CognitoAuthProvider',()=>{
     it('should register user',async ()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
             cognitoAuthProviderModule(reg);
         });
 

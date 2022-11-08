@@ -1,5 +1,5 @@
 import { awsModule } from "@iyio/aws";
-import { createScope, EnvParamProvider, generateRandomTestStoreItem, parseConfigBool, shortUuid, sql, sqlClient, sqlName, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
+import { createScope, EnvParams, generateRandomTestStoreItem, parseConfigBool, shortUuid, sql, sqlClient, sqlName, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
 
 import { RdsClient } from "./RdsClient";
 
@@ -25,8 +25,8 @@ describe('RdsStore',()=>{
 
         const scope=createScope(scope=>{
             scope.use(awsModule);
-            scope.provideForService(sqlClient,scope=>RdsClient.fromScope(scope,storeOptions));
-            scope.provideParams(new EnvParamProvider());
+            scope.implementClient(sqlClient,scope=>RdsClient.fromScope(scope,storeOptions));
+            scope.addParams(new EnvParams());
         })
         const client=sqlClient(scope) as RdsClient;
         client.log=logQueries;

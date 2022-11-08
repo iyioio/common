@@ -1,5 +1,5 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
-import { createScope, EnvParamProvider, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
+import { createScope, EnvParams, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
 import { S3Client } from './S3Client';
 
 describe('S3Store', () => {
@@ -41,7 +41,7 @@ describe('S3Store', () => {
     it('should put, get and delete', async () => {
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         });
 
         const {store}=await putGetDeleteAsync(scope);
@@ -53,7 +53,7 @@ describe('S3Store', () => {
     it('should put, get and delete with cognito user',async ()=>{
 
         await useTempCognitoUser(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         },async scope=>{
 
             const {store}=await putGetDeleteAsync(scope);
@@ -67,7 +67,7 @@ describe('S3Store', () => {
 
     it('should meet standard mount operations',async ()=>{
          await useTempCognitoUser(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         },async scope=>{
             const basePath='s3/test-items'
             await testMountedStoreAsync(scope,basePath,{

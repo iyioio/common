@@ -1,8 +1,8 @@
 import { BehaviorSubject } from 'rxjs';
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
-import { EnvParamProvider } from './EnvParamProvider';
-import { createScope, defineBoolParam, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib';
+import { EnvParams } from './EnvParams';
+import { createScope, defineBoolParam, defineCallableType, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib';
 import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
 import { ScopeReset } from './_internal.common';
@@ -54,18 +54,18 @@ class Car implements ICar, IStatusChecker
 
 }
 
-const ICarType=defineService<ICar>("ICarType");
-const ICarType1=defineService<ICar>("ICarType1");
-const ICarType2=defineService<ICar>("ICarType2");
-const ICarType3=defineService<ICar>("ICarType3");
-const ICarTypeWithDefault=defineService<ICar>("ICarType3",()=>new Car());
+const ICarType=defineCallableType<ICar>("ICarType");
+const ICarType1=defineCallableType<ICar>("ICarType1");
+const ICarType2=defineCallableType<ICar>("ICarType2");
+const ICarType3=defineCallableType<ICar>("ICarType3");
+const ICarTypeWithDefault=defineCallableType<ICar>("ICarType3",()=>new Car());
 
-const IStatusCheckerType=defineService<IStatusChecker>("IStatusCheckerType");
+const IStatusCheckerType=defineCallableType<IStatusChecker>("IStatusCheckerType");
 
 
-const ICarTypeRoot1=defineService<ICar>("ICarTypeRoot1");
-const ICarTypeRoot2=defineService<ICar>("ICarTypeRoot1");
-const ICarTypeRootWidthDefault=defineService<ICar>("ICarTypeRoot1",()=>new Car());
+const ICarTypeRoot1=defineCallableType<ICar>("ICarTypeRoot1");
+const ICarTypeRoot2=defineCallableType<ICar>("ICarTypeRoot1");
+const ICarTypeRootWidthDefault=defineCallableType<ICar>("ICarTypeRoot1",()=>new Car());
 
 const resetScope=(scope:Scope)=>{
     (scope as any)[ScopeReset]();
@@ -82,7 +82,7 @@ describe('Scope',()=>{
     it('should define type',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car())
+            reg.implement(ICarType,()=>new Car())
         });
 
         const car=scope.to(ICarType);
@@ -159,7 +159,7 @@ describe('Scope',()=>{
     it('should create singleton',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car())
+            reg.implement(ICarType,()=>new Car())
         });
 
         const car=scope.to(ICarType);
@@ -178,8 +178,8 @@ describe('Scope',()=>{
     it('should create using fluent',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car())
-                .andFor(IStatusCheckerType);
+            reg.implement(ICarType,()=>new Car())
+                .and(IStatusCheckerType);
         });
 
         const car=scope.to(ICarType);
@@ -196,7 +196,7 @@ describe('Scope',()=>{
     it('should create factory',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,{
+            reg.implement(ICarType,{
                 provider:()=>new Car(),
                 isFactory:true
             });
@@ -218,9 +218,9 @@ describe('Scope',()=>{
     it('should get all',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car('a'));
-            reg.provideForType(ICarType,()=>new Car('b'));
-            reg.provideForType(ICarType,()=>new Car('c'));
+            reg.implement(ICarType,()=>new Car('a'));
+            reg.implement(ICarType,()=>new Car('b'));
+            reg.implement(ICarType,()=>new Car('c'));
         });
 
         const car=scope.to(ICarType);
@@ -237,9 +237,9 @@ describe('Scope',()=>{
     it('should get tagged',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car('a'),'fast');
-            reg.provideForType(ICarType,()=>new Car('b'));
-            reg.provideForType(ICarType,()=>new Car('c'),['fast','first']);
+            reg.implement(ICarType,()=>new Car('a'),'fast');
+            reg.implement(ICarType,()=>new Car('b'));
+            reg.implement(ICarType,()=>new Car('c'),['fast','first']);
         });
 
         const car=scope.to(ICarType);
@@ -256,11 +256,11 @@ describe('Scope',()=>{
     it('should get tagged with parent',()=>{
 
         const parent=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car('c'),['fast','first']);
+            reg.implement(ICarType,()=>new Car('c'),['fast','first']);
         });
         const scope=parent.createChild(reg=>{
-            reg.provideForType(ICarType,()=>new Car('a'),'fast');
-            reg.provideForType(ICarType,()=>new Car('b'));
+            reg.implement(ICarType,()=>new Car('a'),'fast');
+            reg.implement(ICarType,()=>new Car('b'));
         });
 
         const car=scope.to(ICarType);
@@ -415,7 +415,7 @@ describe('Scope',()=>{
     it('should get value from parent',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car());
+            reg.implement(ICarType,()=>new Car());
         });
         const dec=scope.createChild().createChild().createChild();
 
@@ -441,10 +441,10 @@ describe('Scope',()=>{
     it('should scope type',()=>{
 
         const scopeA=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car('a'));
+            reg.implement(ICarType,()=>new Car('a'));
         });
         const scopeB=createScope(reg=>{
-            reg.provideForType(ICarType,()=>new Car('b'));
+            reg.implement(ICarType,()=>new Car('b'));
         });
 
         const car=scopeA.to(ICarType);
@@ -461,14 +461,14 @@ describe('Scope',()=>{
     it('should map types',()=>{
 
         const scopeA=createScope(reg=>{
-            reg.provideForType(ICarType1,()=>new Car('A1'));
-            reg.provideForType(ICarType2,()=>new Car('A2'));
-            reg.provideForType(ICarType3,()=>new Car('A3'));
+            reg.implement(ICarType1,()=>new Car('A1'));
+            reg.implement(ICarType2,()=>new Car('A2'));
+            reg.implement(ICarType3,()=>new Car('A3'));
         });
         const scopeB=createScope(reg=>{
-            reg.provideForType(ICarType1,()=>new Car('B1'));
-            reg.provideForType(ICarType2,()=>new Car('B2'));
-            reg.provideForType(ICarType3,()=>new Car('B3'));
+            reg.implement(ICarType1,()=>new Car('B1'));
+            reg.implement(ICarType2,()=>new Car('B2'));
+            reg.implement(ICarType3,()=>new Car('B3'));
         });
 
         const [source1,source2,source3]=scopeA.map(ICarType1,ICarType2,ICarType3);
@@ -515,7 +515,7 @@ describe('Scope',()=>{
     it('should provide values using hashmap',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams({
+            reg.addParams({
                 TEST_HOST_NAME:hostValue,
                 TEST_PORT:portValue.toString(),
                 TEST_LOG:logValue.toString(),
@@ -529,7 +529,7 @@ describe('Scope',()=>{
     it('should provide values using env',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider())
+            reg.addParams(new EnvParams())
         });
 
         testValues(scope);
@@ -538,7 +538,7 @@ describe('Scope',()=>{
     it('should provide values using env with NX_ prefix',()=>{
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider())
+            reg.addParams(new EnvParams())
         });
 
         testValues(scope,'_T2');
@@ -636,7 +636,7 @@ describe('Scope',()=>{
         expect(reg).toBeTruthy();
 
         try{
-            reg?.provideForType(ICarType,()=>new Car('b'));
+            reg?.implement(ICarType,()=>new Car('b'));
             fail('Late registration should have failed')
         }catch{
             //
@@ -685,8 +685,8 @@ describe('Scope',()=>{
         testRoot(async ()=>{
 
             initRootScope(reg=>{
-                reg.provideForType(ICarTypeRoot1,()=>new Car('a'));
-                reg.provideForType(ICarTypeRoot2,()=>new Car('b'));
+                reg.implement(ICarTypeRoot1,()=>new Car('a'));
+                reg.implement(ICarTypeRoot2,()=>new Car('b'));
                 return {
                     init:async ()=>{
                         await delayAsync(10)

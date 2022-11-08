@@ -1,6 +1,6 @@
 import { awsModule } from '@iyio/aws';
 import { useTempCognitoUser } from '@iyio/aws-credential-providers';
-import { createScope, defineStringParam, EnvParamProvider, httpClient as http } from "@iyio/common";
+import { createScope, defineStringParam, EnvParams, httpClient as http } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
 
 const authFuncUrl=defineStringParam('AUTH_FUNC_URL');
@@ -10,7 +10,7 @@ describe('http-cognito',()=>{
     it('should fail to make auth call',async ()=>{
         const scope=createScope(scope=>{
             scope.use(nodeCommonModule);
-            scope.provideParams(new EnvParamProvider())
+            scope.addParams(new EnvParams())
         });
 
         const httpClient=http(scope);
@@ -30,7 +30,7 @@ describe('http-cognito',()=>{
         await useTempCognitoUser(scope=>{
             scope.use(nodeCommonModule);
             scope.use(awsModule);
-            scope.provideParams(new EnvParamProvider())
+            scope.addParams(new EnvParams())
         },async scope=>{
             const httpClient=http(scope);
 

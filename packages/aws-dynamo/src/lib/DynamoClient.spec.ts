@@ -1,5 +1,5 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
-import { createScope, EnvParamProvider, generateRandomTestStoreItem, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
+import { createScope, EnvParams, generateRandomTestStoreItem, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
 import { testDynamoDbTable } from './dynamo-test-lib';
 import { DynamoClient } from './DynamoClient';
 
@@ -42,7 +42,7 @@ describe('DynamoStore', () => {
     it('should put, get and delete', async () => {
 
         const scope=createScope(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         });
 
         const {store}=await putGetDeleteAsync(scope);
@@ -54,7 +54,7 @@ describe('DynamoStore', () => {
     it('should put, get and delete with cognito user',async ()=>{
 
         await useTempCognitoUser(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         },async scope=>{
 
             const {store}=await putGetDeleteAsync(scope);
@@ -68,7 +68,7 @@ describe('DynamoStore', () => {
 
     it('should meet standard mount operations',async ()=>{
          await useTempCognitoUser(reg=>{
-            reg.provideParams(new EnvParamProvider());
+            reg.addParams(new EnvParams());
         },async scope=>{
             const basePath='dynamo/test-items';
             const tableName=testDynamoDbTable(scope);

@@ -61,7 +61,7 @@ export interface UserAuthProviderData
 }
 
 
-export interface IAuthProvider extends IOpInit, IOpDisposable
+export interface AuthProvider extends IOpInit, IOpDisposable
 {
     /**
      * A string use to distinguish auth provider types.

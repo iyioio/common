@@ -1,4 +1,4 @@
-import { IAuthProvider } from "./auth-types";
+import { AuthProvider } from "./auth-types";
 import { AuthService } from "./AuthService";
 import { BaseUser } from "./BaseUser";
 import { HashMap } from "./common-types";
@@ -46,4 +46,4 @@ export const StoreProviders=defineProvider<StoreProvider|IStore>("StoreProviders
 // Auth
 export const authService=defineService<AuthService>('auth',scope=>AuthService.fromScope(scope));
 export const currentUser=defineReadonlyObservable<BaseUser|null>('currentUser',_setUser,()=>null);
-export const IAuthProviders=defineProvider<IAuthProvider>("IAuthProviders");
+export const AuthProviders=defineProvider<AuthProvider>("AuthProviders");

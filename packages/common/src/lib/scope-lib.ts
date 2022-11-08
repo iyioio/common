@@ -480,7 +480,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         }) as ReadonlyObservableTypeDef<T>
     )
 
-    const provideParams=(valueProvider:ParamProvider|HashMap<string>):void=>
+    const addParams=(valueProvider:ParamProvider|HashMap<string>):void=>
     {
         provideForType(ParamProviderType,()=>valueProvider);
     }
@@ -566,7 +566,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         })
 
         const fluent:FluentTypeProvider<P>={
-            andFor<T>(
+            and<T>(
                 type:TypeDef<FluentProviderType<T,P>>,
                 tags:string|string[]=[]
             ):FluentTypeProvider<P>{
@@ -624,7 +624,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                 scope,
                 cancel,
                 provideForType,
-                provideParams,
+                addParams,
                 rootModule
             }).then(()=>initPromiseSource.resolve()).catch(r=>initPromiseSource.reject(r));
         }else{
@@ -692,7 +692,7 @@ interface InitScopeOptions
 {
     scope:Scope;
     cancel:CancelToken;
-    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
+    addParams(valueProvider:ParamProvider|HashMap<string>):void;
     provideForType<T,P extends T>(
         type:TypeDef<T>,
         provider:TypeProvider<P>|TypeProviderOptions<P>,
@@ -705,7 +705,7 @@ const initScopeAsync=async ({
     scope,
     cancel,
     provideForType,
-    provideParams,
+    addParams,
     rootModule
 }:InitScopeOptions)=>{
 
@@ -729,9 +729,11 @@ const initScopeAsync=async ({
         const reg:ScopeRegistration={
             scope,
             cancel,
-            provideParams,
-            provideForType,
-            provideForService:provideForType,
+            addParams:addParams,
+            implement:provideForType,
+            implementService:provideForType,
+            implementClient:provideForType,
+            addProvider:provideForType,
             use(module:ScopeModule){
                 const lifecycle=module(reg);
                 if(lifecycle){

@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, BaseUser, currentUser, HashMap, IAuthProvider, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, BaseUser, currentUser, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import {
     cognitoIdentityPoolIdParam,
@@ -27,7 +27,7 @@ export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
     currentUser:ReadonlySubject<BaseUser|null>;
 }
 
-export class CognitoAuthProvider implements IAuthProvider, AwsAuthProvider
+export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
 {
 
     public static fromScope(scope:Scope){

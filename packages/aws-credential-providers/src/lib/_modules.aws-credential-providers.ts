@@ -1,10 +1,10 @@
 import { AwsAuthProviders } from "@iyio/aws";
-import { IAuthProviders, ScopeRegistration } from "@iyio/common";
+import { AuthProviders, ScopeRegistration } from "@iyio/common";
 import { CognitoAuthProvider } from "./CognitoAuthProvider";
 
 export const cognitoAuthProviderModule=(reg:ScopeRegistration)=>{
-    reg.provideForType(IAuthProviders,scope=>CognitoAuthProvider.fromScope(scope))
-        .andFor(AwsAuthProviders);
+    reg.addProvider(AuthProviders,scope=>CognitoAuthProvider.fromScope(scope))
+        .and(AwsAuthProviders);
 }
 
 

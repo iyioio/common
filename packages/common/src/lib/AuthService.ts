@@ -1,15 +1,15 @@
-import { AuthDeleteResult, AuthRegisterResult, AuthSignInResult, IAuthProvider, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData } from "./auth-types";
 import { BaseUser } from "./BaseUser";
 import { breakFunction, continueFunction } from "./common-lib";
 import { HashMap, IDisposable, IInit } from "./common-types";
 import { DisposeContainer } from "./DisposeContainer";
 import { RouterStore } from "./RouterStore";
 import { ReadonlySubject } from "./rxjs-types";
-import { Scope, TypeDef } from "./scope-types";
+import { ProviderTypeDef, Scope, TypeDef } from "./scope-types";
 import { ScopedSetter } from "./Setter";
 import { isValidEmail } from "./validation";
 import { _setUser } from "./_internal.common";
-import { currentUser, IAuthProviders, storeRoot } from "./_types.common";
+import { AuthProviders, currentUser, storeRoot } from "./_types.common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 
@@ -17,7 +17,7 @@ export interface AuthServiceOptions
 {
     currentUser:ReadonlySubject<BaseUser|null>;
     setUser:ScopedSetter<BaseUser|null>;
-    providers:TypeDef<IAuthProvider>;
+    providers:ProviderTypeDef<AuthProvider>;
     store:RouterStore;
 }
 
@@ -28,7 +28,7 @@ export class AuthService implements IDisposable, IInit
         return new AuthService({
             currentUser:scope.subject(currentUser),
             setUser:scope.to(_setUser),
-            providers:scope.to(IAuthProviders),
+            providers:scope.to(AuthProviders),
             store:scope.require(storeRoot)
         })
     }
@@ -38,14 +38,14 @@ export class AuthService implements IDisposable, IInit
     protected readonly disposables:DisposeContainer=new DisposeContainer();
 
 
-    private readonly providers:HashMap<Promise<IAuthProvider>>={};
+    private readonly providers:HashMap<Promise<AuthProvider>>={};
 
     private readonly currentUser:ReadonlySubject<BaseUser|null>;
     private readonly setUser:ScopedSetter<BaseUser|null>;
 
     private readonly store:RouterStore;
 
-    private readonly authProviders:TypeDef<IAuthProvider>;
+    private readonly authProviders:TypeDef<AuthProvider>;
 
     public constructor({
         currentUser,
@@ -100,7 +100,7 @@ export class AuthService implements IDisposable, IInit
         }) ?? undefined;
     }
 
-    private async getProviderAsync(type:string):Promise<IAuthProvider|undefined>
+    private async getProviderAsync(type:string):Promise<AuthProvider|undefined>
     {
         let p=this.providers[type];
         if(!p){

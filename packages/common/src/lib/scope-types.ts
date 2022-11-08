@@ -217,7 +217,7 @@ export interface Scope
  */
 export interface FluentTypeProvider<P>
 {
-    andFor<T>(
+    and<T>(
         type:TypeDef<FluentProviderType<T,P>>,
         tags?:string|string[]
     ):FluentTypeProvider<P>;
@@ -237,22 +237,40 @@ export interface ScopeRegistration
      * Provides values that can be retired by types defined with defineValue, defaultString,
      * defineNumber or defineBool or the getProvidedValue method.
      */
-    provideParams(valueProvider:ParamProvider|HashMap<string>):void;
+    addParams(valueProvider:ParamProvider|HashMap<string>):void;
 
     /**
-     * Provides a value for the given type
+     * Provides an implementation the given TypeDef.
      */
-    provideForType<T,P extends T>(
+    implement<T,P extends T>(
         type:TypeDef<T>,
         provider:TypeProvider<P>|TypeProviderOptions<P>,
         tags?:string|string[]
     ):FluentTypeProvider<P>;
 
     /**
-     * Provides a value for the given type. Alias for provideForType
+     * Provides a service implementation the given ServiceTypeDef. Alias for implement
      */
-    provideForService<T,P extends T>(
-        type:TypeDef<T>,
+    implementService<T,P extends T>(
+        type:ServiceTypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+
+    /**
+     * Provides a provider the given ProviderTypeDef. Alias for implement
+     */
+    addProvider<T,P extends T>(
+        type:ProviderTypeDef<T>,
+        provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+
+    /**
+     * Provides a client implementation for the given ClientTypeDef. Alias for implement
+     */
+    implementClient<T,P extends T>(
+        type:ClientTypeDef<T>,
         provider:TypeProvider<P>|TypeProviderOptions<P>,
         tags?:string|string[]
     ):FluentTypeProvider<P>;
