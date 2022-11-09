@@ -6,6 +6,10 @@ import chalk from 'chalk';
 import fetch from 'node-fetch';
 import { enumProjects } from './enum-projects.mjs';
 
+// If paths to the build output for packages will be used.
+// This is useful for local integration testing with projects before publishing
+const local=process.argv.includes('--local');
+
 const deps=[];
 const devDeps=[];
 
@@ -15,10 +19,23 @@ enumProjects({publicOnly:true},({name,project,pkg})=>{
         return;
     }
 
-    if(pkg.forDev){
-        devDeps.push(`${pkg.name}@${pkg.version}`);
+    if(local){
+        const output=project.data?.targets?.build?.options?.outputPath;
+        if(!output){
+            throw new Error(`unable to get output path for ${name}`);
+        }
+        const path=Path.join(process.cwd(),output);
+        if(pkg.forDev){
+            devDeps.push(path);
+        }else{
+            deps.push(path);
+        }
     }else{
-        deps.push(`${pkg.name}@${pkg.version}`);
+        if(pkg.forDev){
+            devDeps.push(`${pkg.name}@${pkg.version}`);
+        }else{
+            deps.push(`${pkg.name}@${pkg.version}`);
+        }
     }
 
 });

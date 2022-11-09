@@ -2,4 +2,4 @@
 set -e
 cd "$(dirname "$0")/.."
 
-node tools/scripts/get-npm-install-commands.mjs
+node tools/scripts/get-npm-install-commands.mjs "$@"
