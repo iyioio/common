@@ -1,6 +1,6 @@
 {
     "name": "@iyio/babel-plugin-macros",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "type": "commonjs",
     "forDev": true
 }
