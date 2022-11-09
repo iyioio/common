@@ -1,23 +1,4 @@
 
-/**
- * A query object stored in a database
- */
-export interface QueryRecord
-{
-    id:string;
-    name?:string;
-    description?:string;
-    ownerId?:string;
-    groupId?:string;
-    query:Query;
-}
-export const isQueryRecord=(value:any):value is QueryRecord=>{
-    if(!value){
-        return false;
-    }
-    const v:Partial<QueryRecord>=value;
-    return (typeof v.id === 'string') && isQuery(v.query);
-}
 
 export interface StaticQueryOperator<T=any>
 {
@@ -107,8 +88,6 @@ export const isQueryWithData=<T=any>(value:any): value is QueryWithData<T>=>{
 }
 
 export type QueryOrQueryWithData<T=any>=Query|QueryWithData<T>;
-
-export type QueryOptions<T=any>=string|QueryRecord|Query|QueryWithData<T>;
 
 export const allQueryGroupConditionOps=['and','or'] as const;
 export type QueryGroupConditionOp=typeof allQueryGroupConditionOps[number];

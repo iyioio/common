@@ -1,8 +1,10 @@
 import { aryRemoveFirst } from "./array";
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData } from "./auth-types";
-import { BaseUser } from "./BaseUser";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData, UserFactoryCallback } from "./auth-types";
+import { BaseUser, BaseUserOptions } from "./BaseUser";
 import { delayAsync } from "./common-lib";
+import { FactoryTypeDef, Scope } from "./scope-types";
 import { shortUuid } from "./uuid";
+import { UserFactory } from "./_types.common";
 
 interface MemoryUserRecord
 {
@@ -11,8 +13,22 @@ interface MemoryUserRecord
     user:BaseUser;
 }
 
+export interface MemoryAuthProviderOptions
+{
+    userFactory:FactoryTypeDef<UserFactoryCallback>;
+}
+
 export class MemoryAuthProvider implements AuthProvider
 {
+
+    public static fromScope(scope:Scope)
+    {
+        return new MemoryAuthProvider({
+            userFactory:scope.to(UserFactory)
+        })
+    }
+
+    private readonly options:MemoryAuthProviderOptions;
 
     public readonly type='MemoryAuthProvider';
 
@@ -25,6 +41,11 @@ export class MemoryAuthProvider implements AuthProvider
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
+
+    public constructor(options:MemoryAuthProviderOptions)
+    {
+        this.options=options;
+    }
 
 
     public dispose()
@@ -92,13 +113,25 @@ export class MemoryAuthProvider implements AuthProvider
         }
 
         const id=shortUuid();
+
+        const options:BaseUserOptions={
+            id,
+            name:email,
+            providerData:{
+                type:this.type,
+                userId:id,
+            }
+        }
+
+        const baseUser=this.options.userFactory.generate(options);
+        if(!baseUser){
+            throw new Error('Unable to get user from factory');
+        }
+
         const record:MemoryUserRecord={
             email,
             password,
-            user:new BaseUser(id,email,{
-                userId:id,
-                type:this.type,
-            })
+            user:baseUser
         }
         this.users.push(record);
 

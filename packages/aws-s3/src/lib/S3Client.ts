@@ -1,16 +1,16 @@
 import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client as AwsS3Client, S3ClientConfig } from "@aws-sdk/client-s3";
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { BaseStore, BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope } from "@iyio/common";
+import { BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope } from "@iyio/common";
 import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
 
 
 
-export class S3Client<T=any> extends BaseStore<T> implements IWithStoreAdapter
+export class S3Client implements IWithStoreAdapter
 {
 
-    public static fromScope<T=any>(scope:Scope,storeAdapterOptions?:S3StoreAdapterOptions)
+    public static fromScope(scope:Scope,storeAdapterOptions?:S3StoreAdapterOptions)
     {
-        return new S3Client<T>({
+        return new S3Client({
             region:awsRegionParam(scope),
             credentials:scope.get(AwsAuthProviders)?.getAuthProvider()
         },storeAdapterOptions)
@@ -22,8 +22,6 @@ export class S3Client<T=any> extends BaseStore<T> implements IWithStoreAdapter
         clientConfig:S3ClientConfig,
         storeAdapterOptions:S3StoreAdapterOptions={}
     ){
-        super();
-
         this.storeAdapterOptions=storeAdapterOptions;
 
         this.clientConfig=clientConfig;
@@ -50,7 +48,7 @@ export class S3Client<T=any> extends BaseStore<T> implements IWithStoreAdapter
         return this.storeAdapter;
     }
 
-    public async getAsync(bucket:string,key:string,cancel?:CancelToken):Promise<T|undefined>
+    public async getAsync<T>(bucket:string,key:string,cancel?:CancelToken):Promise<T|undefined>
     {
         let r:GetObjectCommandOutput;
 
@@ -94,7 +92,7 @@ export class S3Client<T=any> extends BaseStore<T> implements IWithStoreAdapter
     }
 
 
-    public async putAsync(bucket:string,key:string,value:T):Promise<void>
+    public async putAsync<T>(bucket:string,key:string,value:T):Promise<void>
     {
         await this.getClient().send((value instanceof BinaryStoreValue)?
             new PutObjectCommand({

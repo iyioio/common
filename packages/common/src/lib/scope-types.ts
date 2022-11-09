@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 import { CancelToken } from "./CancelToken";
 import { FunctionLoopControl } from "./common-lib";
-import { HashMap, OpValueContainer } from "./common-types";
+import { AnyFunction, HashMap, OpValueContainer } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 import { ScopedSetter, Setter } from "./Setter";
 import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
@@ -237,7 +237,7 @@ export interface ScopeRegistration
      * Provides values that can be retired by types defined with defineValue, defaultString,
      * defineNumber or defineBool or the getProvidedValue method.
      */
-    addParams(valueProvider:ParamProvider|HashMap<string>):void;
+    addParams(valueProvider?:ParamProvider|HashMap<string>):void;
 
     /**
      * Provides an implementation the given TypeDef.
@@ -258,11 +258,20 @@ export interface ScopeRegistration
     ):FluentTypeProvider<P>;
 
     /**
-     * Provides a provider the given ProviderTypeDef. Alias for implement
+     * Provides a provider for the given ProviderTypeDef. Alias for implement
      */
     addProvider<T,P extends T>(
         type:ProviderTypeDef<T>,
         provider:TypeProvider<P>|TypeProviderOptions<P>,
+        tags?:string|string[]
+    ):FluentTypeProvider<P>;
+
+    /**
+     * Provides a factory for the given FactoryTypeDef.
+     */
+    addFactory<T extends AnyFunction,P extends T>(
+        type:FactoryTypeDef<T>,
+        provider:P,
         tags?:string|string[]
     ):FluentTypeProvider<P>;
 
@@ -275,21 +284,32 @@ export interface ScopeRegistration
         tags?:string|string[]
     ):FluentTypeProvider<P>;
 
-    use(module:ScopeModule):void;
+    use(lifecycle?:ScopeModuleLifecycle):void;
+    use(module?:ScopeModule):void;
 }
 
 export interface ScopeModuleLifecycle
 {
+    /**
+     * The higher the priority the earlier the scope will be initialized.
+     */
     priority?:number;
     init?(scope:Scope,cancel:CancelToken):void|Promise<void>;
     onAllInited?(scope:Scope):void;
     dispose?(scope:Scope):void;
 }
-export type ScopeModule=(reg:ScopeRegistration)=>ScopeModuleLifecycle|void;
+export type ScopeModule=(reg:ScopeRegistration)=>void;
 
 
 
 export type ProviderTypeDef<T>=TypeDef<T>;
+
+export interface GeneratorTypeDef<T extends AnyFunction> extends TypeDef<T>
+{
+    generate:T;
+}
+
+export type FactoryTypeDef<T extends AnyFunction>=GeneratorTypeDef<T>
 
 export type ServiceTypeDef<T>=CallableTypeDef<T>;
 

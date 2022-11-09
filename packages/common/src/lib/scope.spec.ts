@@ -567,9 +567,9 @@ describe('Scope',()=>{
 
         log('beforeCreate',callIndex);
         beforeCreate=callIndex++;
-        const scope=createScope(()=>{
+        const scope=createScope(reg=>{
 
-            return {
+            reg.use({
                 async init(){
                     log('initCall',callIndex);
                     initCall=callIndex++;
@@ -585,7 +585,7 @@ describe('Scope',()=>{
                     log('disposed',callIndex);
                     disposed=callIndex++;
                 }
-            }
+            })
         },cancel);
 
         expect(scope.isInited()).toBe(false);
@@ -624,11 +624,11 @@ describe('Scope',()=>{
 
         const scope=createScope(_reg=>{
             reg=_reg;
-            return {
+            _reg.use({
                 async init(){
                     await delayAsync(1);
                 },
-            }
+            })
         });
 
         await scope.getInitPromise();
@@ -687,11 +687,11 @@ describe('Scope',()=>{
             initRootScope(reg=>{
                 reg.implement(ICarTypeRoot1,()=>new Car('a'));
                 reg.implement(ICarTypeRoot2,()=>new Car('b'));
-                return {
+                reg.use({
                     init:async ()=>{
                         await delayAsync(10)
                     }
-                }
+                });
             })
 
             expect(rootScope.isInited()).toBe(false);

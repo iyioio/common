@@ -4,7 +4,7 @@ import { MemoryStore } from "./MemoryStore";
 import { createScope } from "./scope-lib";
 import { Scope } from "./scope-types";
 import { shortUuid } from "./uuid";
-import { AuthProviders, authService, currentUser, storeRoot } from "./_types.common";
+import { AuthProviders, authService, currentBaseUser, storeRoot } from "./_types.common";
 
 describe('MemoryAuthProvider',()=>{
 
@@ -13,7 +13,7 @@ describe('MemoryAuthProvider',()=>{
 
     const getScope=()=>{
         const scope=createScope(reg=>{
-            reg.addProvider(AuthProviders,()=>new MemoryAuthProvider());
+            reg.addProvider(AuthProviders,scope=>MemoryAuthProvider.fromScope(scope));
         });
         storeRoot(scope).mount('/',new MemoryStore())
 
@@ -33,12 +33,12 @@ describe('MemoryAuthProvider',()=>{
         }
 
         expect((await auth.getUserAsync(user.providerData))?.id).toEqual(user.id);
-        const value=currentUser(scope);
+        const value=currentBaseUser(scope);
         expect(value?.id).toEqual(user.id);
 
         if(!keepSignedIn){
             await auth.signOutAsync();
-            expect(currentUser(scope)).toBe(null);
+            expect(currentBaseUser(scope)).toBe(null);
         }
 
         return user;

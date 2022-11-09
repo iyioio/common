@@ -2,16 +2,55 @@ import { BehaviorSubject } from "rxjs";
 import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
-import { HashMap, SymHashMap } from "./common-types";
+import { AnyFunction, HashMap, SymHashMap } from "./common-types";
 import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource } from "./PromiseSource";
-import { CallableTypeDef, ClientTypeDef, FluentProviderType, FluentTypeProvider, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
+import { CallableTypeDef, ClientTypeDef, FactoryTypeDef, FluentProviderType, FluentTypeProvider, GeneratorTypeDef, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
 const ScopeDefineType=Symbol('ScopeDefineType');
 const ScopeDefineCallableType=Symbol('ScopeDefineCallableType');
 const ScopeInit=Symbol('ScopeInit');
+
+export const ScopeModulePriorities={
+    _10:10000,
+    critical:10000,
+
+    _9:9000,
+    high:9000,
+    preConfig:9000,
+
+    _8:8000,
+
+    _7:7000,
+    mediumHigh:7000,
+    config:7000,
+
+    _6:6000,
+
+    _5:5000,
+    medium:5000,
+    postConfig:5000,
+
+    _4:4000,
+
+    _3:3000,
+    lowMedium:3000,
+    types:3000,
+
+    _2:2000,
+
+    _1:1000,
+    low:1000,
+    subTypes:1000,
+
+    _0:0,
+    belowLow:0,
+    optional:0,
+
+} as const;
+Object.freeze(ScopeModulePriorities);
 
 interface TypeProviderInternal
 {
@@ -31,6 +70,11 @@ interface ScopeInternal extends Scope
      * Defines a new type
      */
     defineType<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):TypeDef<T>;
+
+    /**
+     * Defines a new type
+     */
+    defineGeneratorType<T extends AnyFunction>(name:string,defaultFactory?:T):GeneratorTypeDef<T>;
 
     /**
      * Defines a new type
@@ -112,6 +156,7 @@ interface DefineTypeOptions<T>
     subjectDefault?:TypeProvider<T>;
     subjectSetter?:Setter<T>|ScopedSetter<T>;
     isCallable?:boolean;
+    generator?:boolean;
 }
 
 let isCreatingRoot=false;
@@ -395,7 +440,8 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         createSubject,
         subjectDefault,
         subjectSetter,
-        isCallable
+        generator,
+        isCallable,
     }:DefineTypeOptions<T>):TypeDef<T>=>{
         if(types[id]){
             return types[id];
@@ -410,7 +456,8 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                     defaultProvider,
                     createSubject,
                     subjectDefault,
-                    subjectSetter
+                    subjectSetter,
+                    generator
                 }
                 if(isCallable){
                     return (scope as ScopeInternal)[ScopeDefineCallableType](options);
@@ -431,6 +478,11 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             valueConverter:valueConverter,
             [TypeDefDefaultValue]:defaultValue,
             [TypeDefStaticValue]:{},
+        }
+        if(generator){
+            (typeDef as any as GeneratorTypeDef<AnyFunction>).generate=(...args:any[])=>{
+                return (typeDef as any as GeneratorTypeDef<AnyFunction>).getFirst(null,factory=>factory(...args));
+            }
         }
         types[id]=typeDef;
         if(defaultProvider){
@@ -457,6 +509,10 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         _defineType<T>({name,defaultProvider})
     )
 
+    const defineGeneratorType=<T extends AnyFunction>(name:string,defaultFactory?:T):GeneratorTypeDef<T>=>(
+        _defineType<T>({name,defaultProvider:defaultFactory?()=>defaultFactory:undefined,generator:true}) as GeneratorTypeDef<T>
+    )
+
     const defineCallableType=<T>(name:string,defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>):CallableTypeDef<T>=>(
         _defineCallableType<T>({name,defaultProvider})
     )
@@ -480,8 +536,11 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         }) as ReadonlyObservableTypeDef<T>
     )
 
-    const addParams=(valueProvider:ParamProvider|HashMap<string>):void=>
+    const addParams=(valueProvider?:ParamProvider|HashMap<string>):void=>
     {
+        if(!valueProvider){
+            return;
+        }
         provideForType(ParamProviderType,()=>valueProvider);
     }
 
@@ -661,6 +720,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         to,
         map,
         defineType,
+        defineGeneratorType,
         defineCallableType,
         defineObservable,
         defineReadonlyObservable,
@@ -692,7 +752,7 @@ interface InitScopeOptions
 {
     scope:Scope;
     cancel:CancelToken;
-    addParams(valueProvider:ParamProvider|HashMap<string>):void;
+    addParams(valueProvider?:ParamProvider|HashMap<string>):void;
     provideForType<T,P extends T>(
         type:TypeDef<T>,
         provider:TypeProvider<P>|TypeProviderOptions<P>,
@@ -725,7 +785,8 @@ const initScopeAsync=async ({
     }
     cancel.onCancelOrNextTick(disposeModules)
     try{
-        const lifecycles:ScopeModuleLifecycle[]=[];
+        let lifecycles:ScopeModuleLifecycle[]=[];
+        let modules:ScopeModule[]=[];
         const reg:ScopeRegistration={
             scope,
             cancel,
@@ -734,10 +795,28 @@ const initScopeAsync=async ({
             implementService:provideForType,
             implementClient:provideForType,
             addProvider:provideForType,
-            use(module:ScopeModule){
-                const lifecycle=module(reg);
-                if(lifecycle){
-                    lifecycles.push(lifecycle);
+            addFactory<T extends AnyFunction,P extends T>(
+                type:FactoryTypeDef<T>,
+                provider:P,
+                tags?:string|string[]
+            ):FluentTypeProvider<P>{
+                return provideForType(type,{
+                    provider:()=>provider,
+                },tags)
+            },
+            use(moduleOrLifecycle?:ScopeModule|ScopeModuleLifecycle){
+                if(!moduleOrLifecycle){
+                    return;
+                }
+                if(typeof moduleOrLifecycle === 'function'){
+                    if(!modules.includes(moduleOrLifecycle)){
+                        modules.push(moduleOrLifecycle);
+                        moduleOrLifecycle(reg);
+                    }
+                }else{
+                    if(!lifecycles.includes(moduleOrLifecycle)){
+                        lifecycles.push(moduleOrLifecycle);
+                    }
                 }
 
             }
@@ -774,6 +853,10 @@ const initScopeAsync=async ({
             lc.onAllInited?.(scope);
         }
 
+        // release references
+        lifecycles=[];
+        modules=[];
+
     }catch(ex){
         console.error('Scope initialization failed',ex);
         disposeModules();
@@ -797,10 +880,16 @@ export const defineType=<T>(
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :TypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
+
 export const defineProvider=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :ProviderTypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
+
+export const defineFactory=<T extends ((...args:any[])=>any)>(
+    name:string,
+    defaultFactory?:T)
+    :FactoryTypeDef<T>=>rootScope.defineGeneratorType<T>(name,defaultFactory);
 
 export const defineCallableType=<T>(
     name:string,

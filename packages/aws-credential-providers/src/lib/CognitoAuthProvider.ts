@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, BaseUser, currentUser, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import {
     cognitoIdentityPoolIdParam,
@@ -25,6 +25,7 @@ export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
     region:string;
     identityPoolId:string;
     currentUser:ReadonlySubject<BaseUser|null>;
+    userFactory:FactoryTypeDef<UserFactoryCallback>;
 }
 
 export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
@@ -36,7 +37,8 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
             ClientId:cognitoUserPoolClientIdParam(scope),
             identityPoolId:cognitoIdentityPoolIdParam(scope),
             region:awsRegionParam(scope),
-            currentUser:scope.subject(currentUser)
+            currentUser:scope.subject(currentBaseUser),
+            userFactory:scope.to(UserFactory)
         });
     }
 
@@ -115,14 +117,26 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
             user.getSession((error:Error|null,session:CognitoUserSession|null)=>{
                 if(session){
                     const id=user.getUsername();
-                    resolve(new BaseUser(id,id,{
-                        type:this.type,
-                        userId:id,
+                    const options:BaseUserOptions={
+                        id,
+                        name:id,
                         providerData:{
-                            [sessionKey]:session,
-                            [userKey]:user
+                        type:this.type,
+                            userId:id,
+                            providerData:{
+                                [sessionKey]:session,
+                                [userKey]:user
+                            }
                         }
-                    }))
+                    }
+
+                    const baseUser=this.config.userFactory.generate(options);
+                    if(!baseUser){
+                        reject('No user factory provided a user');
+                        return;
+                    }
+
+                    resolve(baseUser)
                 }else{
                     reject(error??new Error('Unable to get user session'))
                 }

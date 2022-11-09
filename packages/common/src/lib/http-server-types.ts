@@ -1,0 +1,59 @@
+import { HashMap } from "./common-types";
+import { BaseHttpRequest } from "./http-types";
+
+export type RouteHandler=(request:BaseHttpRequest,body:any,sourceEvent:HttpRequestEventVariations)=>Promise<any>|any;
+
+export interface RouteConfig
+{
+    basePath?:string;
+    pathCapture?:RegExp;
+    pathCaptureIndex?:number;
+    requirePathCapture?:boolean;
+    logRequest?:boolean;
+
+    /**
+     * If true the handler will return an object that implements the HttpResponse interface.
+     */
+    returnsHttpResponse?:boolean;
+
+    /**
+     * If true CORS headers will be returned;
+     */
+    cors?:boolean;
+
+    responseDefaults?:HttpResponseOptions;
+}
+
+export interface HttpResponseOptions
+{
+    statusCode?:number;
+    headers?:HashMap<string|undefined>;
+    serverName?:string;
+    contentType?:string;
+    body?:string;
+    cors?:boolean;
+}
+
+export interface HttpResponse
+{
+    statusCode:number;
+    headers:HashMap<string>;
+    body?:string;
+}
+
+export interface RouteMap{
+    [path:string]:RouteHandler;
+}
+
+export interface HttpRequestEventVariations
+{
+    requestContext?:{
+        http?:{
+            path?:string;
+            method?:string;
+        },
+        path?:string;
+        httpMethod?:string;
+    }
+    body?:any;
+}

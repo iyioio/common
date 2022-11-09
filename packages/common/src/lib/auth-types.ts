@@ -1,4 +1,4 @@
-import { BaseUser } from "./BaseUser";
+import type { BaseUser, BaseUserOptions } from "./BaseUser";
 import { IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
 
 export type AuthSignInResult={
@@ -60,6 +60,7 @@ export interface UserAuthProviderData
     readonly providerData?:SymStrHashMap;
 }
 
+export type UserFactoryCallback=(options:BaseUserOptions)=>BaseUser|undefined;
 
 export interface AuthProvider extends IOpInit, IOpDisposable
 {

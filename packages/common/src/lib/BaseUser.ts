@@ -4,7 +4,13 @@ import { IDisposable, IInit, SymStrHashMap } from "./common-types";
 import { DisposeContainer } from "./DisposeContainer";
 import { ReadonlySubject } from "./rxjs-types";
 
-
+export interface BaseUserOptions
+{
+    id:string;
+    name:string;
+    providerData:UserAuthProviderData;
+    data?:SymStrHashMap;
+}
 
 export class BaseUser implements IDisposable, IInit
 {
@@ -21,12 +27,17 @@ export class BaseUser implements IDisposable, IInit
     public get isDisposed(){return this._isDisposed}
     protected readonly disposables:DisposeContainer=new DisposeContainer();
 
-    public constructor(id:string,name:string,providerData:UserAuthProviderData,data:SymStrHashMap={})
+    public constructor({
+        id,
+        name,
+        providerData,
+        data,
+    }:BaseUserOptions)
     {
         this.id=id;
         this._name=new BehaviorSubject<string>(name);
         this.providerData=providerData;
-        this.data=data;
+        this.data=data??{};
     }
 
     public init():void|Promise<void>

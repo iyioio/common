@@ -1,4 +1,4 @@
-import { AuthProvider } from "./auth-types";
+import { AuthProvider, UserFactoryCallback } from "./auth-types";
 import { AuthService } from "./AuthService";
 import { BaseUser } from "./BaseUser";
 import { HashMap } from "./common-types";
@@ -7,7 +7,7 @@ import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
 import { RouterStore } from "./RouterStore";
-import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineProvider, defineReadonlyObservable, defineService, defineStringParam } from "./scope-lib";
+import { defineBoolParam, defineClient, defineFactory, defineNumberParam, defineParam, defineProvider, defineReadonlyObservable, defineService, defineStringParam } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { IStore, StoreProvider } from "./store-types";
 import { stringToHashMap } from "./string-converters";
@@ -45,5 +45,6 @@ export const StoreProviders=defineProvider<StoreProvider|IStore>("StoreProviders
 
 // Auth
 export const authService=defineService<AuthService>('auth',scope=>AuthService.fromScope(scope));
-export const currentUser=defineReadonlyObservable<BaseUser|null>('currentUser',_setUser,()=>null);
+export const currentBaseUser=defineReadonlyObservable<BaseUser|null>('currentBaseUser',_setUser,()=>null);
 export const AuthProviders=defineProvider<AuthProvider>("AuthProviders");
+export const UserFactory=defineFactory<UserFactoryCallback>('UserFactory',options=>new BaseUser(options));

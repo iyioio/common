@@ -26,6 +26,9 @@ and can even provide a default implementation for a type.
 - services - {name}Service
 - observables - current{name}
 - parameter / config - {name}Param
+- factory - Name of callback function minus Callback.
+  - Callback function = UserFactoryCallback
+  - FactoryTypeDef = UserFactory
 - setters - _set{name}
 - providers - {full type name}s
 - other - {full type name}Type

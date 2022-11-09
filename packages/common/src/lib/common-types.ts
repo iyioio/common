@@ -68,3 +68,5 @@ export interface OpValueContainer<T>
 }
 
 export type EmptyFunction=()=>void;
+
+export type AnyFunction=(...args:any[])=>any;
