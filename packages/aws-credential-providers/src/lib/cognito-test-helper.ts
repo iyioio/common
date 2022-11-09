@@ -1,5 +1,5 @@
 import { AwsAuthProviders } from "@iyio/aws";
-import { AuthProviders, authService, BaseUser, createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot } from "@iyio/common";
+import { AuthProviders, authService, BaseUser, createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot, uuid } from "@iyio/common";
 import { fail } from "assert";
 import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
 
@@ -17,7 +17,7 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
 
     storeRoot(scope).mount('/',new MemoryStore());
 
-    const email=`unit-test.${shortUuid()}@iyio.io`;
+    const email=`unit-test.${uuid()}@iyio.io`;
     const password='P1!p-'+shortUuid();
 
     console.log(`Registering ${email}, ${password}`);

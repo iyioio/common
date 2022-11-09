@@ -1,10 +1,10 @@
-import { authService, createScope, EnvParams, MemoryStore, shortUuid, storeRoot } from "@iyio/common";
+import { authService, createScope, EnvParams, MemoryStore, shortUuid, storeRoot, uuid } from "@iyio/common";
 import { cognitoAuthProviderModule } from './_modules.aws-credential-providers';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
 
 describe('CognitoAuthProvider',()=>{
 
-    const email=`unit-test.${shortUuid()}@iyio.io`;
+    const email=`unit-test.${uuid()}@iyio.io`;
     const password='P1!p-'+shortUuid();
 
     it('should get config from env',()=>{
