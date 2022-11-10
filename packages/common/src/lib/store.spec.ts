@@ -1,3 +1,4 @@
+import { JsonMemoryStore } from './JsonStore';
 import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
 import { createScope } from './scope-lib';
@@ -110,6 +111,29 @@ describe('MemoryStore',()=>{
         await testMountedStoreAsync(scope,basePath,{
             path:basePath,
             store:new MemoryStore({cloneValues:true})
+        })
+    })
+
+});
+
+describe('JsonMemoryStore',()=>{
+
+    it('should put, get, delete',async ()=>{
+        await putGetDeleteAsync('/',new JsonMemoryStore());
+    });
+
+    it('should watch',async ()=>{
+        await watchAsync('/',new JsonMemoryStore());
+    });
+
+    it('should meet standard mount operations',async ()=>{
+
+        const scope=createScope();
+
+        const basePath='tmp-memory/items/test-stuff'
+        await testMountedStoreAsync(scope,basePath,{
+            path:basePath,
+            store:new JsonMemoryStore()
         })
     })
 
