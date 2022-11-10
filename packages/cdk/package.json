@@ -1,6 +1,6 @@
 {
     "name": "cdk",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "devDependencies": {
         "@types/aws-lambda": "^8.10.104",
         "@types/aws-sdk": "^2.7.0",
