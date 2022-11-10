@@ -2,86 +2,11 @@ import { JsonMemoryStore } from './JsonStore';
 import { MemoryStore } from './MemoryStore';
 import { RouterStore } from './RouterStore';
 import { createScope } from './scope-lib';
-import { testMountedStoreAsync } from './store-test-lib';
-import { IStore } from './store-types';
-import { shortUuid, uuid } from './uuid';
-
-interface Person
-{
-    id:string;
-    name:string;
-}
-
-const frankKey='/people/frank';
-const createFrank=():Person=>({
-    id:shortUuid(),
-    name:'Frank'
-})
-
-const putGetDeleteAsync=async (mouthPath:string,store:IStore& Required<Pick<IStore,
-    'getAsync'|'putAsync'|'deleteAsync'>>)=>
-{
-    const frank=createFrank();
-
-    const key=mouthPath+frankKey;
-
-    await store.putAsync(key,frank);
-    expect(await store.getAsync(key)).toEqual(frank);
-
-    await store.deleteAsync(key);
-    expect(await store.getAsync(key)).toBeUndefined();
-}
-
-const watchAsync=async (mouthPath:string,store:IStore & Required<Pick<IStore,
-    'watch'|'getWatchCount'|'putAsync'|'deleteAsync'>>)=>
-{
-
-    expect(store.getWatchCount()).toBe(0);
-
-    const frank=createFrank();
-    const key=mouthPath+frankKey;
-
-    const pointer=store.watch(key);
-    let subValue:Person|undefined;
-    const unsub=pointer?.subject.subscribe((v)=>{
-        subValue=v;
-    })
-    expect(pointer).toBeTruthy();
-    expect(pointer?.value).toBeUndefined();
-    expect(subValue).toBeUndefined();
-    expect(store.getWatchCount()).toBe(1);
+import { testMountedStoreAsync, testStorePutGetDeleteAsync, testStoreWatchAsync } from './store-test-lib';
+import { uuid } from './uuid';
 
 
-    await store.putAsync(key,frank);
-    expect(pointer?.value).toEqual(frank);
-    expect(subValue).toEqual(frank);
-
-    const pointer2=store.watch(key);
-    expect(pointer2).toBeTruthy();
-    expect(pointer2?.value).toEqual(frank);
-    expect(store.getWatchCount()).toBe(1);
-
-    const bob:Person={
-        id:shortUuid(),
-        name:'Bob'
-    }
-    await store.putAsync(key,bob);
-    expect(pointer?.value).toEqual(bob);
-    expect(subValue).toEqual(bob);
-
-    await store.deleteAsync(key);
-    expect(pointer?.value).toBeUndefined();
-    expect(subValue).toBeUndefined();
-
-    unsub?.unsubscribe();
-
-    pointer?.dispose();
-    expect(store.getWatchCount()).toBe(1);
-    pointer2?.dispose();
-    expect(store.getWatchCount()).toBe(0);
-}
-
-const createMemoryStore=()=>new MemoryStore<Person>({cloneValues:true});
+const createMemoryStore=()=>new MemoryStore({cloneValues:true});
 
 const createRouterStore=(mountPath:string)=>{
 
@@ -96,11 +21,11 @@ const createRouterStore=(mountPath:string)=>{
 describe('MemoryStore',()=>{
 
     it('should put, get, delete',async ()=>{
-        await putGetDeleteAsync('/',createMemoryStore());
+        await testStorePutGetDeleteAsync('/',createMemoryStore());
     });
 
     it('should watch',async ()=>{
-        await watchAsync('/',createMemoryStore());
+        await testStoreWatchAsync('/',createMemoryStore());
     });
 
     it('should meet standard mount operations',async ()=>{
@@ -119,11 +44,11 @@ describe('MemoryStore',()=>{
 describe('JsonMemoryStore',()=>{
 
     it('should put, get, delete',async ()=>{
-        await putGetDeleteAsync('/',new JsonMemoryStore());
+        await testStorePutGetDeleteAsync('/',new JsonMemoryStore());
     });
 
     it('should watch',async ()=>{
-        await watchAsync('/',new JsonMemoryStore());
+        await testStoreWatchAsync('/',new JsonMemoryStore());
     });
 
     it('should meet standard mount operations',async ()=>{
@@ -144,11 +69,11 @@ describe('RouterStore',()=>{
     const mountPath='/';
 
     it('should put, get, delete',async ()=>{
-        await putGetDeleteAsync(mountPath,createRouterStore(mountPath));
+        await testStorePutGetDeleteAsync(mountPath,createRouterStore(mountPath));
     });
 
     it('should watch',async ()=>{
-        await watchAsync(mountPath,createRouterStore(mountPath));
+        await testStoreWatchAsync(mountPath,createRouterStore(mountPath));
     });
 
 })
@@ -158,11 +83,11 @@ describe('RouterStore with mount path',()=>{
     const mountPath='/apps/'+uuid();
 
     it('should put, get, delete',async ()=>{
-        await putGetDeleteAsync(mountPath,createRouterStore(mountPath));
+        await testStorePutGetDeleteAsync(mountPath,createRouterStore(mountPath));
     });
 
     it('should watch',async ()=>{
-        await watchAsync(mountPath,createRouterStore(mountPath));
+        await testStoreWatchAsync(mountPath,createRouterStore(mountPath));
     });
 
 })
