@@ -46,3 +46,9 @@ export const emptyFunction:EmptyFunction=()=>{
 }
 
 export const nameToEnvName=(name:string)=>name?name.replace(/[A-Z]+/g,m=>'_'+m).replace(/__+/g,'_').toUpperCase():'';
+
+export const isPromise=<T=any>(value:any):value is Promise<T>=>(
+    (typeof (value as Partial<Promise<T>>)?.then === 'function') &&
+    (typeof (value as Partial<Promise<T>>)?.catch === 'function') &&
+    (typeof (value as Partial<Promise<T>>)?.finally === 'function')
+)?true:false;
