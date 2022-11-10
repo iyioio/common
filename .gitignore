@@ -44,3 +44,4 @@ Thumbs.db
 /.env.test
 /.env.e2e
 .env.local
+.test-data
