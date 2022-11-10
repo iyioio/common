@@ -1,9 +1,13 @@
-import { CancelToken, delayAsync, HashMap, JsonStore, JsonStoreOptions, ValuePointer } from "@iyio/common";
+import { CancelToken, defineNumberParam, defineStringParam, delayAsync, HashMap, JsonStore, JsonStoreOptions, Scope, ValuePointer } from "@iyio/common";
 import { mkdir, readFile, unlink, watch, writeFile } from 'node:fs/promises';
 import { join } from "node:path";
 import { pathExistsAsync } from "./fs";
 
 export const defaultFsStoreDataDir='fs-store-data';
+
+export const fsStoreKeyPrefixParam=defineStringParam('fsStoreKeyPrefix');
+export const fsStoreDataDirectoryParam=defineStringParam('fsStoreDataDirectory');
+export const fsStoreWatchDebounceDelayMsParam=defineNumberParam('fsStoreWatchDebounceDelayMs');
 
 export interface FsStoreOptions extends JsonStoreOptions
 {
@@ -14,6 +18,19 @@ export interface FsStoreOptions extends JsonStoreOptions
 
 export class FsStore<T=any> extends JsonStore<T>
 {
+
+    public static optionsFromScope(scope:Scope):FsStoreOptions{
+        return {
+            keyPrefix:scope.to(fsStoreKeyPrefixParam).get(),
+            dataDirectory:scope.to(fsStoreDataDirectoryParam).get(),
+            watchDebounceDelayMs:scope.to(fsStoreWatchDebounceDelayMsParam).get(),
+        }
+    }
+
+    public static fromScope(scope:Scope):FsStore
+    {
+        return new FsStore(FsStore.optionsFromScope(scope));
+    }
 
     private readonly keyPrefix:string;
     private readonly dataDir:string;
