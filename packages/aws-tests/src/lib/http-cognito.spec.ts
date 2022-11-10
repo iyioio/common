@@ -3,7 +3,7 @@ import { useTempCognitoUser } from '@iyio/aws-credential-providers';
 import { createScope, defineStringParam, EnvParams, httpClient as http } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
 
-const authFuncUrl=defineStringParam('AUTH_FUNC_URL');
+const authFuncUrl=defineStringParam('authFuncUrl');
 
 describe('http-cognito',()=>{
 

@@ -224,6 +224,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         if(!providers){
             return undefined;
         }
+        const hasKey=name.replace(/_/g,'').toLowerCase();
         for(const p of providers){
             const valueP:ParamProvider|HashMap<string>=getProviderValue(p);
             if(typeof valueP.getParam === 'function'){
@@ -232,7 +233,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
                     return value;
                 }
             }else if(valueP){
-                const value=(valueP as any)[name];
+                const value=(valueP as any)[hasKey];
                 if(typeof value === 'string'){
                     return value;
                 }
@@ -541,7 +542,15 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         if(!valueProvider){
             return;
         }
-        provideForType(ParamProviderType,()=>valueProvider);
+        if(typeof (valueProvider as Partial<ParamProvider>).getParam === 'function'){
+            provideForType(ParamProviderType,()=>valueProvider);
+        }else{
+            const map:HashMap<string>={}
+            for(const e in valueProvider){
+                map[e.replace(/_/g,'').toLowerCase()]=(valueProvider as any)[e];
+            }
+            provideForType(ParamProviderType,()=>map);
+        }
     }
 
     const defineParam=<T>(name:string,valueConverter?:(str:string,scope:Scope)=>T,defaultValue?:T):CallableTypeDef<T>=>

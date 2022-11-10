@@ -3,7 +3,7 @@ import { AwsAuthProvider } from "./aws-auth";
 
 export const AwsAuthProviders=defineProvider<AwsAuthProvider>("AwsAuthProviders");
 
-export const awsRegionParam=defineStringParam('AWS_REGION');
-export const awsProfileParam=defineStringParam('ASW_PROFILE');
+export const awsRegionParam=defineStringParam('awsRegion');
+export const awsProfileParam=defineStringParam('aswProfile');
 
-export const awsHttpSignerServiceParam=defineStringParam('AWS_HTTP_SIGNER_SERVICE','lambda');
+export const awsHttpSignerServiceParam=defineStringParam('awsHttpSignerService','lambda');

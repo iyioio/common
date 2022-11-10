@@ -14,19 +14,19 @@ import { stringToHashMap } from "./string-converters";
 import { _setUser } from "./_internal.common";
 
 
-export const apiBaseUrlParam=defineStringParam('API_BASE_URL');
+export const apiBaseUrlParam=defineStringParam('apiBaseUrl');
 
 // HTTP
 export const httpClient=defineClient<HttpClient>('httpClient',scope=>HttpClient.fromScope(scope));
 export const HttpRequestSigners=defineProvider<HttpRequestSigner>('HttpRequestSigners');
 export const HttpFetchers=defineProvider<HttpFetcher>('HttpFetchers',()=>new HttpDefaultFetcher());
 
-export const httpBaseUrlMapParam=defineParam<HashMap<string>>('HTTP_BASE_URL_MAP',stringToHashMap);
-export const httpBaseUrlPrefixParam=defineStringParam('HTTP_BASE_URL_PREFIX');
-export const httpLogRequestsParam=defineBoolParam('HTTP_LOG_REQUESTS');
-export const httpLogResponsesParam=defineBoolParam('HTTP_LOG_RESPONSES');
-export const httpMaxRetriesParam=defineNumberParam('HTTP_MAX_RETRIES',5);
-export const httpRetryDelayMsParam=defineNumberParam('HTTP_RETRY_DELAY_MS',500);
+export const httpBaseUrlMapParam=defineParam<HashMap<string>>('httpBaseUrlMap',stringToHashMap);
+export const httpBaseUrlPrefixParam=defineStringParam('httpBaseUrlPrefix');
+export const httpLogRequestsParam=defineBoolParam('httpLogRequests');
+export const httpLogResponsesParam=defineBoolParam('httpLogResponses');
+export const httpMaxRetriesParam=defineNumberParam('httpMaxRetries',5);
+export const httpRetryDelayMsParam=defineNumberParam('httpRetryDelayMs',500);
 
 
 // JWP

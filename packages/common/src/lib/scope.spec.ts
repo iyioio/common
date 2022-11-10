@@ -499,10 +499,10 @@ describe('Scope',()=>{
     }
     const testValues=(scope:Scope,suffix:string='')=>{
 
-        const host=defineStringParam('TEST_HOST_NAME'+suffix);
-        const port=defineNumberParam('TEST_PORT'+suffix);
-        const log=defineBoolParam('TEST_LOG'+suffix);
-        const data=defineParam<JsonData>('TEST_JSON_DATA'+suffix);
+        const host=defineStringParam('testHostName'+suffix);
+        const port=defineNumberParam('testPort'+suffix);
+        const log=defineBoolParam('testLog'+suffix);
+        const data=defineParam<JsonData>('testJsonData'+suffix);
 
         expect(host(scope)).toBe(hostValue);
         expect(port(scope)).toBe(portValue);
