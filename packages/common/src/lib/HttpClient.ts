@@ -33,8 +33,11 @@ export class HttpClient
 
     public static optionsFromScope(scope:Scope):HttpClientOptions{
 
-        const apiBaseUrl=apiBaseUrlParam.get();
-        let baseUrlMap=httpBaseUrlMapParam.get();
+        const apiBaseUrl=scope.to(apiBaseUrlParam).get();
+        let baseUrlMap=scope.to(httpBaseUrlMapParam).get();
+        if(apiBaseUrl && !baseUrlMap){
+            baseUrlMap={};
+        }
         if(apiBaseUrl && baseUrlMap){
             baseUrlMap={
                 api:apiBaseUrl,
@@ -86,9 +89,14 @@ export class HttpClient
         for(const basePrefix in this.options.baseUrlMap){
 
             if(prefix===basePrefix){
-                return i===-1?
-                    this.options.baseUrlMap[basePrefix]:
-                    this.options.baseUrlMap[basePrefix]+uri.substring(i)
+                let base=this.options.baseUrlMap[basePrefix];
+                if(i===-1){
+                    return base;
+                }
+                if(base.endsWith('/')){
+                    base=base.substring(0,base.length-1);
+                }
+                return base+uri.substring(i);
             }
 
         }
