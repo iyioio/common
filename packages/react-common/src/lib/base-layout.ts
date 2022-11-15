@@ -147,20 +147,28 @@ export const baseLayoutFlexProps={
     alignStart:'iy-alignStart',
     alignEnd:'iy-alignEnd',
     alignStretch:'iy-alignStretch',
-    selfAlignCenter:'iy-selfAlignCenter',
-    selfAlignStart:'iy-selfAlignStart',
-    selfAlignEnd:'iy-selfAlignEnd',
-    selfAlignStretch:'iy-selfAlignStretch',
 } as const;
 Object.freeze(baseLayoutFlexProps);
 export type BaseLayoutFlexProps = {
     -readonly [prop in keyof typeof baseLayoutFlexProps]?:boolean;
 }
 
+export const baseLayoutSelfFlexProps={
+    selfAlignCenter:'iy-selfAlignCenter',
+    selfAlignStart:'iy-selfAlignStart',
+    selfAlignEnd:'iy-selfAlignEnd',
+    selfAlignStretch:'iy-selfAlignStretch',
+} as const;
+Object.freeze(baseLayoutSelfFlexProps);
+export type BaseLayoutSelfFlexProps = {
+    -readonly [prop in keyof typeof baseLayoutSelfFlexProps]?:boolean;
+}
+
 export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
     ...baseLayoutFlexProps,
+    ...baseLayoutSelfFlexProps,
     ...baseLayoutGapProps,
 } as const;
 Object.freeze(baseLayoutFlagProps);
@@ -174,10 +182,15 @@ for(const e in baseLayoutFlagProps){
 }
 Object.freeze(allBaseLayoutFlagProps);
 
-
-export type BaseLayoutProps = BaseLayoutFlagProps & {
+export interface BaseLayoutClassNameProps
+{
     className?:string;
 }
+
+
+export type BaseLayoutOuterProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps;
+
+export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps;
 
 export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
 {
