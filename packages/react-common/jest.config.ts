@@ -1,15 +1,10 @@
 /* eslint-disable */
 export default {
     displayName: 'react-common',
-    preset: '../../jest.preset.js',
-    globals: {
-        'ts-jest': {
-            tsconfig: '<rootDir>/tsconfig.spec.json',
-        },
-    },
+    preset: "../../jest.preset.js",
     transform: {
-        '^.+\\.[tj]s$': 'ts-jest',
+        "^.+\\.[tj]sx?$": "babel-jest",
     },
-    moduleFileExtensions: ['ts', 'js', 'html'],
+    moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
     coverageDirectory: '../../coverage/packages/react-common',
 };
