@@ -125,15 +125,10 @@ export type BaseLayoutMarginProps = {
     -readonly [prop in keyof typeof baseLayoutMarginProps]?:boolean;
 }
 
-export const baseLayoutFlexProps={
+export const baseLayoutInnerFlexProps={
     displayFlex:'iy-displayFlex',
     flexWrap:'iy-flexWrap',
     centerBoth:'iy-centerBoth',
-    flex1:'iy-flex1',
-    flex2:'iy-flex2',
-    flex3:'iy-flex3',
-    flex4:'iy-flex4',
-    flex5:'iy-flex5',
     row:'iy-row',
     col:'iy-col',
     rowReverse:'iy-rowReverse',
@@ -147,6 +142,18 @@ export const baseLayoutFlexProps={
     alignStart:'iy-alignStart',
     alignEnd:'iy-alignEnd',
     alignStretch:'iy-alignStretch',
+} as const;
+Object.freeze(baseLayoutInnerFlexProps);
+export type BaseLayoutInnerFlexProps = {
+    -readonly [prop in keyof typeof baseLayoutInnerFlexProps]?:boolean;
+}
+
+export const baseLayoutFlexProps={
+    flex1:'iy-flex1',
+    flex2:'iy-flex2',
+    flex3:'iy-flex3',
+    flex4:'iy-flex4',
+    flex5:'iy-flex5',
 } as const;
 Object.freeze(baseLayoutFlexProps);
 export type BaseLayoutFlexProps = {
@@ -168,6 +175,7 @@ export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
     ...baseLayoutFlexProps,
+    ...baseLayoutInnerFlexProps,
     ...baseLayoutSelfFlexProps,
     ...baseLayoutGapProps,
 } as const;
@@ -187,6 +195,8 @@ export interface BaseLayoutClassNameProps
     className?:string;
 }
 
+
+export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps;
 
 export type BaseLayoutOuterProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps;
 
