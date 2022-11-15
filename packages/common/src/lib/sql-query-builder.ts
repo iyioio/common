@@ -1,3 +1,4 @@
+import { asArray } from "./array";
 import { asType } from "./common-lib";
 import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
 import { escapeSqlName, escapeSqlValue } from "./sql-lib";
@@ -65,6 +66,18 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
     }
 
 
+    if(query.join){
+        const joins=asArray(query.join);
+        for(const join of joins){
+            const joinAsName=join.tableAs??'_tbl_'+(ctx.nextAs++);
+            ctx.sql.push('join');
+            ctx.sql.push(escapeSqlName(join.table));
+            ctx.sql.push('as');
+            ctx.sql.push(escapeSqlName(joinAsName));
+            ctx.sql.push('on');
+            appendCondition(ctx,join.condition,depth+1);
+        }
+    }
 
     const cond=(
         ((query.condition && subCondition)?

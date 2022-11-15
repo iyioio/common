@@ -28,6 +28,11 @@ export interface Query
     tableAs?:string;
 
     /**
+     * Tables or projections to join to the query
+     */
+    join?:QueryJoin|QueryJoin[];
+
+    /**
      * A where condition or a group of where conditions
      */
     condition?:QueryConditionOrGroup;
@@ -75,6 +80,24 @@ export interface SubQuery
     query:Query;
 }
 
+export interface QueryJoin
+{
+    /**
+     * Name of table to join
+     */
+    table:string;
+
+    /**
+     * A name to define the table as in the query. If not defined a unique name will be generated.
+     */
+    tableAs?:string;
+
+    /**
+     * This condition used to join the table
+     */
+    condition:QueryConditionOrGroup;
+}
+
 
 /**
  * Represents a query to be ran on a static set of data
@@ -117,7 +140,7 @@ export const isQueryGroupCondition=(value:any):value is QueryGroupCondition=>{
 }
 
 
-export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','not'] as const;
+export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','not','in'] as const;
 export type QueryConditionOp=typeof allQueryConditionOps[number];
 export interface QueryCondition
 {
