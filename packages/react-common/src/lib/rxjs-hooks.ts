@@ -7,7 +7,7 @@ export function useSubject(subject:undefined):undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>|undefined):T|undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>|undefined):T|undefined
 {
-    const [value,setValue]=useState<T|undefined>(subject?.value);
+    const [value,setValue]=useState<T|undefined>(()=>subject?.value);
 
     useEffect(()=>{
         if(!subject){
