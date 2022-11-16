@@ -20,6 +20,8 @@ export const _allIssuedCognitoCreds:Provider<Credentials>[]=[];
 const sessionKey=Symbol('cognitoSession');
 const userKey=Symbol('cognitoUser');
 
+export const CognitoAuthProviderType='CognitoAuthProvider';
+
 export interface CognitoAuthProviderConfig extends ICognitoUserPoolData
 {
     region:string;
@@ -42,7 +44,7 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         });
     }
 
-    public readonly type='CognitoAuthProvider';
+    public readonly type=CognitoAuthProviderType;
 
     public readonly config:Readonly<CognitoAuthProviderConfig>;
 
@@ -147,7 +149,11 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
     public async getUserAsync(data: UserAuthProviderData):Promise<BaseUser|null> {
         const user:CognitoUser|undefined=data.providerData?.[userKey];
         if(!user){
-            return null;
+            if(!data.userId){
+                return null;
+            }
+            const currentUser=await this.getCurrentUser();
+            return currentUser?.id===data.userId?currentUser:null;
         }
         return await this.convertCognitoUserAsync(user);
     }
