@@ -70,6 +70,18 @@ export const asArray=<T>(value:T[]|T): T extends undefined ? undefined : T[] =>
     }
 }
 
+export const asArrayItem=<T>(value:T[]|T): T extends undefined ? undefined : T|undefined =>
+{
+    if(!value){
+        return undefined as any;
+    }
+    if(Array.isArray(value)){
+        return value[0] as any;
+    }else{
+        return value as any;
+    }
+}
+
 
 export const aryCount=<T>(ary:T[]|null|undefined,check:((item:T)=>boolean|null|undefined)|null|undefined):number=>
 {
