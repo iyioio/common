@@ -24,152 +24,152 @@ export function BaseLayoutStyleSheet({
 
         <style global jsx>{`
 
-.iy-g0{gap:${space0} !important}
-.iy-g1{gap:${space1} !important}
-.iy-g2{gap:${space2} !important}
-.iy-g3{gap:${space3} !important}
-.iy-g4{gap:${space4} !important}
-.iy-g5{gap:${space5} !important}
-.iy-g6{gap:${space6} !important}
+.ioG0{gap:${space0} !important}
+.ioG1{gap:${space1} !important}
+.ioG2{gap:${space2} !important}
+.ioG3{gap:${space3} !important}
+.ioG4{gap:${space4} !important}
+.ioG5{gap:${space5} !important}
+.ioG6{gap:${space6} !important}
 
-.iy-p0{padding:${space0} !important}
-.iy-p1{padding:${space1} !important}
-.iy-p2{padding:${space2} !important}
-.iy-p3{padding:${space3} !important}
-.iy-p4{padding:${space4} !important}
-.iy-p5{padding:${space5} !important}
-.iy-p6{padding:${space6} !important}
+.ioP0{padding:${space0} !important}
+.ioP1{padding:${space1} !important}
+.ioP2{padding:${space2} !important}
+.ioP3{padding:${space3} !important}
+.ioP4{padding:${space4} !important}
+.ioP5{padding:${space5} !important}
+.ioP6{padding:${space6} !important}
 
-.iy-pl0{padding-left:${space0} !important}
-.iy-pl1{padding-left:${space1} !important}
-.iy-pl2{padding-left:${space2} !important}
-.iy-pl3{padding-left:${space3} !important}
-.iy-pl4{padding-left:${space4} !important}
-.iy-pl5{padding-left:${space5} !important}
-.iy-pl6{padding-left:${space6} !important}
+.ioPl0{padding-left:${space0} !important}
+.ioPl1{padding-left:${space1} !important}
+.ioPl2{padding-left:${space2} !important}
+.ioPl3{padding-left:${space3} !important}
+.ioPl4{padding-left:${space4} !important}
+.ioPl5{padding-left:${space5} !important}
+.ioPl6{padding-left:${space6} !important}
 
-.iy-pr0{padding-right:${space0} !important}
-.iy-pr1{padding-right:${space1} !important}
-.iy-pr2{padding-right:${space2} !important}
-.iy-pr3{padding-right:${space3} !important}
-.iy-pr4{padding-right:${space4} !important}
-.iy-pr5{padding-right:${space5} !important}
-.iy-pr6{padding-right:${space6} !important}
+.ioPr0{padding-right:${space0} !important}
+.ioPr1{padding-right:${space1} !important}
+.ioPr2{padding-right:${space2} !important}
+.ioPr3{padding-right:${space3} !important}
+.ioPr4{padding-right:${space4} !important}
+.ioPr5{padding-right:${space5} !important}
+.ioPr6{padding-right:${space6} !important}
 
-.iy-pt0{padding-top:${space0} !important}
-.iy-pt1{padding-top:${space1} !important}
-.iy-pt2{padding-top:${space2} !important}
-.iy-pt3{padding-top:${space3} !important}
-.iy-pt4{padding-top:${space4} !important}
-.iy-pt5{padding-top:${space5} !important}
-.iy-pt6{padding-top:${space6} !important}
+.ioPt0{padding-top:${space0} !important}
+.ioPt1{padding-top:${space1} !important}
+.ioPt2{padding-top:${space2} !important}
+.ioPt3{padding-top:${space3} !important}
+.ioPt4{padding-top:${space4} !important}
+.ioPt5{padding-top:${space5} !important}
+.ioPt6{padding-top:${space6} !important}
 
-.iy-pb0{padding-bottom:${space0} !important}
-.iy-pb1{padding-bottom:${space1} !important}
-.iy-pb2{padding-bottom:${space2} !important}
-.iy-pb3{padding-bottom:${space3} !important}
-.iy-pb4{padding-bottom:${space4} !important}
-.iy-pb5{padding-bottom:${space5} !important}
-.iy-pb6{padding-bottom:${space6} !important}
+.ioPb0{padding-bottom:${space0} !important}
+.ioPb1{padding-bottom:${space1} !important}
+.ioPb2{padding-bottom:${space2} !important}
+.ioPb3{padding-bottom:${space3} !important}
+.ioPb4{padding-bottom:${space4} !important}
+.ioPb5{padding-bottom:${space5} !important}
+.ioPb6{padding-bottom:${space6} !important}
 
-.iy-ph0{padding-left:${space0} !important;padding-right:${space0} !important}
-.iy-ph1{padding-left:${space1} !important;padding-right:${space1} !important}
-.iy-ph2{padding-left:${space2} !important;padding-right:${space2} !important}
-.iy-ph3{padding-left:${space3} !important;padding-right:${space3} !important}
-.iy-ph4{padding-left:${space4} !important;padding-right:${space4} !important}
-.iy-ph5{padding-left:${space5} !important;padding-right:${space5} !important}
-.iy-ph6{padding-left:${space6} !important;padding-right:${space6} !important}
+.ioPh0{padding-left:${space0} !important;padding-right:${space0} !important}
+.ioPh1{padding-left:${space1} !important;padding-right:${space1} !important}
+.ioPh2{padding-left:${space2} !important;padding-right:${space2} !important}
+.ioPh3{padding-left:${space3} !important;padding-right:${space3} !important}
+.ioPh4{padding-left:${space4} !important;padding-right:${space4} !important}
+.ioPh5{padding-left:${space5} !important;padding-right:${space5} !important}
+.ioPh6{padding-left:${space6} !important;padding-right:${space6} !important}
 
-.iy-pv0{padding-top:${space0} !important;padding-bottom:${space0} !important}
-.iy-pv1{padding-top:${space1} !important;padding-bottom:${space1} !important}
-.iy-pv2{padding-top:${space2} !important;padding-bottom:${space2} !important}
-.iy-pv3{padding-top:${space3} !important;padding-bottom:${space3} !important}
-.iy-pv4{padding-top:${space4} !important;padding-bottom:${space4} !important}
-.iy-pv5{padding-top:${space5} !important;padding-bottom:${space5} !important}
-.iy-pv6{padding-top:${space6} !important;padding-bottom:${space6} !important}
+.ioPv0{padding-top:${space0} !important;padding-bottom:${space0} !important}
+.ioPv1{padding-top:${space1} !important;padding-bottom:${space1} !important}
+.ioPv2{padding-top:${space2} !important;padding-bottom:${space2} !important}
+.ioPv3{padding-top:${space3} !important;padding-bottom:${space3} !important}
+.ioPv4{padding-top:${space4} !important;padding-bottom:${space4} !important}
+.ioPv5{padding-top:${space5} !important;padding-bottom:${space5} !important}
+.ioPv6{padding-top:${space6} !important;padding-bottom:${space6} !important}
 
 
-.iy-m0{margin:${space0} !important}
-.iy-m1{margin:${space1} !important}
-.iy-m2{margin:${space2} !important}
-.iy-m3{margin:${space3} !important}
-.iy-m4{margin:${space4} !important}
-.iy-m5{margin:${space5} !important}
-.iy-m6{margin:${space6} !important}
+.ioM0{margin:${space0} !important}
+.ioM1{margin:${space1} !important}
+.ioM2{margin:${space2} !important}
+.ioM3{margin:${space3} !important}
+.ioM4{margin:${space4} !important}
+.ioM5{margin:${space5} !important}
+.ioM6{margin:${space6} !important}
 
-.iy-ml0{margin-left:${space0} !important}
-.iy-ml1{margin-left:${space1} !important}
-.iy-ml2{margin-left:${space2} !important}
-.iy-ml3{margin-left:${space3} !important}
-.iy-ml4{margin-left:${space4} !important}
-.iy-ml5{margin-left:${space5} !important}
-.iy-ml6{margin-left:${space6} !important}
+.ioMl0{margin-left:${space0} !important}
+.ioMl1{margin-left:${space1} !important}
+.ioMl2{margin-left:${space2} !important}
+.ioMl3{margin-left:${space3} !important}
+.ioMl4{margin-left:${space4} !important}
+.ioMl5{margin-left:${space5} !important}
+.ioMl6{margin-left:${space6} !important}
 
-.iy-mr0{margin-right:${space0} !important}
-.iy-mr1{margin-right:${space1} !important}
-.iy-mr2{margin-right:${space2} !important}
-.iy-mr3{margin-right:${space3} !important}
-.iy-mr4{margin-right:${space4} !important}
-.iy-mr5{margin-right:${space5} !important}
-.iy-mr6{margin-right:${space6} !important}
+.ioMr0{margin-right:${space0} !important}
+.ioMr1{margin-right:${space1} !important}
+.ioMr2{margin-right:${space2} !important}
+.ioMr3{margin-right:${space3} !important}
+.ioMr4{margin-right:${space4} !important}
+.ioMr5{margin-right:${space5} !important}
+.ioMr6{margin-right:${space6} !important}
 
-.iy-mt0{margin-top:${space0} !important}
-.iy-mt1{margin-top:${space1} !important}
-.iy-mt2{margin-top:${space2} !important}
-.iy-mt3{margin-top:${space3} !important}
-.iy-mt4{margin-top:${space4} !important}
-.iy-mt5{margin-top:${space5} !important}
-.iy-mt6{margin-top:${space6} !important}
+.ioMt0{margin-top:${space0} !important}
+.ioMt1{margin-top:${space1} !important}
+.ioMt2{margin-top:${space2} !important}
+.ioMt3{margin-top:${space3} !important}
+.ioMt4{margin-top:${space4} !important}
+.ioMt5{margin-top:${space5} !important}
+.ioMt6{margin-top:${space6} !important}
 
-.iy-mb0{margin-bottom:${space0} !important}
-.iy-mb1{margin-bottom:${space1} !important}
-.iy-mb2{margin-bottom:${space2} !important}
-.iy-mb3{margin-bottom:${space3} !important}
-.iy-mb4{margin-bottom:${space4} !important}
-.iy-mb5{margin-bottom:${space5} !important}
-.iy-mb6{margin-bottom:${space6} !important}
+.ioMb0{margin-bottom:${space0} !important}
+.ioMb1{margin-bottom:${space1} !important}
+.ioMb2{margin-bottom:${space2} !important}
+.ioMb3{margin-bottom:${space3} !important}
+.ioMb4{margin-bottom:${space4} !important}
+.ioMb5{margin-bottom:${space5} !important}
+.ioMb6{margin-bottom:${space6} !important}
 
-.iy-mh0{margin-left:${space0} !important;margin-right:${space0} !important}
-.iy-mh1{margin-left:${space1} !important;margin-right:${space1} !important}
-.iy-mh2{margin-left:${space2} !important;margin-right:${space2} !important}
-.iy-mh3{margin-left:${space3} !important;margin-right:${space3} !important}
-.iy-mh4{margin-left:${space4} !important;margin-right:${space4} !important}
-.iy-mh5{margin-left:${space5} !important;margin-right:${space5} !important}
-.iy-mh6{margin-left:${space6} !important;margin-right:${space6} !important}
+.ioMh0{margin-left:${space0} !important;margin-right:${space0} !important}
+.ioMh1{margin-left:${space1} !important;margin-right:${space1} !important}
+.ioMh2{margin-left:${space2} !important;margin-right:${space2} !important}
+.ioMh3{margin-left:${space3} !important;margin-right:${space3} !important}
+.ioMh4{margin-left:${space4} !important;margin-right:${space4} !important}
+.ioMh5{margin-left:${space5} !important;margin-right:${space5} !important}
+.ioMh6{margin-left:${space6} !important;margin-right:${space6} !important}
 
-.iy-mv0{margin-top:${space0} !important;margin-bottom:${space0} !important}
-.iy-mv1{margin-top:${space1} !important;margin-bottom:${space1} !important}
-.iy-mv2{margin-top:${space2} !important;margin-bottom:${space2} !important}
-.iy-mv3{margin-top:${space3} !important;margin-bottom:${space3} !important}
-.iy-mv4{margin-top:${space4} !important;margin-bottom:${space4} !important}
-.iy-mv5{margin-top:${space5} !important;margin-bottom:${space5} !important}
-.iy-mv6{margin-top:${space6} !important;margin-bottom:${space6} !important}
+.ioMv0{margin-top:${space0} !important;margin-bottom:${space0} !important}
+.ioMv1{margin-top:${space1} !important;margin-bottom:${space1} !important}
+.ioMv2{margin-top:${space2} !important;margin-bottom:${space2} !important}
+.ioMv3{margin-top:${space3} !important;margin-bottom:${space3} !important}
+.ioMv4{margin-top:${space4} !important;margin-bottom:${space4} !important}
+.ioMv5{margin-top:${space5} !important;margin-bottom:${space5} !important}
+.ioMv6{margin-top:${space6} !important;margin-bottom:${space6} !important}
 
-.iy-displayFlex{display:flex}
-.iy-flexWrap{display:flex;flex-wrap:wrap}
-.iy-centerBoth{display:flex;justify-content:center;align-items:center}
-.iy-flex1{flex:1}
-.iy-flex2{flex:2}
-.iy-flex3{flex:3}
-.iy-flex4{flex:4}
-.iy-flex5{flex:5}
-.iy-row{display:flex;flex-direction:row}
-.iy-col{display:flex;flex-direction:column}
-.iy-rowReverse{display:flex;flex-direction:row-reverse}
-.iy-colReverse{display:flex;flex-direction:column-reverse}
-.iy-justifyCenter{display:flex;justify-content:center}
-.iy-justifyStart{display:flex;justify-content:flex-start}
-.iy-justifyEnd{display:flex;justify-content:flex-end}
-.iy-justifyAround{display:flex;justify-content:space-around}
-.iy-justifyBetween{display:flex;justify-content:space-between}
-.iy-alignCenter{display:flex;align-items:center}
-.iy-alignStart{display:flex;align-items:flex-start}
-.iy-alignEnd{display:flex;align-items:flex-end}
-.iy-alignStretch{display:flex;align-items:stretch}
-.iy-selfAlignCenter{align-self:center}
-.iy-selfAlignStart{align-self:flex-start}
-.iy-selfAlignEnd{align-self:flex-end}
-.iy-selfAlignStretch{align-self:stretch}
+.ioDisplayFlex{display:flex}
+.ioFlexWrap{display:flex;flex-wrap:wrap}
+.ioCenterBoth{display:flex;justify-content:center;align-items:center}
+.ioFlex1{flex:1}
+.ioFlex2{flex:2}
+.ioFlex3{flex:3}
+.ioFlex4{flex:4}
+.ioFlex5{flex:5}
+.ioRow{display:flex;flex-direction:row}
+.ioCol{display:flex;flex-direction:column}
+.ioRowReverse{display:flex;flex-direction:row-reverse}
+.ioColReverse{display:flex;flex-direction:column-reverse}
+.ioJustifyCenter{display:flex;justify-content:center}
+.ioJustifyStart{display:flex;justify-content:flex-start}
+.ioJustifyEnd{display:flex;justify-content:flex-end}
+.ioJustifyAround{display:flex;justify-content:space-around}
+.ioJustifyBetween{display:flex;justify-content:space-between}
+.ioAlignCenter{display:flex;align-items:center}
+.ioAlignStart{display:flex;align-items:flex-start}
+.ioAlignEnd{display:flex;align-items:flex-end}
+.ioAlignStretch{display:flex;align-items:stretch}
+.ioSelfAlignCenter{align-self:center}
+.ioSelfAlignStart{align-self:flex-start}
+.ioSelfAlignEnd{align-self:flex-end}
+.ioSelfAlignStretch{align-self:stretch}
 
         `}</style>
     )
