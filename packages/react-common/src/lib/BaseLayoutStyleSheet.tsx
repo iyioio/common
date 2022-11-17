@@ -153,6 +153,7 @@ export function BaseLayoutStyleSheet({
 .ioFlex3{flex:3}
 .ioFlex4{flex:4}
 .ioFlex5{flex:5}
+.ioFlex6{flex:6}
 .ioRow{display:flex;flex-direction:row}
 .ioCol{display:flex;flex-direction:column}
 .ioRowReverse{display:flex;flex-direction:row-reverse}
@@ -170,6 +171,21 @@ export function BaseLayoutStyleSheet({
 .ioSelfAlignStart{align-self:flex-start}
 .ioSelfAlignEnd{align-self:flex-end}
 .ioSelfAlignStretch{align-self:stretch}
+
+.ioGrid1{display:grid;grid-template-columns:1fr}
+.ioGrid2{display:grid;grid-template-columns:1fr 1fr}
+.ioGrid3{display:grid;grid-template-columns:1fr 1fr 1fr}
+.ioGrid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr}
+.ioGrid5{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+.ioGrid6{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr}
+.ioGridAuto1{display:grid;grid-template-columns:auto}
+.ioGridAuto2{display:grid;grid-template-columns:auto auto}
+.ioGridAuto3{display:grid;grid-template-columns:auto auto auto}
+.ioGridAuto4{display:grid;grid-template-columns:auto auto auto auto}
+.ioGridAuto5{display:grid;grid-template-columns:auto auto auto auto auto}
+.ioGridAuto6{display:grid;grid-template-columns:auto auto auto auto auto auto}
+.ioDisplayGrid{display:grid}
+.ioDisplayInlineGrid{display:inline-grid}
 
         `}</style>
     )

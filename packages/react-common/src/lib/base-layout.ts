@@ -154,6 +154,7 @@ export const baseLayoutFlexProps={
     flex3:'ioFlex3',
     flex4:'ioFlex4',
     flex5:'ioFlex5',
+    flex6:'ioFlex6',
 } as const;
 Object.freeze(baseLayoutFlexProps);
 export type BaseLayoutFlexProps = {
@@ -171,6 +172,28 @@ export type BaseLayoutSelfFlexProps = {
     -readonly [prop in keyof typeof baseLayoutSelfFlexProps]?:boolean;
 }
 
+export const baseLayoutInnerGridProps={
+    displayGrid:'ioDisplayGrid',
+    displayInlineGrid:'ioDisplayInlineGrid',
+    grid1:'ioGrid1',
+    grid2:'ioGrid2',
+    grid3:'ioGrid3',
+    grid4:'ioGrid4',
+    grid5:'ioGrid5',
+    grid6:'ioGrid6',
+    gridAuto1:'ioGridAuto1',
+    gridAuto2:'ioGridAuto2',
+    gridAuto3:'ioGridAuto3',
+    gridAuto4:'ioGridAuto4',
+    gridAuto5:'ioGridAuto5',
+    gridAuto6:'ioGridAuto6',
+
+} as const;
+Object.freeze(baseLayoutInnerGridProps);
+export type BaseLayoutInnerGridProps = {
+    -readonly [prop in keyof typeof baseLayoutInnerGridProps]?:boolean;
+}
+
 export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
@@ -178,6 +201,7 @@ export const baseLayoutFlagProps={
     ...baseLayoutInnerFlexProps,
     ...baseLayoutSelfFlexProps,
     ...baseLayoutGapProps,
+    ...baseLayoutInnerGridProps
 } as const;
 Object.freeze(baseLayoutFlagProps);
 export type BaseLayoutFlagProps = {
