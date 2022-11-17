@@ -198,7 +198,9 @@ export interface BaseLayoutClassNameProps
 
 export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps;
 
-export type BaseLayoutOuterProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps;
+export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps;
+
+export type BaseLayoutOuterProps = BaseLayoutOuterNoFlexProps & BaseLayoutFlexProps;
 
 export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps;
 

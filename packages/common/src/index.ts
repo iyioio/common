@@ -51,6 +51,8 @@ export * from './lib/string-converters';
 export * from './lib/TaskPool';
 export * from './lib/time';
 export * from './lib/type-conversion';
+export * from './lib/ui-lib';
+export * from './lib/uri';
 export * from './lib/uuid';
 export * from './lib/validation';
 export * from './lib/_types.common';

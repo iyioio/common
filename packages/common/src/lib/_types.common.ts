@@ -1,6 +1,7 @@
 import { AuthProvider, UserFactoryCallback } from "./auth-types";
 import { AuthService } from "./AuthService";
 import { BaseUser } from "./BaseUser";
+import { BrowserUiRouter } from "./BrowserUiRouter";
 import { HashMap } from "./common-types";
 import { HttpFetcher, HttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
@@ -11,6 +12,7 @@ import { defineBoolParam, defineClient, defineFactory, defineNumberParam, define
 import { ISqlClient } from "./sql-types";
 import { IStore, StoreProvider } from "./store-types";
 import { stringToHashMap } from "./string-converters";
+import { IUiRouter } from "./ui-lib";
 import { _setUser } from "./_internal.common";
 
 
@@ -48,3 +50,8 @@ export const authService=defineService<AuthService>('auth',scope=>AuthService.fr
 export const currentBaseUser=defineReadonlyObservable<BaseUser|null>('currentBaseUser',_setUser,()=>null);
 export const AuthProviders=defineProvider<AuthProvider>("AuthProviders");
 export const UserFactory=defineFactory<UserFactoryCallback>('UserFactory',options=>new BaseUser(options));
+
+
+// UI Routing
+export const uiRouterService=defineService<IUiRouter>(
+    'uiRouterService',BrowserUiRouter.isSupported()?()=>new BrowserUiRouter():undefined);
