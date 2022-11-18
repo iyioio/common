@@ -2,6 +2,7 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "outDir": "../../dist/out-tsc",
+        "declaration": true,
         "types": ["node"]
     },
     "files": [
@@ -24,5 +25,5 @@
         "**/*.stories.jsx",
         "**/*.stories.tsx"
     ],
-    "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+    "include": ["**/*.ts", "**/*.tsx"]
 }

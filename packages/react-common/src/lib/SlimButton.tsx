@@ -1,3 +1,5 @@
+import { css } from '@iyio/common';
+import Style from 'styled-jsx/style';
 import { BaseLayoutProps } from "./base-layout";
 import { ButtonBase, ButtonBaseProps } from "./ButtonBase";
 
@@ -14,7 +16,7 @@ export function SlimButton({
     return (
         <ButtonBase {...props} baseClassName="SlimButton">
             {children}
-            <style global jsx>{`
+            <Style id="tbCcmdWT9eWU4kWaw3SD" global jsx>{css`
                 .SlimButton{
                     display:flex;
                     border:none;
@@ -23,7 +25,7 @@ export function SlimButton({
                     background:none;
                     cursor:pointer;
                 }
-            `}</style>
+            `}</Style>
         </ButtonBase>
     )
 

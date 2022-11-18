@@ -5,23 +5,13 @@
     "projectType": "library",
     "targets": {
         "build": {
-            "executor": "@nrwl/web:rollup",
+            "executor": "@nrwl/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/react-common",
+                "main": "packages/react-common/src/index.ts",
                 "tsConfig": "packages/react-common/tsconfig.lib.json",
-                "project": "packages/react-common/package.json",
-                "entryFile": "packages/react-common/src/index.ts",
-                "external": ["react/jsx-runtime"],
-                "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
-                "compiler": "babel",
-                "assets": [
-                    {
-                        "glob": "packages/react-common/README.md",
-                        "input": ".",
-                        "output": "."
-                    }
-                ]
+                "assets": ["packages/react-common/*.md"]
             }
         },
         "publish": {

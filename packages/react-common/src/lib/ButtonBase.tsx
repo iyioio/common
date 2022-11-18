@@ -76,13 +76,7 @@ export function ButtonBase({
     return React.createElement(elem,{
         type:type,
         disabled:disabled,
-        _className: cn(baseClassName, { disabled }, baseLayoutCn(props)),
-        get className() {
-            return this._className;
-        },
-        set className(value) {
-            this._className = value;
-        },
+        className: cn(baseClassName, { disabled }, baseLayoutCn(props)),
         onClick,
         tabIndex,
         onKeyPress,

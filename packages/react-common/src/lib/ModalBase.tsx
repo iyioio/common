@@ -1,4 +1,5 @@
-import { cn } from "@iyio/common";
+import { cn, css } from "@iyio/common";
+import Style from 'styled-jsx/style';
 import { baseLayoutCn, BaseLayoutInnerProps } from "./base-layout";
 import { Portal, PortalProps } from "./Portal";
 
@@ -35,7 +36,7 @@ export function ModalBase({
                 </div>
             </Portal>
 
-            <style global jsx>{`
+            <Style id="tyEOMxC0RWXJwy3bzQEI" global jsx>{css`
                 .ModelBase, .ModelBase-bg{
                     position:absolute;
                     left:0;
@@ -48,7 +49,7 @@ export function ModalBase({
                     display:flex;
                     flex-direction:column;
                 }
-            `}</style>
+            `}</Style>
         </>
     )
 

@@ -1,3 +1,6 @@
+import { css } from '@iyio/common';
+import Style from 'styled-jsx/style';
+
 
 export interface BaseLayoutStyleSheetProps
 {
@@ -22,7 +25,7 @@ export function BaseLayoutStyleSheet({
 
     return (
 
-        <style global jsx>{`
+        <Style id="AoRD5JpZOl3Lg2RcD98y" global jsx>{css`
 
 .ioG0{gap:${space0} !important}
 .ioG1{gap:${space1} !important}
@@ -187,7 +190,7 @@ export function BaseLayoutStyleSheet({
 .ioDisplayGrid{display:grid}
 .ioDisplayInlineGrid{display:inline-grid}
 
-        `}</style>
+        `}</Style>
     )
 
 }
