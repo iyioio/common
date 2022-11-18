@@ -57,7 +57,7 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
 
     if(typeof query.table === 'string'){
         ctx.sql.push(`from ${escapeSqlName(query.table)} as ${escapeSqlName(asName)}`);
-    }else{
+    }else if(query.table){
         ctx.sql.push('from');
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,query.table,null);

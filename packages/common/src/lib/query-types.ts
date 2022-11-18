@@ -20,7 +20,7 @@ export interface Query
     /**
      * Name of table to select or a query to use for projection
      */
-    table:string|Query;
+    table?:string|Query;
 
     /**
      * A name to define the table as in the query. If not defined a unique name will be generated.
