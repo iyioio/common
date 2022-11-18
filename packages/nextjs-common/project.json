@@ -3,32 +3,21 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/nextjs-common/src",
     "projectType": "library",
-    "tags": ["client"],
     "targets": {
         "build": {
-            "executor": "@nrwl/web:rollup",
+            "executor": "@nrwl/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/nextjs-common",
+                "main": "packages/nextjs-common/src/index.ts",
                 "tsConfig": "packages/nextjs-common/tsconfig.lib.json",
-                "project": "packages/nextjs-common/package.json",
-                "entryFile": "packages/nextjs-common/src/index.ts",
-                "external": ["react/jsx-runtime"],
-                "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
-                "compiler": "babel",
-                "assets": [
-                    {
-                        "glob": "packages/nextjs-common/README.md",
-                        "input": ".",
-                        "output": "."
-                    }
-                ]
+                "assets": ["packages/nextjs-common/*.md"]
             }
         },
         "publish": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "node tools/scripts/publish.mjs react-common {args.ver} {args.tag}"
+                "command": "node tools/scripts/publish.mjs nextjs-common {args.ver} {args.tag}"
             },
             "dependsOn": [
                 {
@@ -41,18 +30,48 @@
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": [
-                    "packages/nextjs-common/**/*.{ts,tsx,js,jsx}"
-                ]
+                "lintFilePatterns": ["packages/nextjs-common/**/*.ts"]
             }
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["coverage/packages/nextjs-common"],
             "options": {
                 "jestConfig": "packages/nextjs-common/jest.config.ts",
                 "passWithNoTests": true
             }
+        },
+        "storybook": {
+            "executor": "@nrwl/storybook:storybook",
+            "options": {
+                "uiFramework": "@storybook/react",
+                "port": 4400,
+                "config": {
+                    "configFolder": "packages/nextjs-common/.storybook"
+                }
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true
+                }
+            }
+        },
+        "build-storybook": {
+            "executor": "@nrwl/storybook:build",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "uiFramework": "@storybook/react",
+                "outputPath": "dist/storybook/nextjs-common",
+                "config": {
+                    "configFolder": "packages/nextjs-common/.storybook"
+                }
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true
+                }
+            }
         }
-    }
+    },
+    "tags": ["browser"]
 }
