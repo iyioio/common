@@ -20,6 +20,8 @@ enumProjects({publicOnly:true},({name,project,pkg})=>{
 
 });
 
+console.log(publishMap);
+
 
 (async ()=>{
     for(const name in publishMap){
@@ -28,10 +30,14 @@ enumProjects({publicOnly:true},({name,project,pkg})=>{
 
         console.log(`https://registry.npmjs.org/${pkg.name}`)
         const r=await fetch(`https://registry.npmjs.org/${pkg.name}`);
+        const isNew=r.status===404;
+
+        if(isNew){
+            console.log(`new package ${pkg.name}@${pkg.version}`);
+            continue;
+        }
+
         if(!r.ok){
-            if(r.status===404){
-                continue;
-            }
             throw new Error(`unable to get npm package for ${pkg.name}`)
         }
 
