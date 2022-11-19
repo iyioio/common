@@ -6,13 +6,23 @@ import chalk from 'chalk';
 import fetch from 'node-fetch';
 import { enumProjects } from './enum-projects.mjs';
 
-const dryRun=process.argv.includes('--dry-run')
+const dryRun=process.argv.includes('--dry-run');
+
+let includeProjects=null;
+for(let i=2;i<process.argv;i++){
+    if(process.argv[i]==='--include'){
+        if(!includeProjects){
+            includeProjects=[];
+        }
+        includeProjects.push(process.argv[i+1]);
+    }
+}
 
 const publishMap={};
 
 enumProjects({publicOnly:true},({name,project,pkg})=>{
 
-    if(!project.data?.targets?.publish){
+    if(!project.data?.targets?.publish || (includeProjects && !includeProjects.includes(name))){
         return;
     }
 
