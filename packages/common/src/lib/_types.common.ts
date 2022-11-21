@@ -7,8 +7,9 @@ import { HttpFetcher, HttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { JwtProvider } from "./jwt";
+import { defaultQueryRecordStorePath, QueryCtrl } from "./QueryCtrl";
 import { RouterStore } from "./RouterStore";
-import { defineBoolParam, defineClient, defineFactory, defineNumberParam, defineParam, defineProvider, defineReadonlyObservable, defineService, defineStringParam } from "./scope-lib";
+import { defineBoolParam, defineClient, defineFactory, defineNumberParam, defineParam, defineProvider, defineReadonlyObservable, defineService, defineServiceFactory, defineStringParam } from "./scope-lib";
 import { ISqlClient } from "./sql-types";
 import { IStore, StoreProvider } from "./store-types";
 import { stringToHashMap } from "./string-converters";
@@ -38,6 +39,11 @@ export const JwtProviders=defineProvider<JwtProvider>('JwtProviders');
 
 // SQL
 export const sqlClient=defineClient<ISqlClient>('sqlClient');
+
+
+// QueryCtrl
+export const queryCtrlFactory=defineServiceFactory<QueryCtrl>('queryCtrlFactory',scope=>QueryCtrl.fromScope(scope));
+export const queryRecordStorePathParam=defineStringParam('queryRecordStorePath',defaultQueryRecordStorePath);
 
 
 // Store

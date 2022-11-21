@@ -9,5 +9,6 @@ export * from "./lib/PortalRenderer";
 export * from "./lib/rxjs-hooks";
 export * from "./lib/scope-hooks";
 export * from "./lib/SlimButton";
+export * from "./lib/useSeriesDataQuery";
 export * from "./lib/View";
 

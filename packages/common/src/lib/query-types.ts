@@ -62,7 +62,7 @@ export interface Query
 }
 export const isQuery=(value:any):value is Query=>{
     const tableType=typeof (value as Partial<Query>)?.table;
-    return (tableType==='string' || tableType==='object') && !Array.isArray((value as Partial<Query>)?.table);
+    return (tableType==='string' || tableType==='object' || Array.isArray((value as Partial<Query>)?.columns)) && !Array.isArray((value as Partial<Query>)?.table);
 }
 
 export interface SubQuery
@@ -247,3 +247,23 @@ export interface OrderCol extends QueryCol
     desc?:boolean;
 }
 
+
+
+/**
+ * A query object stored in a database
+ */
+export interface BaseQueryRecord
+{
+    id:string;
+    query:Query;
+}
+export const isBaseQueryRecord=(value:any):value is BaseQueryRecord=>{
+    if(!value){
+        return false;
+    }
+    const v:Partial<BaseQueryRecord>=value;
+    return (typeof v.id === 'string') && isQuery(v.query);
+}
+
+
+export type QueryOptions<T=any>=string|BaseQueryRecord|Query|QueryWithData<T>;

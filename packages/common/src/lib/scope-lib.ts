@@ -895,7 +895,7 @@ export const defineProvider=<T>(
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :ProviderTypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
-export const defineFactory=<T extends ((...args:any[])=>any)>(
+export const defineFactory=<T extends AnyFunction>(
     name:string,
     defaultFactory?:T)
     :FactoryTypeDef<T>=>rootScope.defineGeneratorType<T>(name,defaultFactory);
@@ -914,6 +914,16 @@ export const defineClient=<T>(
     name:string,
     defaultProvider?:TypeProvider<T>|TypeProviderOptions<T>)
     :ClientTypeDef<T>=>rootScope.defineCallableType<T>(name,defaultProvider);
+
+export const defineServiceFactory=<T>(
+    name:string,
+    provider:TypeProvider<T>)
+    :ServiceTypeDef<T>=>rootScope.defineCallableType<T>(name,{provider,isFactory:true});
+
+export const defineClientFactory=<T>(
+    name:string,
+    provider:TypeProvider<T>)
+    :ClientTypeDef<T>=>rootScope.defineCallableType<T>(name,{provider,isFactory:true});
 
 interface defineObservableOverloads
 {
