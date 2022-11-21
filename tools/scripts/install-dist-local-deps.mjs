@@ -8,10 +8,30 @@ import { enumProjects } from './enum-projects.mjs';
 
 const rootDir=process.cwd();
 
+const [,,...targets]=process.argv;
+
+//npx nx run-many --target=build
+
+if(targets.length){
+    enumProjects({publicOnly:true},({name,project})=>{
+        if(!project.data?.targets?.publish || !targets.includes(name)){
+            return;
+        }
+        const cmd=`npx nx run ${name}:build`
+        console.log(cmd)
+        execSync(cmd);
+    });
+}else{
+    const cmd='npx nx run-many --target=build'
+    console.log(cmd)
+    execSync(cmd);
+}
+
+
 
 enumProjects({publicOnly:true},({name,project})=>{
 
-    if(!project.data?.targets?.publish){
+    if(!project.data?.targets?.publish || (targets.length && !targets.includes(name))){
         return;
     }
 
