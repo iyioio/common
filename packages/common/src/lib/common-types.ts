@@ -18,6 +18,12 @@ export interface Rect
     height:number;
 }
 
+export interface Size
+{
+    width:number;
+    height:number;
+}
+
 export type DisposeCallback=()=>void;
 
 export type SideEffectCallback=((success:boolean)=>void|Promise<void>)|Promise<void>;

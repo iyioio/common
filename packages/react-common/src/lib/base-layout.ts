@@ -194,6 +194,26 @@ export type BaseLayoutInnerGridProps = {
     -readonly [prop in keyof typeof baseLayoutInnerGridProps]?:boolean;
 }
 
+export const baseLayoutBreakpointProps={
+    bpMobileSmUp:'ioBpMobileSmUp',
+    bpMobileUp:'ioBpMobileUp',
+    bpTabletSmUp:'ioBpTabletSmUp',
+    bpTabletUp:'ioBpTabletUp',
+    bpDesktopSmUp:'ioBpDesktopSmUp',
+    bpDesktopUp:'ioBpDesktopUp',
+    bpMobileSmDown:'ioBpMobileSmDown',
+    bpMobileDown:'ioBpMobileDown',
+    bpTabletSmDown:'ioBpTabletSmDown',
+    bpTabletDown:'ioBpTabletDown',
+    bpDesktopSmDown:'ioBpDesktopSmDown',
+    bpDesktopDown:'ioBpDesktopDown',
+
+} as const;
+Object.freeze(baseLayoutBreakpointProps);
+export type BaseLayoutBreakpointProps = {
+    -readonly [prop in keyof typeof baseLayoutBreakpointProps]?:boolean;
+}
+
 export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
@@ -201,7 +221,8 @@ export const baseLayoutFlagProps={
     ...baseLayoutInnerFlexProps,
     ...baseLayoutSelfFlexProps,
     ...baseLayoutGapProps,
-    ...baseLayoutInnerGridProps
+    ...baseLayoutInnerGridProps,
+    ...baseLayoutBreakpointProps,
 } as const;
 Object.freeze(baseLayoutFlagProps);
 export type BaseLayoutFlagProps = {
@@ -220,13 +241,13 @@ export interface BaseLayoutClassNameProps
 }
 
 
-export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps;
+export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
 
-export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps;
+export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
 
 export type BaseLayoutOuterProps = BaseLayoutOuterNoFlexProps & BaseLayoutFlexProps;
 
-export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps;
+export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
 
 export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
 {

@@ -61,5 +61,6 @@ export * from './lib/ui-lib';
 export * from './lib/uri';
 export * from './lib/uuid';
 export * from './lib/validation';
+export * from './lib/window-size-lib';
 export * from './lib/_types.common';
 

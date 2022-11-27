@@ -1,5 +1,6 @@
-import { css } from '@iyio/common';
+import { Breakpoints, css, currentBreakpoints } from '@iyio/common';
 import Style from 'styled-jsx/style';
+import { useSubject } from './rxjs-hooks';
 
 
 export interface BaseLayoutStyleSheetProps
@@ -11,6 +12,7 @@ export interface BaseLayoutStyleSheetProps
     space4?:string;
     space5?:string;
     space6?:string;
+    breakpoints?:Breakpoints;
 }
 
 export function BaseLayoutStyleSheet({
@@ -21,7 +23,11 @@ export function BaseLayoutStyleSheet({
     space4='16px',
     space5='24px',
     space6='32px',
+    breakpoints,
 }:BaseLayoutStyleSheetProps){
+
+    const _bp=useSubject(currentBreakpoints);
+    const bp=breakpoints??_bp;
 
     return (
 
@@ -189,6 +195,18 @@ export function BaseLayoutStyleSheet({
 .ioGridAuto6{display:grid;grid-template-columns:auto auto auto auto auto auto}
 .ioDisplayGrid{display:grid}
 .ioDisplayInlineGrid{display:inline-grid}
+
+@media (max-width:${bp.mobileSm}px){.ioBpMobileUp{display:none !important}}
+@media (max-width:${bp.mobile}px){.ioBpTabletSmUp{display:none !important}}
+@media (max-width:${bp.tabletSm}px){.ioBpTabletUp{display:none !important}}
+@media (max-width:${bp.tablet}px){.ioBpDesktopSmUp{display:none !important}}
+@media (max-width:${bp.desktopSm}px){.ioBpDesktopUp{display:none !important}}
+
+@media (min-width:${bp.mobileSm+1}px){.ioBpMobileSmDown{display:none !important}}
+@media (min-width:${bp.mobile+1}px){.ioBpMobileDown{display:none !important}}
+@media (min-width:${bp.tabletSm+1}px){.ioBpTabletSmDown{display:none !important}}
+@media (min-width:${bp.tablet+1}px){.ioBpTabletDown{display:none !important}}
+@media (min-width:${bp.desktopSm+1}px){.ioBpDesktopSmDown{display:none !important}}
 
         `}</Style>
     )
