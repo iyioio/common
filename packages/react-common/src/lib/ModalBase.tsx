@@ -1,7 +1,8 @@
 import { cn, css } from "@iyio/common";
 import Style from 'styled-jsx/style';
 import { baseLayoutCn, BaseLayoutInnerProps } from "./base-layout";
-import { Portal, PortalProps } from "./Portal";
+import { Portal } from "./Portal";
+import { PortalProps } from "./portal-lib";
 
 export interface ModalBaseProps extends PortalProps, BaseLayoutInnerProps
 {

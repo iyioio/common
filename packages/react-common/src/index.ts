@@ -1,4 +1,5 @@
 export * from "./lib/base-layout";
+export * from "./lib/BaseAppContainer";
 export * from "./lib/BaseLayoutStyleSheet";
 export * from "./lib/ButtonBase";
 export * from "./lib/common-hooks";
@@ -9,6 +10,9 @@ export * from "./lib/PortalRenderer";
 export * from "./lib/rxjs-hooks";
 export * from "./lib/scope-hooks";
 export * from "./lib/SlimButton";
+export * from "./lib/tool-tip/tool-tip-lib";
+export * from "./lib/tool-tip/ToolTipBase";
+export * from "./lib/tool-tip/ToolTipContainer";
 export * from "./lib/useSeriesDataQuery";
 export * from "./lib/View";
 export * from "./lib/window-hooks";

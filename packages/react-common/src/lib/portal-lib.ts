@@ -1,7 +1,11 @@
 import { aryRemoveItem, HashMap } from "@iyio/common";
+import { useEffect, useMemo } from "react";
 import { BehaviorSubject } from "rxjs";
+import { useSubject } from "./rxjs-hooks";
 
 export const allPortals=new BehaviorSubject<HashMap<PortalCtrl>>({});
+
+export const defaultPortalRendererId='default'
 
 let nextPortalItemId=1;
 export const getPortalItemId=()=>nextPortalItemId++;
@@ -68,3 +72,44 @@ export const createPortalItem=():PortalItem=>({
     render(){return null},
     renderIndex:new BehaviorSubject(0),
 })
+
+export interface PortalProps
+{
+    /**
+     * The id of the PortalRenderer to render children to.
+     * @default defaultPortalRendererId
+     */
+    rendererId?:string;
+    children?:any;
+    active?:boolean;
+}
+
+export const usePortal=({
+    rendererId=defaultPortalRendererId,
+    active=true,
+    children
+}:PortalProps)=>
+{
+
+    const ctrls=useSubject(allPortals);
+    const ctrl:PortalCtrl|undefined=ctrls[rendererId];
+    const item=useMemo(()=>ctrl?createPortalItem():null,[ctrl]);
+
+    useEffect(()=>{
+        if(!item){
+            return;
+        }
+        item.render=()=>children;
+        item.renderIndex.next(item.renderIndex.value+1);
+    },[children,item]);
+
+    useEffect(()=>{
+        if(!ctrl || !item || !active){
+            return;
+        }
+        ctrl.addItem(item);
+        return ()=>{
+            ctrl.removeItem(item);
+        }
+    },[item,ctrl,active])
+}
