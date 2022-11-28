@@ -22,7 +22,7 @@ if(targets.length){
         execSync(cmd);
     });
 }else{
-    const cmd='npx nx run-many --target=build'
+    const cmd='npx nx run-many --target=build --verbose'
     console.log(cmd)
     execSync(cmd);
 }
