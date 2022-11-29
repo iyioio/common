@@ -1,6 +1,7 @@
 import { cn, UiActionItem, uiRouterService } from "@iyio/common";
 import React, { KeyboardEvent, MouseEvent } from "react";
 import { baseLayoutCn, BaseLayoutOuterProps } from "./base-layout";
+import { getReactChildString } from "./react-util";
 
 export interface ButtonBaseProps extends BaseLayoutOuterProps
 {
@@ -16,6 +17,8 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     actionItem?:UiActionItem;
     elem?:string;
     tabIndex?:number;
+    vLinkDesc?:string;
+    noVLink?:boolean;
 }
 
 export interface ButtonBaseInternalProps extends ButtonBaseProps
@@ -37,10 +40,15 @@ export function ButtonBase({
     pop,
     elem,
     tabIndex=0,
+    vLinkDesc,
+    noVLink,
     ...props
 }:ButtonBaseInternalProps){
 
     const to=toProp??href??actionItem?.to;
+    if(elem){
+        elem=elem.toLowerCase();
+    }
     if(!elem){
         elem=to?'a':'button';
     }
@@ -71,6 +79,14 @@ export function ButtonBase({
             onClick();
         }
         onKeyPressProp?.(e);
+    }
+
+    const isVirtualLink=(to && elem!=='a')?true:false;
+    if(isVirtualLink && !noVLink){
+        children=<>
+            <a tabIndex={-1} className="ioOffScreen" href={to}>{vLinkDesc??getReactChildString(children)??to}</a>
+            {children}
+        </>
     }
 
     return React.createElement(elem,{

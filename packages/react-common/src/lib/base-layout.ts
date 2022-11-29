@@ -214,6 +214,25 @@ export type BaseLayoutBreakpointProps = {
     -readonly [prop in keyof typeof baseLayoutBreakpointProps]?:boolean;
 }
 
+export const baseLayoutUtilProps={
+    offScreen:'ioOffScreen',
+    posAbs:'ioPosAbs',
+    posRel:'ioPosRel',
+    posFixed:'ioPosFixed',
+    absFill:'ioAbsFill',
+    absFillWh:'ioAbsFillWh',
+    wh100:'ioWh100',
+    borderBox:'ioBorderBox',
+    pointerEventsNone:'ioPointerEventsNone',
+    cursorPointer:'ioCursorPointer',
+    displayNone:'ioDisplayNone',
+
+} as const;
+Object.freeze(baseLayoutUtilProps);
+export type BaseLayoutUtilProps = {
+    -readonly [prop in keyof typeof baseLayoutUtilProps]?:boolean;
+}
+
 export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
@@ -223,6 +242,7 @@ export const baseLayoutFlagProps={
     ...baseLayoutGapProps,
     ...baseLayoutInnerGridProps,
     ...baseLayoutBreakpointProps,
+    ...baseLayoutUtilProps,
 } as const;
 Object.freeze(baseLayoutFlagProps);
 export type BaseLayoutFlagProps = {
@@ -241,13 +261,13 @@ export interface BaseLayoutClassNameProps
 }
 
 
-export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
+export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
 
-export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
+export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
 
 export type BaseLayoutOuterProps = BaseLayoutOuterNoFlexProps & BaseLayoutFlexProps;
 
-export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps;
+export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
 
 export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
 {

@@ -7,6 +7,7 @@ export * from "./lib/ModalBase";
 export * from "./lib/Portal";
 export * from "./lib/portal-lib";
 export * from "./lib/PortalRenderer";
+export * from "./lib/react-util";
 export * from "./lib/rxjs-hooks";
 export * from "./lib/scope-hooks";
 export * from "./lib/SlimButton";

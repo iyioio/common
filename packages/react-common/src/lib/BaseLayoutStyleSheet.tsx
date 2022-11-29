@@ -196,6 +196,18 @@ export function BaseLayoutStyleSheet({
 .ioDisplayGrid{display:grid}
 .ioDisplayInlineGrid{display:inline-grid}
 
+.ioOffScreen{position:fixed;left:-101vw;top:-101vh;max-width:100vw;max-height:100vh;overflow:clip;pointer-events:none}
+.ioPosAbs{position:absolute}
+.ioPosRel{position:relative}
+.ioPosFixed{position:fixed}
+.ioAbsFill{position:absolute;left:0;top:0;right:0;bottom:0}
+.ioAbsFillWh{position:absolute;left:0;top:0;width:100%;height:100%}
+.ioWh100{width:100%;height:100%}
+.ioBorderBox{box-sizing:border-box}
+.ioPointerEventsNone{pointer-events:none}
+.ioCursorPointer{cursor:pointer}
+.ioDisplayNone{display:none !important}
+
 @media (max-width:${bp.mobileSm}px){.ioBpMobileUp{display:none !important}}
 @media (max-width:${bp.mobile}px){.ioBpTabletSmUp{display:none !important}}
 @media (max-width:${bp.tabletSm}px){.ioBpTabletUp{display:none !important}}
