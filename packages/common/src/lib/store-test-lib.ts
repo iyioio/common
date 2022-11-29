@@ -1,4 +1,3 @@
-import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-generator';
 import { delayAsync } from './common-lib';
 import { HashMap } from "./common-types";
 import { deepCompare } from './object';
@@ -19,9 +18,7 @@ export interface TestStoreItem
     data?:HashMap;
 }
 
-export const randomName=()=>uniqueNamesGenerator({
-  dictionaries: [adjectives, colors, animals]
-});
+export const randomName=()=>'name-'+uuid();
 
 export const generateRandomTestStoreItem=():TestStoreItem=>({
     id:uuid(),
