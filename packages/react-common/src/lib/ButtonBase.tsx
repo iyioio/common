@@ -1,5 +1,5 @@
 import { cn, UiActionItem, uiRouterService } from "@iyio/common";
-import React, { KeyboardEvent, MouseEvent } from "react";
+import React, { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { baseLayoutCn, BaseLayoutOuterProps } from "./base-layout";
 import { getReactChildString } from "./react-util";
 
@@ -19,6 +19,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     tabIndex?:number;
     vLinkDesc?:string;
     noVLink?:boolean;
+    style?:CSSProperties;
 }
 
 export interface ButtonBaseInternalProps extends ButtonBaseProps
@@ -42,6 +43,7 @@ export function ButtonBase({
     tabIndex=0,
     vLinkDesc,
     noVLink,
+    style,
     ...props
 }:ButtonBaseInternalProps){
 
@@ -97,6 +99,7 @@ export function ButtonBase({
         tabIndex,
         onKeyPress,
         href:elem==='a'?to:undefined,
+        style,
         'data-href':to,
     },children);
 
