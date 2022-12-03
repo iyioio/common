@@ -19,12 +19,12 @@ if(targets.length){
         }
         const cmd=`npx nx run ${name}:build`
         console.log(cmd)
-        execSync(cmd);
+        execSync(cmd,{encoding:'utf-8'});
     });
 }else{
     const cmd='npx nx run-many --target=build --verbose'
     console.log(cmd)
-    execSync(cmd);
+    execSync(cmd,{encoding:'utf-8'});
 }
 
 
@@ -87,7 +87,7 @@ enumProjects({publicOnly:true},({name,project})=>{
 
     const cmd=`npm i ${installs.join(' ')}`
     console.log(cmd)
-    execSync(cmd);
+    execSync(cmd,{encoding:'utf-8'});
 
     process.chdir(rootDir);
 
