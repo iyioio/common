@@ -5,11 +5,13 @@ import { joinPaths } from "./fs";
 import { deepClone, deepCompare } from "./object";
 import { sortStaticQuery } from "./query-static-operators";
 import { isBaseQueryRecord, isQuery, isQueryWithData, Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator } from "./query-types";
+import { queryRecordStorePathParam } from "./QueryCtrl.deps";
 import { ReadonlySubject } from "./rxjs-types";
 import { Scope } from "./scope-types";
 import { buildQuery } from "./sql-query-builder";
+import { sqlClient } from "./sql.deps";
 import { IStore } from "./store-types";
-import { queryRecordStorePathParam, sqlClient, storeRoot } from "./_types.common";
+import { storeRoot } from "./store.deps";
 
 
 export interface QueryCtrlError

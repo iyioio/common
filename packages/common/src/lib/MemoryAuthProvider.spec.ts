@@ -1,10 +1,11 @@
 import { AuthRegisterStatus } from "./auth-types";
+import { AuthProviders, authService, currentBaseUser } from "./auth.deps";
 import { MemoryAuthProvider } from './MemoryAuthProvider';
 import { MemoryStore } from "./MemoryStore";
 import { createScope } from "./scope-lib";
 import { Scope } from "./scope-types";
+import { storeRoot } from "./store.deps";
 import { shortUuid } from "./uuid";
-import { AuthProviders, authService, currentBaseUser, storeRoot } from "./_types.common";
 
 describe('MemoryAuthProvider',()=>{
 

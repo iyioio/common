@@ -1,4 +1,5 @@
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData } from "./auth-types";
+import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { BaseUser } from "./BaseUser";
 import { breakFunction, continueFunction } from "./common-lib";
 import { HashMap, IDisposable, IInit } from "./common-types";
@@ -7,9 +8,9 @@ import { RouterStore } from "./RouterStore";
 import { ReadonlySubject } from "./rxjs-types";
 import { ProviderTypeDef, Scope, TypeDef } from "./scope-types";
 import { ScopedSetter } from "./Setter";
+import { storeRoot } from "./store.deps";
 import { isValidEmail } from "./validation";
 import { _setUser } from "./_internal.common";
-import { AuthProviders, currentBaseUser, storeRoot } from "./_types.common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 

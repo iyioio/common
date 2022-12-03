@@ -1,10 +1,10 @@
 import { aryRemoveFirst } from "./array";
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData, UserFactoryCallback } from "./auth-types";
+import { UserFactory } from "./auth.deps";
 import { BaseUser, BaseUserOptions } from "./BaseUser";
 import { delayAsync } from "./common-lib";
 import { FactoryTypeDef, Scope } from "./scope-types";
 import { shortUuid } from "./uuid";
-import { UserFactory } from "./_types.common";
 
 interface MemoryUserRecord
 {

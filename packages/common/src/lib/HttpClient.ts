@@ -2,10 +2,11 @@ import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { HttpBaseUrlPrefixNotFoundError } from "./errors";
 import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
+import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, HttpFetchers, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, HttpRequestSigners, httpRetryDelayMsParam } from "./http.deps";
 import { JwtProvider } from "./jwt";
+import { JwtProviders } from "./jwt.deps";
 import { deleteUndefined } from "./object";
 import { Scope, TypeDef } from "./scope-types";
-import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, HttpFetchers, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, HttpRequestSigners, httpRetryDelayMsParam, JwtProviders } from "./_types.common";
 
 export interface HttpClientOptions
 {

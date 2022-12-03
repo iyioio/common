@@ -1,4 +1,4 @@
-import { BaseUser } from "./BaseUser";
+import type { BaseUser } from "./BaseUser";
 import { createSetter } from "./Setter";
 
 export const TypeDefStaticValue=Symbol('TypeDefStaticValue');

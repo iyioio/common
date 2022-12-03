@@ -5,8 +5,8 @@ import { StoreRoute } from "./RouterStore";
 import { defineBoolParam } from './scope-lib';
 import { Scope } from './scope-types';
 import { IStore } from './store-types';
+import { storeRoot } from './store.deps';
 import { shortUuid, uuid } from "./uuid";
-import { storeRoot } from './_types.common';
 
 const keepTestStoreItemsParam=defineBoolParam('keepTestStoreItems',false);
 

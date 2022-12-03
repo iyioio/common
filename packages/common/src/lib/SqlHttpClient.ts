@@ -1,9 +1,9 @@
+import { httpClient } from "./http.deps";
 import { HttpClient } from "./HttpClient";
 import { defineStringParam } from "./scope-lib";
 import { Scope } from "./scope-types";
 import { SqlExecCommand, SqlResult } from "./sql-types";
 import { SqlBaseClient } from "./SqlBaseClient";
-import { httpClient } from "./_types.common";
 
 export const sqlHttpClientUrlParam=defineStringParam('sqlHttpClientUrl');
 
