@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { UserAuthProviderData } from "./auth-types";
 import { IDisposable, IInit, SymStrHashMap } from "./common-types";
 import { DisposeContainer } from "./DisposeContainer";

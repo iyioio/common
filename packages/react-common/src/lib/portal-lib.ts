@@ -1,6 +1,6 @@
 import { aryRemoveItem, HashMap } from "@iyio/common";
 import { useEffect, useMemo } from "react";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { useSubject } from "./rxjs-hooks";
 
 export const allPortals=new BehaviorSubject<HashMap<PortalCtrl>>({});

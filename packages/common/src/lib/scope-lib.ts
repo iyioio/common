@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
@@ -186,7 +186,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         }
     }
 
-    const require=<T>(type:TypeDef<T>,tag?:string):T=>
+    const requireType=<T>(type:TypeDef<T>,tag?:string):T=>
     {
         const value=get(type,tag);
         if(value===undefined){
@@ -414,7 +414,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
         const typeDef=_defineType(options);
         const callable=(
-            (scope?:Scope)=>scope?scope.to(callable).require():require(callable)
+            (scope?:Scope)=>scope?scope.to(callable).require():requireType(callable)
         ) as CallableTypeDef<T>;
 
         for(const e in typeDef){
@@ -475,7 +475,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
             forEachAsync:(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<void|boolean|FunctionLoopControl>)=>scope.forEachAsync<T>(typeDef,tag,callback),
             getFirstAsync:<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>Promise<TValue|false|FunctionLoopControl>)=>scope.getFirstAsync<T,TValue>(typeDef,tag,callback),
             getFirst:<TValue>(tag:string|null|undefined,callback:(value:T,scope:Scope)=>TValue|false|FunctionLoopControl)=>scope.getFirst<T,TValue>(typeDef,tag,callback),
-            require:(tag?:string)=>require(typeDef,tag),
+            require:(tag?:string)=>requireType(typeDef,tag),
             valueConverter:valueConverter,
             [TypeDefDefaultValue]:defaultValue,
             [TypeDefStaticValue]:{},
@@ -717,7 +717,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
 
 
     const scope:ScopeInternal=Object.freeze({
-        require,
+        require: requireType,
         get,
         getType,
         getAll,

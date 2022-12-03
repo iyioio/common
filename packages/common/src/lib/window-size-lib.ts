@@ -1,4 +1,5 @@
-import { BehaviorSubject, Subscription } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { Subscription } from "rxjs/internal/Subscription";
 import { IDisposable, Size } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 

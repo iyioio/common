@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { CancelToken } from './CancelToken';
 import { delayAsync } from './common-lib';
 import { EnvParams } from './EnvParams';

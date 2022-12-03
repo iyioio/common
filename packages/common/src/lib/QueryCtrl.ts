@@ -1,4 +1,5 @@
-import { BehaviorSubject, Subscription } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { Subscription } from "rxjs/internal/Subscription";
 import { downloadObject } from "./client-download";
 import { unused } from "./common-lib";
 import { joinPaths } from "./fs";

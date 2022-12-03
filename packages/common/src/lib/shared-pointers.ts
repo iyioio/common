@@ -1,5 +1,5 @@
 
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { ListPointer, ValuePointer } from "./pointers";
 import { ReadonlySubject } from "./rxjs-types";
 

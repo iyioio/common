@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { CancelToken } from "./CancelToken";
 import { FunctionLoopControl } from "./common-lib";
 import { AnyFunction, HashMap, OpValueContainer } from "./common-types";
