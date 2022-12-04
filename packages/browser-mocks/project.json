@@ -5,7 +5,7 @@
     "projectType": "library",
     "targets": {
         "build": {
-            "executor": "@nrwl/js:tsc",
+            "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/browser-mocks",

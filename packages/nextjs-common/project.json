@@ -5,14 +5,13 @@
     "projectType": "library",
     "targets": {
         "build": {
-            "executor": "@nrwl/js:tsc",
+            "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/nextjs-common",
                 "main": "packages/nextjs-common/src/index.ts",
                 "tsConfig": "packages/nextjs-common/tsconfig.lib.json",
-                "assets": ["packages/nextjs-common/*.md"],
-                "buildableProjectDepsInPackageJsonType": "peerDependencies"
+                "assets": ["packages/nextjs-common/*.md"]
             }
         },
         "publish": {

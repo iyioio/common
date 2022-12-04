@@ -1,5 +1,4 @@
 {
     "name": "@iyio/common",
-    "version": "0.0.33",
-    "sideEffects": false
+    "version": "0.0.33"
 }
