@@ -27,6 +27,7 @@
             "@iyio/common": ["packages/common/src/index.ts"],
             "@iyio/nextjs-common": ["packages/nextjs-common/src/index.ts"],
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
+            "@iyio/nx-common": ["packages/nx-common/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"]
         }
     },
