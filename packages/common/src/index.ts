@@ -34,6 +34,7 @@ export * from './lib/object';
 export * from './lib/pointers';
 export * from './lib/PromiseCache';
 export * from './lib/PromiseSource';
+export * from './lib/query-ctrl-lib';
 export * from './lib/query-static-operators';
 export * from './lib/query-types';
 export * from './lib/QueryCtrl';

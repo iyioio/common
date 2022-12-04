@@ -4,6 +4,7 @@ import { downloadObject } from "./client-download";
 import { unused } from "./common-lib";
 import { joinPaths } from "./fs";
 import { deepClone, deepCompare } from "./object";
+import { defaultQueryRecordStorePath } from "./query-ctrl-lib";
 import { sortStaticQuery } from "./query-static-operators";
 import { isBaseQueryRecord, isQuery, isQueryWithData, Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator } from "./query-types";
 import { queryRecordStorePathParam } from "./QueryCtrl.deps";
@@ -36,8 +37,6 @@ export interface QueryCtrlState<T>
     loading?:boolean;
     error?:QueryCtrlError;
 }
-
-export const defaultQueryRecordStorePath='/QueryRecords'
 
 export interface QueryCtrlOptions
 {
@@ -99,7 +98,7 @@ export class QueryCtrl<T=any>
 
     public constructor({
         store=storeRoot(),
-        queryRecordStorePath=defaultQueryRecordStorePath
+        queryRecordStorePath=defaultQueryRecordStorePath,
     }:QueryCtrlOptions={})
     {
         this.store=store;

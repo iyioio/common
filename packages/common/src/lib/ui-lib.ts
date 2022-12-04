@@ -47,6 +47,6 @@ export const addQueryToPath=(path:string,query:RouteQuery|null|undefined)=>{
 export const shouldUseNativeNavigation=(path:string)=>(
     getUriProtocol(path) &&
     globalThis.location &&
-    getUriHost(path)?.toLowerCase()!==global.location.host
+    getUriHost(path)?.toLowerCase()!==globalThis.location.host
     ?true:false
 )

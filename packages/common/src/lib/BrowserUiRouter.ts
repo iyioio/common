@@ -13,7 +13,7 @@ export class BrowserUiRouter implements IUiRouter
 {
 
     public static isSupported(){
-        return (typeof global.history !== 'undefined') || (typeof global.location !== 'undefined');
+        return (typeof globalThis.history !== 'undefined') || (typeof globalThis.location !== 'undefined');
     }
 
     private readonly options:BrowserUiRouterOptions;

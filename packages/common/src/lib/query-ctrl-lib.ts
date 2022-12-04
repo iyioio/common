@@ -1,0 +1,2 @@
+
+export const defaultQueryRecordStorePath='/QueryRecords'
