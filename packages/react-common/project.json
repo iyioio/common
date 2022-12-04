@@ -11,7 +11,8 @@
                 "outputPath": "dist/packages/react-common",
                 "main": "packages/react-common/src/index.ts",
                 "tsConfig": "packages/react-common/tsconfig.lib.json",
-                "assets": ["packages/react-common/*.md"]
+                "assets": ["packages/react-common/*.md"],
+                "buildableProjectDepsInPackageJsonType": "peerDependencies"
             }
         },
         "publish": {

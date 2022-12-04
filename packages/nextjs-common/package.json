@@ -1,6 +1,5 @@
 {
     "name": "@iyio/nextjs-common",
-    "version": "0.0.29",
-    "type": "commonjs",
+    "version": "0.0.33",
     "sideEffects": false
 }
