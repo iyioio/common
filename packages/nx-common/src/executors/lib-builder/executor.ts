@@ -52,6 +52,8 @@ export default async function runExecutor(
         const packageJsonPath=Path.join(outputPath,'package.json');
         const pkg=JSON.parse((await readFile(packageJsonPath)).toString());
 
+        delete pkg.type;
+
         if(pkg.sideEffects===undefined){
             if(noSideEffects){
                 pkg.sideEffects=false;
@@ -117,8 +119,7 @@ export default async function runExecutor(
             }
 
             await writeFile(Path.join(esmOutput,'package.json'),JSON.stringify({
-                sideEffects:!noSideEffects,
-                type:'module'
+                sideEffects:!noSideEffects
             },null,4))
 
             return r;
