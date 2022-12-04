@@ -16,6 +16,12 @@ const addVersions=(a,b)=>{
 }
 
 enumProjects({publicOnly:true},({name,version:v,pkg,packageJson})=>{
+
+    if(pkg.iyioSetVersion===false){
+        console.log(`${name} opts out of auto setting version`);
+        return;
+    }
+
     if(version.startsWith('+')){
         pkg.version=addVersions(v,version.substring(1));
     }else{
@@ -26,44 +32,3 @@ enumProjects({publicOnly:true},({name,version:v,pkg,packageJson})=>{
 
     writeFileSync(packageJson,JSON.stringify(pkg,null,4)+'\n');
 })
-
-// for(const e in graph.nodes){
-
-//     const project=graph.nodes[e];
-
-//     const root=project.data.root;
-
-//     if(!root){
-//         console.warn(`no root for ${e}`);
-//         continue;
-//     }
-
-//     const packageJson=Path.join(root,'package.json');
-
-//     if(!existsSync(packageJson)){
-//         continue;
-//     }
-
-//     const pkg=JSON.parse(readFileSync(packageJson).toString());
-
-//     if(pkg.private){
-//         console.log(`Skipping private package ${e}`);
-//         continue;
-//     }
-
-//     if(!pkg.version){
-//         pkg.version='0.0.1';
-//     }
-
-//     const preVersion=pkg.version;
-//     if(version.startsWith('+')){
-//         pkg.version=addVersions(pkg.version,version.substring(1));
-//     }else{
-//         pkg.version=version;
-//     }
-
-//     console.log(`${e} ${preVersion} -> ${pkg.version}`);
-
-//     writeFileSync(packageJson,JSON.stringify(pkg,null,4)+'\n');
-
-// }
