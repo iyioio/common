@@ -76,6 +76,5 @@
                 "linter": "eslint"
             }
         }
-    },
-    "defaultProject": "react-tests"
+    }
 }
