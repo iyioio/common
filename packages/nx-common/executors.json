@@ -6,9 +6,9 @@
       "schema": "./src/executors/build/schema.json",
       "description": "build executor"
     },
-    "iyio-lib-builder": {
-      "implementation": "./src/executors/iyio-lib-builder/executor",
-      "schema": "./src/executors/iyio-lib-builder/schema.json",
+    "lib-builder": {
+      "implementation": "./src/executors/lib-builder/executor",
+      "schema": "./src/executors/lib-builder/schema.json",
       "description": "Builds hybrid libs that can be used by common js and esm projects"
     }
   }
