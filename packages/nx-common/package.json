@@ -4,5 +4,6 @@
     "main": "src/index.js",
     "generators": "./generators.json",
     "executors": "./executors.json",
-    "iyioSetVersion":false
+    "iyioSetVersion":false,
+    "forDev": true
 }
