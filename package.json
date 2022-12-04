@@ -12,6 +12,7 @@
         "@aws-sdk/credential-providers": "^3.199.0",
         "@aws-sdk/util-dynamodb": "^3.204.0",
         "@iyio/nx-cdk": "^0.0.3",
+        "@nrwl/nx-plugin": "^14.8.6",
         "amazon-cognito-identity-js": "^5.2.12",
         "core-js": "^3.6.5",
         "date-fns": "^2.29.3",
