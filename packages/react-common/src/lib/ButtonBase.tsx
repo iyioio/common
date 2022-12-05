@@ -20,6 +20,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     vLinkDesc?:string;
     noVLink?:boolean;
     style?:CSSProperties;
+    description?:string;
 }
 
 export interface ButtonBaseInternalProps extends ButtonBaseProps
@@ -44,6 +45,7 @@ export function ButtonBase({
     vLinkDesc,
     noVLink,
     style,
+    description,
     ...props
 }:ButtonBaseInternalProps){
 
@@ -100,6 +102,7 @@ export function ButtonBase({
         onKeyPress,
         href:elem==='a'?to:undefined,
         style,
+        'aria-label':description,
         'data-href':to,
     },children);
 
