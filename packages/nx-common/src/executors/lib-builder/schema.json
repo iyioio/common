@@ -7,6 +7,11 @@
   "type": "object",
   "properties": {
 
+    "passthrough":{
+        "type":"boolean",
+        "description":"If true all execution will be passed directory to the @nrwl@js:tcs executor",
+        "default":false
+    },
     "noSideEffects":{
         "type":"boolean",
         "description":"If true output package.json file will have sideEffects set to file. This helps to enabled tree shaking",

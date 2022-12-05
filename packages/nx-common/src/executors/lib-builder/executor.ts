@@ -10,6 +10,7 @@ const autoConfig='auto';
 export default async function runExecutor(
     {
         noSideEffects=true,
+        passthrough=false,
 
         watch,
         outputPath,
@@ -28,6 +29,21 @@ export default async function runExecutor(
     }: LibBuilderExecutorSchema,
     context: ExecutorContext
 ):Promise<{success:boolean}>{
+
+    if(process.env['NX_LIB_BUILDER_PASSTHROUGH']==='true'){
+        passthrough=true;
+    }
+
+    if(passthrough){
+        console.info('Passing execution directly to @nrwl/js:tsc');
+        const r=await buildAsync({
+            ...tscOptions,
+            watch,
+            outputPath,
+            tsConfig
+        },context);
+        return {success:r.success};
+    }
 
     const results:BuildResult[]=[];
 

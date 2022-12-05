@@ -2,8 +2,8 @@ import type { ExecutorOptions } from '@nrwl/js/src/utils/schema';
 
 export interface LibBuilderExecutorSchema extends ExecutorOptions {
 
-    buildInParallel?:boolean;
     noSideEffects?:boolean;
+    passthrough?:boolean;
 
     commonJsTsConfig?:string;
 
