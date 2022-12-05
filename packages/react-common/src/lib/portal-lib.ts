@@ -10,6 +10,14 @@ export const defaultPortalRendererId='default'
 let nextPortalItemId=1;
 export const getPortalItemId=()=>nextPortalItemId++;
 
+export const getPortalCtrl=(id:string)=>{
+    let ctrl=allPortals.value[id];
+    if(!ctrl){
+        ctrl=new PortalCtrl(id);
+    }
+    return ctrl;
+}
+
 export interface PortalItem
 {
     id:number;

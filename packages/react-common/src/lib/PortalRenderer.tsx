@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { PortalCtrl, PortalItem } from "./portal-lib";
+import { useEffect, useRef } from "react";
+import { getPortalCtrl, PortalItem } from "./portal-lib";
 import { useSubject } from "./rxjs-hooks";
 
 interface PortalRendererProps
@@ -20,7 +20,7 @@ export function PortalRenderer({
         }
     },[id]);
 
-    const ctrl=useMemo(()=>new PortalCtrl(idRef.current),[]);
+    const ctrl=getPortalCtrl(id);
 
     useEffect(()=>{
         return ()=>{
