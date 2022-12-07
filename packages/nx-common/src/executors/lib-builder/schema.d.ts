@@ -4,6 +4,9 @@ export interface LibBuilderExecutorSchema extends ExecutorOptions {
 
     noSideEffects?:boolean;
     passthrough?:boolean;
+    approximatelyDeps?:string|null;
+    compatibleDeps?:string|null;
+
 
     commonJsTsConfig?:string;
 

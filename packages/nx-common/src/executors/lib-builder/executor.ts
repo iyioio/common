@@ -7,10 +7,26 @@ import Path = require('path');
 
 const autoConfig='auto';
 
+const updateDeps=(filter:string,type:'^'|'~',deps:{[depName:string]:string})=>{
+        console.log({filter,type,deps})
+    if(!deps || !filter){
+        return;
+    }
+    for(const name in deps){
+        const version=deps[name];
+        console.log(`${name} -> ${version}`)
+        if(name.startsWith(filter) && !version.startsWith('^') && !version.startsWith('~')){
+            deps[name]=type+version;
+        }
+    }
+}
+
 export default async function runExecutor(
     {
         noSideEffects=true,
         passthrough=false,
+        approximatelyDeps=process.env['NX_LIB_APPROXIMATELY_DEPS'],
+        compatibleDeps=process.env['NX_LIB_COMPATIBLE_DEPS'],
 
         watch,
         outputPath,
@@ -70,15 +86,27 @@ export default async function runExecutor(
 
         delete pkg.type;
 
-        if(pkg.sideEffects===undefined){
-            if(noSideEffects){
-                pkg.sideEffects=false;
-            }
+        if(pkg.sideEffects===undefined && noSideEffects){
+            pkg.sideEffects=false;
         }
         if(!disableEsm){
             const mainParts=(pkg.main as string).split('/');
             mainParts.splice(mainParts[0]==='.'?1:0,0,esmDir)
             pkg.module=mainParts.join('/');
+        }
+
+        if(compatibleDeps){
+            updateDeps(compatibleDeps,'~',pkg.dependencies);
+            updateDeps(compatibleDeps,'~',pkg.devDependencies);
+            updateDeps(compatibleDeps,'~',pkg.peerDependencies);
+        }
+
+        console.log(`__________________ ${approximatelyDeps}`)
+
+        if(approximatelyDeps){
+            updateDeps(approximatelyDeps,'^',pkg.dependencies);
+            updateDeps(approximatelyDeps,'^',pkg.devDependencies);
+            updateDeps(approximatelyDeps,'^',pkg.peerDependencies);
         }
 
         await writeFile(packageJsonPath,JSON.stringify(pkg,null,4));
