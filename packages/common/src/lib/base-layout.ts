@@ -1,3 +1,51 @@
+import { isServerSide } from "./common-lib";
+import { HashMap } from "./common-types";
+import { ClassNameValue, cn } from "./css";
+import { allBreakpoints, Breakpoint } from "./window-size-lib";
+
+
+export type BaseLayoutFlagValue=boolean|Breakpoint;
+
+export const baseLayoutAnimationSpeeds=[
+    'fast','quick','slow','extraSlow'
+] as const;
+Object.freeze(baseLayoutAnimationSpeeds);
+export type BaseLayoutAnimationSpeed=typeof baseLayoutAnimationSpeeds[number];
+
+export const baseLayoutAnimationProps={
+    transAll:'ioTransAll',
+    transTransform:'ioTransTransform',
+    transOpacity:'ioTransOpacity',
+    transColor:'ioTransColor',
+    transBackgroundColor:'ioTransBackgroundColor',
+    transCommon:'ioTransCommon'
+} as const;
+Object.freeze(baseLayoutAnimationProps);
+export type BaseLayoutAnimationProps = {
+    -readonly [prop in keyof typeof baseLayoutAnimationProps]?:boolean|BaseLayoutAnimationSpeed;
+}
+
+export const baseLayoutColumnProps={
+    colXs:'ioColXs',
+    colSm:'ioColSm',
+    colMd:'ioColMd',
+    colLg:'ioColLg',
+    colXl:'ioColXl',
+    colMinXs:'ioColMinXs',
+    colMinSm:'ioColMinSm',
+    colMinMd:'ioColMinMd',
+    colMinLg:'ioColMinLg',
+    colMinXl:'ioColMinXl',
+    colMaxXs:'ioColMaxXs',
+    colMaxSm:'ioColMaxSm',
+    colMaxMd:'ioColMaxMd',
+    colMaxLg:'ioColMaxLg',
+    colMaxXl:'ioColMaxXl',
+} as const;
+Object.freeze(baseLayoutColumnProps);
+export type BaseLayoutColumnProps = {
+    -readonly [prop in keyof typeof baseLayoutColumnProps]?:BaseLayoutFlagValue;
+}
 
 export const baseLayoutGapProps={
     g0:'ioG0',
@@ -10,7 +58,7 @@ export const baseLayoutGapProps={
 } as const;
 Object.freeze(baseLayoutGapProps);
 export type BaseLayoutGapProps = {
-    -readonly [prop in keyof typeof baseLayoutGapProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutGapProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutPaddingProps={
@@ -66,7 +114,7 @@ export const baseLayoutPaddingProps={
 } as const;
 Object.freeze(baseLayoutPaddingProps);
 export type BaseLayoutPaddingProps = {
-    -readonly [prop in keyof typeof baseLayoutPaddingProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutPaddingProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutMarginProps={
@@ -122,7 +170,7 @@ export const baseLayoutMarginProps={
 } as const;
 Object.freeze(baseLayoutMarginProps);
 export type BaseLayoutMarginProps = {
-    -readonly [prop in keyof typeof baseLayoutMarginProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutMarginProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutInnerFlexProps={
@@ -145,7 +193,7 @@ export const baseLayoutInnerFlexProps={
 } as const;
 Object.freeze(baseLayoutInnerFlexProps);
 export type BaseLayoutInnerFlexProps = {
-    -readonly [prop in keyof typeof baseLayoutInnerFlexProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutInnerFlexProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutFlexProps={
@@ -158,7 +206,7 @@ export const baseLayoutFlexProps={
 } as const;
 Object.freeze(baseLayoutFlexProps);
 export type BaseLayoutFlexProps = {
-    -readonly [prop in keyof typeof baseLayoutFlexProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutFlexProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutSelfFlexProps={
@@ -169,7 +217,7 @@ export const baseLayoutSelfFlexProps={
 } as const;
 Object.freeze(baseLayoutSelfFlexProps);
 export type BaseLayoutSelfFlexProps = {
-    -readonly [prop in keyof typeof baseLayoutSelfFlexProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutSelfFlexProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutInnerGridProps={
@@ -191,7 +239,16 @@ export const baseLayoutInnerGridProps={
 } as const;
 Object.freeze(baseLayoutInnerGridProps);
 export type BaseLayoutInnerGridProps = {
-    -readonly [prop in keyof typeof baseLayoutInnerGridProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutInnerGridProps]?:BaseLayoutFlagValue;
+}
+
+export const baseLayoutParentLayoutProps={
+    stackingRow:'ioStackingRow',
+    flexGrid:'ioFlexGrid',
+}
+Object.freeze(baseLayoutParentLayoutProps);
+export type BaseLayoutParentLayoutProps = {
+    -readonly [prop in keyof typeof baseLayoutParentLayoutProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutBreakpointProps={
@@ -226,27 +283,35 @@ export const baseLayoutUtilProps={
     pointerEventsNone:'ioPointerEventsNone',
     cursorPointer:'ioCursorPointer',
     displayNone:'ioDisplayNone',
+    displayAuto:'ioDisplayAuto',
 
 } as const;
 Object.freeze(baseLayoutUtilProps);
 export type BaseLayoutUtilProps = {
-    -readonly [prop in keyof typeof baseLayoutUtilProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutUtilProps]?:BaseLayoutFlagValue;
 }
 
 export const baseLayoutFlagProps={
     ...baseLayoutPaddingProps,
     ...baseLayoutMarginProps,
+    ...baseLayoutColumnProps,
     ...baseLayoutFlexProps,
     ...baseLayoutInnerFlexProps,
     ...baseLayoutSelfFlexProps,
     ...baseLayoutGapProps,
     ...baseLayoutInnerGridProps,
+    ...baseLayoutParentLayoutProps,
     ...baseLayoutBreakpointProps,
     ...baseLayoutUtilProps,
 } as const;
 Object.freeze(baseLayoutFlagProps);
 export type BaseLayoutFlagProps = {
-    -readonly [prop in keyof typeof baseLayoutFlagProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutFlagProps]?:BaseLayoutFlagValue;
+}
+
+const allMap={
+    ...baseLayoutFlagProps,
+    ...baseLayoutAnimationProps
 }
 
 export const allBaseLayoutFlagProps:(keyof BaseLayoutFlagProps)[]=[];
@@ -261,13 +326,43 @@ export interface BaseLayoutClassNameProps
 }
 
 
-export type BaseLayoutInnerProps = BaseLayoutPaddingProps & BaseLayoutGapProps & BaseLayoutInnerFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
+export type BaseLayoutInnerProps =
+    BaseLayoutAnimationProps &
+    BaseLayoutPaddingProps &
+    BaseLayoutGapProps &
+    BaseLayoutInnerFlexProps &
+    BaseLayoutClassNameProps &
+    BaseLayoutParentLayoutProps &
+    BaseLayoutBreakpointProps &
+    BaseLayoutUtilProps;
 
-export type BaseLayoutOuterNoFlexProps = BaseLayoutMarginProps & BaseLayoutSelfFlexProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
+export type BaseLayoutOuterNoFlexProps =
+    BaseLayoutAnimationProps &
+    BaseLayoutMarginProps &
+    BaseLayoutSelfFlexProps &
+    BaseLayoutClassNameProps &
+    BaseLayoutBreakpointProps &
+    BaseLayoutUtilProps &
+    BaseLayoutColumnProps;
 
-export type BaseLayoutOuterProps = BaseLayoutOuterNoFlexProps & BaseLayoutFlexProps;
+export type BaseLayoutOuterProps =
+    BaseLayoutOuterNoFlexProps &
+    BaseLayoutFlexProps &
+    BaseLayoutAnimationProps &
+    BaseLayoutColumnProps;
 
-export type BaseLayoutProps = BaseLayoutFlagProps & BaseLayoutClassNameProps & BaseLayoutBreakpointProps & BaseLayoutUtilProps;
+export type BaseLayoutProps =
+    BaseLayoutAnimationProps &
+    BaseLayoutFlagProps &
+    BaseLayoutClassNameProps;
+
+
+let incremental=isServerSide;
+export const setBaseLayoutClassesIncremental=(isIncremental:boolean)=>{
+    incremental=isIncremental;
+}
+
+export const baseLayoutIncrementalMap:HashMap<boolean>={}
 
 export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
 {
@@ -277,12 +372,42 @@ export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
     let classNames:string|undefined;
     let cn:string;
     for(const e in props){
-        if((props as any)[e]===true && (cn=(baseLayoutFlagProps as any)[e])){
-            classNames=(classNames?classNames+' ':'')+cn;
+        const v=(props as any)[e];
+        if(
+            (
+                v===true ||
+                allBreakpoints.includes(v as any) ||
+                ((baseLayoutAnimationSpeeds.includes(v as any) && (baseLayoutAnimationProps as any)[e]))
+            ) &&
+            (cn=(allMap as any)[e]))
+        {
+            if(incremental){
+                baseLayoutIncrementalMap[e+(v===true?'':'-'+v)]=true;
+            }
+            classNames=(classNames?classNames+' ':'')+cn+(v===true?'':'-'+v);
         }
     }
     if(props["className"]){
         classNames=(classNames?classNames+' ':'')+props["className"];
     }
     return classNames;
+}
+
+export const bcn=(
+    props:Partial<BaseLayoutProps>,
+    ...classNames:ClassNameValue[]
+):string|undefined=>{
+    if(classNames.length){
+        if(classNames.length===1){
+            return cn(classNames[0],baseLayoutCn(props));
+        }else if(classNames.length===2){
+            return cn(classNames[0],classNames[1],baseLayoutCn(props));
+        }else if(classNames.length===3){
+            return cn(classNames[0],classNames[1],classNames[3],baseLayoutCn(props));
+        }else{
+            return cn(...classNames,baseLayoutCn(props));
+        }
+    }else{
+        return baseLayoutCn(props);
+    }
 }

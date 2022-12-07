@@ -1,12 +1,8 @@
-import { css } from '@iyio/common';
+import { BaseLayoutProps, css } from '@iyio/common';
 import Style from 'styled-jsx/style';
-import { BaseLayoutProps } from "./base-layout";
 import { ButtonBase, ButtonBaseProps } from "./ButtonBase";
 
-export interface SlimButtonProps extends ButtonBaseProps, BaseLayoutProps
-{
-
-}
+export type SlimButtonProps = ButtonBaseProps & BaseLayoutProps;
 
 export function SlimButton({
     children,

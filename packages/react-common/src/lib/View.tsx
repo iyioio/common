@@ -1,5 +1,5 @@
+import { baseLayoutCn, BaseLayoutProps } from '@iyio/common';
 import React, { CSSProperties } from 'react';
-import { baseLayoutCn, BaseLayoutProps } from './base-layout';
 
 export interface ViewProps extends BaseLayoutProps
 {

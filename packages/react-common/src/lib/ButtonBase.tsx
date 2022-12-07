@@ -1,6 +1,5 @@
-import { cn, UiActionItem, uiRouterService } from "@iyio/common";
+import { baseLayoutCn, BaseLayoutOuterProps, cn, UiActionItem, uiRouterService } from "@iyio/common";
 import React, { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { baseLayoutCn, BaseLayoutOuterProps } from "./base-layout";
 import { getReactChildString } from "./react-util";
 
 export interface ButtonBaseProps extends BaseLayoutOuterProps
@@ -16,6 +15,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     pop?:boolean;
     actionItem?:UiActionItem;
     elem?:string;
+    elemRef?:(elem:HTMLElement|null)=>void;
     tabIndex?:number;
     vLinkDesc?:string;
     noVLink?:boolean;
@@ -41,6 +41,7 @@ export function ButtonBase({
     href,
     pop,
     elem,
+    elemRef,
     tabIndex=0,
     vLinkDesc,
     noVLink,
@@ -88,7 +89,7 @@ export function ButtonBase({
     const isVirtualLink=(to && elem!=='a')?true:false;
     if(isVirtualLink && !noVLink){
         children=<>
-            <a tabIndex={-1} className="ioOffScreen" href={to}>{vLinkDesc??getReactChildString(children)??to}</a>
+            <a tabIndex={-1} className={baseLayoutCn({offScreen:true})} href={to}>{vLinkDesc??getReactChildString(children)??to}</a>
             {children}
         </>
     }
@@ -100,6 +101,7 @@ export function ButtonBase({
         onClick,
         tabIndex,
         onKeyPress,
+        ref:elemRef,
         href:elem==='a'?to:undefined,
         style,
         'aria-label':description,

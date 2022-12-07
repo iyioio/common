@@ -1,6 +1,5 @@
-import { cn, css } from "@iyio/common";
+import { baseLayoutCn, BaseLayoutInnerProps, cn, css } from "@iyio/common";
 import Style from 'styled-jsx/style';
-import { baseLayoutCn, BaseLayoutInnerProps } from "./base-layout";
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
 
