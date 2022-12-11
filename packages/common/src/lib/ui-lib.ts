@@ -1,4 +1,5 @@
 import { HashMap } from "./common-types";
+import { ReadonlySubject } from "./rxjs-types";
 import { getUriHost, getUriProtocol } from "./uri";
 
 export interface UiActionItem
@@ -12,11 +13,21 @@ export interface UiActionItem
 
 export type RouteQuery=HashMap<string|string[]>;
 
+export interface UiRouterOpenOptions
+{
+    target?:string;
+}
+
 export interface IUiRouter
 {
+
+    readonly isLoadingSubject:ReadonlySubject<boolean>;
+
     push(path:string,query?:RouteQuery):void|Promise<void>;
 
     pop():void|Promise<void>;
+
+    open(uri:string,options?:UiRouterOpenOptions):void|Promise<void>
 }
 
 export const addQueryToPath=(path:string,query:RouteQuery|null|undefined)=>{

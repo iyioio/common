@@ -13,6 +13,8 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     to?:string;
     href?:string;
     pop?:boolean;
+    linkTarget?:string;
+    openLinkInNewWindow?:boolean;
     actionItem?:UiActionItem;
     elem?:string;
     elemRef?:(elem:HTMLElement|null)=>void;
@@ -40,6 +42,8 @@ export function ButtonBase({
     to: toProp,
     href,
     pop,
+    linkTarget,
+    openLinkInNewWindow,
     elem,
     elemRef,
     tabIndex=0,
@@ -63,7 +67,11 @@ export function ButtonBase({
 
         if(to){
             e?.preventDefault();
-            uiRouterService().push(to);
+            if(openLinkInNewWindow || linkTarget){
+                uiRouterService().open(to,{target:linkTarget??'_blank'});
+            }else{
+                uiRouterService().push(to);
+            }
         }else if(pop){
             e?.preventDefault();
             uiRouterService().pop();
@@ -105,7 +113,7 @@ export function ButtonBase({
         href:elem==='a'?to:undefined,
         style,
         'aria-label':description,
-        'data-href':to,
+        'data-href':elem==='a'?undefined:to,
     },children);
 
 }

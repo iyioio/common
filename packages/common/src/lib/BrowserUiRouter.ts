@@ -1,5 +1,6 @@
 import { UnsupportedError } from "./errors";
-import { addQueryToPath, IUiRouter, RouteQuery, shouldUseNativeNavigation } from "./ui-lib";
+import { addQueryToPath, RouteQuery, shouldUseNativeNavigation } from "./ui-lib";
+import { UiRouterBase } from "./UiRouterBase";
 
 export interface BrowserUiRouterOptions
 {
@@ -9,7 +10,7 @@ export interface BrowserUiRouterOptions
     useHistory?:boolean;
 }
 
-export class BrowserUiRouter implements IUiRouter
+export class BrowserUiRouter extends UiRouterBase
 {
 
     public static isSupported(){
@@ -20,13 +21,14 @@ export class BrowserUiRouter implements IUiRouter
 
     public constructor(options:BrowserUiRouterOptions={})
     {
+        super();
         if(!BrowserUiRouter.isSupported()){
             throw new UnsupportedError('BrowserUiRouter is not supported because history is not defined');
         }
         this.options={...options}
     }
 
-    public push(path:string,query?:RouteQuery){
+    public override push(path:string,query?:RouteQuery){
         if(shouldUseNativeNavigation(path) || !this.options.useHistory){
             globalThis.location.assign(addQueryToPath(path,query));
         }else{
@@ -34,7 +36,7 @@ export class BrowserUiRouter implements IUiRouter
         }
     }
 
-    public pop(){
+    public override pop(){
         globalThis.history.back();
     }
 
