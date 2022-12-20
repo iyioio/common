@@ -188,6 +188,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         includeAnimations,
     }=options;
 
+    const containerMargin=options.containerMargin??s3;
+
     const forCols=(n:string,p:string)=>{
         const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
         if(!f||f[`${n}Xs${a}`])c.push(`.${cn}Xs${a}{${p}:${xs}}`)
@@ -284,6 +286,9 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         c.push(`@media (${mediaQuery}){`)
     }
     const len=c.length;
+
+    add('mCon',`margin-left:${containerMargin};margin-right:${containerMargin};`)
+    add('pCon',`padding-left:${containerMargin};padding-right:${containerMargin};`)
 
     forSpacings('g','gap',true)
     forSpacings('p','padding')

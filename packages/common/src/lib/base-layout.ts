@@ -111,6 +111,8 @@ export const baseLayoutPaddingProps={
     pv4:'ioPv4',
     pv5:'ioPv5',
     pv6:'ioPv6',
+    // Container margin
+    pCon:'ioPCon',
 } as const;
 Object.freeze(baseLayoutPaddingProps);
 export type BaseLayoutPaddingProps = {
@@ -167,6 +169,8 @@ export const baseLayoutMarginProps={
     mv4:'ioMv4',
     mv5:'ioMv5',
     mv6:'ioMv6',
+    // Container margin
+    mCon:'ioMCon',
 } as const;
 Object.freeze(baseLayoutMarginProps);
 export type BaseLayoutMarginProps = {

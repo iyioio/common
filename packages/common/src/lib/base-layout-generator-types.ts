@@ -50,6 +50,11 @@ export interface BaseLayoutCssGenerationOptions
     columnWidths?:BaseLayoutColumnWidths;
 
     animationSpeeds?:BaseLayoutAnimationSpeeds;
+
+    /**
+     * Margin and padding used for containers
+     */
+    containerMargin?:string;
 }
 
 export interface BaseLayoutCssOptions extends BaseLayoutCssGenerationOptions
