@@ -25,6 +25,7 @@ export * from './lib/http-types';
 export * from './lib/http.deps';
 export * from './lib/HttpClient';
 export * from './lib/HttpDefaultFetcher';
+export * from './lib/json';
 export * from './lib/JsonStore';
 export * from './lib/jwt';
 export * from './lib/jwt.deps';
