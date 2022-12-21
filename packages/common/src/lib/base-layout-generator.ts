@@ -287,6 +287,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     }
     const len=c.length;
 
+    add('listStyleNone','list-style:none;margin:0;padding:0')
+
     add('mCon',`margin-left:${containerMargin};margin-right:${containerMargin};`)
     add('pCon',`padding-left:${containerMargin};padding-right:${containerMargin};`)
 
@@ -352,6 +354,7 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('flexGrid','display:flex;flex-wrap:wrap','> *','flex:1')
     add('displayNone','display:none !important')
     add('displayAuto','display:auto !important')
+    add('overflowHidden','overflow:hidden');
 
     if(includeAnimations){
         forAnimation('transAll','all _ ease-in-out');

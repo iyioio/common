@@ -13,6 +13,15 @@ export interface UiActionItem
 
 export type RouteQuery=HashMap<string|string[]>;
 
+export interface RouteInfo
+{
+    key:string;
+    path:string;
+    route:string;
+    asPath:string;
+    query:HashMap<string|string[]|undefined>;
+}
+
 export interface UiRouterOpenOptions
 {
     target?:string;
@@ -27,7 +36,9 @@ export interface IUiRouter
 
     pop():void|Promise<void>;
 
-    open(uri:string,options?:UiRouterOpenOptions):void|Promise<void>
+    open(uri:string,options?:UiRouterOpenOptions):void|Promise<void>;
+
+    getCurrentRoute():RouteInfo;
 }
 
 export const addQueryToPath=(path:string,query:RouteQuery|null|undefined)=>{

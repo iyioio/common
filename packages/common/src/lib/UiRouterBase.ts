@@ -1,6 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { queryParamsToObject } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
-import { addQueryToPath, IUiRouter, RouteQuery, UiRouterOpenOptions } from "./ui-lib";
+import { addQueryToPath, IUiRouter, RouteInfo, RouteQuery, UiRouterOpenOptions } from "./ui-lib";
 
 
 export class UiRouterBase implements IUiRouter
@@ -33,6 +34,26 @@ export class UiRouterBase implements IUiRouter
     public open(uri:string,options?:UiRouterOpenOptions){
         if(globalThis.window){
             globalThis.window.open(uri,options?.target,options?.target==='_blank'?'noreferrer':undefined)
+        }
+    }
+
+    public getCurrentRoute():RouteInfo
+    {
+        if(!globalThis.window){
+            return {
+                key:'_',
+                path:'',
+                route:'',
+                asPath:'',
+                query:{},
+            }
+        }
+        return {
+            key:window.history?((window.history.state as any).key??'_'):'_',
+            path:window.location.pathname,
+            route:window.location.pathname,
+            asPath:window.location.pathname+window.location.search,
+            query:queryParamsToObject(window.location.search),
         }
     }
 

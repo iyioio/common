@@ -150,3 +150,7 @@ export const aryRandomize=<T>(ary:T[]):T[]=>
     }
     return newAry;
 }
+
+export const arySingle=<T>(value:T[]|T):T|undefined=>{
+    return Array.isArray(value)?value[0]:value;
+}

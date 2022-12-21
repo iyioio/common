@@ -183,7 +183,7 @@ export const areShallowEqual=<T=any>(a:T, b:T, shouldTestKey?:(key:keyof T)=>boo
         if(shouldTestKey && !shouldTestKey(key as any)){
             continue;
         }
-        if(!(key in b) || a[key] !== b[key]) {
+        if(!(key in (b as any)) || a[key] !== b[key]) {
             return false;
         }
     }
@@ -191,7 +191,7 @@ export const areShallowEqual=<T=any>(a:T, b:T, shouldTestKey?:(key:keyof T)=>boo
         if(shouldTestKey && !shouldTestKey(key as any)){
             continue;
         }
-        if(!(key in a) || a[key] !== b[key]) {
+        if(!(key in (a as any)) || a[key] !== b[key]) {
             return false;
         }
     }
@@ -304,4 +304,33 @@ export const objGetFirstValue=(obj:HashMap):any=>{
         return obj[e];
     }
     return undefined;
+}
+
+export const objectToQueryParams=(obj:HashMap):string=>{
+    const values:string[]=[];
+    for(const e in obj){
+        values.push(encodeURIComponent(e)+'='+encodeURIComponent(obj[e]?.toString()??'true'))
+    }
+    return values.join('&');
+}
+
+export const queryParamsToObject=(query:string):HashMap<string>=>
+{
+    if(query.startsWith('?')){
+        query=query.substring(1);
+    }
+
+    const obj:HashMap<string>={};
+
+    const parts=query.split('?');
+    for(const p of parts){
+        const [name,value]=p.split('=',2);
+        const n=decodeURIComponent(name).trim();
+        if(!n){
+            continue;
+        }
+        obj[n]=decodeURIComponent(value?.trim()??'');
+    }
+
+    return obj;
 }

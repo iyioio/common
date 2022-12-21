@@ -1,5 +1,6 @@
-import { addQueryToPath, RouteQuery, shouldUseNativeNavigation, UiRouterBase } from "@iyio/common";
+import { addQueryToPath, RouteInfo, RouteQuery, shouldUseNativeNavigation, UiRouterBase } from "@iyio/common";
 import Router from 'next/router';
+import { getRouteInfo } from "./next-route-helper";
 
 export class NextJsUiRouter extends UiRouterBase
 {
@@ -18,6 +19,10 @@ export class NextJsUiRouter extends UiRouterBase
     }
     public override pop(){
         Router.back();
+    }
+
+    public override getCurrentRoute():RouteInfo{
+        return getRouteInfo(Router);
     }
 
 }

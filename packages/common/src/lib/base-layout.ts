@@ -288,6 +288,8 @@ export const baseLayoutUtilProps={
     cursorPointer:'ioCursorPointer',
     displayNone:'ioDisplayNone',
     displayAuto:'ioDisplayAuto',
+    listStyleNone:'ioListStyleNone',
+    overflowHidden:'ioOverflowHidden'
 
 } as const;
 Object.freeze(baseLayoutUtilProps);
