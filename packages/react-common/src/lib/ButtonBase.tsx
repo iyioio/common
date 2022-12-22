@@ -63,6 +63,10 @@ export function ButtonBase({
     }
     const isCustomElem=elem!=='a' && elem!=='button';
 
+    if(actionItem?.linkTarget && linkTarget===undefined){
+        linkTarget=actionItem.linkTarget;
+    }
+
     const onClick=(e?:MouseEvent)=>{
 
         if(to){

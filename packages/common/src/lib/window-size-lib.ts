@@ -65,6 +65,23 @@ export const allBreakpoints:Readonly<Breakpoint[]>=Object.freeze([
     'desktop',
 ]);
 
+export const allDirectionalBreakpoints=[
+    'mobileSmUp',
+    'mobileUp',
+    'tabletSmUp',
+    'tabletUp',
+    'desktopSmUp',
+    'desktopUp',
+    'mobileSmDown',
+    'mobileDown',
+    'tabletSmDown',
+    'tabletDown',
+    'desktopSmDown',
+    'desktopDown',
+] as const;
+Object.freeze(allDirectionalBreakpoints);
+export type DirectionalBreakpoint=typeof allDirectionalBreakpoints[number];
+
 
 export const currentBreakpoints=new BehaviorSubject<Readonly<Breakpoints>>(defaultBreakpoints);
 

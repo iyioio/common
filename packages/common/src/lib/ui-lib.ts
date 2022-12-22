@@ -9,6 +9,8 @@ export interface UiActionItem
     icon?:string;
     to?:string;
     action?:(item:UiActionItem)=>void;
+    linkTarget?:string;
+    data?:any;
 }
 
 export type RouteQuery=HashMap<string|string[]>;

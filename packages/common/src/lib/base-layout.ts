@@ -1,10 +1,10 @@
 import { isServerSide } from "./common-lib";
 import { HashMap } from "./common-types";
 import { ClassNameValue, cn } from "./css";
-import { allBreakpoints, Breakpoint } from "./window-size-lib";
+import { allDirectionalBreakpoints, DirectionalBreakpoint } from "./window-size-lib";
 
 
-export type BaseLayoutFlagValue=boolean|Breakpoint;
+export type BaseLayoutFlagValue=boolean|DirectionalBreakpoint;
 
 export const baseLayoutAnimationSpeeds=[
     'fast','quick','slow','extraSlow'
@@ -289,7 +289,15 @@ export const baseLayoutUtilProps={
     displayNone:'ioDisplayNone',
     displayAuto:'ioDisplayAuto',
     listStyleNone:'ioListStyleNone',
-    overflowHidden:'ioOverflowHidden'
+    overflowHidden:'ioOverflowHidden',
+    zIndex0:'ioZIndex0',
+    zIndex1:'ioZIndex1',
+    zIndex2:'ioZIndex2',
+    zIndex3:'ioZIndex3',
+    zIndex4:'ioZIndex4',
+    zIndex5:'ioZIndex5',
+    zIndex6:'ioZIndex6',
+    zIndexMax:'ioZIndexMax',
 
 } as const;
 Object.freeze(baseLayoutUtilProps);
@@ -382,7 +390,7 @@ export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
         if(
             (
                 v===true ||
-                allBreakpoints.includes(v as any) ||
+                allDirectionalBreakpoints.includes(v as any) ||
                 ((baseLayoutAnimationSpeeds.includes(v as any) && (baseLayoutAnimationProps as any)[e]))
             ) &&
             (cn=(allMap as any)[e]))

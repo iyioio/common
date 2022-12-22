@@ -354,7 +354,15 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('flexGrid','display:flex;flex-wrap:wrap','> *','flex:1')
     add('displayNone','display:none !important')
     add('displayAuto','display:auto !important')
-    add('overflowHidden','overflow:hidden');
+    add('overflowHidden','overflow:hidden')
+    add('zIndex0','z-index:0');
+    add('zIndex1','z-index:1');
+    add('zIndex2','z-index:2');
+    add('zIndex3','z-index:3');
+    add('zIndex4','z-index:4');
+    add('zIndex5','z-index:5');
+    add('zIndex6','z-index:6');
+    add('zIndexMax','z-index:99999');
 
     if(includeAnimations){
         forAnimation('transAll','all _ ease-in-out');
