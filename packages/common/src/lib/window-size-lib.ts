@@ -17,26 +17,29 @@ export const getWindowSize=():Size=>{
     }
 }
 
+export const allBreakpoints=[
+    'mobileSm',
+    'mobile',
+    'tabletSm',
+    'tablet',
+    'desktopSm',
+    'desktop',
+] as const;
+export type Breakpoint=typeof allBreakpoints[number];
 
-export interface Breakpoints
-{
-    mobileSm:number;
-    mobile:number;
-    tabletSm:number;
-    tablet:number;
-    desktopSm:number;
-    desktop:number;
+export type Breakpoints = {
+    [prop in Breakpoint]:number;
 }
 
 export type BreakpointFlags={
-    [prop in keyof Breakpoints]:boolean;
+    [prop in Breakpoint]:boolean;
 }
 
 export type CssBreakpoints={
-    [prop in keyof Breakpoints]:number|string;
+    [prop in Breakpoint]:number|string;
 }
 
-export type Breakpoint=keyof Breakpoints;
+
 
 export const defaultBreakpoints:Readonly<Breakpoints>=Object.freeze({
     mobileSm:300,
@@ -46,6 +49,7 @@ export const defaultBreakpoints:Readonly<Breakpoints>=Object.freeze({
     desktopSm:1200,
     desktop:1400,
 })
+export const currentBreakpoints=new BehaviorSubject<Readonly<Breakpoints>>(defaultBreakpoints);
 
 export enum BreakpointIndex{
     mobileSm=0,
@@ -55,15 +59,6 @@ export enum BreakpointIndex{
     desktopSm=4,
     desktop=5,
 }
-
-export const allBreakpoints:Readonly<Breakpoint[]>=Object.freeze([
-    'mobileSm',
-    'mobile',
-    'tabletSm',
-    'tablet',
-    'desktopSm',
-    'desktop',
-]);
 
 export const allDirectionalBreakpoints=[
     'mobileSmUp',
@@ -82,8 +77,72 @@ export const allDirectionalBreakpoints=[
 Object.freeze(allDirectionalBreakpoints);
 export type DirectionalBreakpoint=typeof allDirectionalBreakpoints[number];
 
+export const allBreakpointAliases=[
+    'sm',
+    'md',
+    'lg',
+    'stack',
+    'wide',
+] as const;
+Object.freeze(allBreakpointAliases);
+export type BreakpointAliases=typeof allBreakpointAliases[number];
+export type BreakpointAliasesMap = {
+    [prop in BreakpointAliases]:Breakpoint;
+}
+export const defaultBreakpointAliases:Readonly<BreakpointAliasesMap>=Object.freeze({
+    // mobileSm:300,
+    // mobile:576,
+    // tabletSm:768,
+    // tablet:992,
+    // desktopSm:1200,
+    // desktop:1400,
 
-export const currentBreakpoints=new BehaviorSubject<Readonly<Breakpoints>>(defaultBreakpoints);
+    sm:'mobile',
+    md:'tabletSm',
+    lg:'desktopSm',
+    stack:'tabletSm',
+    wide:'tablet',
+})
+
+export const allDirectionalBreakpointAliases=[
+    'smUp',
+    'mdUp',
+    'lgUp',
+    'smDown',
+    'mdDown',
+    'lgDown',
+    'stack',
+    'wide',
+] as const;
+Object.freeze(allDirectionalBreakpointAliases);
+export type DirectionalBreakpointAlias=typeof allDirectionalBreakpointAliases[number];
+export type DirectionalBreakpointAliasesMap = {
+    [prop in DirectionalBreakpointAlias]:DirectionalBreakpoint;
+}
+
+export const getDirectionalBreakpointAliasesMap=(map:Readonly<BreakpointAliasesMap>):DirectionalBreakpointAliasesMap=>{
+    return {
+        smUp:`${map.sm}Up` as DirectionalBreakpoint,
+        mdUp:`${map.md}Up` as DirectionalBreakpoint,
+        lgUp:`${map.lg}Up` as DirectionalBreakpoint,
+        smDown:`${map.sm}Down` as DirectionalBreakpoint,
+        mdDown:`${map.md}Down` as DirectionalBreakpoint,
+        lgDown:`${map.lg}Down` as DirectionalBreakpoint,
+        stack:`${map.stack}Down` as DirectionalBreakpoint,
+        wide:`${map.wide}Up` as DirectionalBreakpoint,
+    }
+}
+
+export const currentBreakpointAliases:ReadonlySubject<Readonly<BreakpointAliasesMap>>=
+    new BehaviorSubject<Readonly<BreakpointAliasesMap>>(defaultBreakpointAliases);
+export const currentDirectionalBreakpointAliases:ReadonlySubject<Readonly<DirectionalBreakpointAliasesMap>>=
+    new BehaviorSubject<Readonly<DirectionalBreakpointAliasesMap>>(getDirectionalBreakpointAliasesMap(defaultBreakpointAliases));
+export const setCurrentBreakpointAliases=(map:Readonly<BreakpointAliasesMap>)=>{
+    const value={...map};
+    const dValue=getDirectionalBreakpointAliasesMap(value);
+    (currentBreakpointAliases as BehaviorSubject<Readonly<BreakpointAliasesMap>>).next(value);
+    (currentDirectionalBreakpointAliases as BehaviorSubject<Readonly<DirectionalBreakpointAliasesMap>>).next(dValue);
+}
 
 const parsePx=(value:number|string):number=>{
     if(typeof value === 'string'){

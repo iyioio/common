@@ -1,10 +1,10 @@
 import { isServerSide } from "./common-lib";
 import { HashMap } from "./common-types";
 import { ClassNameValue, cn } from "./css";
-import { allDirectionalBreakpoints, DirectionalBreakpoint } from "./window-size-lib";
+import { allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases, DirectionalBreakpoint, DirectionalBreakpointAlias } from "./window-size-lib";
 
 
-export type BaseLayoutFlagValue=boolean|DirectionalBreakpoint;
+export type BaseLayoutFlagValue=boolean|DirectionalBreakpoint|DirectionalBreakpointAlias;
 
 export const baseLayoutAnimationSpeeds=[
     'fast','quick','slow','extraSlow'
@@ -386,15 +386,23 @@ export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
     let classNames:string|undefined;
     let cn:string;
     for(const e in props){
-        const v=(props as any)[e];
+        let v=(props as any)[e];
+        let da:boolean|undefined;
         if(
             (
                 v===true ||
                 allDirectionalBreakpoints.includes(v as any) ||
+                (da=allDirectionalBreakpointAliases.includes(v as any)) ||
                 ((baseLayoutAnimationSpeeds.includes(v as any) && (baseLayoutAnimationProps as any)[e]))
             ) &&
             (cn=(allMap as any)[e]))
         {
+            if(da){
+                v=(currentDirectionalBreakpointAliases.value as any)[v];
+                if(!v){
+                    continue;
+                }
+            }
             if(incremental){
                 baseLayoutIncrementalMap[e+(v===true?'':'-'+v)]=true;
             }
