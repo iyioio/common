@@ -1,3 +1,4 @@
+import { baseLayoutColorBaseProps, baseLayoutColorMappedProps } from "./base-layout";
 import { HashMap } from "./common-types";
 import { Breakpoints } from "./window-size-lib";
 
@@ -29,6 +30,75 @@ export interface BaseLayoutAnimationSpeeds
     extraSlow?:string;
 }
 
+export interface FontFaceSize
+{
+    size?:string;
+    lineHeight?:string;
+}
+export interface FontFace extends FontFaceSize
+{
+    family?:string;
+    color?:string;
+    weight?:string;
+    style?:string;
+    stretch?:string;
+    kerning?:string;
+    transform?:string;
+    variation?:string;
+    spacing?:string;
+    css?:string;
+}
+
+export interface FontFaces
+{
+    faceDefault?:FontFace;
+    face1?:FontFace,
+    face2?:FontFace,
+    face3?:FontFace,
+    face4?:FontFace,
+    face5?:FontFace,
+    face6?:FontFace,
+    face7?:FontFace,
+    face8?:FontFace,
+    face9?:FontFace,
+    face10?:FontFace,
+}
+
+export interface FontFaceConfig extends FontFaces
+{
+    xxxs?:FontFaceSize;
+    xxs?:FontFaceSize;
+    xs?:FontFaceSize;
+    sm?:FontFaceSize;
+    md?:FontFaceSize;
+    lg?:FontFaceSize;
+    xl?:FontFaceSize;
+    xxl?:FontFaceSize;
+    xxxl?:FontFaceSize;
+    normalize?:boolean;
+    lineHeight?:string;
+    weightBold?:string;
+    weightThin?:string;
+    linkDecoration?:string;
+    linkDisplay?:string;
+    body?:keyof FontFaces;
+    h1?:keyof FontFaces;
+    h2?:keyof FontFaces;
+    h3?:keyof FontFaces;
+    h4?:keyof FontFaces;
+    h5?:keyof FontFaces;
+    h6?:keyof FontFaces;
+}
+
+export type LayoutColors = {
+    -readonly [prop in keyof typeof baseLayoutColorBaseProps]?:string;
+}
+export type LayoutMappedColors = {
+    -readonly [prop in keyof typeof baseLayoutColorMappedProps]?:keyof LayoutColors;
+}
+
+export type LayoutColorConfig = LayoutColors & LayoutMappedColors;
+
 export interface BaseLayoutCssGenerationOptions
 {
     /**
@@ -55,6 +125,18 @@ export interface BaseLayoutCssGenerationOptions
      * Margin and padding used for containers
      */
     containerMargin?:string;
+
+    /**
+     * The value used for semi-transparencies.
+     * @default 0.5
+     */
+    semiTransparency?:number;
+
+    fontConfig?:FontFaceConfig;
+
+    colors?:LayoutColorConfig;
+
+    boxSizing?:string|null;
 }
 
 export interface BaseLayoutCssOptions extends BaseLayoutCssGenerationOptions

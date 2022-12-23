@@ -47,6 +47,110 @@ export type BaseLayoutColumnProps = {
     -readonly [prop in keyof typeof baseLayoutColumnProps]?:BaseLayoutFlagValue;
 }
 
+export const baseLayoutFontProps={
+    faceDefault:'ioFaceDefault',
+    face1:'ioFace1',
+    face2:'ioFace2',
+    face3:'ioFace3',
+    face4:'ioFace4',
+    face5:'ioFace5',
+    face6:'ioFace6',
+    face7:'ioFace7',
+    face8:'ioFace8',
+    face9:'ioFace9',
+    face10:'ioFace10',
+    xxxs:'ioXxxs',
+    xxs:'ioXxs',
+    xs:'ioXs',
+    sm:'ioSm',
+    md:'ioMd',
+    lg:'ioLg',
+    xl:'ioXl',
+    xxl:'ioXxl',
+    xxxl:'ioXxxl',
+    weightBold:'ioWeightBold',
+    weightThin:'ioWeightThin',
+    centerText:'ioCenterText',
+    preSpace:'ioPreSpace',
+    singleLine:'ioSingleLine',
+    lineHeight100:'ioLineHeight100',
+    lineHeight125:'ioLineHeight125',
+    lineHeight150:'ioLineHeight150',
+    lineHeight175:'ioLineHeight175',
+    lineHeight200:'ioLineHeight200',
+    body:'ioBody',//mapped - faceDefault
+    h1:'ioH1',//mapped - face1
+    h2:'ioH2',//mapped - face2
+    h3:'ioH3',//mapped - face3
+    h4:'ioH4',//mapped - face4
+    h5:'ioH5',//mapped - face5
+    h6:'ioH6',//mapped - face6
+} as const;
+Object.freeze(baseLayoutFontProps);
+export type BaseLayoutFontProps = {
+    -readonly [prop in keyof typeof baseLayoutFontProps]?:BaseLayoutFlagValue;
+}
+
+export const baseLayoutColorBaseProps={
+    color1:'ioColor1',
+    color2:'ioColor2',
+    color3:'ioColor3',
+    color4:'ioColor4',
+    color5:'ioColor5',
+    color6:'ioColor6',
+    color7:'ioColor7',
+    color8:'ioColor8',
+    color9:'ioColor9',
+    color10:'ioColor10',
+    color11:'ioColor11',
+    color12:'ioColor12',
+    color13:'ioColor13',
+    color14:'ioColor14',
+    color15:'ioColor15',
+    color16:'ioColor16',
+    frontColor1:'ioFrontColor1',
+    frontColor2:'ioFrontColor2',
+    frontColor3:'ioFrontColor3',
+    frontColor4:'ioFrontColor4',
+    frontColor5:'ioFrontColor5',
+    frontColor6:'ioFrontColor6',
+    frontColor7:'ioFrontColor7',
+    frontColor8:'ioFrontColor8',
+    frontColor9:'ioFrontColor9',
+    frontColor10:'ioFrontColor10',
+    frontColor11:'ioFrontColor11',
+    frontColor12:'ioFrontColor12',
+    frontColor13:'ioFrontColor13',
+    frontColor14:'ioFrontColor14',
+    frontColor15:'ioFrontColor15',
+    frontColor16:'ioFrontColor16',
+} as const;
+Object.freeze(baseLayoutColorBaseProps);
+
+export const baseLayoutColorMappedProps={
+    colorPrimary:'ioColorPrimary',//mapped color1
+    colorSecondary:'ioColorSecondary',//mapped color2
+    colorForeground:'ioColorForeground',// mapped - color10
+    colorBg:'ioColorBg',// mapped - color11
+    colorBorder:'ioColorBorder',// mapped - color12
+    colorMuted:'ioColorMuted',// mapped - color13
+    colorContainer:'ioColorContainer',// mapped - color14
+    colorInput:'ioColorInput',// mapped - color15
+    frontColorPrimary:'ioFrontColorPrimary',//mapped frontColor1
+    frontColorSecondary:'ioFrontColorSecondary',//mapped frontColor2
+} as const;
+Object.freeze(baseLayoutColorMappedProps);
+
+export const baseLayoutColorProps={
+    ...baseLayoutColorBaseProps,
+    ...baseLayoutColorMappedProps,
+
+} as const;
+Object.freeze(baseLayoutColorProps);
+export type BaseLayoutColorProps = {
+    -readonly [prop in keyof typeof baseLayoutColorProps]?:BaseLayoutFlagValue;
+}
+
 export const baseLayoutGapProps={
     g0:'ioG0',
     g1:'ioG1',
@@ -207,6 +311,10 @@ export const baseLayoutFlexProps={
     flex4:'ioFlex4',
     flex5:'ioFlex5',
     flex6:'ioFlex6',
+    flex7:'ioFlex7',
+    flex8:'ioFlex8',
+    flex9:'ioFlex9',
+    flex10:'ioFlex10',
 } as const;
 Object.freeze(baseLayoutFlexProps);
 export type BaseLayoutFlexProps = {
@@ -297,7 +405,17 @@ export const baseLayoutUtilProps={
     zIndex4:'ioZIndex4',
     zIndex5:'ioZIndex5',
     zIndex6:'ioZIndex6',
+    zIndex7:'ioZIndex7',
+    zIndex8:'ioZIndex8',
+    zIndex9:'ioZIndex9',
+    zIndex10:'ioZIndex10',
     zIndexMax:'ioZIndexMax',
+    opacity0:'ioOpacity0',
+    opacity25:'ioOpacity25',
+    opacity50:'ioOpacity50',
+    opacity75:'ioOpacity75',
+    opacity100:'ioOpacity100',
+    semiTransparent:'ioSemiTransparent',
 
 } as const;
 Object.freeze(baseLayoutUtilProps);
@@ -325,8 +443,10 @@ export type BaseLayoutFlagProps = {
 
 const allMap={
     ...baseLayoutFlagProps,
-    ...baseLayoutAnimationProps
-}
+    ...baseLayoutAnimationProps,
+    ...baseLayoutFontProps,
+    ...baseLayoutColorProps,
+} as const;
 
 export const allBaseLayoutFlagProps:(keyof BaseLayoutFlagProps)[]=[];
 for(const e in baseLayoutFlagProps){
@@ -371,6 +491,12 @@ export type BaseLayoutProps =
     BaseLayoutClassNameProps;
 
 
+export type AllBaseLayoutProps=
+    BaseLayoutProps &
+    BaseLayoutFontProps &
+    BaseLayoutColorProps;
+
+
 let incremental=isServerSide;
 export const setBaseLayoutClassesIncremental=(isIncremental:boolean)=>{
     incremental=isIncremental;
@@ -378,7 +504,7 @@ export const setBaseLayoutClassesIncremental=(isIncremental:boolean)=>{
 
 export const baseLayoutIncrementalMap:HashMap<boolean>={}
 
-export const baseLayoutCn=(props:Partial<BaseLayoutProps>):string|undefined=>
+export const baseLayoutCn=(props:Partial<AllBaseLayoutProps>):string|undefined=>
 {
     if(!props){
         return undefined;

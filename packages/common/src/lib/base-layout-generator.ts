@@ -1,5 +1,5 @@
-import { BaseLayoutAnimationProps, BaseLayoutFlagProps } from "./base-layout";
-import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions } from "./base-layout-generator-types";
+import { AllBaseLayoutProps, BaseLayoutAnimationProps } from "./base-layout";
+import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions, FontFace } from "./base-layout-generator-types";
 import { currentBreakpoints } from "./window-size-lib";
 
 
@@ -153,6 +153,13 @@ export interface BaseLayoutBreakpointOptions extends BaseLayoutCssGenerationOpti
     includeAnimations?:boolean;
 }
 
+const defaultFontFaceDefault:FontFace={
+    family:'Helvetica Neue, Helvetica, Arial, sans-serif',
+};
+export const generateFontFaceCss=(f:FontFace={}):string=>(
+    `${f.family?'font-family:'+f.family+';':''}${f.size?'font-size:'+f.size+';':''}${f.color?'color:'+f.color+';':''}${f.weight?'font-weight:'+f.weight+';':''}${f.style?'font-style:'+f.style+';':''}${f.lineHeight?'line-height:'+f.lineHeight+';':''}${f.stretch?'font-stretch:'+f.stretch+';':''}${f.kerning?'font-kerning:'+f.kerning+';':''}${f.transform?'text-transform:'+f.transform+';':''}${f.variation?'font-variation:'+f.variation+';':''}${f.spacing?'letter-spacing:'+f.spacing+';':''}${f.css??''}`
+)
+
 export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOptions={}):string=>
 {
 
@@ -179,6 +186,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
             slow='0.5s',
             extraSlow='1.5s'
         }={},
+        fontConfig: fc={},
+        colors: cl={},
         classNameAppend:a='',
         mediaQuery,
         filter:f,
@@ -186,7 +195,35 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         lines:c=[],
         lineSeparator='\n',
         includeAnimations,
+        semiTransparency=0.5,
+        boxSizing='border-box',
     }=options;
+
+    if(fc.normalize===undefined){fc.normalize=true}
+    if(!fc.lineHeight){fc.lineHeight='1.2em'}
+    if(!fc.body){fc.body='faceDefault'}
+    if(!fc.h1){fc.h1='face1'}
+    if(!fc.h2){fc.h2='face2'}
+    if(!fc.h3){fc.h3='face3'}
+    if(!fc.h4){fc.h4='face4'}
+    if(!fc.h5){fc.h5='face5'}
+    if(!fc.h6){fc.h6='face6'}
+    if(!fc.linkDecoration){fc.linkDecoration='none'}
+    if(!fc.linkDisplay){fc.linkDisplay='inline-block'}
+    if(!fc.weightBold){fc.weightBold='700'}
+    if(!fc.weightThin){fc.weightThin='200'}
+    if(!fc.faceDefault){fc.faceDefault={...defaultFontFaceDefault}}
+
+    if(!cl.colorPrimary){cl.colorPrimary='color1'}
+    if(!cl.colorSecondary){cl.colorSecondary='color2'}
+    if(!cl.colorForeground){cl.colorForeground='color10'}
+    if(!cl.colorBg){cl.colorBg='color11'}
+    if(!cl.colorBorder){cl.colorBorder='color12'}
+    if(!cl.colorMuted){cl.colorMuted='color13'}
+    if(!cl.colorContainer){cl.colorContainer='color14'}
+    if(!cl.colorInput){cl.colorInput='color15'}
+    if(!cl.frontColorPrimary){cl.frontColorPrimary='frontColor1'}
+    if(!cl.frontColorSecondary){cl.frontColorSecondary='frontColor2'}
 
     const containerMargin=options.containerMargin??s3;
 
@@ -272,7 +309,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         if(!f||f[`${n}h0${a}`])c.push(`.${cn}h0${a}{${p}-left:${s0};${p}-right:${s0}}`)
     }
 
-    const add=(n:keyof BaseLayoutFlagProps,css:string,scopedSelector?:string,scopedCss?:string)=>{
+    const add=(n:keyof AllBaseLayoutProps,css:string,scopedSelector?:string,scopedCss?:string)=>{
+        if(!css){
+            return;
+        }
         if(!f || f[n+a]){
             const selector=`.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a}`
             c.push(`${selector}{${css}}`);
@@ -282,10 +322,123 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         }
     }
 
+    const addWithAlias=(
+        n:keyof AllBaseLayoutProps,
+        objWithAlias:any,
+        css:string,
+        scopedSelector?:string,
+        scopedCss?:string
+    )=>{
+        if(!css){
+            return;
+        }
+        let nA:string|undefined;
+        for(const e in objWithAlias){
+            if(objWithAlias[e]===n){
+                nA=e;
+                break;
+            }
+        }
+
+        if(!nA){
+            add(n,css,scopedSelector,scopedCss);
+            return;
+        }
+
+        if(!f || f[n+a] || f[nA+a]){
+            const selector=(
+                `.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a},`+
+                `.io${nA.substring(0,1).toUpperCase()+nA.substring(1)}${a}`
+            )
+            c.push(`${selector}{${css}}`);
+            if(scopedSelector && scopedCss){
+                const s2=(
+                    `.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a} ${scopedSelector},`+
+                    `.io${nA.substring(0,1).toUpperCase()+nA.substring(1)}${a} ${scopedSelector}`
+                )
+                c.push(`${s2}{${scopedCss}}`);
+            }
+        }
+    }
+
     if(mediaQuery){
         c.push(`@media (${mediaQuery}){`)
     }
     const len=c.length;
+
+    if(!mediaQuery){
+        c.push(`body{${generateFontFaceCss(fc.faceDefault)}}`)
+        c.push(`a{text-decoration:${fc.linkDecoration};display:${fc.linkDisplay}}`)
+        if(boxSizing){
+            c.push(`*{box-sizing:${boxSizing}}`)
+        }
+        if(fc.normalize){
+            c.push('h1,h2,h3,h4,h5,h6,p{margin:0;font-weight:400}')
+        }
+    }
+    addWithAlias('face10',fc,generateFontFaceCss(fc.face10))
+    addWithAlias('face9',fc,generateFontFaceCss(fc.face9))
+    addWithAlias('face8',fc,generateFontFaceCss(fc.face8))
+    addWithAlias('face7',fc,generateFontFaceCss(fc.face7))
+    addWithAlias('face6',fc,generateFontFaceCss(fc.face6))
+    addWithAlias('face5',fc,generateFontFaceCss(fc.face5))
+    addWithAlias('face4',fc,generateFontFaceCss(fc.face4))
+    addWithAlias('face3',fc,generateFontFaceCss(fc.face3))
+    addWithAlias('face2',fc,generateFontFaceCss(fc.face2))
+    addWithAlias('face1',fc,generateFontFaceCss(fc.face1))
+    addWithAlias('faceDefault',fc,generateFontFaceCss(fc.faceDefault))
+    add('xxxs',`font-size:${fc.xxxs?.size??'0.3rem'};line-height:${fc.xxxs?.lineHeight??fc.lineHeight}`)
+    add('xxs',`font-size:${fc.xxs?.size??'0.5rem'};line-height:${fc.xxs?.lineHeight??fc.lineHeight}`)
+    add('xs',`font-size:${fc.xs?.size??'0.7rem'};line-height:${fc.xs?.lineHeight??fc.lineHeight}`)
+    add('sm',`font-size:${fc.sm?.size??'0.8rem'};line-height:${fc.sm?.lineHeight??fc.lineHeight}`)
+    add('md',`font-size:${fc.md?.size??'1rem'};line-height:${fc.md?.lineHeight??fc.lineHeight}`)
+    add('lg',`font-size:${fc.lg?.size??'1.5rem'};line-height:${fc.lg?.lineHeight??fc.lineHeight}`)
+    add('xl',`font-size:${fc.xl?.size??'2rem'};line-height:${fc.xl?.lineHeight??fc.lineHeight}`)
+    add('xxl',`font-size:${fc.xxl?.size??'4rem'};line-height:${fc.xxl?.lineHeight??fc.lineHeight}`)
+    add('xxxl',`font-size:${fc.xxxl?.size??'8rem'};line-height:${fc.xxxl?.lineHeight??fc.lineHeight}`)
+    add('weightBold',`font-weight:${fc.weightBold}`)
+    add('weightThin',`font-weight:${fc.weightThin}`)
+    add('centerText','text-align:center')
+    add('preSpace','white-space:pre')
+    add('singleLine','text-overflow: ellipsis;overflow: hidden;white-space: nowrap')
+    add('lineHeight100','line-height:2em')
+    add('lineHeight125','line-height:1.25em')
+    add('lineHeight150','line-height:1.5em')
+    add('lineHeight175','line-height:1.75em')
+    add('lineHeight200','line-height:2em')
+
+    addWithAlias('color1',cl,`color:${cl.color1};fill:${cl.color1}`)
+    addWithAlias('color2',cl,`color:${cl.color2};fill:${cl.color2}`)
+    addWithAlias('color3',cl,`color:${cl.color3};fill:${cl.color3}`)
+    addWithAlias('color4',cl,`color:${cl.color4};fill:${cl.color4}`)
+    addWithAlias('color5',cl,`color:${cl.color5};fill:${cl.color5}`)
+    addWithAlias('color6',cl,`color:${cl.color6};fill:${cl.color6}`)
+    addWithAlias('color7',cl,`color:${cl.color7};fill:${cl.color7}`)
+    addWithAlias('color8',cl,`color:${cl.color8};fill:${cl.color8}`)
+    addWithAlias('color9',cl,`color:${cl.color9};fill:${cl.color9}`)
+    addWithAlias('color10',cl,`color:${cl.color10};fill:${cl.color10}`)
+    addWithAlias('color11',cl,`color:${cl.color11};fill:${cl.color11}`)
+    addWithAlias('color12',cl,`color:${cl.color12};fill:${cl.color12}`)
+    addWithAlias('color13',cl,`color:${cl.color13};fill:${cl.color13}`)
+    addWithAlias('color14',cl,`color:${cl.color14};fill:${cl.color14}`)
+    addWithAlias('color15',cl,`color:${cl.color15};fill:${cl.color15}`)
+    addWithAlias('color16',cl,`color:${cl.color16};fill:${cl.color16}`)
+    addWithAlias('frontColor1',cl,`color:${cl.frontColor1};fill:${cl.frontColor1}`)
+    addWithAlias('frontColor2',cl,`color:${cl.frontColor2};fill:${cl.frontColor2}`)
+    addWithAlias('frontColor3',cl,`color:${cl.frontColor3};fill:${cl.frontColor3}`)
+    addWithAlias('frontColor4',cl,`color:${cl.frontColor4};fill:${cl.frontColor4}`)
+    addWithAlias('frontColor5',cl,`color:${cl.frontColor5};fill:${cl.frontColor5}`)
+    addWithAlias('frontColor6',cl,`color:${cl.frontColor6};fill:${cl.frontColor6}`)
+    addWithAlias('frontColor7',cl,`color:${cl.frontColor7};fill:${cl.frontColor7}`)
+    addWithAlias('frontColor8',cl,`color:${cl.frontColor8};fill:${cl.frontColor8}`)
+    addWithAlias('frontColor9',cl,`color:${cl.frontColor9};fill:${cl.frontColor9}`)
+    addWithAlias('frontColor10',cl,`color:${cl.frontColor10};fill:${cl.frontColor10}`)
+    addWithAlias('frontColor11',cl,`color:${cl.frontColor11};fill:${cl.frontColor11}`)
+    addWithAlias('frontColor12',cl,`color:${cl.frontColor12};fill:${cl.frontColor12}`)
+    addWithAlias('frontColor13',cl,`color:${cl.frontColor13};fill:${cl.frontColor13}`)
+    addWithAlias('frontColor14',cl,`color:${cl.frontColor14};fill:${cl.frontColor14}`)
+    addWithAlias('frontColor15',cl,`color:${cl.frontColor15};fill:${cl.frontColor15}`)
+    addWithAlias('frontColor16',cl,`color:${cl.frontColor16};fill:${cl.frontColor16}`)
 
     add('listStyleNone','list-style:none;margin:0;padding:0')
 
@@ -309,6 +462,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('flex4','flex:4')
     add('flex5','flex:5')
     add('flex6','flex:6')
+    add('flex7','flex:7')
+    add('flex8','flex:8')
+    add('flex9','flex:9')
+    add('flex10','flex:10')
     add('row','display:flex;flex-direction:row')
     add('col','display:flex;flex-direction:column')
     add('rowReverse','display:flex;flex-direction:row-reverse')
@@ -355,14 +512,24 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('displayNone','display:none !important')
     add('displayAuto','display:auto !important')
     add('overflowHidden','overflow:hidden')
-    add('zIndex0','z-index:0');
-    add('zIndex1','z-index:1');
-    add('zIndex2','z-index:2');
-    add('zIndex3','z-index:3');
-    add('zIndex4','z-index:4');
-    add('zIndex5','z-index:5');
-    add('zIndex6','z-index:6');
-    add('zIndexMax','z-index:99999');
+    add('zIndex0','z-index:0')
+    add('zIndex1','z-index:1')
+    add('zIndex2','z-index:2')
+    add('zIndex3','z-index:3')
+    add('zIndex4','z-index:4')
+    add('zIndex5','z-index:5')
+    add('zIndex6','z-index:6')
+    add('zIndex7','z-index:7')
+    add('zIndex8','z-index:8')
+    add('zIndex9','z-index:9')
+    add('zIndex10','z-index:10')
+    add('zIndexMax','z-index:99999')
+    add('opacity0','opacity:0')
+    add('opacity25','opacity:0.25')
+    add('opacity50','opacity:0.5')
+    add('opacity75','opacity:0.75')
+    add('opacity100','opacity:1')
+    add('semiTransparent',`opacity:${semiTransparency}`)
 
     if(includeAnimations){
         forAnimation('transAll','all _ ease-in-out');

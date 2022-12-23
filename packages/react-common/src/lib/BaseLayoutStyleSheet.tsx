@@ -26,6 +26,10 @@ export function BaseLayoutStyleSheet({
     filter,
     columnWidths,
     animationSpeeds,
+    colors,
+    fontConfig,
+    semiTransparency,
+    boxSizing
 }:BaseLayoutStyleSheetProps){
 
     if(optimizeForHybridRendering){
@@ -54,7 +58,11 @@ export function BaseLayoutStyleSheet({
             lineSeparator,
             appendCss,
             columnWidths,
-            animationSpeeds
+            animationSpeeds,
+            colors,
+            fontConfig,
+            semiTransparency,
+            boxSizing
         })
         return lines;
     },[bp,spacing,filter,lineSeparator,appendCss,columnWidths,animationSpeeds]);
