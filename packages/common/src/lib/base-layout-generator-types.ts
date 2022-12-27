@@ -5,12 +5,19 @@ import { Breakpoints } from "./window-size-lib";
 export interface BaseLayoutSpacings
 {
     space0?:string;
+    space025?:string;
+    space050?:string;
+    space075?:string;
     space1?:string;
     space2?:string;
     space3?:string;
     space4?:string;
     space5?:string;
     space6?:string;
+    space7?:string;
+    space8?:string;
+    space9?:string;
+    space10?:string;
 }
 
 export interface BaseLayoutColumnWidths

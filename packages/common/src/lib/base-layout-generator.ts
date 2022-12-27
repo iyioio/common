@@ -166,12 +166,19 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     const {
         spacing:{
             space0:s0='0',
-            space1:s1='0.25rem',
-            space2:s2='0.5rem',
-            space3:s3='1rem',
-            space4:s4='2rem',
-            space5:s5='4rem',
-            space6:s6='8rem',
+            space025:s025='0.25rem',
+            space050:s050='0.50rem',
+            space075:s075='0.75rem',
+            space1:s1='1rem',
+            space2:s2='2rem',
+            space3:s3='3rem',
+            space4:s4='4rem',
+            space5:s5='5rem',
+            space6:s6='6rem',
+            space7:s7='8rem',
+            space8:s8='10rem',
+            space9:s9='15rem',
+            space10:s10='20rem',
         }={},
         columnWidths:{
             xs='8rem',
@@ -248,64 +255,113 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
 
         const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
 
+        if(!f||f[`${n}025${a}`])c.push(`.${cn}025${a}{${p}:${s025}}`)
+        if(!f||f[`${n}050${a}`])c.push(`.${cn}050${a}{${p}:${s050}}`)
+        if(!f||f[`${n}075${a}`])c.push(`.${cn}075${a}{${p}:${s075}}`)
         if(!f||f[`${n}1${a}`])c.push(`.${cn}1${a}{${p}:${s1}}`)
         if(!f||f[`${n}2${a}`])c.push(`.${cn}2${a}{${p}:${s2}}`)
         if(!f||f[`${n}3${a}`])c.push(`.${cn}3${a}{${p}:${s3}}`)
         if(!f||f[`${n}4${a}`])c.push(`.${cn}4${a}{${p}:${s4}}`)
         if(!f||f[`${n}5${a}`])c.push(`.${cn}5${a}{${p}:${s5}}`)
         if(!f||f[`${n}6${a}`])c.push(`.${cn}6${a}{${p}:${s6}}`)
+        if(!f||f[`${n}7${a}`])c.push(`.${cn}7${a}{${p}:${s7}}`)
+        if(!f||f[`${n}8${a}`])c.push(`.${cn}8${a}{${p}:${s8}}`)
+        if(!f||f[`${n}9${a}`])c.push(`.${cn}9${a}{${p}:${s9}}`)
+        if(!f||f[`${n}10${a}`])c.push(`.${cn}10${a}{${p}:${s10}}`)
         if(!f||f[`${n}0${a}`])c.push(`.${cn}0${a}{${p}:${s0}}`)
 
         if(noEdge){
             return;
         }
 
+        if(!f||f[`${n}t025${a}`])c.push(`.${cn}t025${a}{${p}-top:${s025}}`)
+        if(!f||f[`${n}t050${a}`])c.push(`.${cn}t050${a}{${p}-top:${s050}}`)
+        if(!f||f[`${n}t075${a}`])c.push(`.${cn}t075${a}{${p}-top:${s075}}`)
         if(!f||f[`${n}t1${a}`])c.push(`.${cn}t1${a}{${p}-top:${s1}}`)
         if(!f||f[`${n}t2${a}`])c.push(`.${cn}t2${a}{${p}-top:${s2}}`)
         if(!f||f[`${n}t3${a}`])c.push(`.${cn}t3${a}{${p}-top:${s3}}`)
         if(!f||f[`${n}t4${a}`])c.push(`.${cn}t4${a}{${p}-top:${s4}}`)
         if(!f||f[`${n}t5${a}`])c.push(`.${cn}t5${a}{${p}-top:${s5}}`)
         if(!f||f[`${n}t6${a}`])c.push(`.${cn}t6${a}{${p}-top:${s6}}`)
+        if(!f||f[`${n}t7${a}`])c.push(`.${cn}t7${a}{${p}-top:${s7}}`)
+        if(!f||f[`${n}t8${a}`])c.push(`.${cn}t8${a}{${p}-top:${s8}}`)
+        if(!f||f[`${n}t9${a}`])c.push(`.${cn}t9${a}{${p}-top:${s9}}`)
+        if(!f||f[`${n}t10${a}`])c.push(`.${cn}t10${a}{${p}-top:${s10}}`)
         if(!f||f[`${n}t0${a}`])c.push(`.${cn}t0${a}{${p}-top:${s0}}`)
 
+        if(!f||f[`${n}b025${a}`])c.push(`.${cn}b025${a}{${p}-bottom:${s025}}`)
+        if(!f||f[`${n}b050${a}`])c.push(`.${cn}b050${a}{${p}-bottom:${s050}}`)
+        if(!f||f[`${n}b075${a}`])c.push(`.${cn}b075${a}{${p}-bottom:${s075}}`)
         if(!f||f[`${n}b1${a}`])c.push(`.${cn}b1${a}{${p}-bottom:${s1}}`)
         if(!f||f[`${n}b2${a}`])c.push(`.${cn}b2${a}{${p}-bottom:${s2}}`)
         if(!f||f[`${n}b3${a}`])c.push(`.${cn}b3${a}{${p}-bottom:${s3}}`)
         if(!f||f[`${n}b4${a}`])c.push(`.${cn}b4${a}{${p}-bottom:${s4}}`)
         if(!f||f[`${n}b5${a}`])c.push(`.${cn}b5${a}{${p}-bottom:${s5}}`)
         if(!f||f[`${n}b6${a}`])c.push(`.${cn}b6${a}{${p}-bottom:${s6}}`)
+        if(!f||f[`${n}b7${a}`])c.push(`.${cn}b7${a}{${p}-bottom:${s7}}`)
+        if(!f||f[`${n}b8${a}`])c.push(`.${cn}b8${a}{${p}-bottom:${s8}}`)
+        if(!f||f[`${n}b9${a}`])c.push(`.${cn}b9${a}{${p}-bottom:${s9}}`)
+        if(!f||f[`${n}b10${a}`])c.push(`.${cn}b10${a}{${p}-bottom:${s10}}`)
         if(!f||f[`${n}b0${a}`])c.push(`.${cn}b0${a}{${p}-bottom:${s0}}`)
 
+        if(!f||f[`${n}l025${a}`])c.push(`.${cn}l025${a}{${p}-left:${s025}}`)
+        if(!f||f[`${n}l050${a}`])c.push(`.${cn}l050${a}{${p}-left:${s050}}`)
+        if(!f||f[`${n}l075${a}`])c.push(`.${cn}l075${a}{${p}-left:${s075}}`)
         if(!f||f[`${n}l1${a}`])c.push(`.${cn}l1${a}{${p}-left:${s1}}`)
         if(!f||f[`${n}l2${a}`])c.push(`.${cn}l2${a}{${p}-left:${s2}}`)
         if(!f||f[`${n}l3${a}`])c.push(`.${cn}l3${a}{${p}-left:${s3}}`)
         if(!f||f[`${n}l4${a}`])c.push(`.${cn}l4${a}{${p}-left:${s4}}`)
         if(!f||f[`${n}l5${a}`])c.push(`.${cn}l5${a}{${p}-left:${s5}}`)
         if(!f||f[`${n}l6${a}`])c.push(`.${cn}l6${a}{${p}-left:${s6}}`)
+        if(!f||f[`${n}l7${a}`])c.push(`.${cn}l7${a}{${p}-left:${s7}}`)
+        if(!f||f[`${n}l8${a}`])c.push(`.${cn}l8${a}{${p}-left:${s8}}`)
+        if(!f||f[`${n}l9${a}`])c.push(`.${cn}l9${a}{${p}-left:${s9}}`)
+        if(!f||f[`${n}l10${a}`])c.push(`.${cn}l10${a}{${p}-left:${s10}}`)
         if(!f||f[`${n}l0${a}`])c.push(`.${cn}l0${a}{${p}-left:${s0}}`)
 
+        if(!f||f[`${n}r025${a}`])c.push(`.${cn}r025${a}{${p}-right:${s025}}`)
+        if(!f||f[`${n}r050${a}`])c.push(`.${cn}r050${a}{${p}-right:${s050}}`)
+        if(!f||f[`${n}r075${a}`])c.push(`.${cn}r075${a}{${p}-right:${s075}}`)
         if(!f||f[`${n}r1${a}`])c.push(`.${cn}r1${a}{${p}-right:${s1}}`)
         if(!f||f[`${n}r2${a}`])c.push(`.${cn}r2${a}{${p}-right:${s2}}`)
         if(!f||f[`${n}r3${a}`])c.push(`.${cn}r3${a}{${p}-right:${s3}}`)
         if(!f||f[`${n}r4${a}`])c.push(`.${cn}r4${a}{${p}-right:${s4}}`)
         if(!f||f[`${n}r5${a}`])c.push(`.${cn}r5${a}{${p}-right:${s5}}`)
         if(!f||f[`${n}r6${a}`])c.push(`.${cn}r6${a}{${p}-right:${s6}}`)
+        if(!f||f[`${n}r7${a}`])c.push(`.${cn}r7${a}{${p}-right:${s7}}`)
+        if(!f||f[`${n}r8${a}`])c.push(`.${cn}r8${a}{${p}-right:${s8}}`)
+        if(!f||f[`${n}r9${a}`])c.push(`.${cn}r9${a}{${p}-right:${s9}}`)
+        if(!f||f[`${n}r10${a}`])c.push(`.${cn}r10${a}{${p}-right:${s10}}`)
         if(!f||f[`${n}r0${a}`])c.push(`.${cn}r0${a}{${p}-right:${s0}}`)
 
+        if(!f||f[`${n}v025${a}`])c.push(`.${cn}v025${a}{${p}-top:${s025};${p}-bottom:${s025}}`)
+        if(!f||f[`${n}v050${a}`])c.push(`.${cn}v050${a}{${p}-top:${s050};${p}-bottom:${s050}}`)
+        if(!f||f[`${n}v075${a}`])c.push(`.${cn}v075${a}{${p}-top:${s075};${p}-bottom:${s075}}`)
         if(!f||f[`${n}v1${a}`])c.push(`.${cn}v1${a}{${p}-top:${s1};${p}-bottom:${s1}}`)
         if(!f||f[`${n}v2${a}`])c.push(`.${cn}v2${a}{${p}-top:${s2};${p}-bottom:${s2}}`)
         if(!f||f[`${n}v3${a}`])c.push(`.${cn}v3${a}{${p}-top:${s3};${p}-bottom:${s3}}`)
         if(!f||f[`${n}v4${a}`])c.push(`.${cn}v4${a}{${p}-top:${s4};${p}-bottom:${s4}}`)
         if(!f||f[`${n}v5${a}`])c.push(`.${cn}v5${a}{${p}-top:${s5};${p}-bottom:${s5}}`)
         if(!f||f[`${n}v6${a}`])c.push(`.${cn}v6${a}{${p}-top:${s6};${p}-bottom:${s6}}`)
+        if(!f||f[`${n}v7${a}`])c.push(`.${cn}v7${a}{${p}-top:${s7};${p}-bottom:${s7}}`)
+        if(!f||f[`${n}v8${a}`])c.push(`.${cn}v8${a}{${p}-top:${s8};${p}-bottom:${s8}}`)
+        if(!f||f[`${n}v9${a}`])c.push(`.${cn}v9${a}{${p}-top:${s9};${p}-bottom:${s9}}`)
+        if(!f||f[`${n}v10${a}`])c.push(`.${cn}v10${a}{${p}-top:${s10};${p}-bottom:${s10}}`)
         if(!f||f[`${n}v0${a}`])c.push(`.${cn}v0${a}{${p}-top:${s0};${p}-bottom:${s0}}`)
 
+        if(!f||f[`${n}h025${a}`])c.push(`.${cn}h025${a}{${p}-left:${s025};${p}-right:${s025}}`)
+        if(!f||f[`${n}h050${a}`])c.push(`.${cn}h050${a}{${p}-left:${s050};${p}-right:${s050}}`)
+        if(!f||f[`${n}h075${a}`])c.push(`.${cn}h075${a}{${p}-left:${s075};${p}-right:${s075}}`)
         if(!f||f[`${n}h1${a}`])c.push(`.${cn}h1${a}{${p}-left:${s1};${p}-right:${s1}}`)
         if(!f||f[`${n}h2${a}`])c.push(`.${cn}h2${a}{${p}-left:${s2};${p}-right:${s2}}`)
         if(!f||f[`${n}h3${a}`])c.push(`.${cn}h3${a}{${p}-left:${s3};${p}-right:${s3}}`)
         if(!f||f[`${n}h4${a}`])c.push(`.${cn}h4${a}{${p}-left:${s4};${p}-right:${s4}}`)
         if(!f||f[`${n}h5${a}`])c.push(`.${cn}h5${a}{${p}-left:${s5};${p}-right:${s5}}`)
         if(!f||f[`${n}h6${a}`])c.push(`.${cn}h6${a}{${p}-left:${s6};${p}-right:${s6}}`)
+        if(!f||f[`${n}h7${a}`])c.push(`.${cn}h7${a}{${p}-left:${s7};${p}-right:${s7}}`)
+        if(!f||f[`${n}h8${a}`])c.push(`.${cn}h8${a}{${p}-left:${s8};${p}-right:${s8}}`)
+        if(!f||f[`${n}h9${a}`])c.push(`.${cn}h9${a}{${p}-left:${s9};${p}-right:${s9}}`)
+        if(!f||f[`${n}h10${a}`])c.push(`.${cn}h10${a}{${p}-left:${s10};${p}-right:${s10}}`)
         if(!f||f[`${n}h0${a}`])c.push(`.${cn}h0${a}{${p}-left:${s0};${p}-right:${s0}}`)
     }
 
@@ -489,12 +545,20 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('grid4','display:grid;grid-template-columns:1fr 1fr 1fr 1fr')
     add('grid5','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr')
     add('grid6','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr')
+    add('grid7','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+    add('grid8','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+    add('grid9','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+    add('grid10','display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr')
     add('gridAuto1','display:grid;grid-template-columns:auto')
     add('gridAuto2','display:grid;grid-template-columns:auto auto')
     add('gridAuto3','display:grid;grid-template-columns:auto auto auto')
     add('gridAuto4','display:grid;grid-template-columns:auto auto auto auto')
     add('gridAuto5','display:grid;grid-template-columns:auto auto auto auto auto')
     add('gridAuto6','display:grid;grid-template-columns:auto auto auto auto auto auto')
+    add('gridAuto7','display:grid;grid-template-columns:auto auto auto auto auto auto auto')
+    add('gridAuto8','display:grid;grid-template-columns:auto auto auto auto auto auto auto auto')
+    add('gridAuto9','display:grid;grid-template-columns:auto auto auto auto auto auto auto auto auto')
+    add('gridAuto10','display:grid;grid-template-columns:auto auto auto auto auto auto auto auto auto auto')
     add('displayGrid','display:grid')
     add('displayInlineGrid','display:inline-grid')
     add('offScreen','position:fixed !important;left:-101vw;top:-101vh;max-width:100vw;max-height:100vh;overflow:clip;pointer-events:none')
@@ -525,10 +589,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('zIndex10','z-index:10')
     add('zIndexMax','z-index:99999')
     add('opacity0','opacity:0')
-    add('opacity25','opacity:0.25')
-    add('opacity50','opacity:0.5')
-    add('opacity75','opacity:0.75')
-    add('opacity100','opacity:1')
+    add('opacity025','opacity:0.25')
+    add('opacity050','opacity:0.5')
+    add('opacity075','opacity:0.75')
+    add('opacity1','opacity:1')
     add('semiTransparent',`opacity:${semiTransparency}`)
 
     if(includeAnimations){
