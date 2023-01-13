@@ -76,3 +76,5 @@ export interface OpValueContainer<T>
 export type EmptyFunction=()=>void;
 
 export type AnyFunction=(...args:any[])=>any;
+
+export type Side='left'|'right'|'top'|'bottom';
