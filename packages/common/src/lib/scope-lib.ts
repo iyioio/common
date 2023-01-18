@@ -743,6 +743,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         recreate,
         parent,
         isInited,
+        initCalled:()=>initCalled,
         getInitPromise:()=>initPromiseSource.promise,
         [ScopeDefineType]:_defineType,
         [ScopeDefineCallableType]:_defineCallableType,

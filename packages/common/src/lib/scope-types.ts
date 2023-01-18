@@ -126,6 +126,8 @@ export interface Scope
 
     isInited():boolean;
 
+    initCalled():boolean;
+
     /**
      * Returns an array of types scoped to this scope
      */
