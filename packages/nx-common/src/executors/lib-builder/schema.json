@@ -33,6 +33,10 @@
         "type":"string",
         "description":"Converts dependencies that start with the given value in the compatible dependencies. Only exact version dependencies are effected. The NX_LIB_COMPATIBLE_DEPS env var is used as a fallback value"
     },
+    "moreThanEqDeps":{
+        "type":"boolean",
+        "description":"If true all exact version deps will be converted into a more than equal dep. This can be useful for allowing maximum compatibility of dependencies."
+    },
 
     "disableEsm":{
         "type":"boolean",

@@ -6,6 +6,7 @@ export interface LibBuilderExecutorSchema extends ExecutorOptions {
     passthrough?:boolean;
     approximatelyDeps?:string|null;
     compatibleDeps?:string|null;
+    moreThanEqDeps?:boolean;
 
 
     commonJsTsConfig?:string;

@@ -7,16 +7,21 @@ import Path = require('path');
 
 const autoConfig='auto';
 
-const updateDeps=(filter:string,type:'^'|'~',deps:{[depName:string]:string})=>{
-        console.log({filter,type,deps})
+const updateDeps=(filter:string|RegExp,type:'^'|'~'|'>=',deps:{[depName:string]:string},updates:{[depName:string]:string})=>{
+
     if(!deps || !filter){
         return;
     }
+    let match:RegExpExecArray|null=null;
     for(const name in deps){
         const version=deps[name];
         console.log(`${name} -> ${version}`)
-        if(name.startsWith(filter) && !version.startsWith('^') && !version.startsWith('~')){
-            deps[name]=type+version;
+        if( ((typeof filter ==='string')?
+                name.startsWith(filter) && !version.startsWith('^') && !version.startsWith('~'):
+                (match=filter.exec(version))
+            ) && !updates[name]
+        ){
+            updates[name]=deps[name]=type+(match?.[1]??version);
         }
     }
 }
@@ -27,6 +32,7 @@ export default async function runExecutor(
         passthrough=false,
         approximatelyDeps=process.env['NX_LIB_APPROXIMATELY_DEPS'],
         compatibleDeps=process.env['NX_LIB_COMPATIBLE_DEPS'],
+        moreThanEqDeps=process.env['NX_LIB_MORE_EQ_DEPS']==='true' || process.env['NX_LIB_MORE_EQ_DEPS']==='1',
 
         watch,
         outputPath,
@@ -95,18 +101,26 @@ export default async function runExecutor(
             pkg.module=mainParts.join('/');
         }
 
+        const updates:{[name:string]:string}={};
+
         if(compatibleDeps){
-            updateDeps(compatibleDeps,'~',pkg.dependencies);
-            updateDeps(compatibleDeps,'~',pkg.devDependencies);
-            updateDeps(compatibleDeps,'~',pkg.peerDependencies);
+            updateDeps(compatibleDeps,'~',pkg.dependencies,updates);
+            updateDeps(compatibleDeps,'~',pkg.devDependencies,updates);
+            updateDeps(compatibleDeps,'~',pkg.peerDependencies,updates);
         }
 
-        console.log(`__________________ ${approximatelyDeps}`)
+        console.log(`__________________ ${approximatelyDeps}, ${moreThanEqDeps}, ${JSON.stringify(process.env['NX_LIB_MORE_EQ_DEPS'])}`)
 
         if(approximatelyDeps){
-            updateDeps(approximatelyDeps,'^',pkg.dependencies);
-            updateDeps(approximatelyDeps,'^',pkg.devDependencies);
-            updateDeps(approximatelyDeps,'^',pkg.peerDependencies);
+            updateDeps(approximatelyDeps,'^',pkg.dependencies,updates);
+            updateDeps(approximatelyDeps,'^',pkg.devDependencies,updates);
+            updateDeps(approximatelyDeps,'^',pkg.peerDependencies,updates);
+        }
+
+        if(moreThanEqDeps){
+            updateDeps(/([0-9.]+)/,'>=',pkg.dependencies,updates);
+            updateDeps(/([0-9.]+)/,'>=',pkg.devDependencies,updates);
+            updateDeps(/([0-9.]+)/,'>=',pkg.peerDependencies,updates);
         }
 
         await writeFile(packageJsonPath,JSON.stringify(pkg,null,4));

@@ -1,5 +1,5 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
-import { createScope, EnvParams, generateRandomTestStoreItem, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
+import { createScope, EnvParams, generateRandomTestStoreItem, parseConfigBool, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
 import { testDynamoDbTable } from './dynamo-test-lib';
 import { DynamoClient } from './DynamoClient';
 
@@ -7,6 +7,13 @@ import { DynamoClient } from './DynamoClient';
 
 
 describe('DynamoStore', () => {
+
+    if(!parseConfigBool(process.env['NX_RUN_LONG_RUNNING_TEST'])){
+        it('should skip dynamo tests',()=>{
+            // do nothing
+        })
+        return;
+    }
 
     const putGetDeleteAsync=async (scope:Scope, onStore?:(store:DynamoClient)=>void)=>{
 
