@@ -661,7 +661,7 @@ export const bcn=(
         }else if(classNames.length===2){
             return cn(classNames[0],classNames[1],baseLayoutCn(props));
         }else if(classNames.length===3){
-            return cn(classNames[0],classNames[1],classNames[3],baseLayoutCn(props));
+            return cn(classNames[0],classNames[1],classNames[2],baseLayoutCn(props));
         }else{
             return cn(...classNames,baseLayoutCn(props));
         }
