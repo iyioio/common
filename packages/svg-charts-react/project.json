@@ -40,6 +40,37 @@
                 "jestConfig": "packages/svg-charts-react/jest.config.ts",
                 "passWithNoTests": true
             }
+        },
+        "storybook": {
+            "executor": "@nrwl/storybook:storybook",
+            "options": {
+                "uiFramework": "@storybook/react",
+                "port": 4401,
+                "config": {
+                    "configFolder": "packages/svg-charts-react/.storybook"
+                }
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true
+                }
+            }
+        },
+        "build-storybook": {
+            "executor": "@nrwl/storybook:build",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "uiFramework": "@storybook/react",
+                "outputPath": "dist/storybook/svg-charts-react",
+                "config": {
+                    "configFolder": "packages/svg-charts-react/.storybook"
+                }
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true
+                }
+            }
         }
     },
     "tags": []

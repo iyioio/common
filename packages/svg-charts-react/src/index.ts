@@ -1,1 +1,1 @@
-export * from './lib/svg-charts-react';
+export * from './lib/LineSvgChartView';

@@ -12,6 +12,7 @@ export * from "./lib/react-util";
 export * from "./lib/rxjs-hooks";
 export * from "./lib/scope-hooks";
 export * from "./lib/SlimButton";
+export * from "./lib/story-lib";
 export * from "./lib/Text";
 export * from "./lib/tool-tip/tool-tip-lib";
 export * from "./lib/tool-tip/ToolTipBase";

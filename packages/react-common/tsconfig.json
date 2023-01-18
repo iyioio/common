@@ -1,8 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "jsx": "react-jsx",
-        "module": "commonjs",
+        "jsx": "preserve",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
