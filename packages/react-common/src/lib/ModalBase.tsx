@@ -36,7 +36,7 @@ export function ModalBase({
                 </div>
             </Portal>
 
-            <Style id="tyEOMxC0RWXJwy3bzQEI" global jsx>{css`
+            <Style id="iyio-ModalBase-tyEOMxC0RWXJwy3bzQEI" global jsx>{css`
                 .ModelBase, .ModelBase-bg{
                     position:absolute;
                     left:0;

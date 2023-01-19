@@ -1,4 +1,6 @@
+import { css } from "@iyio/common";
 import { useEffect, useState } from "react";
+import Style from "styled-jsx/style";
 import type { ToolTipStateSubject } from "./tool-tip-lib";
 
 export interface ToolTipContainerProps
@@ -52,7 +54,7 @@ export default function ToolTipContainer({
             <div ref={setInner}>
                 {children}
             </div>
-            <style global jsx>{`
+            <Style id="iyio-ToolTipContainer-pFyNcGBxgtcbapEYvrGZ" global jsx>{css`
                 .ToolTipContainer{
                     pointer-events:none;
                     opacity:0;
@@ -66,7 +68,7 @@ export default function ToolTipContainer({
                 .ToolTipContainer.active{
                     opacity:1;
                 }
-            `}</style>
+            `}</Style>
         </div>
     )
 

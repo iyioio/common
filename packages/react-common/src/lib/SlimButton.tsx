@@ -12,7 +12,7 @@ export function SlimButton({
     return (
         <ButtonBase {...props} baseClassName="SlimButton">
             {children}
-            <Style id="tbCcmdWT9eWU4kWaw3SD" global jsx>{css`
+            <Style id="iyio-SlimButton-tbCcmdWT9eWU4kWaw3SD" global jsx>{css`
                 .SlimButton{
                     display:flex;
                     border:none;
