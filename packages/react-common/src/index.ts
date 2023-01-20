@@ -8,6 +8,7 @@ export * from "./lib/Image";
 export * from "./lib/ModalBase";
 export * from "./lib/page-lib";
 export * from "./lib/PageTransition";
+export * from "./lib/PageTransitionOptions";
 export * from "./lib/Portal";
 export * from "./lib/portal-lib";
 export * from "./lib/PortalRenderer";

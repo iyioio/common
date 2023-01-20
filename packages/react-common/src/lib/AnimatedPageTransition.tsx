@@ -1,6 +1,7 @@
 import { css, RouteInfo } from "@iyio/common";
 import Style from "styled-jsx/style";
 import { PageTransition } from "./PageTransition";
+import { PageTransitionOptions } from "./PageTransitionOptions";
 
 export const defaultAnimatedPageTransitionKeyframes=css`
     @keyframes PageTransitionEnter
@@ -43,16 +44,10 @@ export const defaultAnimatedPageTransitionKeyframes=css`
     }
 `
 
-interface AnimatedPageTransitionProps
+export interface AnimatedPageTransitionProps extends PageTransitionOptions
 {
     routeInfo:RouteInfo;
     children:any;
-    keyframes?:string;
-    transSpeed?:number;
-    enterName?:string;
-    exitName?:string;
-    enterContentName?:string;
-    exitContentName?:string;
 }
 
 export function AnimatedPageTransition({

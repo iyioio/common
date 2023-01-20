@@ -10,12 +10,14 @@ const styleBaseId='__AoRD5JpZOl3Lg2RcD98y__';
 export interface BaseLayoutStyleSheetProps extends Omit<BaseLayoutCssOptions,'lines'>
 {
     optimizeForHybridRendering?:boolean;
+    debugOptimizations?:boolean;
     incremental?:boolean;
     directInsert?:boolean;
 }
 
 export function BaseLayoutStyleSheet({
     optimizeForHybridRendering,
+    debugOptimizations,
     incremental,
     directInsert,
 
@@ -29,7 +31,7 @@ export function BaseLayoutStyleSheet({
     colors,
     fontConfig,
     semiTransparency,
-    boxSizing
+    boxSizing,
 }:BaseLayoutStyleSheetProps){
 
     if(optimizeForHybridRendering){
@@ -79,17 +81,25 @@ export function BaseLayoutStyleSheet({
         }
 
         const allStyles=globalThis.document.getElementsByTagName('style');
+        let firstStyle:HTMLElement|null=null;
         for(let i=0;i<allStyles.length;i++){
             const style=allStyles.item(i);
             if(style?.id?.endsWith(styleBaseId)){
-                style?.remove();
+                style.innerHTML='';
+                if(!firstStyle){
+                    firstStyle=style;
+                }
             }
         }
 
         const style=globalThis.document.createElement('style');
         style.id=id;
         style.innerHTML=lines.join('\n');
-        globalThis.document.head.appendChild(style);
+        if(firstStyle){
+            globalThis.document.head.insertBefore(style,firstStyle);
+        }else{
+            globalThis.document.head.appendChild(style);
+        }
 
         return ()=>{
             style.remove();
@@ -98,6 +108,14 @@ export function BaseLayoutStyleSheet({
     },[lines,directInsert])
 
     const id=`iyio-BaseLayout-${incremental?'incremental-':''}${styleBaseId}`;
+
+    if(debugOptimizations && optimizeForHybridRendering && !directInsert){
+        console.info('--- Optimized BaseLayoutStyleSheet CSS ---');
+        const css=lines.join('\n')
+        console.info(css.length/1000+'KB');
+        console.info(css)
+        console.info('------');
+    }
 
     return (
         <Style key={id} id={id} global jsx>{directInsert?'':lines.join('\n')}</Style>
