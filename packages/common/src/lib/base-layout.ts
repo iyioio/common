@@ -130,6 +130,10 @@ Object.freeze(baseLayoutColorBaseProps);
 export const baseLayoutColorMappedProps={
     colorPrimary:'ioColorPrimary',//mapped color1
     colorSecondary:'ioColorSecondary',//mapped color2
+    colorInfo:'ioColorInfo',// mapped - color6
+    colorSuccess:'ioColorSuccess',// mapped - color7
+    colorWarn:'ioColorWarn',// mapped - color8
+    colorDanger:'ioColorDanger',// mapped - color9
     colorForeground:'ioColorForeground',// mapped - color10
     colorBg:'ioColorBg',// mapped - color11
     colorBorder:'ioColorBorder',// mapped - color12

@@ -223,6 +223,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
 
     if(!cl.colorPrimary){cl.colorPrimary='color1'}
     if(!cl.colorSecondary){cl.colorSecondary='color2'}
+    if(!cl.colorInfo){cl.colorInfo='color6'}
+    if(!cl.colorSuccess){cl.colorSuccess='color7'}
+    if(!cl.colorWarn){cl.colorWarn='color8'}
+    if(!cl.colorDanger){cl.colorDanger='color9'}
     if(!cl.colorForeground){cl.colorForeground='color10'}
     if(!cl.colorBg){cl.colorBg='color11'}
     if(!cl.colorBorder){cl.colorBorder='color12'}
@@ -431,6 +435,7 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         if(fc.normalize){
             c.push('h1,h2,h3,h4,h5,h6,p{margin:0;font-weight:400}')
         }
+        c.push('.Text{display:inline-block}')
     }
     addWithAlias('face10',fc,generateFontFaceCss(fc.face10))
     addWithAlias('face9',fc,generateFontFaceCss(fc.face9))

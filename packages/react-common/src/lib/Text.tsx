@@ -42,6 +42,8 @@ export function Text({
         }
     }
 
-    return React.createElement(elem,{ref:elemRef,style,className:baseLayoutCn(props)},children??text);
+    const c=baseLayoutCn(props);
+
+    return React.createElement(elem,{ref:elemRef,style,className:c?'Text '+c:'Text'},children??text);
 
 }
