@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import {
     cognitoIdentityPoolIdParam,
@@ -195,13 +195,10 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
                 Password:password
             });
 
-
-            const userData={
+            const cognitoUser=new CognitoUser({
                 Username:email,
                 Pool:this.userPool,
-            }
-
-            const cognitoUser=new CognitoUser(userData);
+            });
             const callbacks:IAuthenticationCallback={
                 onSuccess:async (session,confirmationNeeded)=>{
                     if(confirmationNeeded){
@@ -239,7 +236,12 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         });
     }
 
-    public async registerEmailPasswordAsync?(email: string, password: string): Promise<AuthRegisterResult | undefined> {
+    public async registerEmailPasswordAsync(
+        email:string,
+        password:string,
+        userData?:HashMap,
+    ):Promise<AuthRegisterResult|undefined>{
+
         return new Promise<AuthRegisterResult|undefined>((resolve)=>{
 
             const atts:CognitoUserAttribute[]=[
@@ -248,6 +250,17 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
                     Value:email
                 })
             ]
+
+            if(userData){
+                for(const e in userData){
+                    if(!atts.find(a=>a.Name===e)){
+                        atts.push(new CognitoUserAttribute({
+                            Name:e,
+                            Value:userData[e]?.toString()??'',
+                        }))
+                    }
+                }
+            }
 
             this.userPool.signUp(email,password,atts,[],async (err,result)=>{
                 if(err || !result?.user){
@@ -280,6 +293,32 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
                         verificationDestination:email
                     })
                 }
+            })
+        });
+    }
+
+    public verifyAsync(identity:string,code:string):Promise<AuthVerificationResult>
+    {
+        return new Promise<AuthVerificationResult>((resolve)=>{
+            const cognitoUser=new CognitoUser({
+                Username:identity,
+                Pool:this.userPool,
+            });
+            cognitoUser.confirmRegistration(code,true,(err)=>{
+
+                if(err){
+                    resolve({
+                        success:false,
+                        message:'Verification failed',
+                        error:err
+                    })
+                    return;
+                }
+
+                resolve({
+                    success:true,
+                    message:'Verification complete'
+                })
             })
         });
     }

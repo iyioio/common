@@ -3,6 +3,7 @@ import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, U
 import { UserFactory } from "./auth.deps";
 import { BaseUser, BaseUserOptions } from "./BaseUser";
 import { delayAsync } from "./common-lib";
+import { HashMap } from "./common-types";
 import { FactoryTypeDef, Scope } from "./scope-types";
 import { shortUuid } from "./uuid";
 
@@ -102,7 +103,12 @@ export class MemoryAuthProvider implements AuthProvider
             }
         }
     }
-    public async registerEmailPasswordAsync(email: string, password: string): Promise<AuthRegisterResult | undefined> {
+    public async registerEmailPasswordAsync(
+        email:string,
+        password:string,
+        userData?:HashMap
+    ):Promise<AuthRegisterResult|undefined>{
+
         await this.delayAsync();
 
         if(this.users.find(u=>u.email===email)){
@@ -120,7 +126,8 @@ export class MemoryAuthProvider implements AuthProvider
             providerData:{
                 type:this.type,
                 userId:id,
-            }
+            },
+            data:userData
         }
 
         const baseUser=this.options.userFactory.generate(options);

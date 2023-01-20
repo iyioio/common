@@ -1,4 +1,4 @@
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { BaseUser } from "./BaseUser";
 import { breakFunction, continueFunction } from "./common-lib";
@@ -147,7 +147,7 @@ export class AuthService implements IDisposable, IInit
         );
     }
 
-    public async registerEmailPasswordAsync(email:string,password:string):Promise<AuthRegisterResult>
+    public async registerEmailPasswordAsync(email:string,password:string,userData?:HashMap):Promise<AuthRegisterResult>
     {
         if(!isValidEmail(email)){
             return {
@@ -157,9 +157,21 @@ export class AuthService implements IDisposable, IInit
         }
         return await this.handlerRegisterResultAsync(
             await this.authProviders.getFirstAsync(null,async provider=>{
-                return await provider.registerEmailPasswordAsync?.(email,password);
+                return await provider.registerEmailPasswordAsync?.(email,password,userData);
             })
         );
+    }
+
+    public async verifyAsync(identity:string,code:string):Promise<AuthVerificationResult>
+    {
+        const result=await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.verifyAsync?.(identity,code);
+        })
+
+        return result??{
+            success:false,
+            message:'Verification not supported'
+        }
     }
 
     public async signOutAsync():Promise<void>

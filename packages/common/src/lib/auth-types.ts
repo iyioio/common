@@ -1,5 +1,5 @@
 import type { BaseUser, BaseUserOptions } from "./BaseUser";
-import { IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
+import { HashMap, IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
 
 export type AuthSignInResult={
     success:true;
@@ -22,6 +22,12 @@ export type AuthRegisterResult={
     verificationDestination:string;
 } | {
     status:'error',
+    message:string;
+    error?:any;
+}
+
+export type AuthVerificationResult={
+    success:boolean,
     message:string;
     error?:any;
 }
@@ -99,6 +105,13 @@ export interface AuthProvider extends IOpInit, IOpDisposable
      * Register a user using their email and password. Undefined can be returned to indicate the
      * provider does not support registering using with the given email.
      */
-    registerEmailPasswordAsync?(email:string,password:string):Promise<AuthRegisterResult|undefined>;
+    registerEmailPasswordAsync?(email:string,password:string,userData?:HashMap):Promise<AuthRegisterResult|undefined>;
+
+    /**
+     * Verifies a user after registration
+     * @param identity The email, phone or any other primary identifier used when registering the user
+     * @param code The verification code the user received
+     */
+    verifyAsync?(identity:string,code:string):Promise<AuthVerificationResult>;
 
 }
