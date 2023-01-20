@@ -53,32 +53,32 @@ export const isPromise=<T=any>(value:any):value is Promise<T>=>(
     (typeof (value as Partial<Promise<T>>)?.finally === 'function')
 )?true:false;
 
-export const dump=<T>(value:T):T=>{
-    console.log(value);
+export const dump=<T>(value:T,...log:any[]):T=>{
+    console.log(value,...log);
     return value;
 }
 
-export const dumpDebug=<T>(value:T):T=>{
-    console.debug(value);
+export const dumpDebug=<T>(value:T,...log:any[]):T=>{
+    console.debug(value,...log);
     return value;
 }
 
-export const dumpInfo=<T>(value:T):T=>{
-    console.info(value);
+export const dumpInfo=<T>(value:T,...log:any[]):T=>{
+    console.info(value,...log);
     return value;
 }
 
-export const dumpLog=<T>(value:T):T=>{
-    console.log(value);
+export const dumpLog=<T>(value:T,...log:any[]):T=>{
+    console.log(value,...log);
     return value;
 }
 
-export const dumpWarn=<T>(value:T):T=>{
-    console.warn(value);
+export const dumpWarn=<T>(value:T,...log:any[]):T=>{
+    console.warn(value,...log);
     return value;
 }
 
-export const dumpError=<T>(value:T):T=>{
-    console.error(value);
+export const dumpError=<T>(value:T,...log:any[]):T=>{
+    console.error(value,...log);
     return value;
 }
