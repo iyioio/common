@@ -3,7 +3,7 @@ import { NextRouter } from "next/router";
 
 export const getRouteInfo=(router:NextRouter):RouteInfo=>{
     return {
-        key:(router as any)._key,
+        key:(router.isReady?'':'not-ready-')+(router as any)._key,
         path:router.pathname,
         asPath:router.asPath,
         route:router.route,
