@@ -49,11 +49,12 @@ export class DynamoClient implements IWithStoreAdapter
     }
 
 
-    public async getAllScanAsync<T>(tableName:string):Promise<T[]>
+    public async getAllScanAsync<T>(tableName:string,commandInput:Partial<ScanCommandInput>={}):Promise<T[]>
     {
 
         const params:ScanCommandInput={
-            TableName:tableName
+            TableName:tableName,
+            ...commandInput
         }
 
         const scanResults:T[] = [];
