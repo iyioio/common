@@ -3,11 +3,7 @@ import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
-import {
-    cognitoIdentityPoolIdParam,
-    cognitoUserPoolClientIdParam,
-    cognitoUserPoolIdParam
-} from './_types.aws-credential-providers';
+import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
 const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
 
@@ -59,17 +55,32 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         this.currentUser=config.currentUser;
     }
 
+    private unCreds:Provider<Credentials>|null=null;
+    public getUnauthenticatedCredentials():Provider<Credentials>{
+        if(!this.unCreds){
+            this.unCreds=fromCognitoIdentityPool({
+                identityPoolId:this.config.identityPoolId,
+                clientConfig:{
+                    region:this.config.region,
+                }
+            });
+        }
+        return this.unCreds;
+    }
+
     private readonly providerMap:HashMap<Provider<Credentials>>={};
     public getAuthProvider():Provider<Credentials>|undefined
     {
         const user=this.currentUser.value;
+        const getAnon=()=>disableCognitoUnauthenticatedParam.get()?
+            undefined:this.getUnauthenticatedCredentials();
         if(!user){
-            return undefined;
+            return getAnon();
         }
 
         const session:CognitoUserSession|undefined=user.providerData.providerData?.[sessionKey];
         if(!session){
-            return undefined;
+            return getAnon();
         }
 
         const token=session.getIdToken().getJwtToken();
