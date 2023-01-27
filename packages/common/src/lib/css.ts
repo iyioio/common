@@ -55,3 +55,5 @@ export const css=(strings:TemplateStringsArray,...values:any[])=>{
 
     return strAry.join('');
 }
+
+export const percentToCssHex=(n:number)=>Math.floor(n*255).toString(16).padStart(2,'0');

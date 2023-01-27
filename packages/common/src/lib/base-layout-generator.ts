@@ -436,6 +436,7 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
             c.push('h1,h2,h3,h4,h5,h6,p{margin:0;font-weight:400}')
         }
         c.push('.Text{display:inline-block}')
+        c.push(`.SlimButton{display:flex;border:none;padding:0;margin:0;background:none;cursor:pointer}`)
     }
     addWithAlias('face10',fc,generateFontFaceCss(fc.face10))
     addWithAlias('face9',fc,generateFontFaceCss(fc.face9))

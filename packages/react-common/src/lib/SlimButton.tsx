@@ -1,27 +1,17 @@
-import { BaseLayoutProps, css } from '@iyio/common';
-import Style from 'styled-jsx/style';
+import { BaseLayoutProps } from '@iyio/common';
 import { ButtonBase, ButtonBaseProps } from "./ButtonBase";
 
-export type SlimButtonProps = ButtonBaseProps & BaseLayoutProps;
+export type SlimButtonProps = ButtonBaseProps & BaseLayoutProps & {unstyled?:boolean};
 
 export function SlimButton({
+    unstyled,
     children,
     ...props
 }:SlimButtonProps){
 
     return (
-        <ButtonBase {...props} baseClassName="SlimButton">
+        <ButtonBase {...props} baseClassName={unstyled?undefined:"SlimButton"}>
             {children}
-            <Style id="iyio-SlimButton-tbCcmdWT9eWU4kWaw3SD" global jsx>{css`
-                .SlimButton{
-                    display:flex;
-                    border:none;
-                    padding:0;
-                    margin:0;
-                    background:none;
-                    cursor:pointer;
-                }
-            `}</Style>
         </ButtonBase>
     )
 
