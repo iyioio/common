@@ -71,8 +71,8 @@ export function AnimatedPageTransition({
             <Style id="iyio-AnimatedPageTransition-P8RnQXyu10LJ8sGlR2PD" global jsx>{css`
 
                 .AnimatedPageTransition, .PageTransition, .PageTransition-container, .PageTransition-item{
-                    width:100vw;
-                    height:100vh;
+                    width:100%;
+                    height:100%;
                     margin:0;
                     padding:0;
                     overflow:hidden;
