@@ -39,6 +39,7 @@ export * from './lib/macros';
 export * from './lib/MemoryStore';
 export * from './lib/mime';
 export * from './lib/NamedValue';
+export * from './lib/numbers';
 export * from './lib/object';
 export * from './lib/pointers';
 export * from './lib/PromiseCache';

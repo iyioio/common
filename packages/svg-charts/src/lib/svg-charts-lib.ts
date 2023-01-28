@@ -48,3 +48,19 @@ let nextId=1;
 export const generateRandomChartId=()=>{
     return `svg-chart-${nextId++}-${Date.now()}-${Math.round(Math.random()*999999)}`
 }
+
+export const getDefaultChartSteps=():number[]=>{
+    const steps=[0.001,0.01,0.1];
+    const ns=[1,2,3,5];
+    let base=1;
+    for(let i=0;i<10;i++){
+        for(const n of ns){
+            const v=n*base;
+            if(v>0 && isFinite(v)){
+                steps.push(v)
+            }
+        }
+        base*=10;
+    }
+    return steps;
+}

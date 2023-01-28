@@ -31,6 +31,7 @@ export interface SvgChartCtrlOptions
     stack?:boolean;
     css?:string;
     className?:string|null;
+    steps?:number[];
 }
 
 export interface ChartData

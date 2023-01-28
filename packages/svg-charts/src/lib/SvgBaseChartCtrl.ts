@@ -1,8 +1,6 @@
-import { deepCompare, escapeHtml, Sides, Size } from "@iyio/common";
-import { classNamePrefix, createEmptyChartData, generateRandomChartId, getViewBoxRect } from "./svg-charts-lib";
+import { deepCompare, escapeHtml, formatNumberWithBases, Sides, Size } from "@iyio/common";
+import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect } from "./svg-charts-lib";
 import { ChartData, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
-
-const steps=[0.001,0.01,0.1,1,2,5,10,20,50,100]
 
 export abstract class SvgBaseChartCtrl
 {
@@ -108,6 +106,7 @@ export abstract class SvgBaseChartCtrl
             autoResize:true,
             removeElementsOnDispose:true,
             min,
+            steps:options?.steps??getDefaultChartSteps(),
 
             ...(options??{}),
         }
@@ -289,6 +288,7 @@ export abstract class SvgBaseChartCtrl
         let valueStep=-1;
 
         let diff=max-min;
+        const steps=this._options.steps;
 
         if(diff>=2){
             min=Math.floor(min);
@@ -551,7 +551,7 @@ export abstract class SvgBaseChartCtrl
                 const h=hLineSpacing;
 
                 const className=`${classNamePrefix}text ${classNamePrefix}text-label ${isFirst?` ${classNamePrefix}text-first`:isLast?` ${classNamePrefix}text-last`:''}`;
-                const text=escapeHtml((Math.round(value*1000)/1000).toString())
+                const text=escapeHtml(formatNumberWithBases(value))
                 obj.innerHTML=`
                     <div class="${className}" title="${text}" style="width:${lw}px;height:${h}px">
                         <div>${text}</div>
