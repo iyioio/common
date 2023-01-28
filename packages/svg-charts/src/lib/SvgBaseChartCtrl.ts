@@ -1,6 +1,6 @@
-import { escapeHtml, Sides, Size } from "@iyio/common";
-import { classNamePrefix, createEmptyChartData, getViewBoxRect } from "./svg-charts-lib";
-import { ChartData, ChartRenderOptions, ChartStyle, SeriesStyle, SvgChartCtrlOptions } from "./svg-charts-types";
+import { deepCompare, escapeHtml, Sides, Size } from "@iyio/common";
+import { classNamePrefix, createEmptyChartData, generateRandomChartId, getViewBoxRect } from "./svg-charts-lib";
+import { ChartData, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
 
 const steps=[0.001,0.01,0.1,1,2,5,10,20,50,100]
 
@@ -19,6 +19,8 @@ export abstract class SvgBaseChartCtrl
      */
     public readonly canvas:SVGGElement;
 
+    private readonly styleElem:HTMLStyleElement;
+
     private _data:ChartData;
     public get data(){return this._data}
     public set data(value:ChartData){
@@ -27,16 +29,28 @@ export abstract class SvgBaseChartCtrl
         this.render();
     }
 
-    private _style:ChartStyle;
-    public get style(){return this._style}
-    public set style(value:ChartStyle){
-        if(this._style===value){return}
-        this._style=value;
-        this.seriesStyle=(value.series??[]).map(s=>this.fillSeriesStyle(s));
+    private _seriesOptions:Partial<SeriesOptions>[]=[];
+    public get seriesOptions(){return this._seriesOptions}
+    public set seriesOptions(value:Partial<SeriesOptions>[]){
+        if(this._seriesOptions===value){return}
+        this._seriesOptions=value;
+        this.filledSeriesOptions=value.map(s=>this.fillSeriesStyle(s));
         this.render();
     }
 
-    private _options:Required<SvgChartCtrlOptions>;
+    private _options:Required<Omit<SvgChartCtrlOptions,'seriesOptions'|'data'>>;
+    public get options(){return {...this._options}}
+    public set options(value:Partial<SvgChartCtrlOptions>){
+        this.setOptions(value);
+    }
+
+    private parseCss(css:string,id:string)
+    {
+        if(id){
+            id='#'+id;
+        }
+        return css.split('@@').join(id);
+    }
 
     private _canvasPadding:Sides={left:60,right:35,top:35,bottom:35};
     public get canvasPadding(){return this._canvasPadding}
@@ -46,6 +60,8 @@ export abstract class SvgBaseChartCtrl
         this.render();
     }
 
+    public get id(){return this._options.id}
+
     private _viewBox:Size={width:1,height:1};
     public get viewBox(){return this._viewBox}
 
@@ -53,7 +69,7 @@ export abstract class SvgBaseChartCtrl
     public get renderOptions(){return this._renderOptions}
 
 
-    public constructor(options?:SvgChartCtrlOptions|null, svg?:SVGSVGElement)
+    public constructor(options?:SvgChartCtrlOptions|null, svg?:SVGSVGElement, skipRender?:boolean)
     {
 
         if(!svg){
@@ -70,16 +86,16 @@ export abstract class SvgBaseChartCtrl
         this.root.classList.add(classNamePrefix+'canvas')
         this.root.appendChild(this.canvas);
 
+        this.styleElem=document.createElement('style');
+        this.svg.appendChild(this.styleElem);
+
         this._data=options?.data??createEmptyChartData();
 
-        this._style=options?.style??{
-
-        }
-        this.seriesStyle=(this._style.series??[]).map(s=>this.fillSeriesStyle(s));
+        this.seriesOptions=options?.seriesOptions??[];
 
 
         this._options={
-
+            id:options?.id??(this.svg.id||generateRandomChartId()),
             hLines:true,
             hLinesFullWidth:false,
             vLines:true,
@@ -90,16 +106,44 @@ export abstract class SvgBaseChartCtrl
             viewBox:null,
             showLabelLabels:true,
             showValueLabels:true,
+            stack:false,
+            vLinePadding:0,
+            css:'',
+            className:options?.className??null,
+            autoResize:true,
+            removeElementsOnDispose:true,
 
             ...(options??{}),
-
-            data:this._data,
-            style:this.style,
         }
 
         this._renderOptions=this.getRenderOptions();
 
+        this.updateCss();
+        if(!skipRender){
+            this.render();
+        }
+
+        window.addEventListener('resize',this.onResize);
+        if(window.ResizeObserver){
+            let size={width:this.svg.clientWidth,height:this.svg.clientHeight};
+            this.resizeObserver=new ResizeObserver(()=>{
+                if(!this.resizeObserved){
+                    this.resizeObserved=true;
+                    window.removeEventListener('resize',this.onResize);
+                }
+                if(size.width!==this.svg.clientWidth || size.height!==this.svg.clientHeight){
+                    size={width:this.svg.clientWidth,height:this.svg.clientHeight};
+                    this.render();
+                }
+            })
+            this.resizeObserver.observe(this.svg);
+        }else{
+            this.resizeObserver=null;
+        }
     }
+
+    private readonly resizeObserver:ResizeObserver|null;
+    private resizeObserved=false;
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
@@ -109,7 +153,97 @@ export abstract class SvgBaseChartCtrl
             return;
         }
         this._isDisposed=true;
-        this.root.remove();
+        window.removeEventListener('resize',this.onResize);
+        this.resizeObserver?.unobserve(this.svg);
+        this.resizeObserver?.disconnect();
+        if(this._options.removeElementsOnDispose){
+            this.root.remove();
+            this.styleElem.remove();
+        }
+    }
+
+    private readonly onResize=()=>{
+        if(this._options.autoResize){
+            this.render();
+        }
+    }
+
+    private prevClassName:string|null=null;
+    private updateCss()
+    {
+        this.styleElem.innerHTML=this.parseCss(this._options.css,this._options.id);
+        this.svg.id=this._options.id;
+        if(this.prevClassName!==this._options.className){
+            if(this.prevClassName){
+                this.svg.classList.remove(this.prevClassName);
+            }
+            if(this._options.className){
+                this.svg.classList.add(this._options.className);
+            }
+        }
+    }
+
+    private setOptions(value:Partial<SvgChartCtrlOptions>,skipRender=false){
+        if(!value){
+            return;
+        }
+        let changed=false;
+        let updateCss=false;
+        this.pauseRender=true;
+        try{
+            for(const e in value){
+                const v=(value as any)[e];
+                let _continue=true;
+                switch(e as keyof SvgChartCtrlOptions){
+
+                    case 'data':
+                        if(v!==this._data){
+                            changed=true;
+                            this.data=v;
+                        }
+                        break;
+
+                    case 'seriesOptions':{
+                        const current=this.filledSeriesOptions;
+                        this.seriesOptions=v;
+                        if(!deepCompare(current,this.filledSeriesOptions)){
+                            changed=true;
+                        }
+                        break;
+                    }
+
+                    case 'className':
+                    case 'id':
+                    case 'css':
+                        if(value.id!==this._options.id || value.css!==this._options.css){
+                            updateCss=true;
+                        }
+                        break;
+
+                    default:
+                        _continue=false;
+                        break;
+                }
+                if(_continue){
+                    (this._options as any)[e]=v;
+                    continue;
+                }
+                if(e===undefined || (this._options as any)[e]===v){
+                    continue;
+                }
+                changed=true;
+                (this._options as any)[e]=v;
+
+            }
+        }finally{
+            this.pauseRender=false;
+        }
+        if(updateCss){
+            this.updateCss();
+        }
+        if(changed && !skipRender){
+            this.render();
+        }
     }
 
 
@@ -118,8 +252,12 @@ export abstract class SvgBaseChartCtrl
     {
         const valueCount=this.data?.series?.[0]?.length??0;
 
-        const width=Math.max(0,this._viewBox.width-this._canvasPadding.left-this._canvasPadding.right)||1;
-        const height=Math.max(0,this._viewBox.height-this._canvasPadding.top-this._canvasPadding.bottom)||1;
+        const preCanvasWidth=Math.max(0,this._viewBox.width-this._canvasPadding.left-this._canvasPadding.right)||1;
+        const preCanvasHeight=Math.max(0,this._viewBox.height-this._canvasPadding.top-this._canvasPadding.bottom)||1;
+        const renderPadding=this.getRenderPadding(preCanvasWidth,preCanvasHeight);
+
+        const width=Math.max(0,this._viewBox.width-this._canvasPadding.left-this._canvasPadding.right-renderPadding.left-renderPadding.right)||1;
+        const height=Math.max(0,this._viewBox.height-this._canvasPadding.top-this._canvasPadding.bottom-renderPadding.top-renderPadding.bottom)||1;
 
 
         let min=Number.MAX_VALUE;
@@ -142,8 +280,6 @@ export abstract class SvgBaseChartCtrl
         const layoutScale=(this.svg.clientHeight||1)/this._viewBox.height;
         const canvasHeightPx=height*layoutScale;
         let hLineCount=Math.ceil(canvasHeightPx/hLineSpacingPx);
-        console.log('----')
-        console.log({hLineCount,height,layoutScale},this.viewBox)
         let valueStep=-1;
 
         let diff=max-min;
@@ -196,18 +332,11 @@ export abstract class SvgBaseChartCtrl
             valueStep=diff/(hLineCount-1);
         }
 
-        console.log({diff,valueStep,hLineCount,hLineSpacing})
-        console.log({min,max,height,canvasHeightPx,viewBoxHeight:this._viewBox.height})
+        const left=this._canvasPadding.left+renderPadding.left;
+        const top=this._canvasPadding.top+renderPadding.top;
+        const right=this._viewBox.width-this.canvasPadding.right-renderPadding.right;
+        const bottom=this._viewBox.height-this.canvasPadding.bottom-renderPadding.bottom;
 
-
-        // for(let i=1;i<steps.length;i++){
-        //     const spacing=hLineCount*steps[i];
-        //     if(spacing>=height){
-        //         console.log({spacing},steps[i])
-        //         hLineSpacing=steps[i];
-        //         break;
-        //     }
-        // }
 
         return {
             min,
@@ -218,18 +347,30 @@ export abstract class SvgBaseChartCtrl
             hLineSpacing,
             valueCount,
             hLineCount,
-            left:this._canvasPadding.left,
-            top:this._canvasPadding.top,
-            right:this._viewBox.width-this.canvasPadding.right,
-            bottom:this._viewBox.height-this.canvasPadding.bottom,
+            left,
+            top,
+            right,
+            bottom,
             viewBoxWidth:this._viewBox.width,
             viewBoxHeight:this._viewBox.height,
-            valueStep
+            valueStep,
+            renderPadding,
+
+            canvasWidth:width+renderPadding.left+renderPadding.right,
+            canvasHeight:height+renderPadding.top+renderPadding.bottom,
+            canvasLeft:left-renderPadding.left,
+            canvasRight:right+renderPadding.right,
+            canvasTop:top-renderPadding.top,
+            canvasBottom:bottom+renderPadding.bottom,
         }
     }
 
+    private pauseRender=false;
     public render()
     {
+        if(this.pauseRender || !this._options){
+            return;
+        }
         if(this._options.viewBox){
             this.svg.setAttribute('viewBox',this._options.viewBox);
         }else{
@@ -244,7 +385,7 @@ export abstract class SvgBaseChartCtrl
         const rect=getViewBoxRect(this.svg.viewBox);
         this._viewBox={width:rect.width||1,height:rect.height||1};
         this._renderOptions=this.getRenderOptions();
-        this.canvas.setAttribute('transform',`translate(${this._canvasPadding.left},${this._canvasPadding.top})`);
+        this.canvas.setAttribute('transform',`translate(${this._renderOptions.left},${this._renderOptions.top})`);
         this.renderValueLines();
         this.renderLabelLines();
         this.renderValueLabels();
@@ -264,8 +405,8 @@ export abstract class SvgBaseChartCtrl
             hLineCount,
             hLineSpacing,
             bottom,
-            left,
-            right,
+            canvasLeft:left,
+            canvasRight:right,
         }=this.renderOptions;
 
         const {
@@ -367,8 +508,8 @@ export abstract class SvgBaseChartCtrl
         const {
             hLineCount,
             hLineSpacing,
-            bottom,
-            left,
+            canvasBottom:bottom,
+            canvasLeft:left,
             min,
             valueStep
         }=this.renderOptions;
@@ -437,7 +578,8 @@ export abstract class SvgBaseChartCtrl
             valueCount,
             width,
             viewBoxHeight,
-            bottom
+            bottom,
+            renderPadding
         }=this.renderOptions;
 
         const {
@@ -456,8 +598,8 @@ export abstract class SvgBaseChartCtrl
             }
 
             for(let i=0;i<valueCount;i++){
-                const isFirst=i===0;
-                const isLast=i===valueCount-1;
+                const isFirst=i===0 && renderPadding.left<20;
+                const isLast=i===valueCount-1 && renderPadding.right<20;
                 if(this.vLabels.length<=i){
                     const newLine=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
                     newLine.setAttribute('class',`${classNamePrefix}label-label`);
@@ -490,8 +632,8 @@ export abstract class SvgBaseChartCtrl
         }
     }
 
-    private seriesStyle:SeriesStyle[]=[];
-    protected fillSeriesStyle(style:Partial<SeriesStyle>):SeriesStyle
+    private filledSeriesOptions:SeriesOptions[]=[];
+    protected fillSeriesStyle(style:Partial<SeriesOptions>):SeriesOptions
     {
         return {
             ...this.getDefaultSeriesStyle(),
@@ -499,15 +641,24 @@ export abstract class SvgBaseChartCtrl
         }
     }
 
-    protected getDefaultSeriesStyle():SeriesStyle
+    protected getDefaultSeriesStyle():SeriesOptions
     {
         return {
             smoothness:0,
+            thickness:30,
+            margin:20,
+            cornerRadius:0,
         }
     }
 
-    public getSeriesStyle(index:number):SeriesStyle
+    public getSeriesStyle(index:number):SeriesOptions
     {
-        return this.seriesStyle[index%this.seriesStyle.length]??this.fillSeriesStyle({});
+        return this.filledSeriesOptions[index%this.filledSeriesOptions.length]??this.fillSeriesStyle({});
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected getRenderPadding(preCanvasWidth:number,preCanvasHeight:number):Sides
+    {
+        return {left:0,right:0,top:0,bottom:0}
     }
 }

@@ -43,3 +43,8 @@ export const getViewBoxRect=(viewBox:string|SVGAnimatedRect|null|undefined):Rect
         }
     }
 }
+
+let nextId=1;
+export const generateRandomChartId=()=>{
+    return `svg-chart-${nextId++}-${Date.now()}-${Math.round(Math.random()*999999)}`
+}

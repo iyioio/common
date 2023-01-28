@@ -1,5 +1,6 @@
 import { aryRemoveItem, cn } from "@iyio/common";
 import { classNamePrefix } from "./svg-charts-lib";
+import { SvgChartCtrlOptions } from "./svg-charts-types";
 import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl";
 
 interface Line
@@ -14,8 +15,16 @@ interface Line
 export class SvgLineChartCtrl extends SvgBaseChartCtrl
 {
 
-    private readonly lines:Line[]=[];
+    public constructor(options?:SvgChartCtrlOptions|null, svg?:SVGSVGElement, skipRender?:boolean)
+    {
+        super(options,svg,true);
 
+        if(!skipRender){
+            this.render();
+        }
+    }
+
+    private readonly lines:Line[]=[];
     protected renderData():void
     {
         while(this.lines.length>this.renderOptions.valueCount){

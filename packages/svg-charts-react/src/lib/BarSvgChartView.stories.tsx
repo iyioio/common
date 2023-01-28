@@ -1,13 +1,13 @@
 import { css } from '@iyio/common';
 import { createStory } from '@iyio/react-common';
-import { LineSvgChartView } from './LineSvgChartView';
+import { BarSvgChartView } from './BarSvgChartView';
 
 export default {
-    component:LineSvgChartView,
-    title:'LineSvgChartView'
+    component:BarSvgChartView,
+    title:'BarSvgChartView'
 }
 
-export const Default = createStory(LineSvgChartView,{
+export const Default = createStory(BarSvgChartView,{
     style:{
         height:400,
         width:'100%',
@@ -15,24 +15,23 @@ export const Default = createStory(LineSvgChartView,{
     },
     options:{
         data:{
-            labels:['A','B','Castsfieijfskdjjfjfjief  asdfefefe Castsfieijfskdjjfjfjief  asdfefefe Castsfieijfskdjjfjfjief  asdfefefe Castsfieijfskdjjfjfjief  asdfefefe Castsfieijfskdjjfjfjief  asdfefefe ','D','E'],
+            labels:['A','B','C','D','E','F'],
             series:[
-                //[-2,8,4, 6,0],
+                [1,-2,8,4, 6,0],
                 //[10,70,50,90,10],
                 //[3,6,-3,10,9],
-                [0.2,0.8,0.125],
-                [0.1,0.8,0.333],
+                // [0.2,0.8,0.125],
+                // [0.1,0.8,0.333],
             ],
         },
+        vLinePadding:30,
         hLines:true,
         vLines:true,
         seriesOptions:[
             {
-                smoothness:1
+                smoothness:1,
+                cornerRadius:5,
             },
-            {
-                smoothness:1
-            }
         ],
         css:css`
             @@ .svg-charts-label-line, @@ .svg-charts-value-line{
@@ -44,20 +43,16 @@ export const Default = createStory(LineSvgChartView,{
                 color:#ffffff;
             }
 
-            @@ .svg-charts-line.svg-charts-odd .svg-charts-path{
-                display:none;
-            }
-            @@ .svg-charts-line.svg-charts-odd .svg-charts-fill{
-                fill:#4085F812;
+            @@ .svg-charts-bar.svg-charts-odd .svg-charts-fill{
+                fill:#4085F8;
             }
 
-            @@ .svg-charts-line.svg-charts-even .svg-charts-path{
+            @@ .svg-charts-bar.svg-charts-even .svg-charts-path{
                 stroke:#4085F8;
                 stroke-width:5px;
                 fill:none;
-                stroke-linecap:round;
             }
-            @@ .svg-charts-line.svg-charts-even .svg-charts-fill{
+            @@ .svg-charts-bar.svg-charts-even .svg-charts-fill{
                 display:none;
             }
 
