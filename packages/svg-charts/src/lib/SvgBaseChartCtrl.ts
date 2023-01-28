@@ -24,7 +24,9 @@ export abstract class SvgBaseChartCtrl
     private _data:ChartData;
     public get data(){return this._data}
     public set data(value:ChartData){
-        if(this._data===value){return}
+        if(this._data===value || (this._data?.renderId && this._data.renderId===value.renderId)){
+            return
+        }
         this._data=value;
         this.render();
     }

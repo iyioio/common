@@ -35,6 +35,10 @@ export interface SvgChartCtrlOptions
 
 export interface ChartData
 {
+    /**
+     * If defined changes to chart data will only be rendered when renderId is changed
+     */
+    renderId?:string;
     labels:string[];
     series:number[][];
 }
