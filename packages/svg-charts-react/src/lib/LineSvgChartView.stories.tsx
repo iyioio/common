@@ -86,3 +86,40 @@ export const Default = createStory(LineSvgChartView,{
         `
     },
 })
+
+
+export const Min = createStory(LineSvgChartView,{
+    style:{
+        height:400,
+        //background:'#f5f5f5',
+        width:'100%',
+    },
+    options:{
+        data:{
+            labels:[],
+            series:[
+                //[-2,8,4, 6,0],
+                //[10,70,50,90,10],
+                //[3,6,-3,10,9],
+                [0.2,0.8,0.125],
+            ],
+        },
+        min:true,
+        seriesOptions:[
+            {
+                smoothness:1
+            }
+        ],
+        css:css`
+            @@ .svg-charts-line .svg-charts-path{
+                stroke:#4085F8;
+                stroke-width:5px;
+                fill:none;
+                stroke-linecap:round;
+            }
+            @@ .svg-charts-line .svg-charts-fill{
+                display:none;
+            }
+        `
+    },
+})

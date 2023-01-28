@@ -44,15 +44,7 @@ export abstract class SvgBaseChartCtrl
         this.setOptions(value);
     }
 
-    private parseCss(css:string,id:string)
-    {
-        if(id){
-            id='#'+id;
-        }
-        return css.split('@@').join(id);
-    }
-
-    private _canvasPadding:Sides={left:60,right:35,top:35,bottom:35};
+    private _canvasPadding:Sides;
     public get canvasPadding(){return this._canvasPadding}
     public set canvasPadding(value:Sides){
         if(this._canvasPadding===value){return}
@@ -93,28 +85,32 @@ export abstract class SvgBaseChartCtrl
 
         this.seriesOptions=options?.seriesOptions??[];
 
+        const min=options?.min??false;
 
         this._options={
             id:options?.id??(this.svg.id||generateRandomChartId()),
-            hLines:true,
+            hLines:!min,
             hLinesFullWidth:false,
-            vLines:true,
+            vLines:!min,
             hLineSpacing:50,
             labelHAlignment:'left',
             labelVAlignment:'bottom',
             zoom:1,
             viewBox:null,
-            showLabelLabels:true,
-            showValueLabels:true,
+            showLabelLabels:!min,
+            showValueLabels:!min,
             stack:false,
             vLinePadding:0,
             css:'',
             className:options?.className??null,
             autoResize:true,
             removeElementsOnDispose:true,
+            min,
 
             ...(options??{}),
         }
+
+        this._canvasPadding=this._options.min?{left:5,right:5,top:5,bottom:5}:{left:60,right:35,top:35,bottom:35}
 
         this._renderOptions=this.getRenderOptions();
 
@@ -181,6 +177,14 @@ export abstract class SvgBaseChartCtrl
                 this.svg.classList.add(this._options.className);
             }
         }
+    }
+
+    private parseCss(css:string,id:string)
+    {
+        if(id){
+            id='#'+id;
+        }
+        return css.split('@@').join(id);
     }
 
     private setOptions(value:Partial<SvgChartCtrlOptions>,skipRender=false){

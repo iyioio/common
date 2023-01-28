@@ -24,6 +24,7 @@ export interface SvgChartCtrlOptions
     labelVAlignment?:'top'|'bottom';
     autoResize?:boolean;
     removeElementsOnDispose?:boolean;
+    min?:boolean;
     /**
      * For bar charts if true series values are stacked on top of each other
      */
