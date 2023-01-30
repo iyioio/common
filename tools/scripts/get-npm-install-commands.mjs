@@ -9,6 +9,7 @@ import { enumProjects } from './enum-projects.mjs';
 // If paths to the build output for packages will be used.
 // This is useful for local integration testing with projects before publishing
 const local=process.argv.includes('--local');
+const force=process.argv.includes('--force');
 
 const deps=[];
 const devDeps=[];
@@ -41,8 +42,8 @@ enumProjects({publicOnly:true},({name,project,pkg})=>{
 });
 
 if(devDeps.length){
-    console.log(`npm i ${devDeps.join(' ')} --save-dev`);
+    console.log(`npm i ${devDeps.join(' ')} --save-dev${force?' --force':''}`);
 }
 if(deps.length){
-    console.log(`npm i ${deps.join(' ')}`);
+    console.log(`npm i ${deps.join(' ')}${force?' --force':''}`);
 }
