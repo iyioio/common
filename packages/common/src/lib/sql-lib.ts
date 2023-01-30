@@ -51,7 +51,10 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
     return strAry.join('').trim();
 }
 
-export const escapeSqlValue=(value:any):string=>{
+const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number):string=>{
+    if(depth>20){
+        throw new Error('Max escapeSqlValue depth reached');
+    }
     switch(typeof value){
 
         case 'string':
@@ -69,6 +72,8 @@ export const escapeSqlValue=(value:any):string=>{
                 return 'NULL';
             }else if(value instanceof Date){
                 return `'${value.toISOString()}'`;
+            }else if(Array.isArray(value)){
+                return (wrapArray?'(':'')+value.map(v=>_escapeSqlValue(v,wrapArray,depth+1)).join(',')+(wrapArray?')':'');
             }else{
                 return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
             }
@@ -76,3 +81,5 @@ export const escapeSqlValue=(value:any):string=>{
     }
 }
 
+
+export const escapeSqlValue=(value:any,wrapArray=true):string=>_escapeSqlValue(value,wrapArray,0);

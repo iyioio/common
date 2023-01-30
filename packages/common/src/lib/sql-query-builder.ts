@@ -70,7 +70,7 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
         const joins=asArray(query.join);
         for(const join of joins){
             const joinAsName=join.tableAs??'_tbl_'+(ctx.nextAs++);
-            ctx.sql.push('join');
+            ctx.sql.push(join.required?'join':'left outer join');
             ctx.sql.push(escapeSqlName(join.table));
             ctx.sql.push('as');
             ctx.sql.push(escapeSqlName(joinAsName));
@@ -149,7 +149,7 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
     if(value.col){
         appendCol(ctx,value.col);
     }else if(value.value!==undefined){
-        ctx.sql.push(escapeSqlValue(value.value));
+        ctx.sql.push(escapeSqlValue(value.value,false));
     }else if(value.subQuery){
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,value.subQuery.query,value.subQuery.condition??null);

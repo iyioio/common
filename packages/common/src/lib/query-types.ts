@@ -96,6 +96,12 @@ export interface QueryJoin
      * This condition used to join the table
      */
     condition:QueryConditionOrGroup;
+
+    /**
+     * If required then joined rows must have a match. For SQL queries non-required joins
+     * as performed as left or outer joins.
+     */
+    required?:boolean;
 }
 
 
@@ -192,7 +198,7 @@ export interface QueryValue
     /**
      * A literal value to use as the value
      */
-    value?:string|number|boolean|null;
+    value?:string|number|boolean|null|((string|number|boolean|null)[]);
 
     /**
      * A predefined function to use as a value

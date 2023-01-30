@@ -44,6 +44,7 @@ export interface QueryCtrlOptions
     queryRecordStorePath?:string;
 }
 
+export type QueryCellRenderer<T=any>=(item:T,key:keyof T,value:any,ctrl:QueryCtrl,rowIndex:number,colIndex:number)=>any;
 
 export class QueryCtrl<T=any>
 {
@@ -81,6 +82,8 @@ export class QueryCtrl<T=any>
     public get data():ReadonlySubject<T[]|null>{return this._data};
 
     public readonly getLink=new BehaviorSubject<((item:T)=>string|null)|null>(null);
+
+    public readonly renderCellContent=new BehaviorSubject<QueryCellRenderer|null>(null);
 
     public readonly staticOperators:StaticQueryOperator[]=[
         sortStaticQuery
@@ -282,22 +285,23 @@ export class QueryCtrl<T=any>
         return undefined;
     }
 
-    public async downloadAsync(format:'json')
+    public async downloadAsync(format:'json',data?:any[])
     {
         unused(format);
 
-        let data:T[];
 
         let query=await this.getQueryOrQueryWithDataAsync();
-        if(isQuery(query)){
-            query={...query};
-            delete query.offset;
-            delete query.limit;
-            data=await sqlClient().selectAsync(buildQuery(query));
-        }else if(isQueryWithData(query)){
-            data=query.table;
-        }else{
-            data=[];
+        if(!data){
+            if(isQuery(query)){
+                query={...query};
+                delete query.offset;
+                delete query.limit;
+                data=await sqlClient().selectAsync(buildQuery(query));
+            }else if(isQueryWithData(query)){
+                data=query.table;
+            }else{
+                data=[];
+            }
         }
 
         downloadObject((query?.tableAs??(typeof query?.table === 'string'?query.table:'data'))+'.json',data);
