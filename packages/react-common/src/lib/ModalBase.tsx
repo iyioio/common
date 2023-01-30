@@ -1,4 +1,5 @@
-import { baseLayoutCn, BaseLayoutInnerProps, cn, css } from "@iyio/common";
+import { BaseLayoutInnerProps, bcn, cn, css } from "@iyio/common";
+import { useEffect, useState } from "react";
 import Style from 'styled-jsx/style';
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
@@ -8,6 +9,24 @@ export interface ModalBaseProps extends PortalProps, BaseLayoutInnerProps
     open:boolean;
     closeRequested?:(open:false)=>void;
     background?:string;
+    /**
+     * The number of milliseconds before the modal stops rending after open is set to false. This
+     * timeout allows for transitions between open and closed.
+     */
+    renderTimeoutMs?:number;
+
+    /**
+     * If true the default transition is disabled. This is useful for creating custom transitions.
+     */
+    noDefaultTransition?:boolean;
+
+    defaultShow?:boolean;
+    center?:boolean;
+    scrollable?:boolean;
+    contentClassName?:string;
+    bgClassName?:string;
+    zIndex?:number;
+    hideScrollBarOnOut?:boolean;
 }
 
 export function ModalBase({
@@ -16,21 +35,57 @@ export function ModalBase({
     closeRequested,
     children,
     background,
+    renderTimeoutMs=1000,
+    noDefaultTransition,
+    defaultShow=false,
+    center,
+    scrollable,
+    bgClassName,
+    contentClassName,
+    hideScrollBarOnOut=true,
+    zIndex,
     ...props
 }:ModalBaseProps){
 
-    if(!open){
+    const [show,setShow]=useState(defaultShow);
+
+    useEffect(()=>{
+        if(open){
+            setShow(true);
+            return;
+        }
+
+        let m=true;
+
+        setTimeout(()=>{
+            if(m){
+                setShow(false);
+            }
+        },renderTimeoutMs);
+
+        return ()=>{
+            m=false;
+        }
+    },[renderTimeoutMs,open])
+
+    if(!show){
         return null;
     }
 
     return (
         <>
             <Portal rendererId={rendererId}>
-                <div className={cn('ModelBase',baseLayoutCn(props))}>
+                <div style={{zIndex}} className={bcn(
+                    props,
+                    'ModelBase',
+                    open?'ModelBase-open':'ModelBase-closed',
+                    noDefaultTransition?undefined:(open?'ModelBase-defaultIn':'ModelBase-defaultOut'),
+                    {center,scrollable,hideScrollBarOnOut}
+                )}>
 
-                    <div className="ModelBase-bg" style={{background}} onClick={()=>closeRequested?.(false)}/>
+                    <div className={cn("ModelBase-bg",bgClassName)} style={{background}} onClick={()=>closeRequested?.(false)}/>
 
-                    <div className="ModelBase-content">
+                    <div className={cn("ModelBase-content",contentClassName)}>
                         {children}
                     </div>
                 </div>
@@ -48,6 +103,51 @@ export function ModalBase({
                     position:relative;
                     display:flex;
                     flex-direction:column;
+                    height:100%;
+                }
+                .ModelBase.center .ModelBase-content{
+                    justify-content:center;
+                    align-items:center;
+                }
+                .ModelBase.scrollable .ModelBase-content{
+                    overflow-y:auto;
+                    overflow-y:overlay;
+                }
+                .ModelBase-closed.hideScrollBarOnOut.scrollable .ModelBase-content{
+                    overflow-y:hidden;
+                    overflow-y:clip;
+                }
+
+
+                @keyframes ModelBase-defaultIn{
+                    0%{opacity:0;}
+                    100%{opacity:1;}
+                }
+                @keyframes ModelBase-defaultOut{
+                    0%{opacity:1;}
+                    100%{opacity:0;}
+                }
+                @keyframes ModelBase-defaultIn-content{
+                    0%{transform:scale(1.1);}
+                    100%{transform:scale(1);}
+                }
+                @keyframes ModelBase-defaultOut-content{
+                    0%{transform:scale(1);}
+                    100%{transform:scale(0.9);}
+                }
+
+                .ModelBase-defaultIn{
+                    animation:ModelBase-defaultIn 0.5s forwards;
+                }
+                .ModelBase-defaultOut{
+                    animation:ModelBase-defaultOut 0.5s forwards;
+                }
+
+                .ModelBase-defaultIn .ModelBase-content{
+                    animation:ModelBase-defaultIn-content 0.5s forwards;
+                }
+                .ModelBase-defaultOut .ModelBase-content{
+                    animation:ModelBase-defaultOut-content 0.5s forwards;
                 }
             `}</Style>
         </>
