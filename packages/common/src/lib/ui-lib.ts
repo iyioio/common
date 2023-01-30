@@ -13,6 +13,16 @@ export interface UiActionItem
     data?:any;
 }
 
+export interface UiActionSubItem extends UiActionItem
+{
+    sub?:UiActionItem[];
+}
+
+export interface UiActionRecursiveSubItem extends UiActionItem
+{
+    sub?:UiActionRecursiveSubItem[];
+}
+
 export type RouteQuery=HashMap<string|string[]>;
 
 export interface RouteInfo
