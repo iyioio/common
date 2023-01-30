@@ -1,5 +1,5 @@
 import { aryRemoveItem, cn, Sides } from "@iyio/common";
-import { classNamePrefix } from "./svg-charts-lib";
+import { classNamePrefix, toSafeSvgAttValue } from "./svg-charts-lib";
 import { SvgChartCtrlOptions } from "./svg-charts-types";
 import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl";
 
@@ -77,11 +77,11 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
             const v=bar.data[i];
             const x=dist*i;
             const y=height-((v-min)/diff*height);
-            rect.setAttribute('x',(x-style.thickness/2).toString());
-            rect.setAttribute('y',y.toString());
-            rect.setAttribute('width',style.thickness.toString());
-            rect.setAttribute('height',(height-y).toString());
-            rect.setAttribute('rx',style.cornerRadius.toString());
+            rect.setAttribute('x',toSafeSvgAttValue((x-style.thickness/2)));
+            rect.setAttribute('y',toSafeSvgAttValue(y));
+            rect.setAttribute('width',toSafeSvgAttValue(style.thickness));
+            rect.setAttribute('height',toSafeSvgAttValue((height-y)));
+            rect.setAttribute('rx',toSafeSvgAttValue(style.cornerRadius));
         }
     }
 

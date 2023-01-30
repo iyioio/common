@@ -1,5 +1,5 @@
 import { deepCompare, escapeHtml, formatNumberWithBases, Sides, Size } from "@iyio/common";
-import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect } from "./svg-charts-lib";
+import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect, toSafeSvgAttValue } from "./svg-charts-lib";
 import { ChartData, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
 
 export abstract class SvgBaseChartCtrl
@@ -441,10 +441,10 @@ export abstract class SvgBaseChartCtrl
                 }
                 const line=this.hLines[i];
 
-                line.setAttribute('x1',hLinesFullWidth?'0':left.toString());
-                line.setAttribute('x2',hLinesFullWidth?this.viewBox.width.toString():right.toString());
-                line.setAttribute('y1',y.toString());
-                line.setAttribute('y2',y.toString());
+                line.setAttribute('x1',toSafeSvgAttValue(hLinesFullWidth?0:left));
+                line.setAttribute('x2',toSafeSvgAttValue(hLinesFullWidth?this.viewBox.width:right));
+                line.setAttribute('y1',toSafeSvgAttValue(y));
+                line.setAttribute('y2',toSafeSvgAttValue(y));
 
                 y-=hLineSpacing;
             }
@@ -494,10 +494,10 @@ export abstract class SvgBaseChartCtrl
                 const line=this.vLines[i];
 
                 const x=(width/(valueCount-1))*i+left;
-                line.setAttribute('y1',top.toString());
-                line.setAttribute('y2',bottom.toString());
-                line.setAttribute('x1',x.toString());
-                line.setAttribute('x2',x.toString());
+                line.setAttribute('y1',toSafeSvgAttValue(top));
+                line.setAttribute('y2',toSafeSvgAttValue(bottom));
+                line.setAttribute('x1',toSafeSvgAttValue(x));
+                line.setAttribute('x2',toSafeSvgAttValue(x));
             }
 
         }else if(this.vLineGroup){
@@ -559,9 +559,10 @@ export abstract class SvgBaseChartCtrl
                 `
 
                 obj.setAttribute('x','0');
-                obj.setAttribute('y',(y-hLineSpacing).toString());
-                obj.setAttribute('width',lw.toString());
-                obj.setAttribute('height',h.toString());
+                obj.setAttribute('y',toSafeSvgAttValue((y-hLineSpacing)));
+                obj.setAttribute('width',toSafeSvgAttValue(lw));
+                obj.setAttribute('height',toSafeSvgAttValue(h));
+
 
                 y-=hLineSpacing;
                 value+=valueStep;
@@ -625,10 +626,11 @@ export abstract class SvgBaseChartCtrl
                 `
 
                 const x=w*i+left;
-                obj.setAttribute('y',bottom.toString());
-                obj.setAttribute('x',(isFirst?x:isLast?x-lw:x-lw/2).toString());
-                obj.setAttribute('width',lw.toString());
-                obj.setAttribute('height',h.toString());
+                obj.setAttribute('y',toSafeSvgAttValue(bottom));
+                obj.setAttribute('x',toSafeSvgAttValue((isFirst?x:isLast?x-lw:x-lw/2)));
+                obj.setAttribute('width',toSafeSvgAttValue(lw));
+                obj.setAttribute('height',toSafeSvgAttValue(h));
+
             }
 
         }else if(this.vLabelGroup){

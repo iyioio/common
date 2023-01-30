@@ -64,3 +64,12 @@ export const getDefaultChartSteps=():number[]=>{
     }
     return steps;
 }
+
+export const toSafeSvgAttValue=(value:any)=>{
+    value=Number(value?.toString()||'0');
+    if(!isFinite(value)){
+        return '0';
+    }
+    return value.toString();
+
+}
