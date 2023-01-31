@@ -1,5 +1,6 @@
 import { ReadonlySubject } from "@iyio/common";
 import { useEffect, useState } from 'react';
+import { BehaviorSubject } from "rxjs";
 
 export function useSubject(subject:undefined):undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>):T
@@ -24,4 +25,16 @@ export function useSubject<T>(subject:ReadonlySubject<T>|undefined):T|undefined
     },[subject]);
 
     return value;
+}
+
+export const useIncrementSubject=(subject:BehaviorSubject<number>,active:boolean=true)=>{
+    useEffect(()=>{
+        if(!active){
+            return;
+        }
+        subject.next(subject.value+1);
+        return ()=>{
+            subject.next(subject.value-1);
+        }
+    },[subject,active]);
 }
