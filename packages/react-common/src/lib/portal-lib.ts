@@ -30,7 +30,9 @@ export class PortalCtrl
 {
     public readonly id:string;
 
-    public readonly items:BehaviorSubject<PortalItem[]>=new BehaviorSubject<PortalItem[]>([])
+    public readonly items:BehaviorSubject<PortalItem[]>=new BehaviorSubject<PortalItem[]>([]);
+
+    public readonly states:BehaviorSubject<any[]>=new BehaviorSubject<any[]>([]);
 
     public constructor(id:string)
     {
@@ -73,6 +75,18 @@ export class PortalCtrl
         this.items.next(items);
     }
 
+    public addState(state:any)
+    {
+        this.states.next([...this.states.value,state]);
+    }
+
+    public removeState(state:any)
+    {
+        const states=[...this.states.value];
+        aryRemoveItem(states,state);
+        this.states.next(states);
+    }
+
 }
 
 export const createPortalItem=():PortalItem=>({
@@ -90,11 +104,13 @@ export interface PortalProps
     rendererId?:string;
     children?:any;
     active?:boolean;
+    state?:any;
 }
 
 export const usePortal=({
     rendererId=defaultPortalRendererId,
     active=true,
+    state,
     children
 }:PortalProps)=>
 {
@@ -120,4 +136,14 @@ export const usePortal=({
             ctrl.removeItem(item);
         }
     },[item,ctrl,active])
+
+    useEffect(()=>{
+        if(!ctrl || state===undefined){
+            return;
+        }
+        ctrl.addState(state);
+        return ()=>{
+            ctrl.removeState(state);
+        }
+    },[ctrl,state])
 }
