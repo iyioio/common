@@ -22,6 +22,7 @@ export * from "./lib/Text";
 export * from "./lib/tool-tip/tool-tip-lib";
 export * from "./lib/tool-tip/ToolTipBase";
 export * from "./lib/tool-tip/ToolTipContainer";
+export * from "./lib/useElementSize";
 export * from "./lib/useRoute";
 export * from "./lib/useSeriesDataQuery";
 export * from "./lib/useSwipe";
