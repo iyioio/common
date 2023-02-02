@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
@@ -124,37 +124,46 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         return null;
     }
 
-    private convertCognitoUserAsync(user:CognitoUser):Promise<BaseUser>
+    private async convertCognitoUserAsync(user:CognitoUser):Promise<BaseUser>
     {
-        return new Promise<BaseUser>((resolve,reject)=>{
-            user.getSession((error:Error|null,session:CognitoUserSession|null)=>{
-                if(session){
-                    const id=user.getUsername();
-                    const options:BaseUserOptions={
-                        id,
-                        name:id,
-                        providerData:{
-                        type:this.type,
-                            userId:id,
-                            providerData:{
-                                [sessionKey]:session,
-                                [userKey]:user
-                            }
-                        }
-                    }
-
-                    const baseUser=this.config.userFactory.generate(options);
-                    if(!baseUser){
-                        reject('No user factory provided a user');
-                        return;
-                    }
-
-                    resolve(baseUser)
-                }else{
-                    reject(error??new Error('Unable to get user session'))
+        const session=await promiseFromErrorResultCallback<CognitoUserSession|null>(cb=>user.getSession(cb));
+        if(session){
+            const atts=await promiseFromErrorResultCallback<CognitoUserAttribute[]|undefined>(cb=>user.getUserAttributes(cb));
+            const id=user.getUsername();
+            const data:HashMap<string>={};
+            if(atts){
+                for(const att of atts){
+                    data[att.Name]=att.Value
                 }
-            })
-        })
+            }
+            const name=data['nickname']??id;
+            const email=data['email'];
+            const phoneNumber=data['phone']??data['phone_number']??data['phoneNumber'];
+            const options:BaseUserOptions={
+                id,
+                name,
+                email,
+                phoneNumber,
+                data,
+                providerData:{
+                    type:this.type,
+                    userId:id,
+                    providerData:{
+                        [sessionKey]:session,
+                        [userKey]:user
+                    }
+                }
+            }
+
+            const baseUser=this.config.userFactory.generate(options);
+            if(!baseUser){
+                throw new Error('No user factory provided a user');
+            }
+
+            return baseUser;
+        }else{
+            throw new Error('Unable to get user session');
+        }
     }
 
     public async getUserAsync(data: UserAuthProviderData):Promise<BaseUser|null> {

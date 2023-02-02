@@ -8,6 +8,8 @@ export interface BaseUserOptions
 {
     id:string;
     name:string;
+    email?:string;
+    phoneNumber?:string;
     providerData:UserAuthProviderData;
     data?:SymStrHashMap;
 }
@@ -20,6 +22,14 @@ export class BaseUser implements IDisposable, IInit
     public get nameSubject():ReadonlySubject<string>{return this._name}
     public get name(){return this._name.value}
 
+    private readonly _email:BehaviorSubject<string|null>;
+    public get emailSubject():ReadonlySubject<string|null>{return this._email}
+    public get email(){return this._email.value}
+
+    private readonly _phoneNumber:BehaviorSubject<string|null>;
+    public get phoneNumberSubject():ReadonlySubject<string|null>{return this._phoneNumber}
+    public get phoneNumber(){return this._phoneNumber.value}
+
     public readonly data:SymStrHashMap;
     public readonly providerData:UserAuthProviderData;
 
@@ -30,12 +40,16 @@ export class BaseUser implements IDisposable, IInit
     public constructor({
         id,
         name,
+        email,
+        phoneNumber,
         providerData,
         data,
     }:BaseUserOptions)
     {
         this.id=id;
         this._name=new BehaviorSubject<string>(name);
+        this._email=new BehaviorSubject<string|null>(email||null);
+        this._phoneNumber=new BehaviorSubject<string|null>(phoneNumber||null);
         this.providerData=providerData;
         this.data=data??{};
     }
