@@ -1,4 +1,4 @@
-import type { BaseUser, BaseUserOptions } from "./BaseUser";
+import type { BaseUser, BaseUserOptions, BaseUserUpdate } from "./BaseUser";
 import { HashMap, IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
 
 export type AuthSignInResult={
@@ -89,6 +89,12 @@ export interface AuthProvider extends IOpInit, IOpDisposable
      * Deletes the user
      */
     deleteAsync(user:BaseUser):Promise<AuthDeleteResult|undefined>;
+
+
+    /**
+     * Updates a user
+     */
+    updateAsync?(user:BaseUser,update:BaseUserUpdate):Promise<boolean>
 
     /**
      * Signs out the given user

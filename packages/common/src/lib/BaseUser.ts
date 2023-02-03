@@ -14,6 +14,15 @@ export interface BaseUserOptions
     data?:SymStrHashMap;
 }
 
+export interface BaseUserUpdate
+{
+    name?:string;
+    /**
+     * Undefined values will be deleted
+     */
+    data?:SymStrHashMap;
+}
+
 export class BaseUser implements IDisposable, IInit
 {
     public readonly id:string;

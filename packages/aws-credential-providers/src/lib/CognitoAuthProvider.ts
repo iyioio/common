@@ -1,8 +1,8 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
-import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
+import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
 const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
@@ -343,6 +343,39 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         });
     }
 
+    public async updateAsync(user:BaseUser,update:BaseUserUpdate):Promise<boolean>
+    {
+        const cUser:CognitoUser|undefined=user.providerData.providerData?.[userKey];
+        if(!cUser){
+            return false;
+        }
+
+        const atts:ICognitoUserAttributeData[]=[];
+        const add=(name:string,value:string)=>{
+            if(!atts.some(a=>a.Name===name)){
+                atts.push({Name:name,Value:value})
+            }
+        }
+
+        if(update.name){
+            add('nickname',update.name);
+        }
+
+        if(update.data){
+            for(const e in update.data){
+                add(e,update.data[e]);
+            }
+        }
+
+        if(!atts.length){
+            return false;
+        }
+
+        await promiseFromErrorResultCallback(cb=>cUser.updateAttributes(atts,cb));
+
+        return true;
+    }
+
 }
 
 const cacheCreds=(provider:Provider<Credentials>):Provider<Credentials>=>{
@@ -350,7 +383,7 @@ const cacheCreds=(provider:Provider<Credentials>):Provider<Credentials>=>{
     let t=Date.now();
 
     return async ()=>{
-        if(!credsPromise || (Date.now()-t)>1000*60*3){
+        if(!credsPromise || (Date.now()-t)>1000*30){
             t=Date.now();
             credsPromise=provider();
         }

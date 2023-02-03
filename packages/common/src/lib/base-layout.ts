@@ -177,6 +177,9 @@ export type BaseLayoutGapProps = {
 }
 
 export const baseLayoutPaddingProps={
+    p025:'ioP025',
+    p050:'ioP050',
+    p075:'ioP075',
     p0:'ioP0',
     p1:'ioP1',
     p2:'ioP2',

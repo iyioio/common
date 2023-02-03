@@ -1,6 +1,6 @@
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
-import { BaseUser } from "./BaseUser";
+import { BaseUser, BaseUserUpdate } from "./BaseUser";
 import { breakFunction, continueFunction } from "./common-lib";
 import { HashMap, IDisposable, IInit } from "./common-types";
 import { DisposeContainer } from "./DisposeContainer";
@@ -240,5 +240,29 @@ export class AuthService implements IDisposable, IInit
             }
         }
         this.setUser(user);
+    }
+
+
+    public async updateAsync(user:BaseUser,update:BaseUserUpdate):Promise<boolean>
+    {
+        const provider=await this.getProviderAsync(user.providerData.type);
+        if(!provider?.updateAsync){
+            return false;
+        }
+        const updated=await provider.updateAsync(user,update);
+        if(!updated){
+            return false;
+        }
+
+        const updatedUser=await provider.getUserAsync(user.providerData);
+        if( updatedUser &&
+            this.currentUser.value &&
+            updatedUser.id===this.currentUser.value.id &&
+            updatedUser!==this.currentUser.value)
+        {
+            await this.setUserAsync(updatedUser,true);
+        }
+
+        return updatedUser?true:false;
     }
 }
