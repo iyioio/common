@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, PasswordResetResult, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
@@ -374,6 +374,47 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         await promiseFromErrorResultCallback(cb=>cUser.updateAttributes(atts,cb));
 
         return true;
+    }
+
+    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
+    {
+        try{
+            const cognitoUser=new CognitoUser({
+                Username:identity,
+                Pool:this.userPool,
+            });
+            const {codeSentTo}=await promiseFromErrorResultCallback(cb=>cognitoUser.forgotPassword({
+                onSuccess:()=>{/* */},
+                onFailure:err=>cb(err,undefined),
+                inputVerificationCode:code=>{
+                    cb(null,{
+                        codeSentTo:code?.CodeDeliveryDetails?.Destination
+                    })
+                }
+            }));
+
+            return {
+                codeSent:true,
+                codeSentTo
+            };
+        }catch(ex){
+            return {
+                error:ex,
+                codeSent:false
+            }
+        }
+    }
+
+    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
+    {
+        const cognitoUser=new CognitoUser({
+            Username:identity,
+            Pool:this.userPool,
+        });
+        return await promiseFromErrorResultCallback(cb=>cognitoUser.confirmPassword(code,newPassword,{
+            onSuccess:()=>cb(null,true),
+            onFailure:err=>cb(err,undefined as any),
+        }));
     }
 
 }

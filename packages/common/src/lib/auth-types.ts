@@ -66,6 +66,13 @@ export interface UserAuthProviderData
     readonly providerData?:SymStrHashMap;
 }
 
+export interface PasswordResetResult
+{
+    error?:any;
+    codeSent:boolean;
+    codeSentTo?:boolean;
+}
+
 export type UserFactoryCallback=(options:BaseUserOptions)=>BaseUser|undefined;
 
 export interface AuthProvider extends IOpInit, IOpDisposable
@@ -119,5 +126,18 @@ export interface AuthProvider extends IOpInit, IOpDisposable
      * @param code The verification code the user received
      */
     verifyAsync?(identity:string,code:string):Promise<AuthVerificationResult>;
+
+    /**
+     * Sends a password reset code to the given identity
+     */
+    resetPasswordAsync?(identity:string):Promise<PasswordResetResult>;
+
+    /**
+     * Sets a user's new password using a password reset code.
+     * @param identity email or phone
+     * @param code Reset code
+     * @param newPassword New password
+     */
+    setNewPasswordAsync?(identity:string,code:string,newPassword:string):Promise<boolean>;
 
 }

@@ -1,4 +1,4 @@
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { BaseUser, BaseUserUpdate } from "./BaseUser";
 import { breakFunction, continueFunction } from "./common-lib";
@@ -264,5 +264,25 @@ export class AuthService implements IDisposable, IInit
         }
 
         return updatedUser?true:false;
+    }
+
+    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
+    {
+        const result=await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.resetPasswordAsync?.(identity);
+        })
+
+        return result??{
+            codeSent:false
+        };
+    }
+
+    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
+    {
+        const result=await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.setNewPasswordAsync?.(identity,code,newPassword);
+        })
+
+        return result??false;
     }
 }
