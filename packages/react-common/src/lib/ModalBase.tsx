@@ -27,6 +27,7 @@ export interface ModalBaseProps extends PortalProps, BaseLayoutInnerProps
     bgClassName?:string;
     zIndex?:number;
     hideScrollBarOnOut?:boolean;
+    keepMounted?:boolean;
 }
 
 export function ModalBase({
@@ -44,6 +45,7 @@ export function ModalBase({
     contentClassName,
     hideScrollBarOnOut=true,
     zIndex,
+    keepMounted,
     ...props
 }:ModalBaseProps){
 
@@ -68,7 +70,7 @@ export function ModalBase({
         }
     },[renderTimeoutMs,open])
 
-    if(!show){
+    if(!show && !keepMounted){
         return null;
     }
 
