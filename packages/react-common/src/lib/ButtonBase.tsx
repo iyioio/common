@@ -71,7 +71,7 @@ export function ButtonBase({
 
         if(to){
             e?.preventDefault();
-            if(openLinkInNewWindow || linkTarget){
+            if(openLinkInNewWindow || linkTarget || e?.metaKey || e?.ctrlKey){
                 uiRouterService().open(to,{target:linkTarget??'_blank'});
             }else{
                 uiRouterService().push(to);

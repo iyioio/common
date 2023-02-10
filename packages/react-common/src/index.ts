@@ -5,6 +5,7 @@ export * from "./lib/BasePage";
 export * from "./lib/ButtonBase";
 export * from "./lib/common-hooks";
 export * from "./lib/Image";
+export * from "./lib/ImageContainer";
 export * from "./lib/ModalBase";
 export * from "./lib/page-lib";
 export * from "./lib/PageTransition";
