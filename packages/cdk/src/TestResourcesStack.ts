@@ -1,5 +1,4 @@
 import * as cdk from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { createAuthFunc } from './createAuthFunc';
@@ -10,8 +9,6 @@ import { createUserPool } from './createUserPool';
 export class TestResourcesStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
-
-        const vpc=new ec2.Vpc(this,"TestingVpc");
 
         const {cognitoUserRole}=createUserPool(this);
 
@@ -24,7 +21,7 @@ export class TestResourcesStack extends cdk.Stack {
 
         createAuthFunc(this,cognitoUserRole);
 
-        createDbCluster(this,vpc);
+        createDbCluster(this);
 
         createDynamoTables(this,cognitoUserRole);
 

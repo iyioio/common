@@ -1,10 +1,9 @@
 import { rdsClusterArnParam, rdsDatabaseParam, rdsSecretArnParam } from "@iyio/aws-rds";
 import * as cdk from "aws-cdk-lib";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
 import { Construct } from "constructs";
 
-export const createDbCluster=(scope:Construct, vpc:ec2.Vpc)=>
+export const createDbCluster=(scope:Construct)=>
 {
 
     const defaultDatabaseName='TestingDatabase';
@@ -18,7 +17,6 @@ export const createDbCluster=(scope:Construct, vpc:ec2.Vpc)=>
             maxCapacity:2,
             autoPause:cdk.Duration.minutes(5)
         },
-        vpc,
     });
 
     const rdsAdminCredentialsArn=dbCluster.secret?.secretArn;
