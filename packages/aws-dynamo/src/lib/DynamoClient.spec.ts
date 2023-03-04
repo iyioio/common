@@ -1,6 +1,6 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
 import { createScope, EnvParams, generateRandomTestStoreItem, parseConfigBool, Scope, shortUuid, testMountedStoreAsync } from "@iyio/common";
-import { testDynamoDbTable } from './dynamo-test-lib';
+import { testDynamoDbTableParam } from './dynamo-test-lib';
 import { DynamoClient } from './DynamoClient';
 
 
@@ -19,7 +19,7 @@ describe('DynamoStore', () => {
 
         const store=DynamoClient.fromScope(scope);
 
-        const tableName=testDynamoDbTable(scope);
+        const tableName=testDynamoDbTableParam(scope);
 
         onStore?.(store);
 
@@ -78,7 +78,7 @@ describe('DynamoStore', () => {
             reg.addParams(new EnvParams());
         },async scope=>{
             const basePath='dynamo/test-items';
-            const tableName=testDynamoDbTable(scope);
+            const tableName=testDynamoDbTableParam(scope);
             await testMountedStoreAsync(scope,basePath,{
                     path:basePath,
                     store:DynamoClient.fromScope(scope,{

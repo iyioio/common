@@ -1,4 +1,4 @@
-import { testDynamoDbTable, testDynamoDbTableWithSortKey } from '@iyio/aws-dynamo';
+import { testDynamoDbTableParam, testDynamoDbTableWithSecondaryIndexesParam, testDynamoDbTableWithSortKeyParam } from '@iyio/aws-dynamo';
 import * as cdk from "aws-cdk-lib";
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -15,7 +15,7 @@ export const createDynamoTables=(scope:Construct, role:iam.Role)=>{
         billingMode: db.BillingMode.PAY_PER_REQUEST,
     });
     grantTablePerms(role,defaultTable);
-    new cdk.CfnOutput(scope,testDynamoDbTable.typeName,{value:defaultTable.tableName});
+    new cdk.CfnOutput(scope,testDynamoDbTableParam.typeName,{value:defaultTable.tableName});
 
 
     const sortKeyTable = new db.Table(scope, "sortKeyTable", {
@@ -31,7 +31,18 @@ export const createDynamoTables=(scope:Construct, role:iam.Role)=>{
         billingMode: db.BillingMode.PAY_PER_REQUEST,
     });
     grantTablePerms(role,defaultTable);
-    new cdk.CfnOutput(scope,testDynamoDbTableWithSortKey.typeName,{value:sortKeyTable.tableName});
+    new cdk.CfnOutput(scope,testDynamoDbTableWithSortKeyParam.typeName,{value:sortKeyTable.tableName});
+
+    const secondaryTable = new db.Table(scope, "secondaryTable", {
+        partitionKey: {
+            name: "id",
+            type: db.AttributeType.STRING,
+        },
+        tableClass: db.TableClass.STANDARD,
+        billingMode: db.BillingMode.PAY_PER_REQUEST,
+    });
+    grantTablePerms(role,defaultTable);
+    new cdk.CfnOutput(scope,testDynamoDbTableWithSecondaryIndexesParam.typeName,{value:secondaryTable.tableName});
 
     return {defaultTable,sortKeyTable}
 

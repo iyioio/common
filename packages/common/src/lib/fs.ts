@@ -7,7 +7,7 @@ export const joinPaths=(... paths:string[]):string=>
     }
     let path=paths[0];
     if(path.endsWith('/')){
-        path=path.substr(0,path.length-1);
+        path=path.substring(0,path.length-1);
     }
     for(let i=1;i<paths.length;i++){
         const part=paths[i];
@@ -16,7 +16,7 @@ export const joinPaths=(... paths:string[]):string=>
         }
         path+=(part[0]==='/'?'':'/')+part;
         if(path.endsWith('/')){
-            path=path.substr(0,path.length-1);
+            path=path.substring(0,path.length-1);
         }
     }
     return path;
@@ -39,7 +39,7 @@ export const getFileExt=(path:string|null|undefined,includeDot:boolean=false,toL
 
     const q=path.indexOf('?');
     if(q!==-1){
-        path=path.substr(0,q);
+        path=path.substring(0,q);
     }
 
     const s=path.lastIndexOf('/');
@@ -48,7 +48,7 @@ export const getFileExt=(path:string|null|undefined,includeDot:boolean=false,toL
         return '';
     }
 
-    const ext=path.substr(d+(includeDot?0:1));
+    const ext=path.substring(d+(includeDot?0:1));
 
     return toLower?ext.toLowerCase():ext;
 }
@@ -59,11 +59,11 @@ export const getFileName=(path?:string|null): string=>
         return '';
     }
     if(path.endsWith('/')){
-        path=path.substr(0,path.length-1);
+        path=path.substring(0,path.length-1);
     }
 
     const i=path.lastIndexOf('/');
-    return i===-1?path:path.substr(i+1);
+    return i===-1?path:path.substring(i+1);
 }
 
 export const getDirectoryName=(path?:string|null): string=>
@@ -72,11 +72,11 @@ export const getDirectoryName=(path?:string|null): string=>
         return '';
     }
     if(path.endsWith('/')){
-        path=path.substr(0,path.length-1);
+        path=path.substring(0,path.length-1);
     }
 
     const i=path.lastIndexOf('/');
-    return i===-1?'/':path.substr(0,i);
+    return i===-1?'/':path.substring(0,i);
 }
 
 export const getFileNameNoExt=(path?:string|null): string=>
@@ -88,7 +88,7 @@ export const getFileNameNoExt=(path?:string|null): string=>
     }
 
     const i=path.lastIndexOf('.');
-    return i===-1?path:path.substr(0,i);
+    return i===-1?path:path.substring(0,i);
 }
 
 export const decodePathParts=<TPath extends string|null|undefined>(path:TPath):TPath=>

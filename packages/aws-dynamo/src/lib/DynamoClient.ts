@@ -1,11 +1,15 @@
-import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { IWithStoreAdapter, Scope } from "@iyio/common";
 import { createItemUpdateInputOrNull } from "./dynamo-lib";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 
-
+interface PageResult<T>
+{
+    items:T[];
+    lastKey?:any;
+}
 
 export class DynamoClient implements IWithStoreAdapter
 {
@@ -57,14 +61,87 @@ export class DynamoClient implements IWithStoreAdapter
             ...commandInput
         }
 
-        const scanResults:T[] = [];
+        const results:T[]=[];
         do{
-            const items =  await this.getClient().send(new ScanCommand(params));
-            items.Items?.forEach((item) => scanResults.push(unmarshall(item) as T));
-            params.ExclusiveStartKey = items.LastEvaluatedKey;
+            const items=await this.getClient().send(new ScanCommand(params));
+            if(items.Items){
+                for(const item of items.Items){
+                    results.push(unmarshall(item) as T);
+                }
+            }
+            params.ExclusiveStartKey=items.LastEvaluatedKey;
         }while(typeof params.ExclusiveStartKey !== "undefined");
 
-        return scanResults;
+        return results;
+    }
+
+
+    public async getScanAsync<T>(tableName:string,commandInput:Partial<ScanCommandInput>={}):Promise<PageResult<T>>
+    {
+
+        const params:ScanCommandInput={
+            TableName:tableName,
+            ...commandInput
+        }
+
+        const results:T[]=[];
+        const items=await this.getClient().send(new ScanCommand(params));
+        if(items.Items){
+            for(const item of items.Items){
+                results.push(unmarshall(item) as T);
+            }
+        }
+
+        return {
+            items:results,
+            lastKey:items.LastEvaluatedKey,
+        }
+    }
+
+
+    public async getAllQueryAsync<T>(tableName:string,commandInput:Partial<QueryCommandInput>={}):Promise<T[]>
+    {
+
+        const params:QueryCommandInput={
+            TableName:tableName,
+            ...commandInput
+        }
+
+        const results:T[]=[];
+        do{
+            const items=await this.getClient().send(new QueryCommand(params));
+            if(items.Items){
+                for(const item of items.Items){
+                    results.push(unmarshall(item) as T);
+                }
+            }
+            params.ExclusiveStartKey=items.LastEvaluatedKey;
+        }while(typeof params.ExclusiveStartKey !== "undefined");
+
+        return results;
+    }
+
+
+    public async getQueryAsync<T>(tableName:string,commandInput:Partial<QueryCommandInput>={}):Promise<PageResult<T>>
+    {
+
+        const params:QueryCommandInput={
+            TableName:tableName,
+            ...commandInput
+        }
+
+        const results:T[]=[];
+        const items=await this.getClient().send(new QueryCommand(params));
+        if(items.Items){
+            for(const item of items.Items){
+                results.push(unmarshall(item) as T);
+            }
+        }
+
+        return {
+            items:results,
+            lastKey:items.LastEvaluatedKey,
+        };
     }
 
     public async getAsync<T>(tableName:string,key:Partial<T>):Promise<T|undefined>
@@ -85,15 +162,15 @@ export class DynamoClient implements IWithStoreAdapter
         }));
     }
 
-    public async putAsync<T>(tableName:string, keyName:keyof T, item:T):Promise<void>
+    public async putAsync<T>(tableName:string, checkKey:(keyof T)|null, item:T):Promise<void>
     {
         await this.getClient().send(new PutItemCommand({
             TableName:tableName,
             Item:marshall(item),
-            ExpressionAttributeNames:{
-                '#key':(keyName as string)
-            },
-            ConditionExpression:"attribute_not_exists(#key)",
+            ExpressionAttributeNames:checkKey?{
+                '#key':(checkKey as string)
+            }:undefined,
+            ConditionExpression:checkKey?"attribute_not_exists(#key)":undefined,
         }));
     }
 

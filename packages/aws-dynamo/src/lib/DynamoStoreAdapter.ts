@@ -21,6 +21,11 @@ export interface DynamoStoreAdapterOptions extends StoreKeyScope
      * @default 'id'
      */
     sortKey?:string;
+
+    /**
+     * Array of secondary indexes of the table
+     */
+    secondaryIndexes?:string[];
 }
 
 export class DynamoStoreAdapter<T=any> extends BaseStore<T>
@@ -144,4 +149,28 @@ export class DynamoStoreAdapter<T=any> extends BaseStore<T>
 
         return undefined;
     }
+
+
+     /**
+     * Returns a collection of values based on the given query.
+     */
+    // public async queryAsync<TK extends T=T>(baseKey:string,query:Query,cancel?:CancelToken):Promise<TK[]>
+    // {
+    //     const pathInfo=convertStorePathToSqlPathInfo(baseKey,this.options.tableName,this.options.partitionKey);
+    //     if(!pathInfo?.table){
+    //         throw new InvalidStoreKeyError(`baseKey = ${baseKey}`);
+    //     }
+    // }
+
+    // /**
+    //  * Watches a value with the given key. The returned pointer will update its value subject
+    //  * as the value changes.
+    //  */
+    // watch?<TK extends T=T>(key:string):ValuePointer<TK>|undefined;
+
+    // /**
+    //  * Watches a collection of items based on the given query. Changes to the collection can be
+    //  * listened to by using the pointers changeCount.
+    //  */
+    // watchQuery?<TK extends T=T>(baseKey:string,query:Query):ListPointer<TK>|undefined;
 }

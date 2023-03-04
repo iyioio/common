@@ -1,5 +1,6 @@
 import { asArray } from "./array";
 import { asType } from "./common-lib";
+import { applyQueryShorthands } from "./query-lib";
 import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
 import { escapeSqlName, escapeSqlValue } from "./sql-lib";
 
@@ -35,6 +36,8 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
     if(depth>ctx.maxDepth){
         throw new Error(`Max query depth reached. maxDepth=${ctx.maxDepth}`);
     }
+
+    query=applyQueryShorthands(query,false);
 
     const asName=query.tableAs??'_tbl_'+(ctx.nextAs++);
     ctx.idStack.push(asName);

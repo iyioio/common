@@ -1,3 +1,4 @@
+import { HashMap } from "./common-types";
 
 
 export interface StaticQueryOperator<T=any>
@@ -36,6 +37,12 @@ export interface Query
      * A where condition or a group of where conditions
      */
     condition?:QueryConditionOrGroup;
+
+    /**
+     * Is converted into a condition where the keys of the match are columns that should equal their
+     * corresponding values.
+     */
+    match?:HashMap;
 
     /**
      * Columns to order by results by
