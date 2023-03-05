@@ -2,7 +2,7 @@ import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { IWithStoreAdapter, Scope } from "@iyio/common";
-import { createItemUpdateInputOrNull } from "./dynamo-lib";
+import { createItemUpdateInputOrNull, ExtendedItemUpdateOptions } from "./dynamo-lib";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 
 interface PageResult<T>
@@ -174,9 +174,9 @@ export class DynamoClient implements IWithStoreAdapter
         }));
     }
 
-    public async patchAsync<T>(tableName:string, key:Partial<T>, item:Partial<T>):Promise<void>
+    public async patchAsync<T>(tableName:string, key:Partial<T>, item:Partial<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
     {
-        const update=createItemUpdateInputOrNull(tableName,key,item);
+        const update=createItemUpdateInputOrNull(tableName,key,item,true,extendedOptions);
         if(!update){
             return;
         }

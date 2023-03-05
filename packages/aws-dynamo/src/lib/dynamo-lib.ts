@@ -1,12 +1,17 @@
 import { AttributeValue, UpdateItemInput } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 
-
+export interface ExtendedItemUpdateOptions<T=any>
+{
+    incrementProp?:keyof T;
+    incrementValue?:number;
+}
 export function createItemUpdateInputOrNull<T>(
     tableName:string,
     key:Partial<T>,
     obj:Partial<T>,
-    doNotUpdateKeys:boolean=true
+    doNotUpdateKeys:boolean=true,
+    extendedOptions?:ExtendedItemUpdateOptions
 ):UpdateItemInput|null
 {
 
@@ -14,9 +19,11 @@ export function createItemUpdateInputOrNull<T>(
     const values:Record<string,AttributeValue>={}
     let expression='SET';
 
+    const incrementProp=typeof extendedOptions?.incrementProp === 'string'?extendedOptions?.incrementProp:undefined;
+
     let i=0;
     for(const e in obj){
-        if((doNotUpdateKeys && key[e]!==undefined) || obj[e]===undefined){
+        if((doNotUpdateKeys && key[e]!==undefined) || obj[e]===undefined || e===incrementProp){
             continue;
         }
 
@@ -25,6 +32,16 @@ export function createItemUpdateInputOrNull<T>(
         values[vk]=convertToAttr(obj[e]);
         names[nk]=e;
         expression=`${expression}${i?',':''} ${nk} = ${vk}`
+        i++;
+    }
+
+
+    if(incrementProp){
+        const vk=':__incrementValue';
+        const nk='#N'+i;
+        values[vk]=convertToAttr(extendedOptions?.incrementValue??1);
+        names[nk]=incrementProp;
+        expression=`${expression}${i?',':''} ${nk} = ${nk} + ${vk}`
         i++;
     }
 
