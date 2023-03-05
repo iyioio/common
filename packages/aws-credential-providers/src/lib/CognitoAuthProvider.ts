@@ -12,7 +12,6 @@ const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CRED
  */
 export const _allIssuedCognitoCreds:Provider<Credentials>[]=[];
 
-
 const sessionKey=Symbol('cognitoSession');
 const userKey=Symbol('cognitoUser');
 
@@ -68,29 +67,49 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         return this.unCreds;
     }
 
-    private readonly providerMap:HashMap<Provider<Credentials>>={};
     public getAuthProvider():Provider<Credentials>|undefined
     {
+        return this.getCredentials;
+    }
+
+    private readonly getCredentials=async ():Promise<Credentials>=>{
         const user=this.currentUser.value;
-        const getAnon=()=>disableCognitoUnauthenticatedParam.get()?
-            undefined:this.getUnauthenticatedCredentials();
         if(!user){
-            return getAnon();
+            if(disableCognitoUnauthenticatedParam.get()){
+                throw new Error('Unauthenticated cognito users disabled')
+            }
+            return await this.getUnauthenticatedCredentials()();
         }
 
-        const session:CognitoUserSession|undefined=user.providerData.providerData?.[sessionKey];
+        let session:CognitoUserSession|undefined=user.providerData.providerData?.[sessionKey];
         if(!session){
-            return getAnon();
+            if(disableCognitoUnauthenticatedParam.get()){
+                throw new Error('Unauthenticated cognito users disabled')
+            }
+            return await this.getUnauthenticatedCredentials()();
+        }
+
+        if(!session.isValid()){
+            console.info('getAuthProvider','refresh session')
+            const cognitoUser:CognitoUser=user.providerData.providerData?.[userKey];
+            if(cognitoUser){
+                const refreshToken=session.getRefreshToken();
+                const newSession=await promiseFromErrorResultCallback<CognitoUserSession>(
+                    cb=>cognitoUser.refreshSession(refreshToken,cb));
+
+
+                if(newSession){
+                    session=newSession;
+                    if(user.providerData.providerData){
+                        user.providerData.providerData[sessionKey]=newSession;
+                    }
+                }
+            }
         }
 
         const token=session.getIdToken().getJwtToken();
 
-        let provider:Provider<Credentials>=this.providerMap[token];
-        if(provider){
-            return provider;
-        }
-
-        provider=fromCognitoIdentityPool({
+        const provider=fromCognitoIdentityPool({
             identityPoolId:this.config.identityPoolId,
             logins:{
                 [`cognito-idp.${this.config.region}.amazonaws.com/${this.config.UserPoolId}`]:token
@@ -100,14 +119,11 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
             }
         });
 
-        const cached=cacheCreds(provider);
-
         if(trackIssuedCreds){
-            _allIssuedCognitoCreds.push(cached);
+            _allIssuedCognitoCreds.push(provider);
         }
 
-        return this.providerMap[token]=cached;
-
+        return await provider();
     }
 
     public async getCurrentUser():Promise<BaseUser|null>{
@@ -126,8 +142,21 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
 
     private async convertCognitoUserAsync(user:CognitoUser):Promise<BaseUser>
     {
-        const session=await promiseFromErrorResultCallback<CognitoUserSession|null>(cb=>user.getSession(cb));
+        let session=await promiseFromErrorResultCallback<CognitoUserSession|null>(cb=>user.getSession(cb));
         if(session){
+
+            if(!session.isValid()){
+
+                const refreshToken=session.getRefreshToken();
+                const newSession=await promiseFromErrorResultCallback<CognitoUserSession>(
+                    cb=>user.refreshSession(refreshToken,cb));
+
+                if(newSession){
+                    session=newSession;
+                }
+
+            }
+
             const atts=await promiseFromErrorResultCallback<CognitoUserAttribute[]|undefined>(cb=>user.getUserAttributes(cb));
             const id=user.getUsername();
             const data:HashMap<string>={};
@@ -419,15 +448,3 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
 
 }
 
-const cacheCreds=(provider:Provider<Credentials>):Provider<Credentials>=>{
-    let credsPromise:Promise<Credentials>|null=null;
-    let t=Date.now();
-
-    return async ()=>{
-        if(!credsPromise || (Date.now()-t)>1000*30){
-            t=Date.now();
-            credsPromise=provider();
-        }
-        return await credsPromise;
-    }
-}
