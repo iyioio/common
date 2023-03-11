@@ -42,3 +42,7 @@ export const downloadObject=(name:string, obj:any)=>{
     const blob=new Blob([JSON.stringify(obj)]);
     return downloadBlob(name,blob);
 }
+
+export const downloadText=(name:string,text:string,contentType:string)=>{
+    downloadBlob(name,new Blob([text],{type:contentType}));
+}

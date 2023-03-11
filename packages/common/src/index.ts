@@ -12,6 +12,7 @@ export * from './lib/BaseUser';
 export * from './lib/BrowserUiRouter';
 export * from './lib/CancelToken';
 export * from './lib/client-download';
+export * from './lib/clipboard';
 export * from './lib/common-lib';
 export * from './lib/common-params';
 export * from './lib/common-types';
