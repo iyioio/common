@@ -26,7 +26,6 @@
         "react-dom": "18.2.0",
         "regenerator-runtime": "0.13.7",
         "rxjs": "^7.8.0",
-        "source-map-support": "^0.5.21",
         "styled-jsx": "5.0.7",
         "tslib": "^2.3.0",
         "uuid": "^9.0.0"
@@ -40,8 +39,8 @@
         "@nrwl/devkit": "14.8.6",
         "@nrwl/eslint-plugin-nx": "14.8.6",
         "@nrwl/jest": "15.0.3",
-        "@nrwl/js": "14.8.6",
-        "@nrwl/linter": "14.8.6",
+        "@nrwl/js": "^15.8.6",
+        "@nrwl/linter": "^15.8.6",
         "@nrwl/react": "^15.8.6",
         "@nrwl/storybook": "15.0.3",
         "@nrwl/web": "^15.8.6",
