@@ -1,0 +1,46 @@
+{
+    "name": "cdk-common",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/cdk-common/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@iyio/nx-common:lib-builder",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/cdk-common",
+                "main": "packages/cdk-common/src/index.ts",
+                "tsConfig": "packages/cdk-common/tsconfig.lib.json",
+                "assets": ["packages/cdk-common/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs cdk-common {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/cdk-common/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/cdk-common"],
+            "options": {
+                "jestConfig": "packages/cdk-common/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}
