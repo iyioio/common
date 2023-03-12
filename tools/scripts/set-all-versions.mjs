@@ -1,9 +1,11 @@
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import * as Path from 'path';
 import chalk from 'chalk';
 import { enumProjects } from './enum-projects.mjs'
+import devkit from '@nrwl/devkit';
+
+const { readCachedProjectGraph } = devkit;
 
 const [, , version] = process.argv;
 

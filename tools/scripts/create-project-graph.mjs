@@ -1,4 +1,6 @@
-import { createProjectGraphAsync } from '@nrwl/devkit';
+import devkit from '@nrwl/devkit';
+
+const {createProjectGraphAsync}=devkit;
 
 const main=async ()=>{
     try{
