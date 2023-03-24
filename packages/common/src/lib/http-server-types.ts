@@ -47,6 +47,7 @@ export interface RouteMap{
 
 export interface HttpRequestEventVariations
 {
+    queryStringParameters?:{[key:string]:string};
     requestContext?:{
         http?:{
             path?:string;
