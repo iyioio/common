@@ -108,7 +108,7 @@ export const decodePathParts=<TPath extends string|null|undefined>(path:TPath):T
 }
 
 
-const httpReg=/^https?:\/\//i
+export const httpReg=/^https?:\/\//i
 export const isHttp=(path:string|null|undefined):boolean=>
 {
     if(!path){
@@ -117,7 +117,7 @@ export const isHttp=(path:string|null|undefined):boolean=>
     return httpReg.test(path);
 }
 
-const protocolReg=/^\w+:\/\//i
+export const protocolReg=/^(\w+):\/\//
 export const isRooted=(path:string|null|undefined):boolean=>
 {
     if(!path){

@@ -75,6 +75,12 @@
                 "style": "css",
                 "linter": "eslint"
             }
+        },
+        "@nrwl/next": {
+            "application": {
+                "style": "styled-jsx",
+                "linter": "eslint"
+            }
         }
     }
 }
