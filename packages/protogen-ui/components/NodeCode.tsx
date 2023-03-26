@@ -1,4 +1,5 @@
 import { getSubstringCount } from "@iyio/common";
+import { markdownHidden } from "@iyio/protogen";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NodeCtrl } from "../lib/NodeCtrl";
 import { CodeInput } from "./CodeInput";
@@ -54,7 +55,7 @@ export function NodeCode({
     useEffect(()=>{
         if(node.autoFocus && textarea){
             node.autoFocus=false;
-            const i=textarea.value.indexOf('*hidden*');
+            const i=textarea.value.indexOf(markdownHidden);
             if(i===-1){
                 textarea.setSelectionRange(textarea.value.length,textarea.value.length);
             }else{

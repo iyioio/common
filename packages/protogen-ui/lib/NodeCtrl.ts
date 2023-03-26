@@ -1,5 +1,5 @@
 import { DisposeCallback, Point, shortUuid } from "@iyio/common";
-import { getMarkdownProtoPos, getProtoLayout, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
+import { addMarkdownAttribute, getMarkdownProtoPos, getProtoLayout, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { DomViewCharPointer, getElemProtoLayout, getNodesProtoLayout } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
@@ -153,6 +153,18 @@ export class NodeCtrl
             doUpdate();
         }
 
+    }
+
+    public addAttribute(childName:string,attName:string,value:string,hidden:boolean){
+        const code=addMarkdownAttribute(
+            this.getFullCode(),
+            childName,
+            attName,
+            value,
+            hidden
+        )
+        this.code.next(code);
+        this.update();
     }
 }
 

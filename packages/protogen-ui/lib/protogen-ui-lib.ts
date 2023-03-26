@@ -14,6 +14,14 @@ export interface ProtoUiLine{
     p2:Point;
 }
 
+export interface ProtoAnchor
+{
+    side:'left'|'right';
+    layout:ProtoLayout;
+    ctrl:NodeCtrl;
+    time:number;
+}
+
 export interface NodeCtrlAndProp
 {
     node:NodeCtrl;
@@ -59,23 +67,15 @@ export const getNodesProtoLayout=(nodes:Node[],scale:number):ProtoLayout=>{
         return getEmptyProtoLayout();
     };
     let layout:ProtoLayout|undefined;
-    let text='';
     for(const node of nodes){
-        if(!layout && (node instanceof Element)){
+        if(node instanceof Element){
             layout=getNodeProtoLayout(node,scale);
-        }
-        const i=(node.textContent??'').indexOf('\n')
-        if(i!==-1){
-            text+=node.textContent?.substring(0,i)??'';
             break;
-        }else{
-            text+=node.textContent??'';
         }
     }
     if(!layout){
         layout=getNodeProtoLayout(nodes[0],scale);
     }
-    layout.text=text;
     return layout;
 }
 
@@ -109,19 +109,19 @@ export const getNodeProtoLayout=(node:Node|null,scale:number):ProtoLayout=>{
     }
 
     const localY=(elemRect.bottom-elemRect.top)/2+(elemRect.top-nodeRect.top);
-    const y=(elemRect.bottom-elemRect.top)/2+elemRect.top;
+    const y=((elemRect.bottom-elemRect.top)/2+elemRect.top)-canvasRect.top;
     const left=nodeRect.left-canvasRect.left+anchorInset;
     const right=nodeRect.right-canvasRect.right-anchorInset;
 
     return {
-        left:left*scale,
-        right:right*scale,
-        localY:localY*scale,
-        y:y*scale,
-        top:elemRect.top*scale,
-        bottom:elemRect.bottom*scale,
-        lPt:{x:left*scale,y:y*scale},
-        rPt:{x:right*scale,y:y*scale},
+        left:left/scale,
+        right:right/scale,
+        localY:localY/scale,
+        y:y/scale,
+        top:(elemRect.top-canvasRect.top)/scale,
+        bottom:(elemRect.bottom-canvasRect.bottom)/scale,
+        lPt:{x:left/scale,y:y/scale},
+        rPt:{x:right/scale,y:y/scale},
     }
 }
 
@@ -146,7 +146,7 @@ export const getElemProtoLayout=(elem:HTMLElement|null,scale:number):ProtoLayout
     }
 
     const localY=(nodeRect.bottom-nodeRect.top)/2+nodeRect.top;
-    const y=localY;
+    const y=localY-canvasRect.top;
     const left=nodeRect.left-canvasRect.left+anchorInset;
     const right=nodeRect.right-canvasRect.right-anchorInset;
 
@@ -155,8 +155,8 @@ export const getElemProtoLayout=(elem:HTMLElement|null,scale:number):ProtoLayout
         right:right*scale,
         localY:localY*scale,
         y:y*scale,
-        top:nodeRect.top*scale,
-        bottom:nodeRect.bottom*scale,
+        top:(nodeRect.top-canvasRect.top)*scale,
+        bottom:(nodeRect.bottom-canvasRect.bottom)*scale,
         lPt:{x:left*scale,y:y*scale},
         rPt:{x:right*scale,y:y*scale},
     }

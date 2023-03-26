@@ -110,10 +110,8 @@ export interface ProtoLayout
     bottom:number;
     y:number;
     localY:number;
-    content?:string;
     lPt:Point;
     rPt:Point;
-    text?:string;
     node?:ProtoNode;
 }
 

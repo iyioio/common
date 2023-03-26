@@ -1,8 +1,9 @@
-import { parseProtogenMarkdownItem as parseProtogenMarkdownItems, ProtoPosScale } from "@iyio/protogen";
+import { ReadonlySubject } from "@iyio/common";
+import { parseProtogenMarkdownItem as parseProtogenMarkdownItems, ProtoLayout, ProtoPosScale } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
-import { NodeCtrlAndProp } from "./protogen-ui-lib";
+import { NodeCtrlAndProp, ProtoAnchor } from "./protogen-ui-lib";
 
 export class ProtogenCtrl
 {
@@ -17,11 +18,17 @@ export class ProtogenCtrl
 
     public readonly lineCtrl:LineCtrl;
 
+    private readonly _activeAnchor:BehaviorSubject<ProtoAnchor|null>=new BehaviorSubject<ProtoAnchor|null>(null);
+    public get activeAnchorSubject():ReadonlySubject<ProtoAnchor|null>{return this._activeAnchor}
+    public get activeAnchor(){return this._activeAnchor.value}
+
     public constructor(code?:string)
     {
         this.entities=new BehaviorSubject<NodeCtrl[]>([]);
 
         this.lineCtrl=new LineCtrl(this);
+
+        window.addEventListener('mouseup',this.mouseUpListener);
 
         if(code){
             this.setState(code);
@@ -36,8 +43,42 @@ export class ProtogenCtrl
         }
         this._isDisposed=true;
 
+        window.removeEventListener('mouseup',this.mouseUpListener);
+
         for(const e of this.entities.value){
             e.dispose();
+        }
+    }
+
+    private readonly mouseUpListener=()=>{
+        setTimeout(()=>{
+            const a=this.activeAnchor;
+            if(!this._isDisposed && a && (Date.now()-a.time)>200){
+                this._activeAnchor.next(null);
+            }
+        },1);
+    }
+
+    public selectAnchor(layout:ProtoLayout,side:'left'|'right',ctrl:NodeCtrl)
+    {
+        console.log({layout})
+        const a=this._activeAnchor.value;
+        if(a){
+            this._activeAnchor.next(null);
+            if((a.layout!==layout || a.side!==side) && layout.node && a.layout.node){
+                a.ctrl.addAttribute(
+                    a.layout.node.name===a.ctrl.node.value.name?'$self':a.layout.node.name,
+                    '$link',
+                    `${
+                        ctrl.node.value.name
+                    }${
+                        layout.node.name===ctrl.node.value.name?'':'.'+layout.node.name
+                    }`,
+                    true
+                )
+            }
+        }else{
+            this._activeAnchor.next({layout,side,ctrl,time:Date.now()});
         }
     }
 

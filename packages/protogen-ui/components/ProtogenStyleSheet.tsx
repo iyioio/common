@@ -26,9 +26,8 @@ export default function ProtogenStyleSheet()
                 height:100%;
                 margin:0;
                 padding:0;
-            }
-            body{
                 overflow:hidden;
+                overflow:clip;
             }
             main{
                 display:flex;

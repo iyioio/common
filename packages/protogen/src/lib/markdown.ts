@@ -18,8 +18,10 @@ export interface ProtogenMarkdownNode
     connections?:Connection[];
 }
 
+export const markdownHidden='*hidden*'
+
 const typeReg=/^\s*##\s*(\w+)/;
-const layoutReg=/^\s*-\s+\$layout\s*:\s*([\d.]+)\s+([\d.]+)(\s+([\d.]+))?/;
+const layoutReg=/^\s*-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/;
 
 export const parseProtogenMarkdownItem=(str:string):ProtogenMarkdownNode[]=>{
 
@@ -282,7 +284,7 @@ const parseTypes=(line:string):ProtoTypeInfo[]=>{
     return types;
 }
 
-const layoutRegNoStart=/-\s+\$layout\s*:\s*([\d.]+)\s+([\d.]+)(\s+([\d.]+))?/i
+const layoutRegNoStart=/-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/i
 export const getMarkdownProtoPos=(code:string):ProtoPosScale|null=>{
     const match=layoutRegNoStart.exec(code);
     if(!match){
@@ -312,10 +314,10 @@ export const setMarkdownProtoPos=(code:string,pos:ProtoPosScale):string=>{
 }
 
 export const addMarkdownHidden=(code:string):string=>{
-    if(code.includes('*hidden*')){
+    if(code.includes(markdownHidden)){
         return code;
     }
-    return code+'\n*hidden*';
+    return code+'\n'+markdownHidden;
 }
 
 export const splitMarkdownSections=(code:string):string[]=>{
@@ -390,4 +392,38 @@ const mergeNormalizeNodes=(child:ProtoNode,existing:ProtoNode|null|undefined)=>{
             apply.links.push(v);
         }
     }
+}
+
+
+export const addMarkdownAttribute=(
+    code:string,
+    childName:string,
+    attName:string,
+    value:string,
+    hidden:boolean
+):string=>{
+
+    const matches=code.matchAll(/(^|\n)-\s+([$\w]+)\s*(:|$|\n|\r)/g);
+    let match:RegExpMatchArray|null=null;
+    for(const m of matches){
+        if(m[2]===childName){
+            match=m;
+            if(!hidden){
+                break;
+            }
+        }
+    }
+
+    const attLine=`  - ${attName}:${value?' '+value:''}`;
+    const hiddenIndex=hidden?-1:code.indexOf(markdownHidden);
+
+    if(!match || (hidden && (match.index??0)<hiddenIndex)){
+        return `${hidden?addMarkdownHidden(code):code}\n- ${childName}\n${attLine}`
+    }
+
+    const insertAt=code.indexOf('\n',(match.index??0)+1);
+    if(insertAt===-1){
+        return `${hidden?addMarkdownHidden(code):code}\n- ${childName}\n${attLine}`
+    }
+    return `${code.substring(0,insertAt+1)}${attLine}\n${code.substring(insertAt+1)}`;
 }

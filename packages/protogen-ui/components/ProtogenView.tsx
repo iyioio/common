@@ -1,9 +1,10 @@
+import { markdownHidden } from "@iyio/protogen";
 import { DragTarget, PanZoomCtrl, PanZoomView } from "@iyio/react-common";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { dt } from "../lib/lib-design-tokens";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
 import Canvas from "./Canvas";
 import { ProtogenContext } from "./lib-builder-components";
+import { ProtogenToolbar } from "./ProtogenToolbar";
 
 interface ProtogenViewProps
 {
@@ -61,7 +62,7 @@ export default function ProtogenView({
 
         ctrl.addEntity(
             code.trim()+
-            (code.includes('*hidden*')?'':'\n*hidden*')+
+            (code.includes(markdownHidden)?'':'\n'+markdownHidden)+
             `\n- $layout: ${Math.round(pt.x)} ${Math.round(pt.y)} 300`
         ,true);
 
@@ -109,10 +110,7 @@ export default function ProtogenView({
                     <Canvas editable />
                 }
 
-                <div className="bar">
-                    <span></span>
-                    <button onClick={()=>ctrl.exportAsync()}>Export</button>
-                </div>
+                <ProtogenToolbar ctrl={ctrl}/>
 
 
                 <style jsx>{`
@@ -120,28 +118,6 @@ export default function ProtogenView({
                         display:flex;
                         flex-direction:column;
                         flex:1;
-                    }
-                    .bar{
-                        position:absolute;
-                        left:0;
-                        right:0;
-                        bottom:0;
-                        display:flex;
-                        justify-content:space-between;
-                        padding:4px ${dt().containerPadding};
-                        background:${dt().entityBgColor};
-                    }
-                    button{
-                        border:none;
-                        border-radius:4px;
-                        background:transparent;
-                        padding:4px;
-                        color:${dt().mutedColor};
-                        font-weight:bold;
-                        transition:opacity 0.1s ease-in-out;
-                    }
-                    button:active{
-                        opacity:0.5;
                     }
                 `}</style>
             </div>
