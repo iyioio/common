@@ -193,7 +193,7 @@ export function PanZoomView({
 
             if(state.anchorPanT===null || state.anchorPanCount!==points.length){
                 if(state.dragTarget){
-                    const match=/translate\(\s*([-\d]+)px[,\s]*([-\d]+)px\s*\)/i.exec(state.dragTarget.elem.style.transform??'');
+                    const match=/translate\(\s*([-\d.]+)px[,\s]*([-\d.]+)px\s*\)/i.exec(state.dragTarget.elem.style.transform??'');
                     state.dragAnchorX=match?Number(match[1]):0;
                     state.dragAnchorY=match?Number(match[2]):0;
                     state.anchorX=x;
