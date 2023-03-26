@@ -1,6 +1,6 @@
 import { CsvRow, parseCsvRows } from "@iyio/common";
 import { parseNodeLine } from "./parseNodeLine";
-import { ProtoContext, TGenNode } from "./protogen-types";
+import { ProtoContext, ProtoNode } from "./protogen-types";
 
 const nameKey='Name';
 const shapeKey='Shape Library';
@@ -73,7 +73,7 @@ export const lucidCsvParser=async ({
     }
 }
 
-const addDetachedComments=(name:string,index:number|null,row:CsvRow|null,node:TGenNode,csv:CsvRow[]):boolean=>{
+const addDetachedComments=(name:string,index:number|null,row:CsvRow|null,node:ProtoNode,csv:CsvRow[]):boolean=>{
 
     let added=false;
 

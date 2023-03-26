@@ -24,7 +24,8 @@
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "protogen-ui:build",
-                "dev": true
+                "dev": true,
+                "port": 4213
             },
             "configurations": {
                 "development": {

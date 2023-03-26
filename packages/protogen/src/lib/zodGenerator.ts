@@ -1,4 +1,4 @@
-import { ProtoContext, TGenNode } from "./protogen-types";
+import { ProtoContext, ProtoNode } from "./protogen-types";
 
 export interface ZodGeneratorOptions
 {
@@ -72,7 +72,7 @@ export const zodGenerator=async ({
     })
 }
 
-const addEnum=(node:TGenNode,out:string[],tab:string,getFullName:(name:string)=>string)=>{
+const addEnum=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string)=>{
 
     const fullName=getFullName(node.name);
 
@@ -90,7 +90,7 @@ const addEnum=(node:TGenNode,out:string[],tab:string,getFullName:(name:string)=>
     out.push(`export const ${fullName}=z.nativeEnum(${node.name})`);
 }
 
-const addUnion=(node:TGenNode,out:string[],tab:string,getFullName:(name:string)=>string)=>{
+const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string)=>{
 
     const fullName=getFullName(node.name);
 
@@ -107,7 +107,7 @@ const addUnion=(node:TGenNode,out:string[],tab:string,getFullName:(name:string)=
     out.push(`export type ${node.name}=z.infer<typeof ${fullName}>;`);
 }
 
-const addInterface=(node:TGenNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[])=>{
+const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[])=>{
     const fullName=getFullName(node.name);
 
     const hasCustoms=node.children?.some(c=>!isBuiltInType(c.type))?true:false;

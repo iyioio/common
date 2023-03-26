@@ -21,6 +21,7 @@
         "constructs": "^10.1.110",
         "core-js": "^3.6.5",
         "date-fns": "^2.29.3",
+        "highlight.js": "^11.7.0",
         "next": "^13.2.4",
         "node-fetch": "^2.6.7",
         "react": "18.2.0",

@@ -1,7 +1,10 @@
+import { Point } from "@iyio/common";
+
 export interface ProtoAttribute
 {
     name:string;
     value:string;
+    multiValue?:string[]
     props:{[name:string]:string};
 }
 
@@ -11,7 +14,8 @@ export interface ProtoTypeInfo
     isArray:boolean;
 }
 
-export interface TGenNode extends ProtoTypeInfo{
+export interface ProtoNode extends ProtoTypeInfo{
+
     name:string;
 
     /**
@@ -30,7 +34,12 @@ export interface TGenNode extends ProtoTypeInfo{
 
     attributes:{[name:string]:ProtoAttribute};
 
-    children?:TGenNode[];
+    children?:ProtoNode[];
+
+
+    hidden?:boolean;
+
+    links?:NodeAndPropName[];
 }
 
 export interface ProtoOutput
@@ -57,7 +66,7 @@ export interface ProtoContext
     inputArgs:string[];
     outputArgs:string[];
     sources:ProtoSource[];
-    nodes:TGenNode[];
+    nodes:ProtoNode[];
     outputs:ProtoOutput[];
     verbose:boolean;
     tab:string;
@@ -77,4 +86,47 @@ export interface ProtoPipeline
     generators:ProtoCallback[];
     writers:ProtoCallback[];
     plugins:{[name:string]:ProtoCallback};
+}
+
+
+
+export interface EntityLayout
+{
+    name:string;
+    x:number;
+    y:number;
+    width:number;
+    height:number;
+}
+
+
+export type RelationType='one-one'|'one-many'|'many-many'|'node-node';
+
+export interface ProtoLayout
+{
+    left:number;
+    right:number;
+    top:number;
+    bottom:number;
+    y:number;
+    localY:number;
+    content?:string;
+    lPt:Point;
+    rPt:Point;
+    text?:string;
+    node?:ProtoNode;
+}
+
+export interface NodeAndPropName
+{
+    nodeName:string;
+    propName?:string;
+}
+
+export interface ProtoPosScale
+{
+    x:number;
+    y:number;
+    width?:number;
+    scale:number;
 }

@@ -1,18 +1,22 @@
+import { NextJsApp } from '@iyio/nextjs-common';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import './styles.css';
+import ProtogenStyleSheet from '../components/ProtogenStyleSheet';
 
-function CustomApp({ Component, pageProps }: AppProps) {
+
+export default function App(props:AppProps){
     return (
-        <>
+        <NextJsApp
+            appProps={props}
+            GlobalStyle={ProtogenStyleSheet}
+            layoutProps={{
+                pageTransitions:true,
+            }}
+        >
             <Head>
-                <title>Welcome to protogen-ui!</title>
+                <title>Protogen</title>
             </Head>
-            <main className="app">
-                <Component {...pageProps} />
-            </main>
-        </>
-    );
-}
 
-export default CustomApp;
+        </NextJsApp>
+    )
+}

@@ -120,7 +120,7 @@ export const runTGenCliAsync=async (argList:string[],argStart=0):Promise<ProtoPi
 
     await executeTGenPipelineAsync(pipeline);
 
-    //console.log('context',inspect(pipeline.context,{showHidden:false,depth:20,colors:true}));
+    //log('context',inspect(pipeline.context,{showHidden:false,depth:20,colors:true}));
 
     return pipeline;
 }

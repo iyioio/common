@@ -1,8 +1,8 @@
-import { ProtoAttribute, TGenNode } from "./protogen-types";
+import { ProtoAttribute, ProtoNode } from "./protogen-types";
 
 const brackets=/\[\s*\]/g
 
-export const parseNodeLine=(line:string,typeStartIndex:number,hasParent:boolean,extendLine?:(name:string)=>string|null):TGenNode[]=>{
+export const parseNodeLine=(line:string,typeStartIndex:number,hasParent:boolean,extendLine?:(name:string)=>string|null):ProtoNode[]=>{
 
     const ci=line.indexOf('#');
     let comment:string|undefined;
@@ -26,7 +26,7 @@ export const parseNodeLine=(line:string,typeStartIndex:number,hasParent:boolean,
 
     const attributes:{[name:string]:ProtoAttribute}={};
 
-    const node:TGenNode={
+    const node:ProtoNode={
         name:types[0].replace(brackets,''),
         type:types[typeStartIndex]?.replace(brackets,'')??'',
         types:types.filter((_,i)=>i>=typeStartIndex).map(t=>({
@@ -79,7 +79,7 @@ export const parseNodeLine=(line:string,typeStartIndex:number,hasParent:boolean,
         }else{
             name=node.name+'Ref';
         }
-        const refNode:TGenNode={
+        const refNode:ProtoNode={
             name,
             optional:true,
             type:type.type,
