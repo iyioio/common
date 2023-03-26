@@ -59,3 +59,23 @@ export const addSpacesToCamelCase=(value:string):string=>{
     }
     return value;
 }
+
+export const getSubstringCount=(str:string,substring:string):number=>{
+    let count=0;
+    let i=0;
+    if(!substring){
+        return 0
+    }else if(substring.length===1){
+        for(let i=0;i<str.length;i++){
+            if(str[i]===substring){
+                count++;
+            }
+        }
+    }else{
+        while((i=str.indexOf(substring,i))!==-1){
+            count++;
+            i+=substring.length;
+        }
+    }
+    return count;
+}
