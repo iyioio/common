@@ -40,7 +40,6 @@ export default function Canvas({
         <div className={cn('Canvas proto-canvas-pos',{editable})}>
 
             <svg viewBox={`-${svgSpan} -${svgSpan} ${svgSpan*2} ${svgSpan*2}`} width={svgSpan*2} height={svgSpan*2}>
-                <rect x="-50" width="100" height="50" fill="red"/>
                 <g ref={setLineGroup}/>
             </svg>
 
