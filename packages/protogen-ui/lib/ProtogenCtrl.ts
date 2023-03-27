@@ -4,9 +4,13 @@ import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
 import { NodeCtrlAndProp, ProtoAnchor, SaveRequest } from "./protogen-ui-lib";
+import { ProtoKeyListener } from "./ProtoKeyListener";
 
 export class ProtogenCtrl
 {
+
+    public readonly lineCtrl:LineCtrl;
+    public readonly keyListener:ProtoKeyListener;
 
     public readonly entities:BehaviorSubject<NodeCtrl[]>;
 
@@ -15,8 +19,6 @@ export class ProtogenCtrl
         y:0,
         scale:1
     });
-
-    public readonly lineCtrl:LineCtrl;
 
     private readonly _activeAnchor:BehaviorSubject<ProtoAnchor|null>=new BehaviorSubject<ProtoAnchor|null>(null);
     public get activeAnchorSubject():ReadonlySubject<ProtoAnchor|null>{return this._activeAnchor}
@@ -39,6 +41,7 @@ export class ProtogenCtrl
         this.entities=new BehaviorSubject<NodeCtrl[]>([]);
 
         this.lineCtrl=new LineCtrl(this);
+        this.keyListener=new ProtoKeyListener(this);
 
         window.addEventListener('mouseup',this.mouseUpListener);
 
@@ -54,6 +57,8 @@ export class ProtogenCtrl
             return;
         }
         this._isDisposed=true;
+
+        this.keyListener.dispose();
 
         window.removeEventListener('mouseup',this.mouseUpListener);
 
