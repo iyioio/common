@@ -47,7 +47,7 @@ const darkTokens:DesignTokens=Object.freeze(
     panelColor:"#1B1D1F",
     containerPadding:'14px',
 
-    entityBgColor:'#1E1E1E',
+    entityBgColor:'#1e1e1efa',
     entityNameColor:'#BC8ABD',
     entityTypeColor:'#6FC5B1',
     memberNameWeight:'bold',

@@ -60,6 +60,7 @@ export default function NodeView({
                     flex-direction:column;
                     background:${dt().entityBgColor};
                     border-radius:${dt().borderRadius};
+                    box-shadow:0 0 8px #00000033;
                 }
                 .NodeView-drag{
                     height:12px;
