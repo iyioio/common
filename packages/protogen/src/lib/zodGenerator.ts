@@ -128,7 +128,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
 
             if(!isBuiltIn){
                 interfaceProps.push(`${
-                        prop.comment?formatComment(prop.comment,tab):''
+                        prop.comment?formatComment(prop.comment,tab)+'\n':''
                     }${
                         tab
                     }${
@@ -158,7 +158,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
             }
 
             out.push(`${
-                    prop.comment?formatComment(prop.comment,tab):''
+                    prop.comment?formatComment(prop.comment,tab)+'\n':''
                 }${
                     tab
                 }${
@@ -181,6 +181,9 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
             out.push(prop);
         }
         out.push('});')
+    }
+    if(node.comment){
+        out.push(formatComment(node.comment,''));
     }
     if(interfaceProps.length){
         out.push(`export type ${node.name}=z.infer<typeof ${hasCustoms?'__base__':''}${fullName}> & {`);
@@ -213,5 +216,5 @@ const isBuiltInType=(type:string)=>{
 }
 
 const formatComment=(comment:string,tab:string)=>(
-    `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */\n`
+    `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
 )

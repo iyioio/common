@@ -13,64 +13,10 @@ export interface ProtogenMarkdownNode
 
 export const markdownHidden='*hidden*'
 
-const typeReg=/^\s*##\s*(\w+)/;
-const layoutReg=/^\s*-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/;
-const bulletReg=/^(\s*)-\s+([$\w]+)(\?)?\s*:?(.*)/;
 
 export const splitMarkdown=(code:string)=>{
     return code.split(/(?=(^|\n)#)/g).map(c=>c.trim()).filter(c=>c);
 }
-
-export const parseProtogenMarkdownItem=(str:string):ProtogenMarkdownNode[]=>{
-
-    const nodes:ProtogenMarkdownNode[]=[];
-
-    let node:ProtogenMarkdownNode|null=null;
-    let code:string[]=[];
-
-    const lines=str.split('\n');
-
-    for(let i=0;i<lines.length;i++){
-
-        const line=lines[i];
-        const typeMatch=typeReg.exec(line);
-        if(typeMatch){
-            if(node){
-                node.code=code.join('\n');
-                code=[];
-                nodes.push(node);
-            }
-            node={
-                name:typeMatch[0],
-                x:0,
-                y:0,
-                width:300,
-                code:''
-            }
-            code=[line];
-        }else if(node){
-            const layoutMatch=layoutReg.exec(line);
-            if(layoutMatch){
-                node.x=Number(layoutMatch[1]);
-                node.y=Number(layoutMatch[2]);
-                node.width=Number(layoutMatch[3]);
-            }else{
-                code.push(line);
-            }
-        }
-
-    }
-
-    if(node){
-        node.code=code.join('\n');
-        code=[];
-        nodes.push(node);
-    }
-
-    return nodes;
-
-}
-
 
 const linkReg=/^\s*(\w+)\.?(\w+)?/i;
 export const parseMarkdownLink=(line:string):NodeAndPropName|null=>{
@@ -191,20 +137,21 @@ export const parseMarkdownNodes=(
         }
 
         let match:RegExpExecArray|null=null;
-        if(match=bulletReg.exec(line)){// bullet
-            const name=match[2];
-            const value=match[4]?.trim()??'';
+        if(match=/^(\s*)-\s+([$\w]+)(\?)?\s*(:(.*)|\s*)$/.exec(line)){// bullet
             const depth=getDepth(match[1]);
+            const name=match[2];
+            const optional=match[3]?true:false;
+            const value=match[5]?.trim()??'';
             if(depth===0){
                 lastAtt=null;
-                const types=parseTypes(match[4]??'');
+                const types=parseTypes(value);
                 propNode={
                     name,
                     type:types[0]?.type??'',
                     isArray:types[0]?.isArray??false,
                     refType:types[1],
                     types,
-                    optional:match[3]?true:false,
+                    optional,
                     attributes:{},
                     hidden,
                 }
@@ -241,7 +188,7 @@ export const parseMarkdownNodes=(
                 }
             }
 
-        }else if(match=/^\s*#+\s*([\w:\s]+)*/.exec(line)){// header
+        }else if(match=/^\s*##\s*([\w:\s]+)*/.exec(line)){// header
             pushTypeNode();
             const types=parseTypes(match[1]);
             if(types.length){
@@ -258,6 +205,19 @@ export const parseMarkdownNodes=(
             }
         }else if(line.includes(markdownHidden)){// hidden
             hidden=true
+        }else{
+            const lastNode=propNode??typeNode;
+            if(lastNode){
+                lastNode.comment=(
+                    (lastNode.comment??'')+
+                    (lastNode.comment?'\n':'')+
+                    (propNode?(
+                        (line.startsWith('  - ') || line.startsWith('    '))?line.substring(4):line
+                    ):(
+                        (line.startsWith('- ') || line.startsWith('  '))?line.substring(2):line
+                    ))
+                )
+            }
         }
     }
 
