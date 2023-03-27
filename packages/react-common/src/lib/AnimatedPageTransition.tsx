@@ -83,6 +83,8 @@ export function AnimatedPageTransition({
                 ${keyframes}
 
                 .AnimatedPageTransition .PageTransition-item{
+                    display:flex;
+                    flex-direction:column;
                     position:absolute;
                     left:0;
                     top:0;
