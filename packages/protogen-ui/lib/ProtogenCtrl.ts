@@ -1,5 +1,5 @@
 import { ReadonlySubject } from "@iyio/common";
-import { parseProtogenMarkdownItem as parseProtogenMarkdownItems, ProtoLayout, ProtoPosScale } from "@iyio/protogen";
+import { parseProtogenMarkdownItem as parseProtogenMarkdownItems, ProtoLayout, ProtoPosScale, ProtoViewMode } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
@@ -21,6 +21,18 @@ export class ProtogenCtrl
     private readonly _activeAnchor:BehaviorSubject<ProtoAnchor|null>=new BehaviorSubject<ProtoAnchor|null>(null);
     public get activeAnchorSubject():ReadonlySubject<ProtoAnchor|null>{return this._activeAnchor}
     public get activeAnchor(){return this._activeAnchor.value}
+
+    private readonly _viewMode:BehaviorSubject<ProtoViewMode>=new BehaviorSubject<ProtoViewMode>('all');
+    public get viewModeSubject():ReadonlySubject<ProtoViewMode>{return this._viewMode}
+    public get viewMode(){return this._viewMode.value}
+    public set viewMode(value:ProtoViewMode){
+        if(value==this._viewMode.value){
+            return;
+        }
+        this._viewMode.next(value);
+        this.updateViewMode();
+
+    }
 
     public constructor(code?:string)
     {
@@ -57,6 +69,14 @@ export class ProtogenCtrl
                 this._activeAnchor.next(null);
             }
         },1);
+    }
+
+    private updateViewMode()
+    {
+        for(const n of this.entities.value){
+            n._updateViewMode()
+        }
+        this.lineCtrl.updateLines();
     }
 
     public selectAnchor(layout:ProtoLayout,side:'left'|'right',ctrl:NodeCtrl)

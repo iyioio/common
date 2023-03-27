@@ -1,12 +1,6 @@
 import { HashMap } from "@iyio/common";
 import { getMultiProtoAttValue, setProtoLayout } from "./protogen-lib";
-import { NodeAndPropName, ProtoAttribute, ProtoLayout, ProtoNode, ProtoPosScale, ProtoTypeInfo } from "./protogen-types";
-
-export interface Connection
-{
-    name:string;
-    prop:number;
-}
+import { NodeAndPropName, ProtoAttribute, ProtoLayout, ProtoNode, ProtoPosScale, ProtoTypeInfo, ProtoViewMode } from "./protogen-types";
 
 export interface ProtogenMarkdownNode
 {
@@ -15,13 +9,13 @@ export interface ProtogenMarkdownNode
     y:number;
     width:number;
     code:string;
-    connections?:Connection[];
 }
 
 export const markdownHidden='*hidden*'
 
 const typeReg=/^\s*##\s*(\w+)/;
 const layoutReg=/^\s*-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/;
+const bulletReg=/^(\s*)-\s+([$\w]+)(\?)?\s*:?(.*)/;
 
 export const parseProtogenMarkdownItem=(str:string):ProtogenMarkdownNode[]=>{
 
@@ -101,6 +95,7 @@ export interface ViewCharPointer
 
 export const parseMarkdownNodes=(
     code:string,
+    hiddenCode?:string,
     viewPointer?:ViewCharPointer,
     getLayout?:(views:any[])=>ProtoLayout|null
 ):ProtoNode[]=>{
@@ -148,6 +143,14 @@ export const parseMarkdownNodes=(
     }
 
     const lines=code.split('\n');
+    const visibleLength=lines.length;
+    if(hiddenCode){
+        lines.push(markdownHidden);
+        const hiddenLines=hiddenCode.split('\n');
+        for(const l of hiddenLines){
+            lines.push(l);
+        }
+    }
     let views:any[]=[];
 
     const setLayout=(node:ProtoNode)=>{
@@ -164,7 +167,7 @@ export const parseMarkdownNodes=(
     for(let lineIndex=0;lineIndex<lines.length;lineIndex++){
         const line=lines[lineIndex];
         views=[];
-        if(viewPointer){
+        if(viewPointer && lineIndex<visibleLength){
             for(let ci=0;ci<line.length;ci++){
                 if(viewPointer.char!==line.charAt(ci)){
                     throw new Error(
@@ -184,7 +187,7 @@ export const parseMarkdownNodes=(
         }
 
         let match:RegExpExecArray|null=null;
-        if(match=/^(\s*)-\s*([$\w]+)\s*(\?)?\s*:?(.*)/.exec(line)){// bullet
+        if(match=bulletReg.exec(line)){// bullet
             const name=match[2];
             const value=match[4]?.trim()??'';
             const depth=getDepth(match[1]);
@@ -249,7 +252,7 @@ export const parseMarkdownNodes=(
                 }
                 setLayout(typeNode);
             }
-        }else if(match=/^\s*[*_]hidden[*_]/i.exec(line)){// hidden
+        }else if(line.includes(markdownHidden)){// hidden
             hidden=true
         }
     }
@@ -403,7 +406,7 @@ export const addMarkdownAttribute=(
     hidden:boolean
 ):string=>{
 
-    const matches=code.matchAll(/(^|\n)-\s+([$\w]+)\s*(:|$|\n|\r)/g);
+    const matches=code.matchAll(/(^|\n)-\s+([$\w]+)\??\s*(:|$|\n|\r)/g);
     let match:RegExpMatchArray|null=null;
     for(const m of matches){
         if(m[2]===childName){
@@ -426,4 +429,105 @@ export const addMarkdownAttribute=(
         return `${hidden?addMarkdownHidden(code):code}\n- ${childName}\n${attLine}`
     }
     return `${code.substring(0,insertAt+1)}${attLine}\n${code.substring(insertAt+1)}`;
+}
+
+
+
+export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMode):string=>{
+
+    if(viewMode==='all'){
+        return code;
+    }
+
+    let aHi=code.indexOf(markdownHidden);
+    const bHi=addCode.indexOf(markdownHidden);
+
+    if(viewMode==='children'){
+        const lines=(aHi===-1?code:code.substring(0,aHi)).split('\n');
+        const namedLines:{line:string,name:string|null}[]=[];
+        for(const line of lines){
+            const match=/^(-|##)\s+([$\w]+)\??\s*(:.*?$|$)/.exec(line);
+            namedLines.push({
+                line,
+                name:match?.[2]??null
+            })
+
+        }
+
+        const matches=(
+            bHi===-1?addCode:addCode.substring(0,bHi).trim()
+        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|:.*?\n)(\s(.|\n)*?)(?=(\n[-*#]))/g);
+        for(const match of matches){
+            const name=match[3];
+            for(const line of namedLines){
+                if(line.name===name){
+                    line.line+='\n  '+match[5].trim();
+                    break;
+                }
+            }
+
+        }
+
+        for(let i=0;i<namedLines.length;i++){
+            lines[i]=namedLines[i].line;
+        }
+        code=lines.join('\n');
+
+        aHi=code.indexOf(markdownHidden);
+
+    }
+
+    if(aHi===-1 && bHi!==-1){
+        code=code.trim()+'\n\n'+addCode.substring(bHi);
+    }
+
+    return code;
+}
+
+export const applyMarkdownViewMode=(code:string,viewMode:ProtoViewMode):string=>{
+
+    switch(viewMode){
+
+        case 'atts':{
+            const i=code.indexOf(markdownHidden);
+            return i===-1?code:code.substring(0,i).trim();
+        }
+
+        case 'children':{
+            const i=code.indexOf(markdownHidden);
+            if(i!==-1){
+                code=code.substring(0,i).trim();
+            }
+            return code.replace(/(^|\n)[^-#].*?(?=($|\n))/g,'');
+        }
+
+        default:
+            return code;
+
+    }
+}
+
+
+export const getHiddenMarkdownCode=(code:string,viewMode:ProtoViewMode)=>{
+
+    if(viewMode==='all'){
+        return '';
+    }else if(viewMode==='atts'){
+        return getHiddenMarkdownBlock(code);
+    }
+
+    return code.replace(/(^|\n)#.*?(\n|$)/g,'\n- $self');
+}
+
+
+export const getHiddenMarkdownBlock=(code:string)=>{
+    const i=code.indexOf(markdownHidden);
+    if(i===-1){
+        return '';
+    }
+    const e=code.indexOf('\n',i);
+    if(e===-1){
+        return '';
+    }
+    return code.substring(e+1).trim();
 }

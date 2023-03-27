@@ -62,7 +62,7 @@ export default function ProtogenView({
 
         ctrl.addEntity(
             code.trim()+
-            (code.includes(markdownHidden)?'':'\n'+markdownHidden)+
+            (code.includes(markdownHidden)?'':'\n\n'+markdownHidden)+
             `\n- $layout: ${Math.round(pt.x)} ${Math.round(pt.y)} 300`
         ,true);
 
@@ -146,6 +146,7 @@ const tmpGetCode=()=>(li++)%2?
     - order: 5
     - desc
 - momId: string :User
+
 *hidden*
 - userId:
   - $link: User.threads

@@ -4,6 +4,7 @@ import type { NodeCtrl } from "./NodeCtrl";
 
 export const anchorInset=0;
 
+
 export interface ProtoUiLine{
     nodeCtrlId:string;
     updateId:number;

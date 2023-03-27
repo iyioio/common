@@ -1,5 +1,5 @@
 import { DisposeCallback, Point, shortUuid } from "@iyio/common";
-import { addMarkdownAttribute, getMarkdownProtoPos, getProtoLayout, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
+import { addMarkdownAttribute, addMarkdownHidden, applyMarkdownViewMode, getHiddenMarkdownCode, getMarkdownProtoPos, getProtoLayout, mergeMarkdownCode, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, ProtoViewMode, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { DomViewCharPointer, getElemProtoLayout, getNodesProtoLayout } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
@@ -17,8 +17,13 @@ export class NodeCtrl
     public readonly viewElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
     public readonly codeElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
 
+    private codeChangeId=0;
+    private codeBackup:string;
+    private lastViewMode:ProtoViewMode='all';
+
     public constructor(code:string,parent:ProtogenCtrl)
     {
+        this.codeBackup=code;
         const nodes=parseMarkdownNodes(code);
         this.id=shortUuid();
         this.parent=parent;
@@ -30,6 +35,9 @@ export class NodeCtrl
                 elem.style.transform=`translate(${pos.x}px,${pos.y}px)`;
                 elem.style.minWidth=pos.width===undefined?'auto':pos.width+'px';
             }
+        })
+        this.code.subscribe(()=>{
+            this.codeChangeId++;
         })
 
     }
@@ -47,13 +55,32 @@ export class NodeCtrl
         this.parent.removeEntity(this);
     }
 
+    _updateViewMode()
+    {
+        this.codeChangeId++;
+        const fullCode=this.getFullCode(this.lastViewMode);
+        const viewMode=this.parent.viewMode;
+
+        const code=applyMarkdownViewMode(fullCode,viewMode);
+
+        this.lastViewMode=viewMode;
+        this.codeBackup=fullCode;
+        this.code.next(code);
+        this.update(false);
+    }
+
     public moveTo(point:Point){
         this.pos.next({...this.pos.value,...point});
     }
 
     public updateCodeLayout(){
         const code=this.getFullCode();
-        this.code.next(setMarkdownProtoPos(code,this.pos.value));
+        const updated=setMarkdownProtoPos(code,this.pos.value);
+        if(this.parent.viewMode==='all'){
+            this.code.next(updated);
+        }else{
+            this.codeBackup=updated;
+        }
     }
 
     public updateNodeLayouts()
@@ -76,12 +103,25 @@ export class NodeCtrl
 
     }
 
-    public getFullCode(){// todo - flush view changes (get latest code from code input) and parse node and return
-        return this.code.value;
+    private lastFullCode:string='';
+    private lastFullCodeId=-2;
+
+    public getFullCode(viewMode:ProtoViewMode=this.parent.viewMode):string{
+        if(this.codeChangeId===this.lastFullCodeId){
+            return this.lastFullCode;
+        }
+        const fullCode=mergeMarkdownCode(
+            this.codeElem.value?.textContent||this.code.value,
+            this.codeBackup,
+            viewMode
+        );
+        this.lastFullCodeId=this.codeChangeId;
+        this.lastFullCode=fullCode;
+        return fullCode;
     }
 
     private updateId=0;
-    public update(){
+    public update(updateLines=true){
         const codeElem=this.codeElem.value;
         if(!codeElem || this._isDisposed){
             return;
@@ -89,14 +129,17 @@ export class NodeCtrl
 
         const doUpdate=()=>{
 
-            if(!this.code.value.trim()){
+            if(!this.getFullCode().trim()){
                 this.dispose();
                 return;
             }
 
             const pointer=new DomViewCharPointer(codeElem);
 
-            const nodes=parseMarkdownNodes(this.code.value,pointer,views=>{
+            const code=this.code.value;
+            const hiddenCode=getHiddenMarkdownCode(this.codeBackup,this.parent.viewMode);
+
+            const nodes=parseMarkdownNodes(code,hiddenCode,pointer,views=>{
                 return getNodesProtoLayout(
                     views,
                     this.parent.pos.value.scale
@@ -110,7 +153,7 @@ export class NodeCtrl
             this.node.next(nodes[0]);
 
             if(nodes.length>1){
-                const sections=splitMarkdownSections(this.code.value);
+                const sections=splitMarkdownSections(hiddenCode?addMarkdownHidden(code)+hiddenCode:code);
 
                     this.code.next(sections[0]);
                     const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
@@ -132,7 +175,9 @@ export class NodeCtrl
 
             this.updateNodeLayouts();
 
-            this.parent.lineCtrl.updateLines();
+            if(updateLines){
+                this.parent.lineCtrl.updateLines();
+            }
 
         }
 

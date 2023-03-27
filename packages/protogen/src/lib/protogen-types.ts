@@ -128,3 +128,5 @@ export interface ProtoPosScale
     width?:number;
     scale:number;
 }
+
+export type ProtoViewMode='all'|'atts'|'children';
