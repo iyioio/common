@@ -241,7 +241,7 @@ export const parseMarkdownNodes=(
                 }
             }
 
-        }else if(match=/^\s*#+\s*(\w+)*/.exec(line)){// header
+        }else if(match=/^\s*#+\s*([\w:\s]+)*/.exec(line)){// header
             pushTypeNode();
             const types=parseTypes(match[1]);
             if(types.length){
