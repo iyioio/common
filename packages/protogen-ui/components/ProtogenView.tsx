@@ -94,7 +94,7 @@ export default function ProtogenView({
 
     return (
         <ProtogenContext.Provider value={ctrl}>
-            <div className="ProtogenDesignView" onContextMenu={onContextMenu}>
+            <div className="ProtogenView" onContextMenu={onContextMenu}>
 
                 {enablePanZoom?
                     <PanZoomView
@@ -112,10 +112,13 @@ export default function ProtogenView({
 
 
                 <style jsx>{`
-                    .ProtogenDesignView{
+                    .ProtogenView{
                         display:flex;
                         flex-direction:column;
                         flex:1;
+                        position:relative;
+                        overflow:hidden;
+                        overflow:clip;
                     }
                 `}</style>
             </div>
