@@ -56,7 +56,7 @@ export default function ProtogenView({
 
         const pt=panZoom.transformClientPointToPlane({x:e.clientX,y:e.clientY});
 
-        const code=tmpGetCode();//`## NewType`
+        const code=defaultType();
 
         ctrl.addEntity(
             code.trim()+
@@ -127,37 +127,8 @@ export default function ProtogenView({
 
 }
 
-let li=0;
-const tmpGetCode=()=>(li++)%2?
-`## User
+let newTypeIndex=1;
+const defaultType=()=>(
+`## NewType${newTypeIndex++}
 - id: string
-- uv: number
-- threads: Thread[]
-- age: number
-`:
-`## Thread
-  - $link: User
-  - $link: User.id
-- id: string
-- uv: number
-- userId: string :User
-  - min: 0
-  - max: 50
-  - index: true
-    - order: 5
-    - desc
-- momId: string :User
-
-*hidden*
-- userId:
-  - $link: User.threads
-    - type: many-one
-  - max
-    - offset: 77
-- uv
-  - cake:good
-- $self
-  - index: 7
-  - $link: User.uv
-  - $link: user.age
-`
+`)
