@@ -36,12 +36,10 @@ export default function ProtogenView({
         if(!ctrl){
             return;
         }
-        if(code){
-            if(url){
-                ctrl.loadStateAsync(url);
-            }else{
-                ctrl.setState(code);
-            }
+        if(url){
+            ctrl.loadStateAsync(url);
+        }else if(code){
+            ctrl.setState(code);
         }else{
             ctrl.clearState();
         }

@@ -1,9 +1,9 @@
 import { ReadonlySubject } from "@iyio/common";
-import { parseProtogenMarkdownItem as parseProtogenMarkdownItems, ProtoLayout, ProtoPosScale, ProtoViewMode } from "@iyio/protogen";
+import { ProtoLayout, ProtoPosScale, ProtoViewMode, splitMarkdown } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
-import { NodeCtrlAndProp, ProtoAnchor } from "./protogen-ui-lib";
+import { NodeCtrlAndProp, ProtoAnchor, SaveRequest } from "./protogen-ui-lib";
 
 export class ProtogenCtrl
 {
@@ -137,9 +137,13 @@ export class ProtogenCtrl
         this.exporting=true;
 
         try{
-            const state:string=this.entities.value.map(e=>e.code.value).join('\n\n');
+            const content:string=this.entities.value.map(e=>e.getFullCode()).join('\n\n');
 
-            await fetch('/api/protogen',{method:'POST',body:JSON.stringify(state)});
+            const request:SaveRequest={
+                content
+            }
+
+            await fetch('/api/protogen',{method:'POST',body:JSON.stringify(request)});
         }finally{
             this.exporting=false;
         }
@@ -156,10 +160,10 @@ export class ProtogenCtrl
     {
         this.setStateIndex++;
 
-        const nodes=parseProtogenMarkdownItems(code);
+        const nodes=splitMarkdown(code);
 
         this.entities.next(nodes.map(e=>(
-            new NodeCtrl(e.code,this)
+            new NodeCtrl(e,this)
         )))
     }
 

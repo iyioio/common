@@ -1,3 +1,3 @@
-import { runTGenCliAsync } from "./runTGenCliAsync";
+import { runProtogenCliAsync } from "./runProtogenCliAsync";
 
-runTGenCliAsync(globalThis.process?.argv??[],2);
+runProtogenCliAsync(globalThis.process?.argv??[],2,require);

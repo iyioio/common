@@ -2,11 +2,12 @@ import { executeTGenPipelineAsync } from "./executeTGenPipelineAsync";
 import { fileReader } from "./fileReader";
 import { fileWriter } from "./fileWriter";
 import { lucidCsvParser } from "./lucidCsvParser";
+import { markdownParser } from "./markdownParser";
 import { tgenCliFlags } from "./protogen-cli-const";
 import { ProtoCallback, ProtoPipeline } from "./protogen-types";
 import { zodGenerator } from "./zodGenerator";
 
-export const runTGenCliAsync=async (argList:string[],argStart=0):Promise<ProtoPipeline>=>{
+export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:(name:string)=>any,):Promise<ProtoPipeline>=>{
 
     const args:{[name:string]:string[]}={}
 
@@ -66,8 +67,8 @@ export const runTGenCliAsync=async (argList:string[],argStart=0):Promise<ProtoPi
 
         log(`Load plugin module - ${p}`);
 
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod=require(p);
+
+        const mod=loadModule?.(p)??{};
         for(const name of mod){
             const callback=mod[name];
             if(typeof callback === 'function'){
@@ -103,6 +104,8 @@ export const runTGenCliAsync=async (argList:string[],argStart=0):Promise<ProtoPi
         }
 
         if(!pipeline.parsers.length){
+            log('Add default parser - markdownParser');
+            pipeline.parsers.push(markdownParser);
             log('Add default parser - lucidCsvParser');
             pipeline.parsers.push(lucidCsvParser);
         }

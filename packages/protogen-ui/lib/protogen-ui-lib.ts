@@ -4,6 +4,18 @@ import type { NodeCtrl } from "./NodeCtrl";
 
 export const anchorInset=0;
 
+export interface SaveRequest
+{
+    name?:string;
+    content:string;
+    snapshot?:boolean;
+}
+
+export interface LoadRequest
+{
+    name?:string;
+}
+
 
 export interface ProtoUiLine{
     nodeCtrlId:string;

@@ -17,6 +17,10 @@ const typeReg=/^\s*##\s*(\w+)/;
 const layoutReg=/^\s*-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/;
 const bulletReg=/^(\s*)-\s+([$\w]+)(\?)?\s*:?(.*)/;
 
+export const splitMarkdown=(code:string)=>{
+    return code.split(/(?=(^|\n)#)/g).map(c=>c.trim()).filter(c=>c);
+}
+
 export const parseProtogenMarkdownItem=(str:string):ProtogenMarkdownNode[]=>{
 
     const nodes:ProtogenMarkdownNode[]=[];

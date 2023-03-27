@@ -7,6 +7,6 @@ export * from './lib/parseNodeLine';
 export * from './lib/protogen-cli-const';
 export * from './lib/protogen-lib';
 export * from './lib/protogen-types';
-//export * from './lib/runTGenCliAsync';
+export * from './lib/runProtogenCliAsync';
 export * from './lib/zodGenerator';
 
