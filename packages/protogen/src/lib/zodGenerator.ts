@@ -1,4 +1,11 @@
-import { ProtoContext, ProtoNode } from "./protogen-types";
+import { asArray, getObjKeyCount, HashMap } from "@iyio/common";
+import { ProtoAttribute, ProtoContext, ProtoNode } from "./protogen-types";
+
+const typeMap:HashMap<string>={
+    'int':'number'
+};
+const numTypes=['number','bigint'];
+const builtIns=['string','number','any','bigint','boolean','date','null'] as const;
 
 export interface ZodGeneratorOptions
 {
@@ -124,7 +131,9 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
     if(node.children){
         for(const prop of node.children){
 
-            const isBuiltIn=isBuiltInType(prop.type);
+
+            const propType=typeMap[prop.type]??prop.type;
+            const isBuiltIn=isBuiltInType(propType);
 
             if(!isBuiltIn){
                 interfaceProps.push(`${
@@ -136,7 +145,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                     }${
                         prop.optional?'?':''
                     }:${
-                        prop.type
+                        propType
                     };`
                 );
                 lazyProps.push(`${
@@ -144,17 +153,17 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                     }${
                         prop.name
                     }:z.lazy(()=>${
-                        getFullName(prop.type)
-                    })${
+                        getFullName(propType)
+                    })${getFormatCalls(prop,propType)}${
                         prop.optional?'.optional()':''
                     },`
                 );
                 continue;
             }
 
-            const customType=getRealCustomType(prop.type as any);
-            if(customType && !useCustomTypes.includes(prop.type as any)){
-                useCustomTypes.push(prop.type as any)
+            const customType=getRealCustomType(propType as any);
+            if(customType && !useCustomTypes.includes(propType as any)){
+                useCustomTypes.push(propType as any)
             }
 
             out.push(`${
@@ -164,7 +173,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                 }${
                     prop.name
                 }:${
-                    customType||`z.${prop.type}()`
+                    customType||`z.${propType}()${getFormatCalls(prop,propType)}`
                 }${
                     prop.isArray?'.array()':''
                 }${
@@ -210,7 +219,6 @@ const getRealCustomType=(type:CustomBuiltInsType)=>{
         default: return null;
     }
 }
-const builtIns=['string','number','any','bigint','boolean','date','null'] as const
 const isBuiltInType=(type:string)=>{
     return builtIns.includes(type as any) || customBuiltIns.includes(type as any);
 }
@@ -218,3 +226,167 @@ const isBuiltInType=(type:string)=>{
 const formatComment=(comment:string,tab:string)=>(
     `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
 )
+
+interface AddCallOptions
+{
+    defaultValue?:string;
+    hasMessage?:boolean;
+    rawValue?:boolean;
+    option?:(att:ProtoAttribute)=>string|null;
+}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
+    let call='';
+
+    const add=(type:string|string[],name:string,att:ProtoAttribute|undefined,getValue?:((att:ProtoAttribute)=>string|number|null|undefined)|null,{
+        defaultValue,
+        hasMessage=true,
+        rawValue,
+        option
+    }:AddCallOptions={})=>{
+        if(!att){
+            return;
+        }
+        type=asArray(type);
+        if(!type.includes(propType)){
+            return;
+        }
+        let value=getValue?.(att)??defaultValue;
+        if(typeof value === 'string'){
+            value=value.trim()
+        }
+        if(!rawValue && (typeof value ==='string')){
+            value=JSON.stringify(value)
+        }
+        const message=option?option(att):att.props['message']?.trim();
+        call+=`.${name}(${value??''}${(message && hasMessage)?(value?',':'')+(option?message:JSON.stringify(message)):''})`
+
+    }
+
+    if( propType==='string' &&
+        !prop.attributes['max'] &&
+        !parseBool(prop.attributes['long']?.value,false)
+    ){
+        call+='.max(255)';
+    }
+
+    if(propType==='number' && !prop.attributes['int']){
+        call+='.int()';
+    }
+
+    add(['string',...numTypes],'min',prop.attributes['min'],att=>parseNum(att.value))
+    add(['string',...numTypes],'max',prop.attributes['max'],att=>parseNum(att.value))
+    add(['string'],'length',prop.attributes['length'],att=>parseNum(att.value))
+    add(['string'],'endsWith',prop.attributes['endsWith'],att=>att.value)
+    add(['string'],'startsWith',prop.attributes['startsWith'],att=>att.value)
+    add(['string'],'email',prop.attributes['email']);
+    add(['string'],'url',prop.attributes['url']);
+    add(['string'],'emoji',prop.attributes['emoji']);
+    add(['string'],'uuid',prop.attributes['uuid']);
+    add(['string'],'cuid',prop.attributes['cuid']);
+    add(['string'],'cuid2',prop.attributes['cuid2']);
+    add(['string'],'ulid',prop.attributes['ulid']);
+    add(['string'],'nonempty',prop.attributes['notEmpty']);
+    add(['string'],'trim',prop.attributes['trim'],null,{hasMessage:false});
+    add(['string'],'toLowerCase',prop.attributes['lower'],null,{hasMessage:false});
+    add(['string'],'toUpperCase',prop.attributes['upper'],null,{hasMessage:false});
+
+    add('string','ip',prop.attributes['ip'],att=>parseObj({
+        version:att.value||'v4',
+        message:att.props['message'],
+    }),{hasMessage:false,rawValue:true})
+
+    add('string','datetime',prop.attributes['date'],att=>parseObj({
+        precision:parseNum(att.value),
+        offset:Boolean(att.value),
+        message:att.props['message'],
+    }),{hasMessage:false,rawValue:true})
+
+    add('string','regex',prop.attributes['regex'],att=>paseRegex(att),{rawValue:true})
+
+    add('string','includes',prop.attributes['includes'],att=>att.value,{
+        option:att=>parseObj({
+            position:parseNum(att.value),
+            message:att.props['message'],
+        })
+    })
+
+
+    add(numTypes,'gte',prop.attributes['gte'],att=>parseNum(att.value))
+    add(numTypes,'gt',prop.attributes['gt'],att=>parseNum(att.value))
+    add(numTypes,'lte',prop.attributes['lte'],att=>parseNum(att.value))
+    add(numTypes,'lt',prop.attributes['lt'],att=>parseNum(att.value))
+    add(numTypes,'multipleOf',prop.attributes['multipleOf'],att=>parseNum(att.value))
+    add(numTypes,'step',prop.attributes['step'],att=>parseNum(att.value))
+    add(numTypes,'int',prop.attributes['int'])
+    add(numTypes,'positive',prop.attributes['positive'])
+    add(numTypes,'negative',prop.attributes['negative'])
+    add(numTypes,'nonpositive',prop.attributes['notPositive'])
+    add(numTypes,'nonnegative',prop.attributes['notNegative'])
+    add(numTypes,'finite',prop.attributes['finite'])
+    add(numTypes,'safe',prop.attributes['safe'])
+
+    add('date','min',prop.attributes['min'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
+    add('date','max',prop.attributes['max'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
+
+    return call;
+
+}
+
+
+const parseNum=(str:string|null|undefined)=>{
+    if(!str){
+        return undefined;
+    }
+    console.log('str',str)
+    const n=Number(str);
+    return isFinite(n)?n:undefined;
+}
+
+const parseObj=(obj:any)=>{
+    for(const e in obj){
+        const value=typeof obj[e]==='string'?obj[e].trim():obj[e];
+        if(value===''){
+            delete obj[e];
+        }else{
+            obj[e]=value;
+        }
+    }
+    return getObjKeyCount(obj)?JSON.stringify(obj):null;
+}
+
+const paseRegex=(att:ProtoAttribute)=>{
+    if(!att.value){
+        return null;
+    }
+    try{
+        new RegExp(att.value);
+        const flags=att.props['flags']??'';
+        return `/${att.value}/${
+            flags.includes('i')?'i':''
+        }${
+            flags.includes('g')?'g':''
+        }${
+            flags.includes('m')?'m':''
+        }${
+            flags.includes('s')?'s':''
+        }${
+            flags.includes('u')?'u':''
+        }${
+            flags.includes('y')?'y':''
+        }`;
+    }catch{
+        return null;
+    }
+}
+
+const parseBool=(value:string|undefined,defaultValue:boolean):boolean=>{
+    if(!value){
+        return defaultValue;
+    }
+    value=value.trim();
+    if(!value){
+        return defaultValue;
+    }
+    return Boolean(value);
+}
