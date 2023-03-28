@@ -86,7 +86,6 @@ export class ProtogenCtrl
 
     public selectAnchor(layout:ProtoLayout,side:'left'|'right',ctrl:NodeCtrl)
     {
-        console.log({layout})
         const a=this._activeAnchor.value;
         if(a){
             this._activeAnchor.next(null);
