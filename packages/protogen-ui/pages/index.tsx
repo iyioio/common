@@ -1,5 +1,6 @@
-import ProtogenView from "../components/ProtogenView";
+import dynamic from "next/dynamic";
 
+const ProtogenView=dynamic(()=>import('../components/ProtogenView'),{ssr:false});
 
 export default function index()
 {
