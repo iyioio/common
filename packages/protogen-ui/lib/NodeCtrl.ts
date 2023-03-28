@@ -48,6 +48,29 @@ export class NodeCtrl
         })
         this.codeElem.subscribe(this.updateBound);
 
+        this.viewElem.subscribe(view=>{
+            this.removeResizeListener?.();
+            if(!view){
+                return;
+            }
+            let width=-1;
+            let height=-1;
+            const ob=new ResizeObserver((e)=>{
+                const w=Math.round(e[0]?.contentRect.width??0);
+                const h=Math.round(e[0]?.contentRect.height??0);
+                if(width===w && height===h){
+                    return;
+                }
+                width=w;
+                height=h;
+                this.update(true,15);
+            })
+
+            ob.observe(view);
+
+            this.removeResizeListener=()=>ob.disconnect();
+        })
+
     }
 
     private _isDisposed=false;
@@ -138,6 +161,16 @@ export class NodeCtrl
         return fullCode;
     }
 
+    public setFullCode(code:string){
+        if(this.parent.viewMode==='all'){
+            this.code.next(code);
+        }else{
+            this.codeBackup=code;
+            this.code.next(applyMarkdownViewMode(code,this.parent.viewMode));
+
+        }
+    }
+
     private updateId=0;
     public update(updateLines=true,delay=0){
         const codeElem=this.codeElem.value;
@@ -226,8 +259,7 @@ export class NodeCtrl
             value,
             hidden
         )
-        this.code.next(code);
-        this.update();
+        this.setFullCode(code);
     }
 
 }

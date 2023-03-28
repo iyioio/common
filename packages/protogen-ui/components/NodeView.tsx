@@ -1,6 +1,6 @@
 import { cn } from "@iyio/common";
 import { useSubject } from "@iyio/react-common";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { dt } from "../lib/lib-design-tokens";
 import { NodeCtrl } from "../lib/NodeCtrl";
 import { anchorInset } from "../lib/protogen-ui-lib";
@@ -20,9 +20,13 @@ export default function NodeView({
     const ctrl=useProtogenCtrl();
     const anchors=useSubject(node.nodeLayouts);
     const activeAnchor=useSubject(ctrl.activeAnchorSubject);
+    const [view,setView]=useState<HTMLElement|null>(null);
+    useEffect(()=>{
+        node.viewElem.next(view);
+    },[node,view])
 
     return (
-        <div className="NodeView proto-node-pos" ref={e=>node.viewElem.next(e)}>
+        <div className="NodeView proto-node-pos" ref={setView}>
 
             <div className="NodeView-drag"><div/></div>
 
@@ -34,7 +38,7 @@ export default function NodeView({
                 <Fragment key={i}>
                     <button
                         onClick={()=>ctrl.selectAnchor(a,'left',node)}
-                        className={cn("NodeView-anchor",{active:activeAnchor?.layout===a && activeAnchor.side==='left'})}
+                        className={cn("NodeView-anchor left",{active:activeAnchor?.layout===a && activeAnchor.side==='left'})}
                             style={{
                             left:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.localY-dt().anchorSize/2)+'px'
@@ -43,7 +47,7 @@ export default function NodeView({
 
                     <button
                         onClick={()=>ctrl.selectAnchor(a,'right',node)}
-                        className={cn("NodeView-anchor",{active:activeAnchor?.layout===a && activeAnchor.side==='right'})}
+                        className={cn("NodeView-anchor right",{active:activeAnchor?.layout===a && activeAnchor.side==='right'})}
                         style={{
                             right:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.localY-dt().anchorSize/2)+'px'
@@ -87,8 +91,13 @@ export default function NodeView({
                     height:${dt().anchorSize}px;
                     border:none;
                     padding:0;
-                    cursor:crosshair;
                     transition:background-color 0.2s ease-in-out;
+                }
+                .NodeView-anchor.left{
+                    cursor:w-resize;
+                }
+                .NodeView-anchor.right{
+                    cursor:e-resize;
                 }
                 .NodeView-anchor:hover{
                     background:${dt().lineColor}cc;
