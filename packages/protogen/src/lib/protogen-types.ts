@@ -40,6 +40,8 @@ export interface ProtoNode extends ProtoTypeInfo{
     hidden?:boolean;
 
     links?:NodeAndPropName[];
+
+    section?:string;
 }
 
 export interface ProtoOutput

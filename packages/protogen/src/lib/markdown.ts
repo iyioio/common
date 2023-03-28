@@ -56,6 +56,8 @@ export const parseMarkdownNodes=(
     let propNode:ProtoNode|null=null;
     let lastAtt:ProtoAttribute|null=null;
     let hidden=false;
+    let section:string|undefined=undefined;
+    let sectionLineIndex=0;
 
     const pushTypeNode=()=>{
         if(typeNode){
@@ -90,6 +92,8 @@ export const parseMarkdownNodes=(
         propNode=null;
         lastAtt=null;
         hidden=false;
+        section=undefined;
+        sectionLineIndex=0;
     }
 
     const lines=code.split('\n');
@@ -117,6 +121,8 @@ export const parseMarkdownNodes=(
 
     for(let lineIndex=0;lineIndex<lines.length;lineIndex++){
         const line=lines[lineIndex];
+        const lineSi=sectionLineIndex;
+        sectionLineIndex=0;
         views=[];
         if(viewPointer && lineIndex<visibleLength){
             for(let ci=0;ci<line.length;ci++){
@@ -156,6 +162,10 @@ export const parseMarkdownNodes=(
                     attributes:{},
                     hidden,
                 }
+                if(section){
+                    propNode.section=section;
+                    propNode.comment=(propNode.comment?propNode.comment+'\n':'')+'@section '+section;
+                }
                 setLayout(propNode);
                 if(typeNode){
                     if(!typeNode.children){
@@ -189,7 +199,7 @@ export const parseMarkdownNodes=(
                 }
             }
 
-        }else if(match=/^\s*##\s+([\w:\s]+)*/.exec(line)){// header
+        }else if(match=/^##\s+([\w:\s]+)/.exec(line)){// header
             pushTypeNode();
             const types=parseTypes(match[1]);
             if(types.length){
@@ -204,18 +214,38 @@ export const parseMarkdownNodes=(
                 }
                 setLayout(typeNode);
             }
+        }else if(match=/^###\s+(.*)/.exec(line)){// section
+            section=match[1].trim();
+            sectionLineIndex=1;
+            if(!section){
+                section=undefined;
+                sectionLineIndex=0;
+            }
         }else if(line.includes(markdownHidden)){// hidden
             hidden=true
         }else{
-            const lastNode=propNode??typeNode;
+            const addToSection=(lineSi && section)?true:false;
+            const pn=addToSection?null:propNode;
+            const lastNode=pn??typeNode;
+
+            if(addToSection){
+                sectionLineIndex=lineSi+1;
+                if(typeNode && !typeNode.comment){
+                    typeNode.comment=typeNode.name;
+                }
+            }
+
             if(lastNode){
+                const comment=addToSection?(
+                    (lineSi===1?`\n### ${section}\n`:'')+line
+                ):line;
                 lastNode.comment=(
                     (lastNode.comment??'')+
                     (lastNode.comment?'\n':'')+
-                    (propNode?(
-                        (line.startsWith('  - ') || line.startsWith('    '))?line.substring(4):line
+                    (pn?(
+                        (comment.startsWith('  - ') || comment.startsWith('    '))?comment.substring(4):comment
                     ):(
-                        (line.startsWith('- ') || line.startsWith('  '))?line.substring(2):line
+                        (comment.startsWith('- ') || comment.startsWith('  '))?comment.substring(2):comment
                     ))
                 )
             }
