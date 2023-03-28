@@ -263,7 +263,15 @@ const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
 
     }
 
-    if( propType==='string' &&
+    let noAutoLength=prop.attributes['email']?true:false;
+
+    if(propType==='string' && !prop.attributes['email'] && /(^e|E)mail($|[A-Z\d_])/.test(prop.name)){
+        call+='.email()';
+        noAutoLength=true;
+    }
+
+    if( !noAutoLength &&
+        propType==='string' &&
         !prop.attributes['max'] &&
         !parseBool(prop.attributes['long']?.value,false)
     ){

@@ -194,6 +194,12 @@ Content related properties
   - $link: MediaSource
 - mediaSource?: MediaSource
 
+### Other
+- email: string
+- emailSecond?: string
+- firstEmail?: string
+- secondEmailSecure?: string
+
 *hidden*
 - $layout: 2371 532
 
