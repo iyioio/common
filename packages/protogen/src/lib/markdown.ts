@@ -15,7 +15,7 @@ export const markdownHidden='*hidden*'
 
 
 export const splitMarkdown=(code:string)=>{
-    return code.split(/(?=(^|\n)#)/g).map(c=>c.trim()).filter(c=>c);
+    return code.split(/(?=(^|\n)##\s)/g).map(c=>c.trim()).filter(c=>c);
 }
 
 const linkReg=/^\s*(\w+)\.?(\w+)?/i;
@@ -188,7 +188,7 @@ export const parseMarkdownNodes=(
                 }
             }
 
-        }else if(match=/^\s*##\s*([\w:\s]+)*/.exec(line)){// header
+        }else if(match=/^\s*##\s+([\w:\s]+)*/.exec(line)){// header
             pushTypeNode();
             const types=parseTypes(match[1]);
             if(types.length){
@@ -290,7 +290,7 @@ export const addMarkdownHidden=(code:string):string=>{
 export const splitMarkdownSections=(code:string):string[]=>{
     const sections:string[]=[];
     let lastIndex=-1;
-    const matches=code.matchAll(/(^|\n)\s*##\s*(\w+)/g);
+    const matches=code.matchAll(/(^|\n)\s*##\s+(\w+)/g);
     for(const match of matches){
 
         if(lastIndex!==-1){
@@ -420,12 +420,12 @@ export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMod
 
         const matches=(
             bHi===-1?addCode:addCode.substring(0,bHi).trim()
-        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|:.*?\n)(\s(.|\n)*?)(?=(\n[-*#]))/g);
+        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|:.*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-|##)\s))/g);
         for(const match of matches){
             const name=match[3];
             for(const line of namedLines){
                 if(line.name===name){
-                    line.line+='\n  '+match[5].trim();
+                    line.line+='\n'+match[5];
                     break;
                 }
             }
@@ -462,7 +462,7 @@ export const applyMarkdownViewMode=(code:string,viewMode:ProtoViewMode):string=>
             if(i!==-1){
                 code=code.substring(0,i).trim();
             }
-            return code.replace(/(^|\n)[^-#].*?(?=($|\n))/g,'');
+            return code.replace(/(^|\n)(?!-\s|##\s).*?(?=($|\n))/g,'');
         }
 
         default:
