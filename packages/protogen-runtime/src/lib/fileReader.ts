@@ -1,6 +1,6 @@
 import { getFileExt, protocolReg } from "@iyio/common";
+import { ProtoContext } from "@iyio/protogen";
 import { readFile } from "fs/promises";
-import { ProtoContext } from "./protogen-types";
 
 export const fileReader=async ({
     log,

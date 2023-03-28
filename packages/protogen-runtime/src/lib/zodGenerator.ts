@@ -1,5 +1,5 @@
 import { asArray, getObjKeyCount, HashMap } from "@iyio/common";
-import { ProtoAttribute, ProtoContext, ProtoNode } from "./protogen-types";
+import { ProtoAttribute, ProtoContext, ProtoNode } from "@iyio/protogen";
 
 const typeMap:HashMap<string>={
     'int':'number'
@@ -346,7 +346,6 @@ const parseNum=(str:string|null|undefined)=>{
     if(!str){
         return undefined;
     }
-    console.log('str',str)
     const n=Number(str);
     return isFinite(n)?n:undefined;
 }

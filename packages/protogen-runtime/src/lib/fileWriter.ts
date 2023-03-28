@@ -1,6 +1,6 @@
 import { protocolReg } from "@iyio/common";
+import { ProtoContext } from "@iyio/protogen";
 import { writeFile } from "fs/promises";
-import { ProtoContext } from "./protogen-types";
 
 export const fileWriter=async ({
     log,

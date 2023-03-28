@@ -1,5 +1,4 @@
-import { parseMarkdownNodes } from "./markdown";
-import { ProtoContext } from "./protogen-types";
+import { parseMarkdownNodes, ProtoContext } from "@iyio/protogen";
 
 export const markdownParser=async ({
     sources,

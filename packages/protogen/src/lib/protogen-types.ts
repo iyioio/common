@@ -61,6 +61,7 @@ export interface ProtoSource
 
 export interface ProtoContext
 {
+    executionId:string;
     /**
      * Args passed from the command line
      */
@@ -72,6 +73,8 @@ export interface ProtoContext
     outputs:ProtoOutput[];
     verbose:boolean;
     tab:string;
+    stage:ProtoStage;
+    metadata:{[name:string]:any};
     log:(...values:any[])=>void;
 }
 
@@ -79,6 +82,14 @@ export interface ProtoContext
  * Callback type used to call plugin while running a protogen pipeline
  */
 export type ProtoCallback=(ctx:ProtoContext)=>Promise<void>|void;
+
+export interface ProtoExternalExecutorOptions
+{
+    action:'run-plugin'|'clean-up';
+    plugin?:string;
+}
+
+export type ProtoExternalExecutor=(ctx:ProtoContext,options:ProtoExternalExecutorOptions)=>Promise<boolean>
 
 export interface ProtoPipeline
 {
@@ -88,6 +99,8 @@ export interface ProtoPipeline
     generators:ProtoCallback[];
     writers:ProtoCallback[];
     plugins:{[name:string]:ProtoCallback};
+    externalPlugins:string[];
+    externalExecutors:ProtoExternalExecutor[];
 }
 
 
@@ -133,3 +146,16 @@ export interface ProtoPosScale
 }
 
 export type ProtoViewMode='all'|'atts'|'children';
+
+export type ProtoStage='preprocess'|'input'|'parse'|'generate'|'output';
+
+export type ProtoPluginCallback=(ctx:ProtoContext)=>Promise<void|boolean>|void|boolean;
+
+export interface ProtoPluginExecutionOptions
+{
+    preprocess?:ProtoPluginCallback;
+    input?:ProtoPluginCallback;
+    parse?:ProtoPluginCallback;
+    generate?:ProtoPluginCallback;
+    output?:ProtoPluginCallback;
+}

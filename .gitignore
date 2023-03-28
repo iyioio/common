@@ -45,6 +45,7 @@ Thumbs.db
 /.env.e2e
 .env.local
 .test-data
+.protogen
 
 # Next.js
 .next

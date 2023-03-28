@@ -1,6 +1,7 @@
 export const tgenCliFlags={
     input:'-i',
     loadPlugin:'-l',
+    loadPluginPath:'-lp',
     output:'-o',
     reader:'-r',
     parser:'-p',

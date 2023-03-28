@@ -1,5 +1,5 @@
 import { pathExistsAsync } from '@iyio/node-common';
-import { runProtogenCliAsync } from '@iyio/protogen';
+import { runProtogenCliAsync } from '@iyio/protogen-runtime';
 import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -35,7 +35,16 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
                 if(tsDir && !request.snapshot){
-                    await runProtogenCliAsync(['-v','-i',path,'-o',defaultTsFile],0,require);
+                    await runProtogenCliAsync([
+                        '-v',
+                        '-i',
+                        path,
+                        '-o',
+                        defaultTsFile,
+                        '-lp',
+                        'packages/protogen-runtime/src/lib/test-plugins/echo-generator.ts:'+
+                        'packages/protogen-runtime/tsconfig.json'
+                    ],0,require);
                 }
 
                 res.status(204).send('');

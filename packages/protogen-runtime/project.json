@@ -1,0 +1,33 @@
+{
+    "name": "protogen-runtime",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/protogen-runtime/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@iyio/nx-common:lib-builder",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/protogen-runtime",
+                "main": "packages/protogen-runtime/src/index.ts",
+                "tsConfig": "packages/protogen-runtime/tsconfig.lib.json",
+                "assets": ["packages/protogen-runtime/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs protogen-runtime {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/protogen-runtime/**/*.ts"]
+            }
+        }
+    },
+    "tags": []
+}

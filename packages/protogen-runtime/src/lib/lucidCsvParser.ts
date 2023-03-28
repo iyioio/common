@@ -1,6 +1,5 @@
 import { CsvRow, parseCsvRows } from "@iyio/common";
-import { parseNodeLine } from "./parseNodeLine";
-import { ProtoContext, ProtoNode } from "./protogen-types";
+import { parseNodeLine, ProtoContext, ProtoNode } from "@iyio/protogen";
 
 const nameKey='Name';
 const shapeKey='Shape Library';

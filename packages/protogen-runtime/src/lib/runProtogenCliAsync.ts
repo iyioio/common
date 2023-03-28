@@ -1,10 +1,10 @@
-import { executeTGenPipelineAsync } from "./executeTGenPipelineAsync";
+import { uuid } from "@iyio/common";
+import { executeTGenPipelineAsync, ProtoCallback, ProtoPipeline, tgenCliFlags } from "@iyio/protogen";
 import { fileReader } from "./fileReader";
 import { fileWriter } from "./fileWriter";
 import { lucidCsvParser } from "./lucidCsvParser";
 import { markdownParser } from "./markdownParser";
-import { tgenCliFlags } from "./protogen-cli-const";
-import { ProtoCallback, ProtoPipeline } from "./protogen-types";
+import { tsExternalExecutor } from "./tsExternalExecutor";
 import { zodGenerator } from "./zodGenerator";
 
 export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:(name:string)=>any,):Promise<ProtoPipeline>=>{
@@ -44,6 +44,8 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
 
     const pipeline:ProtoPipeline={
         context:{
+            executionId:uuid(),
+            metadata:{},
             args,
             inputArgs:args[tgenCliFlags.input]??[],
             outputArgs:args[tgenCliFlags.output]??[],
@@ -52,6 +54,7 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
             outputs:[],
             verbose,
             tab:'    ',
+            stage:'input',
             log,
         },
         readers:[],
@@ -59,6 +62,8 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
         generators:[],
         writers:[],
         plugins:{},
+        externalPlugins:[],
+        externalExecutors:[tsExternalExecutor]
     };
 
 
@@ -66,7 +71,6 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
     for(const p of plugins){
 
         log(`Load plugin module - ${p}`);
-
 
         const mod=loadModule?.(p)??{};
         for(const name of mod){
@@ -78,7 +82,15 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
         }
     }
 
-    const addToList=(flag:keyof typeof tgenCliFlags,ary:ProtoCallback[])=>{
+    const exPlugins=args[tgenCliFlags.loadPluginPath]??[];
+    for(const p of exPlugins){
+
+        log(`Add external plugin path - ${p}`);
+
+        pipeline.externalPlugins.push(p);
+    }
+
+    const addToList=(flag:keyof typeof tgenCliFlags,ary:(ProtoCallback|string)[])=>{
         const names=args[tgenCliFlags[flag]]??[];
         for(const name of names){
             log(`Add ${flag} - ${name}`);
