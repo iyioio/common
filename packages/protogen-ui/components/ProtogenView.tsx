@@ -62,7 +62,7 @@ export default function ProtogenView({
             code.trim()+
             (code.includes(markdownHidden)?'':'\n\n'+markdownHidden)+
             `\n- $layout: ${Math.round(pt.x)} ${Math.round(pt.y)} 300`
-        ,true);
+        ,'type');
 
 
     },[panZoom,ctrl]);
@@ -75,15 +75,12 @@ export default function ProtogenView({
             const entity=ctrl?.getNodeByElem(elem);
             if(entity){
                 entity.moveTo(pt);
-                entity.update();
             }
         },
         onEnd:(pt,elem)=>{
             const entity=ctrl?.getNodeByElem(elem);
             if(entity){
-                entity.moveTo(pt);
-                entity.updateCodeLayout();
-                entity.update();
+                entity.updateCodeLayout(pt);
             }
         },
     }],[ctrl])
@@ -130,5 +127,4 @@ export default function ProtogenView({
 let newTypeIndex=1;
 const defaultType=()=>(
 `## NewType${newTypeIndex++}
-- id: string
 `)

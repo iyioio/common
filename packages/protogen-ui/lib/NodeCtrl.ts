@@ -1,4 +1,4 @@
-import { DisposeCallback, Point, shortUuid } from "@iyio/common";
+import { DisposeCallback, getSubstringCount, Point, shortUuid } from "@iyio/common";
 import { addMarkdownAttribute, addMarkdownHidden, applyMarkdownViewMode, getHiddenMarkdownCode, getMarkdownProtoPos, getProtoLayout, mergeMarkdownCode, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, ProtoViewMode, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { DomViewCharPointer, getElemProtoLayout, getNodesProtoLayout } from "./protogen-ui-lib";
@@ -10,6 +10,7 @@ export class NodeCtrl
     public readonly id:string;
     public readonly parent:ProtogenCtrl;
     public autoFocus:boolean=false;
+    public autoFocusType:boolean=false;
     public readonly node:BehaviorSubject<ProtoNode>;
     public readonly nodeLayouts:BehaviorSubject<ProtoLayout[]>=new BehaviorSubject<ProtoLayout[]>([]);
     public readonly code:BehaviorSubject<string>;
@@ -20,6 +21,8 @@ export class NodeCtrl
     private codeChangeId=0;
     private codeBackup:string;
     private lastViewMode:ProtoViewMode='all';
+    private lastLineCount=0;
+    private removeResizeListener?:DisposeCallback;
 
     public constructor(code:string,parent:ProtogenCtrl)
     {
@@ -36,13 +39,16 @@ export class NodeCtrl
                 elem.style.minWidth=pos.width===undefined?'auto':pos.width+'px';
             }
         })
-        this.code.subscribe(()=>{
+        this.code.subscribe((code)=>{
             this.codeChangeId++;
+            const lineCount=getSubstringCount(code,'\n');
+            const lc=this.lastLineCount;
+            this.lastLineCount=lineCount;
+            this.update(true,lc!==lineCount?0:700);
         })
+        this.codeElem.subscribe(this.updateBound);
 
     }
-
-    private removeResizeListener?:DisposeCallback;
 
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
@@ -54,6 +60,9 @@ export class NodeCtrl
         this.removeResizeListener?.();
         this.parent.removeEntity(this);
     }
+
+    public readonly setCodeBound=(code:string)=>this.code.next(code);
+    public readonly updateBound=()=>this.update();
 
     _updateViewMode()
     {
@@ -69,11 +78,19 @@ export class NodeCtrl
         this.update(false);
     }
 
-    public moveTo(point:Point){
+    private _moveTo(point:Point){
         this.pos.next({...this.pos.value,...point});
     }
 
-    public updateCodeLayout(){
+    public moveTo(point:Point){
+        this._moveTo(point);
+        this.update();
+    }
+
+    public updateCodeLayout(point?:Point){
+        if(point){
+            this._moveTo(point);
+        }
         const code=this.getFullCode();
         const updated=setMarkdownProtoPos(code,this.pos.value);
         if(this.parent.viewMode==='all'){
@@ -81,6 +98,7 @@ export class NodeCtrl
         }else{
             this.codeBackup=updated;
         }
+        this.update();
     }
 
     public updateNodeLayouts()
@@ -111,7 +129,7 @@ export class NodeCtrl
             return this.lastFullCode;
         }
         const fullCode=mergeMarkdownCode(
-            this.codeElem.value?.textContent||this.code.value,
+            this.code.value,
             this.codeBackup,
             viewMode
         );
@@ -121,68 +139,14 @@ export class NodeCtrl
     }
 
     private updateId=0;
-    public update(updateLines=true){
+    public update(updateLines=true,delay=0){
         const codeElem=this.codeElem.value;
         if(!codeElem || this._isDisposed){
             return;
         }
 
-        const doUpdate=()=>{
-
-            if(!this.getFullCode().trim()){
-                this.dispose();
-                return;
-            }
-
-            const pointer=new DomViewCharPointer(codeElem);
-
-            const code=this.code.value;
-            const hiddenCode=getHiddenMarkdownCode(this.codeBackup,this.parent.viewMode);
-
-            const nodes=parseMarkdownNodes(code,hiddenCode,pointer,views=>{
-                return getNodesProtoLayout(
-                    views,
-                    this.parent.pos.value.scale
-                );
-            })
-            if(!nodes.length){
-                this.dispose();
-                return;
-            }
-
-            this.node.next(nodes[0]);
-
-            if(nodes.length>1){
-                const sections=splitMarkdownSections(hiddenCode?addMarkdownHidden(code)+hiddenCode:code);
-
-                    this.code.next(sections[0]);
-                    const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
-                    for(let i=1;i<sections.length;i++){
-                        this.parent.addEntity(
-                            setMarkdownProtoPos(
-                                sections[i].trim()+'\n',
-                                {
-                                    x:nodeLayout.left,
-                                    y:nodeLayout.bottom+30,
-                                    scale:this.parent.pos.value.scale,
-                                    width:this.pos.value.width
-                                }
-                            ),
-                            i===sections.length-1
-                        );
-                    }
-            }
-
-            this.updateNodeLayouts();
-
-            if(updateLines){
-                this.parent.lineCtrl.updateLines(this.node.value.name);
-            }
-
-        }
-
         const updateId=++this.updateId;
-        if(this.code.value.trim()!==codeElem.innerText.trim()){
+        if(delay>0 || this.code.value.trim()!==codeElem.innerText.trim()){
             const iv=setInterval(()=>{
                 if(this.updateId!==updateId || this._isDisposed){
                     clearInterval(iv);
@@ -190,12 +154,66 @@ export class NodeCtrl
                 }
                 if(this.code.value.trim()===codeElem.innerText.trim()){
                     clearInterval(iv);
-                    doUpdate();
+                    this.doUpdate(updateLines,codeElem);
                 }
-            },15);
+            },delay>0?delay:15);
 
         }else{
-            doUpdate();
+            this.doUpdate(updateLines,codeElem);
+        }
+
+    }
+
+    private doUpdate(updateLines:boolean,codeElem:HTMLElement){
+
+        if(!this.getFullCode().trim()){
+            this.dispose();
+            return;
+        }
+
+        const pointer=new DomViewCharPointer(codeElem);
+
+        const code=this.code.value;
+        const hiddenCode=getHiddenMarkdownCode(this.codeBackup,this.parent.viewMode);
+
+        const nodes=parseMarkdownNodes(code,hiddenCode,pointer,views=>{
+            return getNodesProtoLayout(
+                views,
+                this.parent.pos.value.scale
+            );
+        })
+        if(!nodes.length){
+            this.dispose();
+            return;
+        }
+
+        this.node.next(nodes[0]);
+
+        if(nodes.length>1){
+            const sections=splitMarkdownSections(hiddenCode?addMarkdownHidden(code)+hiddenCode:code);
+
+                this.code.next(sections[0]);
+                const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
+                for(let i=1;i<sections.length;i++){
+                    this.parent.addEntity(
+                        setMarkdownProtoPos(
+                            sections[i].trim()+'\n',
+                            {
+                                x:nodeLayout.left,
+                                y:nodeLayout.bottom+30,
+                                scale:this.parent.pos.value.scale,
+                                width:this.pos.value.width
+                            }
+                        ),
+                        i===sections.length-1
+                    );
+                }
+        }
+
+        this.updateNodeLayouts();
+
+        if(updateLines){
+            this.parent.lineCtrl.updateLines(this.node.value.name);
         }
 
     }
@@ -211,5 +229,6 @@ export class NodeCtrl
         this.code.next(code);
         this.update();
     }
+
 }
 

@@ -116,10 +116,12 @@ export class ProtogenCtrl
         return null;
     }
 
-    public addEntity(code:string,autoFocus?:boolean):NodeCtrl
+    public addEntity(code:string,autoFocus?:boolean|'type'):NodeCtrl
     {
         const ctrl=new NodeCtrl(code,this);
-        if(autoFocus){
+        if(autoFocus==='type'){
+            ctrl.autoFocusType=true;
+        }else if(autoFocus){
             ctrl.autoFocus=true;
         }
         this.entities.next([...this.entities.value,ctrl]);

@@ -1,6 +1,6 @@
-import { getSubstringCount } from "@iyio/common";
 import { markdownHidden } from "@iyio/protogen";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSubject } from "@iyio/react-common";
+import { useEffect, useState } from "react";
 import { NodeCtrl } from "../lib/NodeCtrl";
 import { CodeInput } from "./CodeInput";
 
@@ -15,45 +15,18 @@ export function NodeCode({
 
     const [codeElem,setCodeElem]=useState<HTMLElement|null>(null);
 
-    const [code,setCode]=useState(node.code.value);
-    const codeRef=useRef(code);
-    codeRef.current=code;
-
-    useEffect(()=>{
-        const sub=node.code.subscribe(v=>{
-            setCode(v);
-        })
-        return ()=>{
-            sub.unsubscribe();
-        }
-    },[node])
-
-    const update=useCallback(()=>{
-        node.code.next(codeRef.current);
-        node.update();
-    },[node])
+    const code=useSubject(node.code);
 
     useEffect(()=>{
         node.codeElem.next(codeElem);
-        node.update();
     },[node,codeElem]);
-
-    const lastLineCount=useRef(-1);
-    useEffect(()=>{
-        if(!codeElem){
-            return;
-        }
-        const count=getSubstringCount(code,'\n');
-        if(count!==lastLineCount.current){
-            lastLineCount.current=count;
-            node.code.next(code);
-            node.update();
-        }
-    },[code,node,codeElem]);
 
     const [textarea,setTextarea]=useState<HTMLTextAreaElement|null>(null);
     useEffect(()=>{
-        if(node.autoFocus && textarea){
+        if(!textarea){
+            return;
+        }
+        if(node.autoFocus){
             node.autoFocus=false;
             const i=textarea.value.indexOf(markdownHidden);
             if(i===-1){
@@ -63,15 +36,27 @@ export function NodeCode({
             }
             textarea.focus();
         }
+
+        if(node.autoFocusType){
+            node.autoFocus=false;
+            const match=/((^|\n)##\s)([$\w]+)/.exec(textarea.value);
+            if(!match){
+                textarea.setSelectionRange(textarea.value.length,textarea.value.length);
+            }else{
+                const start=(match.index??0)+match[1].length;
+                textarea.setSelectionRange(start,start+match[3].length);
+            }
+            textarea.focus();
+        }
     },[textarea,node])
 
     return (
         <CodeInput
             language="markdown"
             value={code}
-            onChange={setCode}
-            onSubmit={update}
-            onBlur={update}
+            onChange={node.setCodeBound}
+            onSubmit={node.updateBound}
+            onBlur={node.updateBound}
             onTextarea={setTextarea}
             onElem={setCodeElem}/>
     )
