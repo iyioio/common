@@ -72,49 +72,65 @@ export class LineCtrl
                         line={
                             nodeCtrlId:node.id,
                             updateId,
-                            elem:document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            elem:document.createElementNS("http://www.w3.org/2000/svg", "path"),
                             nodeName,
                             propName,
                             p1:{x:0,y:0},
                             p2:{x:0,y:0},
                         }
                         line.elem.setAttribute('stroke','#88B6BA');
+                        line.elem.setAttribute('fill','none');
                         this.lines.push(line);
                         group.appendChild(line.elem);
                     }
 
                     let dist=Number.MAX_SAFE_INTEGER;
 
+                    let dir1:1|-1=1;
+                    let dir2:1|-1=1;
+
                     let checkDist=getDistanceBetweenPoints(anchor.lPt,end.lPt);
                     if(checkDist<dist){
                         dist=checkDist;
                         line.p1=anchor.lPt;
                         line.p2=end.lPt;
+                        dir1=-1;
+                        dir2=-1;
                     }
                     checkDist=getDistanceBetweenPoints(anchor.rPt,end.lPt);
                     if(checkDist<dist){
                         dist=checkDist;
                         line.p1=anchor.rPt;
                         line.p2=end.lPt;
+                        dir1=1;
+                        dir2=-1;
                     }
                     checkDist=getDistanceBetweenPoints(anchor.lPt,end.rPt);
                     if(checkDist<dist){
                         dist=checkDist;
                         line.p1=anchor.lPt;
                         line.p2=end.rPt;
+                        dir1=-1;
+                        dir2=1;
                     }
                     checkDist=getDistanceBetweenPoints(anchor.rPt,end.rPt);
                     if(checkDist<dist){
                         dist=checkDist;
                         line.p1=anchor.rPt;
                         line.p2=end.rPt;
+                        dir1=1;
+                        dir2=1;
                     }
 
                     line.updateId=updateId;
-                    line.elem.setAttribute('x1',line.p1.x.toString());
-                    line.elem.setAttribute('y1',line.p1.y.toString());
-                    line.elem.setAttribute('x2',line.p2.x.toString());
-                    line.elem.setAttribute('y2',line.p2.y.toString());
+
+                    const dir=anchor.typeNode && anchor.typeNode===end.typeNode?30:Math.min(dist/4,150);
+                    line.elem.setAttribute('d',
+                        `M ${line.p1.x} ${line.p1.y
+                        } C ${line.p1.x+(dir*dir1)} ${line.p1.y
+                        } ${line.p2.x+(dir*dir2)} ${line.p2.y
+                        }  ${line.p2.x} ${line.p2.y}`
+                    )
 
                 }
             }

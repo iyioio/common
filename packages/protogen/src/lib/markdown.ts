@@ -109,6 +109,7 @@ export const parseMarkdownNodes=(
         }
         const layout=getLayout?.(views);
         if(layout){
+            layout.typeNode=typeNode??undefined;
             layout.node=node;
         }
         setProtoLayout(node,layout??null);

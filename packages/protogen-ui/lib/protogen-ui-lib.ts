@@ -20,7 +20,7 @@ export interface LoadRequest
 export interface ProtoUiLine{
     nodeCtrlId:string;
     updateId:number;
-    elem:SVGLineElement;
+    elem:SVGPathElement;
     nodeName:string;
     propName?:string;
     p1:Point;

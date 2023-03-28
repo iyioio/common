@@ -113,6 +113,7 @@ export interface ProtoLayout
     lPt:Point;
     rPt:Point;
     node?:ProtoNode;
+    typeNode?:ProtoNode;
 }
 
 export interface NodeAndPropName
