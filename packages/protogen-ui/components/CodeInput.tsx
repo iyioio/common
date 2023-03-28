@@ -4,6 +4,9 @@ import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { CodeLanguage } from './code-lib';
 import "./code-style";
 
+export const defaultCodeLineStartReg=/^(\s*)/;
+export const markdownCodeLineStartReg=/^(\s*-?\s*)/;
+
 interface CodeInputProps extends BaseLayoutOuterProps
 {
     tab?:string;
@@ -20,6 +23,8 @@ interface CodeInputProps extends BaseLayoutOuterProps
     tall?:boolean;
     onElem?:(elem:HTMLElement|null)=>void;
     onTextarea?:(elem:HTMLTextAreaElement|null)=>void;
+    lineStartReg?:RegExp|null;
+    lineStartRegIndex?:number;
 }
 
 export function CodeInput({
@@ -34,6 +39,8 @@ export function CodeInput({
     onBlur,
     onNewLine,
     tall,
+    lineStartReg=defaultCodeLineStartReg,
+    lineStartRegIndex=1,
     ...props
 }:CodeInputProps){
 
@@ -92,17 +99,35 @@ export function CodeInput({
                     e.preventDefault();
                     const s=textArea.selectionStart;
                     textArea.value=value;
-                    textArea.selectionStart=s;
-                    textArea.selectionEnd=s;
-                    textArea.focus();
+                    if(s>=0){
+                        textArea.selectionStart=s;
+                        textArea.selectionEnd=s;
+                        textArea.focus();
+                    }
                     onSubmit?.(value);
                 }else{
+                    const s=textArea.selectionStart;
+                    if(lineStartReg && s>0 && s===textArea.selectionEnd){
+                        const i=textArea.value.lastIndexOf('\n',s-1);
+                        if(i!=-1){
+                            const prevLine=textArea.value.substring(i+1,s);
+                            const lineStart=lineStartReg.exec(prevLine)?.[lineStartRegIndex];
+                            if(lineStart){
+                                e.preventDefault();
+                                textArea.value=textArea.value.substring(0,s+1)+lineStart+'\n'+textArea.value.substring(s+1)
+                                textArea.selectionStart=s+lineStart.length+1;
+                                textArea.selectionEnd=s+lineStart.length+1;
+                                onChange?.(textArea.value);
+                                textArea.focus();
+                            }
+                        }
+                    }
                     onNewLine?.(value)
                 }
                 break;
             }
         }
-    },[textArea,tab,onChange,onSubmit,onNewLine,disabled])
+    },[textArea,tab,onChange,onSubmit,onNewLine,disabled,lineStartReg,lineStartRegIndex])
 
 
     return (

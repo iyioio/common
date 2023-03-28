@@ -54,6 +54,7 @@ export function NodeCode({
         <CodeInput
             language="markdown"
             value={code}
+            tab={'  '}
             onChange={node.setCodeBound}
             onSubmit={node.updateBound}
             onBlur={node.updateBound}
