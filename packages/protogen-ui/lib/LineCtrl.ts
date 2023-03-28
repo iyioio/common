@@ -36,7 +36,7 @@ export class LineCtrl
 
     private lineUpdateId=0;
     private readonly lines:ProtoUiLine[]=[];
-    public updateLines()
+    public updateLines(onlyForType?:string)
     {
         const group=this._lineGroup;
         if(!group){
@@ -82,6 +82,16 @@ export class LineCtrl
                         line.elem.setAttribute('fill','none');
                         this.lines.push(line);
                         group.appendChild(line.elem);
+                    }
+
+                    if( onlyForType!==undefined &&
+                        anchor.typeNode &&
+                        end.typeNode &&
+                        anchor.typeNode.name!==onlyForType &&
+                        end.typeNode.name!==onlyForType
+                    ){
+                        line.updateId=updateId;
+                        continue;
                     }
 
                     let dist=Number.MAX_SAFE_INTEGER;

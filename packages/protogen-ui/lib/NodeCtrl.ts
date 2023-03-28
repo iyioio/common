@@ -176,7 +176,7 @@ export class NodeCtrl
             this.updateNodeLayouts();
 
             if(updateLines){
-                this.parent.lineCtrl.updateLines();
+                this.parent.lineCtrl.updateLines(this.node.value.name);
             }
 
         }

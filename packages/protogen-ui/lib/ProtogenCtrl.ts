@@ -131,6 +131,7 @@ export class ProtogenCtrl
         if(this.entities.value.includes(entity)){
             this.entities.next(this.entities.value.filter(e=>e!==entity));
         }
+        this.lineCtrl.updateLines();
     }
 
     private exporting=false;
