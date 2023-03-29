@@ -79,3 +79,84 @@ export const getSubstringCount=(str:string,substring:string):number=>{
     }
     return count;
 }
+
+interface SplitStringWithQuoteOptions{
+    separator:string;
+    trimValues?:boolean;
+    escapeStyle?:'backslash'|'double-quote';
+    removeEmptyValues?:boolean;
+    keepQuotes?:boolean;
+}
+
+/**
+ * Splits a string by the given separate but allows the separator to be inside quotes.
+ * @example 'abc,"1,2,3",zyx' -> ['abc','1,2,3','xyz']
+ */
+export const splitStringWithQuotes=(str:string,{
+    separator,
+    trimValues=false,
+    escapeStyle='backslash',
+    removeEmptyValues=false,
+    keepQuotes=false
+}:SplitStringWithQuoteOptions):string[]=>{
+    const ary:string[]=[];
+
+    let i=0;
+    let value='';
+    let firstChar=true;
+    let quoteChar:'"'|"'"|null=null;
+    for(;i<str.length;i++){
+        const ch=str.charAt(i);
+
+        if(firstChar){
+            quoteChar=ch==='"'?'"':ch==="'"?"'":null;
+            if(keepQuotes && quoteChar){
+                value+=ch;
+            }
+            firstChar=false;
+            if(quoteChar){
+                continue;
+            }else if(/\s/.test(ch)){
+                firstChar=true;
+            }
+        }
+
+        if(quoteChar){
+            if(ch===quoteChar){
+                if(escapeStyle==='backslash' && str.charAt(i-1)==='\\'){
+                    value=value.substring(0,value.length-1)+ch;
+                }else if(escapeStyle==='double-quote' && str.charAt(i+1)===quoteChar){
+                    value+=ch;
+                    i++
+                }else{
+                    if(keepQuotes){
+                        value+=ch;
+                    }
+                    quoteChar=null;
+                }
+            }else{
+                value+=ch;
+            }
+        }else if(ch===separator){
+            if(trimValues){
+                value=value.trim();
+            }
+            if(!removeEmptyValues || value){
+                ary.push(value);
+            }
+            value='';
+            firstChar=true;
+        }else{
+            value+=ch;
+        }
+
+    }
+    if(trimValues){
+        value=value.trim();
+    }
+    if(!removeEmptyValues || value){
+        ary.push(value);
+    }
+
+    return ary;
+}
