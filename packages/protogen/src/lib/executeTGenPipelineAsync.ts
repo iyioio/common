@@ -12,7 +12,7 @@ export const executeTGenPipelineAsync=async ({
 
     const log=context.log;
 
-    log(`Start pipeline - ${context.executionId}}`)
+    log(`\n--------------------------\nStart pipeline - ${context.executionId}}`)
 
     const runPluginsAsync=async (stage:ProtoStage,type:(keyof ProtoPipeline)|'preProcessors',ary:ProtoCallback[])=>{
         context.stage=stage;
@@ -54,6 +54,6 @@ export const executeTGenPipelineAsync=async ({
         await exe(context,{action:'clean-up'});
     }
 
-    log(`end of pipeline - ${context.executionId}`)
+    log(`end of pipeline - ${context.executionId}\n--------------------------\n`)
 
 }
