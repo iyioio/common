@@ -1,3 +1,4 @@
+import { dump, splitStringWithQuotes } from '@iyio/common';
 import { pathExistsAsync } from '@iyio/node-common';
 import { runProtogenCliAsync } from '@iyio/protogen-runtime';
 import chalk from 'chalk';
@@ -10,8 +11,7 @@ const defaultFile=process.env['NX_PROTOGEN_DEFAULT_FILE']??'protogen';
 const saveDir=process.env['NX_PROTOGEN_SAVE_DIR']??'.';
 const snapshotDir=process.env['NX_PROTOGEN_SNAPSHOT_DIR']??'.';
 const tsDir=process.env['NX_PROTOGEN_TS_DIR'];
-const defaultTsFile=process.env['NX_PROTOGEN_TS_DEFAULT_FILE']??'models.ts';
-
+const protoArgs=process.env['NX_PROTOGEN_ARGS']??'-o models.ts';
 const notNameReg=/[^\w-]/g;
 
 export default async function protogenApiHandler (req: NextApiRequest, res: NextApiResponse)
@@ -35,16 +35,17 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
                 if(tsDir && !request.snapshot){
-                    await runProtogenCliAsync([
-                        '-v',
+                    await runProtogenCliAsync(dump([
                         '-i',
                         path,
-                        '-o',
-                        defaultTsFile,
-                        '-lp',
-                        'packages/protogen-runtime/src/lib/test-plugins/echo-generator.ts:'+
-                        'packages/protogen-runtime/tsconfig.json'
-                    ],0,require);
+                        ...splitStringWithQuotes(protoArgs,{
+                            separator:' ',
+                            removeEmptyValues:true,
+                            escapeStyle:'double-quote',
+                            trimValues:true,
+                        })
+
+                    ]),0);
                 }
 
                 res.status(204).send('');
