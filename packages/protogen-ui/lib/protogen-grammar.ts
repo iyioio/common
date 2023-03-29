@@ -57,19 +57,34 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
     excludeEnd: true,
   };
   const PROP_LIST:Mode = {
-    scope: 'type',
-    match:'(?<=^-\\s+)([\\w]+)(?=(\\?)?\\s*(:|\\s*$))',
-    excludeEnd: true,
+    scope:{
+        1:'bullet',
+        2:'type'
+    },
+    match:[
+        '^-\\s+',
+        '[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    ],
   };
   const SUB_PROP_LIST:Mode = {
-    scope: 'attr',
-    match:'(?<=^(\\s+)-\\s+)([\\w]+)(?=(\\?)?\\s*(:|\\s*$))',
-    excludeEnd: true,
+    scope:{
+        1:'bullet',
+        2:'attr'
+    },
+    match:[
+        '^\\s+-\\s+',
+        '[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    ],
   };
   const SPECIAL_PROP_LIST:Mode = {
-    scope: 'operator',
-    match:'(?<=^(\\s*)-\\s+)(\\$[\\w]+)(?=(\\?)?\\s*(:|\\s*$))',
-    excludeEnd: true,
+    scope:{
+        1:'bullet',
+        2:'operator'
+    },
+    match:[
+        '^\\s*-\\s+',
+        '\\$[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    ],
   };
   const LIST:Mode = {
     scope: 'bullet',
