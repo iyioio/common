@@ -466,7 +466,7 @@ export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMod
         const lines=(aHi===-1?code:code.substring(0,aHi)).split('\n');
         const namedLines:{line:string,name:string|null}[]=[];
         for(const line of lines){
-            const match=/^(-|##)\s+([$\w]+)\??\s*(:.*?$|$)/.exec(line);
+            const match=/^(-|##)\s+([$\w]+)\??\s*([:(].*?$|$)/.exec(line);
             namedLines.push({
                 line,
                 name:match?.[2]??null
@@ -476,7 +476,7 @@ export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMod
 
         const matches=(
             bHi===-1?addCode:addCode.substring(0,bHi).trim()
-        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|:.*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-|##)\s))/g);
+        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|[:(].*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-(?! \()|##)\s))/g);
         for(const match of matches){
             const name=match[3];
             for(const line of namedLines){
@@ -518,7 +518,7 @@ export const applyMarkdownViewMode=(code:string,viewMode:ProtoViewMode):string=>
             if(i!==-1){
                 code=code.substring(0,i).trim();
             }
-            return code.replace(/(^|\n)(?!-\s|##\s).*?(?=($|\n))/g,'');
+            return code.replace(/(^|\n)(?!-\s|##\s).*?(?=($|\n))/g,'').replace(/(^|\n)[ \t]*-[ \t]+\(.*?(?=($|\n))/g,'');
         }
 
         default:
