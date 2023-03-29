@@ -21,6 +21,7 @@ export interface ProtoUiLine{
     nodeCtrlId:string;
     updateId:number;
     elem:SVGPathElement;
+    elem2:SVGPathElement;
     nodeName:string;
     propName?:string;
     p1:Point;

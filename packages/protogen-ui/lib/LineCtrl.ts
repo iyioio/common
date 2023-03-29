@@ -1,5 +1,6 @@
 import { getDistanceBetweenPoints } from "@iyio/common";
 import { getProtoLayout } from "@iyio/protogen";
+import { dt } from "./lib-design-tokens";
 import { ProtoUiLine } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
 
@@ -73,14 +74,20 @@ export class LineCtrl
                             nodeCtrlId:node.id,
                             updateId,
                             elem:document.createElementNS("http://www.w3.org/2000/svg", "path"),
+                            elem2:document.createElementNS("http://www.w3.org/2000/svg", "path"),
                             nodeName,
                             propName,
                             p1:{x:0,y:0},
                             p2:{x:0,y:0},
                         }
-                        line.elem.setAttribute('stroke','#88B6BA');
+                        line.elem.setAttribute('stroke','#88B6BA99');
                         line.elem.setAttribute('fill','none');
+                        line.elem.setAttribute('stroke-width','2');
+                        line.elem2.setAttribute('stroke',dt().bgColor+'cc');
+                        line.elem2.setAttribute('stroke-width','4');
+                        line.elem2.setAttribute('fill','none');
                         this.lines.push(line);
+                        group.appendChild(line.elem2);
                         group.appendChild(line.elem);
                     }
 
@@ -135,12 +142,14 @@ export class LineCtrl
                     line.updateId=updateId;
 
                     const dir=anchor.typeNode && anchor.typeNode===end.typeNode?30:Math.min(dist/4,150);
-                    line.elem.setAttribute('d',
+                    const d=(
                         `M ${line.p1.x} ${line.p1.y
                         } C ${line.p1.x+(dir*dir1)} ${line.p1.y
                         } ${line.p2.x+(dir*dir2)} ${line.p2.y
                         }  ${line.p2.x} ${line.p2.y}`
                     )
+                    line.elem.setAttribute('d',d);
+                    line.elem2.setAttribute('d',d);
 
                 }
             }
@@ -149,6 +158,7 @@ export class LineCtrl
             const line=this.lines[i];
             if(line.updateId!==updateId){
                 line.elem.remove();
+                line.elem2.remove();
                 this.lines.splice(i,1);
                 i--;
             }
