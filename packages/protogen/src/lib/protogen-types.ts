@@ -4,7 +4,8 @@ export interface ProtoAttribute
 {
     name:string;
     value:string;
-    multiValue?:string[]
+    multiValue?:string[];
+    tags?:string[];
     props:{[name:string]:string};
 }
 
@@ -42,6 +43,8 @@ export interface ProtoNode extends ProtoTypeInfo{
     links?:NodeAndPropName[];
 
     section?:string;
+
+    tags?:string[];
 }
 
 export interface ProtoOutput

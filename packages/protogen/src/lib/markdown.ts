@@ -1,5 +1,5 @@
 import { HashMap } from "@iyio/common";
-import { getMultiProtoAttValue, setProtoLayout } from "./protogen-lib";
+import { addProtoTags, getMultiProtoAttValue, setProtoLayout } from "./protogen-lib";
 import { NodeAndPropName, ProtoAttribute, ProtoLayout, ProtoNode, ProtoPosScale, ProtoTypeInfo, ProtoViewMode } from "./protogen-types";
 
 export interface ProtogenMarkdownNode
@@ -199,9 +199,10 @@ export const parseMarkdownNodes=(
                 }
             }
 
-        }else if(match=/^##\s+([\w:\s]+)/.exec(line)){// header
+        }else if(match=/^##\s+([\w:\s]+)(.*)/.exec(line)){// header
             pushTypeNode();
             const types=parseTypes(match[1]);
+            const tags=parseTags(match[2]);
             if(types.length){
                 typeNode={
                     name:types[0].type,
@@ -211,6 +212,7 @@ export const parseMarkdownNodes=(
                     types,
                     attributes:{},
                     hidden,
+                    tags,
                 }
                 setLayout(typeNode);
             }
@@ -223,6 +225,11 @@ export const parseMarkdownNodes=(
             }
         }else if(line.includes(markdownHidden)){// hidden
             hidden=true
+        }else if(match=/^\s*-\s*(\([^)]+\).*)/.exec(line)){// tags
+            const lastNode=propNode??typeNode;
+            if(lastNode){
+                addProtoTags(lastNode,parseTags(match[1]));
+            }
         }else{
             const addToSection=(lineSi && section)?true:false;
             const pn=addToSection?null:propNode;
@@ -280,6 +287,24 @@ const parseTypes=(line:string):ProtoTypeInfo[]=>{
     }
 
     return types;
+}
+
+const parseTags=(line:string):string[]|undefined=>{
+
+    const tags:string[]=[];
+
+    const matches=line.matchAll(/\(([^(]+)\)/g);
+    for(const match of matches){
+        const list=match[1].split(/[,\s]/);
+        for(const t of list){
+            const tag=t.trim();
+            if(tag && !tags.includes(tag)){
+                tags.push(tag);
+            }
+        }
+    }
+
+    return tags;
 }
 
 const layoutRegNoStart=/-\s+\$layout\s*:\s*([-\d.]+)\s+([-\d.]+)(\s+([-\d.]+))?/i

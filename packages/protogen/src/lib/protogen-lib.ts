@@ -26,3 +26,20 @@ export const getEmptyProtoLayout=():ProtoLayout=>({
 export const getMultiProtoAttValue=(att:ProtoAttribute|null|undefined):string[]=>{
     return att?att.multiValue??[att.value]:[];
 }
+
+export const addProtoTags=(item:ProtoNode|ProtoAttribute,tags:string[]|null|undefined)=>{
+    if(!tags?.length){
+        return;
+    }
+
+    if(!item.tags){
+        item.tags=[];
+    }
+
+    for(const tag of tags){
+        const t=tag.trim();
+        if(t && !item.tags.includes(t)){
+            item.tags.push(t);
+        }
+    }
+}

@@ -56,9 +56,28 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
     match:'\\*hidden\\*',
     excludeEnd: true,
   };
+  const tagScope='string';//string
+  const TAG:Mode={
+    scope:tagScope,
+    match:/\([^()]+\)/
+  }
+  const PROP_LIST_TAG:Mode = {
+    beginScope:{
+        1:tagScope,
+        2:tagScope
+    },
+    begin:[
+        '^[ \\t]*-\\s+',
+        /\([^()]+\)/
+    ],
+    contains:[
+        TAG
+    ],
+    end:/$/
+  };
   const PROP_LIST:Mode = {
     scope:{
-        1:'bullet',
+        1:'type',
         2:'type'
     },
     match:[
@@ -68,7 +87,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
   };
   const SUB_PROP_LIST:Mode = {
     scope:{
-        1:'bullet',
+        1:'attr',
         2:'attr'
     },
     match:[
@@ -78,7 +97,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
   };
   const SPECIAL_PROP_LIST:Mode = {
     scope:{
-        1:'bullet',
+        1:'operator',
         2:'operator'
     },
     match:[
@@ -233,7 +252,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
       {
         begin: '^#{1,6}',
         end: '$',
-        contains: CONTAINABLE
+        contains: [TAG,...CONTAINABLE]
       },
       {
         begin: '(?=^.+?\\n[=-]{2,}$)',
@@ -270,6 +289,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
       INLINE_HTML,
       SPECIAL_PROP_LIST,
       PROP_LIST,
+      PROP_LIST_TAG,
       SUB_PROP_LIST,
       LIST,
       BOLD,
