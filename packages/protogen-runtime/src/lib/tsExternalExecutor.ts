@@ -19,7 +19,9 @@ export const tsExternalExecutor:ProtoExternalExecutor=async (ctx,{plugin,action}
         return true;
     }
 
-    const [pluginPath,tsConfigPath]=plugin.split(':');
+    const [pluginPath,_tsConfigPath]=plugin.split(':');
+
+    const tsConfigPath=_tsConfigPath??ctx.args['--ts-config'];
 
 
     if(!pathExistsAsync(pluginPath)){
