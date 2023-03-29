@@ -52,7 +52,7 @@ export function NodeCode({
 
     return (
         <CodeInput
-            language="markdown"
+            language="p-markdown"
             value={code}
             tab={'  '}
             onChange={node.setCodeBound}

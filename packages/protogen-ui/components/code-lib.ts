@@ -192,6 +192,8 @@ export const codeLanguage=[
     'xl',
     'xquery',
     'zephir',
+
+    'p-markdown',
 ] as const
 
 export type CodeLanguage=typeof codeLanguage[number];

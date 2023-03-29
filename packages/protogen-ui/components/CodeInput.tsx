@@ -1,6 +1,7 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, escapeHtml } from '@iyio/common';
 import hljs from 'highlight.js';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { registerGrammars } from '../lib/registerGrammars';
 import { CodeLanguage } from './code-lib';
 import "./code-style";
 
@@ -43,6 +44,10 @@ export function CodeInput({
     lineStartRegIndex=1,
     ...props
 }:CodeInputProps){
+
+    useEffect(()=>{
+        registerGrammars();
+    },[]);
 
     const [code,setCode]=useState<HTMLElement|null>(null);
     useEffect(()=>{
@@ -198,9 +203,10 @@ export function CodeInput({
                     color:#00000000;
                     caret-color: #ffffffcc;
                     outline-width: 0;
+                    pointer-events:none;
                 }
                 .CodeInput .no-select{
-                    pointer-events:none;
+                    _pointer-events:none;
                 }
             `}</style>
         </div>

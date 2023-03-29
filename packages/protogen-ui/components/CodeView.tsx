@@ -1,5 +1,6 @@
 import hljs from 'highlight.js';
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { registerGrammars } from '../lib/registerGrammars';
 import { CodeLanguage } from './code-lib';
 import "./code-style";
 
@@ -17,6 +18,10 @@ export function CodeView({
     wrap,
     children
 }:CodeViewProps){
+
+    useEffect(()=>{
+        registerGrammars();
+    },[]);
 
     const code=value||children||'';
 
