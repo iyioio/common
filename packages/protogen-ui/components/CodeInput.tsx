@@ -202,6 +202,7 @@ export function CodeInput({
                     resize:none;
                     color:#00000000;
                     caret-color: #ffffffcc;
+                    outline:none;
                     outline-width:0;
                 }
                 .CodeInput .no-select{
