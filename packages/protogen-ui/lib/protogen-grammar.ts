@@ -72,7 +72,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
         2:'attr'
     },
     match:[
-        '^\\s+-\\s+',
+        '^[ \t]+-\\s+',
         '[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
     ],
   };
@@ -82,7 +82,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
         2:'operator'
     },
     match:[
-        '^\\s*-\\s+',
+        '^[ \t]*-\\s+',
         '\\$[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
     ],
   };
