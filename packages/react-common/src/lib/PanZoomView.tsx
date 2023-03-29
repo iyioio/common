@@ -386,6 +386,7 @@ export function PanZoomView({
                         right:0;
                         bottom:0;
                         overflow:visible;
+                        touch-action:none;
                     }
                     .PanZoomView .plane{
                         position:absolute;
