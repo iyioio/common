@@ -202,11 +202,10 @@ export function CodeInput({
                     resize:none;
                     color:#00000000;
                     caret-color: #ffffffcc;
-                    outline-width: 0;
-                    pointer-events:none;
+                    outline-width:0;
                 }
                 .CodeInput .no-select{
-                    _pointer-events:none;
+                    pointer-events:none;
                 }
             `}</style>
         </div>
