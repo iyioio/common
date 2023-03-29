@@ -15,7 +15,7 @@ export function ProtogenToolbar({
     const mode=useSubject(ctrl.viewModeSubject);
 
     return (
-        <div className="ProtogenToolbar">
+        <div className="ProtogenToolbar node-container">
             <View flex1 g1>
                 <button className={mode==='all'?'active':''} onClick={()=>ctrl.viewMode='all'}>more</button>
                 <button className={mode==='atts'?'active':''} onClick={()=>ctrl.viewMode='atts'}>less</button>
@@ -37,7 +37,6 @@ export function ProtogenToolbar({
                     bottom:0;
                     display:flex;
                     padding:4px ${dt().containerPadding};
-                    background:${dt().entityBgColor};
                 }
                 .ProtogenToolbar button{
                     border:none;

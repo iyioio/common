@@ -26,7 +26,7 @@ export default function NodeView({
     },[node,view])
 
     return (
-        <div className="NodeView proto-node-pos" ref={setView}>
+        <div className="NodeView proto-node-pos node-container" ref={setView}>
 
             <div className="NodeView-drag"><div/></div>
 
@@ -62,9 +62,7 @@ export default function NodeView({
                     position:absolute;
                     display:flex;
                     flex-direction:column;
-                    background:${dt().entityBgColor};
                     border-radius:${dt().borderRadius};
-                    box-shadow:0 0 8px #00000033;
                 }
                 .NodeView-drag{
                     height:12px;

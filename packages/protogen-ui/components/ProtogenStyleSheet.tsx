@@ -38,6 +38,12 @@ export default function ProtogenStyleSheet()
                 margin:0;
             }
 
+            .node-container{
+                background:${dt().entityBgColor};
+                box-shadow:0 0 8px #00000033;
+                backdrop-filter: blur(3px);
+            }
+
 
         `}</style>
     )
