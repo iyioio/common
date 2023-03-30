@@ -1,5 +1,5 @@
 import { getDistanceBetweenPoints } from "@iyio/common";
-import { getProtoLayout } from "@iyio/protogen";
+import { getProtoLayout, NodeAndPropName } from "@iyio/protogen";
 import { dt } from "./lib-design-tokens";
 import { ProtoUiLine } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
@@ -73,6 +73,7 @@ export class LineCtrl
                         const nodeName=match.node.node.value.name;
                         const propName=match.prop?.node?.name;
                         let line=this.getLine(updateId,node.id,nodeName,propName);
+                        const lineColor=getLinkColor(link);
 
                         if(!line){
                             line={
@@ -84,8 +85,9 @@ export class LineCtrl
                                 propName,
                                 p1:{x:0,y:0},
                                 p2:{x:0,y:0},
+                                color:lineColor
                             }
-                            line.elem.setAttribute('stroke','#88B6BA99');
+                            line.elem.setAttribute('stroke',lineColor);
                             line.elem.setAttribute('fill','none');
                             line.elem.setAttribute('stroke-width','2');
                             line.elem2.setAttribute('stroke',dt().bgColor+'cc');
@@ -155,6 +157,10 @@ export class LineCtrl
                         )
                         line.elem.setAttribute('d',d);
                         line.elem2.setAttribute('d',d);
+                        if(line.color!==lineColor){
+                            line.color=lineColor;
+                            line.elem.setAttribute('stroke',lineColor);
+                        }
                     }
                 }
             }
@@ -169,4 +175,15 @@ export class LineCtrl
             }
         }
     }
+}
+
+const getLinkColor=(link:NodeAndPropName):string=>{
+    const meta=link.meta;
+    if(!meta){
+        return '#88B6BA99';
+    }
+    if(meta['min']!==undefined){
+        return '#444444';
+    }
+    return meta['color']||'#88B6BA99';
 }

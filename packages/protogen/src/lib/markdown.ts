@@ -404,11 +404,15 @@ const mergeNormalizeNodes=(child:ProtoNode,existing:ProtoNode|null|undefined)=>{
     }
 
     const apply=existing??child;
-    const links=getMultiProtoAttValue(apply.attributes['$link']);
+    const linkAtt=apply.attributes['$link'];
+    const links=getMultiProtoAttValue(linkAtt);
 
     for(const link of links){
         const v=parseMarkdownLink(link);
         if(v){
+            if(linkAtt.props){
+                v.meta={...linkAtt.props};
+            }
             if(!apply.links){
                 apply.links=[];
             }

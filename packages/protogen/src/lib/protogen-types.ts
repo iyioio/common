@@ -1,4 +1,4 @@
-import { Point } from "@iyio/common";
+import { HashMap, Point } from "@iyio/common";
 
 export interface ProtoAttribute
 {
@@ -138,6 +138,7 @@ export interface NodeAndPropName
 {
     nodeName:string;
     propName?:string;
+    meta?:HashMap<string>;
 }
 
 export interface ProtoPosScale
