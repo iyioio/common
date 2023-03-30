@@ -485,7 +485,7 @@ export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMod
 
         const matches=(
             bHi===-1?addCode:addCode.substring(0,bHi).trim()
-        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|[:(].*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-(?! \()|##)\s))/g);
+        ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|[:(].*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-(?! \()|##)\s|$))/g);
         for(const match of matches){
             const name=match[3];
 
