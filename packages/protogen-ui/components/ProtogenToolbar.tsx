@@ -17,16 +17,16 @@ export function ProtogenToolbar({
     return (
         <div className="ProtogenToolbar node-container">
             <View flex1 g1>
-                <button className={mode==='all'?'active':''} onClick={()=>ctrl.viewMode='all'}>more</button>
-                <button className={mode==='atts'?'active':''} onClick={()=>ctrl.viewMode='atts'}>less</button>
-                <button className={mode==='children'?'active':''} onClick={()=>ctrl.viewMode='children'}>min</button>
+                <button className={'min-button '+(mode==='all'?'active':'')} onClick={()=>ctrl.viewMode='all'}>more</button>
+                <button className={'min-button '+(mode==='atts'?'active':'')} onClick={()=>ctrl.viewMode='atts'}>less</button>
+                <button className={'min-button '+(mode==='children'?'active':'')} onClick={()=>ctrl.viewMode='children'}>min</button>
             </View>
             <View row justifyCenter alignCenter flex1 g1 className="ProtogenToolbar-message">
                 {activeAnchor?'( Select a connecting point )':''}
             </View>
             <View row flex1 justifyEnd g1>
-                <button onClick={()=>ctrl.saveAsync({executePipeline:true})}>execute</button>
-                <button onClick={()=>ctrl.saveAsync()}>save</button>
+                <button className="min-button" onClick={()=>ctrl.saveAsync({executePipeline:true})}>execute</button>
+                <button className="min-button" onClick={()=>ctrl.saveAsync()}>save</button>
             </View>
 
 
@@ -38,19 +38,6 @@ export function ProtogenToolbar({
                     bottom:0;
                     display:flex;
                     padding:4px ${dt().containerPadding};
-                }
-                .ProtogenToolbar button{
-                    border:none;
-                    border-radius:4px;
-                    background:transparent;
-                    padding:4px;
-                    color:${dt().mutedColor}99;
-                    font-weight:bold;
-                    transition:opacity 0.1s ease-in-out;
-                    cursor:pointer;
-                }
-                .ProtogenToolbar button:active, .ProtogenToolbar button.active{
-                    color:${dt().mutedColor};
                 }
                 .ProtogenToolbar-message{
                     opacity:0.5;

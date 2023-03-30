@@ -4,6 +4,7 @@ import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
 import Canvas from "./Canvas";
 import { ProtogenContext } from "./lib-builder-components";
+import { ProtogenOutputView } from "./ProtogenOutputView";
 import { ProtogenToolbar } from "./ProtogenToolbar";
 
 interface ProtogenViewProps
@@ -106,6 +107,8 @@ export default function ProtogenView({
                 }
 
                 <ProtogenToolbar ctrl={ctrl}/>
+
+                <ProtogenOutputView ctrl={ctrl}/>
 
 
                 <style jsx>{`

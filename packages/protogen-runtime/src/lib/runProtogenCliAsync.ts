@@ -7,7 +7,26 @@ import { markdownParser } from "./markdownParser";
 import { tsExternalExecutor } from "./tsExternalExecutor";
 import { zodGenerator } from "./zodGenerator";
 
-export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:(name:string)=>any,):Promise<ProtoPipeline>=>{
+export interface RunProtogenCliAsyncOptions
+{
+    argList:string[];
+    argStart?:number;
+    loadModule?:(name:string)=>any;
+    logOutput?:(...args:any[])=>void;
+    verbose?:boolean;
+    onOutputReady?:(verbose:boolean,logOutput:(...args:any[])=>void)=>void;
+    onPipelineReady?:(pipeline:ProtoPipeline)=>void;
+}
+
+export const runProtogenCliAsync=async ({
+    argList,
+    argStart=0,
+    loadModule,
+    logOutput,
+    verbose: _verbose,
+    onOutputReady,
+    onPipelineReady,
+}:RunProtogenCliAsyncOptions):Promise<ProtoPipeline>=>{
 
     const args:{[name:string]:string[]}={}
 
@@ -36,8 +55,9 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
         }
     }
 
-    const verbose=args[tgenCliFlags.verbose]?true:false;
-    const log=verbose?console.log:()=>{/* */}
+    const verbose=_verbose??(args[tgenCliFlags.verbose]?true:false);
+    const log=logOutput??(verbose?console.log:()=>{/* */})
+    onOutputReady?.(verbose,log);
     if(verbose){
         log('Verbose mode enabled');
     }
@@ -132,6 +152,8 @@ export const runProtogenCliAsync=async (argList:string[],argStart=0,loadModule?:
             pipeline.writers.push(fileWriter);
         }
     }
+
+    onPipelineReady?.(pipeline);
 
     await executeTGenPipelineAsync(pipeline);
 

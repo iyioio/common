@@ -11,9 +11,11 @@ export class ProtoKeyListener
     {
         this.ctrl=ctrl;
         window.addEventListener('keypress',this.onKeyPress);
+        window.addEventListener('keyup',this.onKeyUp);
 
         this.removeCallbacks=()=>{
             window.removeEventListener('keypress',this.onKeyPress);
+            window.removeEventListener('keyup',this.onKeyUp);
         }
     }
 
@@ -31,13 +33,17 @@ export class ProtoKeyListener
     private readonly onKeyPress=(e:KeyboardEvent)=>{
         let handled=true;
 
-        const key=(e.ctrlKey||e.metaKey?'c:':'')+(e.shiftKey?'s:':'')+e.key.toLowerCase();
+        const key=getKey(e);
 
         switch(key){
 
             case 'c:i':
                 console.info('ProtogenCtrl',this.ctrl);
                 console.info('ProtoNodes',this.ctrl.entities.value.map(n=>n.node.value));
+                break;
+
+            case 'escape':
+                this.ctrl.clearApiOutput();
                 break;
 
             default:
@@ -50,4 +56,18 @@ export class ProtoKeyListener
             e.stopPropagation();
         }
     }
+
+    private readonly onKeyUp=(e:KeyboardEvent)=>{
+
+        const key=getKey(e);
+
+        switch(key){
+
+            case 'escape':
+                this.ctrl.clearApiOutput();
+                break;
+        }
+    }
 }
+
+const getKey=(e:KeyboardEvent)=>(e.ctrlKey||e.metaKey?'c:':'')+(e.shiftKey?'s:':'')+e.key.toLowerCase();

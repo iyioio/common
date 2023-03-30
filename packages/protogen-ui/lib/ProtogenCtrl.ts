@@ -1,4 +1,4 @@
-import { ReadonlySubject } from "@iyio/common";
+import { delayAsync, ReadonlySubject, uuid } from "@iyio/common";
 import { ProtoLayout, ProtoPosScale, ProtoViewMode, splitMarkdown } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
@@ -35,6 +35,10 @@ export class ProtogenCtrl
         this.updateViewMode();
 
     }
+
+    private readonly _apiOutput:BehaviorSubject<string>=new BehaviorSubject<string>('');
+    public get apiOutputSubject():ReadonlySubject<string>{return this._apiOutput}
+    public get apiOutput(){return this._apiOutput.value}
 
     public constructor(code?:string)
     {
@@ -135,6 +139,11 @@ export class ProtogenCtrl
         this.lineCtrl.updateLines();
     }
 
+    public clearApiOutput(){
+        this._apiOutput.next('');
+    }
+
+    private _exportWarm=false;
     private exporting=false;
     public async saveAsync(options:Omit<SaveRequest,'content'>={})
     {
@@ -142,17 +151,46 @@ export class ProtogenCtrl
             return;
         }
         this.exporting=true;
+        let complete=false;
 
         try{
+
+            // A workaround to first call of route not warning memory with other routes
+            if(!this._exportWarm){
+                await fetch(`/api/protogen/output/_warmup`);
+                this._exportWarm=true;
+            }
+
+            const outputId=uuid();
             const content:string=this.entities.value.map(e=>e.getFullCode()).join('\n\n');
 
             const request:SaveRequest={
                 ...options,
-                content
-            }
+                content,
+                outputId,
+            };
+
+            (async ()=>{
+                let _continue=2;
+                while(_continue>0){
+                    await delayAsync(200);
+                    try{
+                        const response=await fetch(`/api/protogen/output/${outputId}`);
+                        const out:string|null=await response.json();
+                        if(out!==null){
+                            this._apiOutput.next(this._apiOutput.value+out);
+                        }
+                        if(complete){
+                            _continue--;
+                        }
+                    }catch{/* */}
+                }
+            })();
+
 
             await fetch('/api/protogen',{method:'POST',body:JSON.stringify(request)});
         }finally{
+            complete=true;
             this.exporting=false;
         }
     }

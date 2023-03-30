@@ -16,6 +16,16 @@ export interface SaveRequest
      * Can not be used with snapshot
      */
     executePipeline?:boolean;
+
+    /**
+     * Can later be used to get on-going output from execution.
+     */
+    outputId?:string;
+}
+
+export interface SaveResult
+{
+    output?:string;
 }
 
 export interface LoadRequest

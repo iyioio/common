@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { join } from 'path';
+import { setApiOutput } from '../../lib/protogen-api-lib';
 import { SaveRequest } from '../../lib/protogen-ui-lib';
 
 const defaultFile=process.env['NX_PROTOGEN_DEFAULT_FILE']??'protogen';
@@ -34,17 +35,34 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
                 if(request.executePipeline && !request.snapshot){
-                    await runProtogenCliAsync([
-                        '-i',
-                        path,
-                        ...splitStringWithQuotes(protoArgs,{
-                            separator:' ',
-                            removeEmptyValues:true,
-                            escapeStyle:'double-quote',
-                            trimValues:true,
-                        })
+                    const outputId=request.outputId;
+                    let isVerbose:boolean;
+                    await runProtogenCliAsync({
+                        argList:[
+                            '-i',
+                            path,
+                            ...splitStringWithQuotes(protoArgs,{
+                                separator:' ',
+                                removeEmptyValues:true,
+                                escapeStyle:'double-quote',
+                                trimValues:true,
+                            })
 
-                    ],0);
+                        ],
+                        argStart:0,
+                        onOutputReady:v=>isVerbose=v,
+                        logOutput:outputId?(...args:any[])=>{
+                            if(isVerbose){
+                                console.info(...args);
+                            }
+                            setApiOutput(outputId,args.join(' ')+'\n',true);
+                        }:undefined
+                    });
+                    if(outputId){
+                        setTimeout(()=>{
+                            setApiOutput(outputId,null);
+                        },6000);
+                    }
                     console.info(chalk.green(`protogen pipeline execution success`));
                 }
 
