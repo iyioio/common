@@ -2,7 +2,8 @@ import { asArray, getObjKeyCount, HashMap } from "@iyio/common";
 import { ProtoAttribute, ProtoContext, ProtoNode } from "@iyio/protogen";
 
 const typeMap:HashMap<string>={
-    'int':'number'
+    'int':'number',
+    '':'null'
 };
 const numTypes=['number','bigint'];
 const builtIns=['string','number','any','bigint','boolean','date','null'] as const;
@@ -47,19 +48,7 @@ export const zodGenerator=async ({
 
     for(const node of nodes){
 
-        const tsType:'interface'|'union'|'enum'=(
-            node.refType?.type==='enum'?
-                (node.types[2]?.type==='string'?'union':'enum')
-            :node.refType?.type==='union'?
-                'union'
-            :'interface'
-        )
-
-        switch(tsType){
-
-            case 'interface':
-                addInterface(node,out,tab,getFullName,useCustomTypes);
-                break;
+        switch(node.refType?.type){
 
             case 'union':
                 addUnion(node,out,tab,getFullName);
@@ -67,6 +56,14 @@ export const zodGenerator=async ({
 
             case 'enum':
                 addEnum(node,out,tab,getFullName);
+                break;
+
+            case 'entity':
+            case 'struct':
+            case 'interface':
+            case 'class':
+            case 'type':
+                addInterface(node,out,tab,getFullName,useCustomTypes);
                 break;
         }
 
@@ -131,8 +128,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
     if(node.children){
         for(const prop of node.children){
 
-
-            const propType=typeMap[prop.type]??prop.type;
+            const propType=typeMap[prop.type]??prop.type??'string';
             const isBuiltIn=isBuiltInType(propType);
 
             if(!isBuiltIn){
