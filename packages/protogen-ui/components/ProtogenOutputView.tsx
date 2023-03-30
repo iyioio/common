@@ -1,6 +1,7 @@
 import { useSubject, View } from "@iyio/react-common";
 import { useEffect, useState } from "react";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
+import { ProtoButton } from "./ProtoButton";
 
 interface ProtogenOutputViewProps
 {
@@ -41,7 +42,7 @@ export function ProtogenOutputView({
             <div ref={setOutputElem} className="ProtogenOutputView-output">{output}</div>
 
             <View className="ProtogenOutputView-bottom" row justifyEnd p1>
-                <button className="min-button" onClick={()=>ctrl.clearApiOutput()}>clear</button>
+                <ProtoButton text="clear (esc)" onClick={()=>ctrl.clearApiOutput()}/>
             </View>
 
             <style global jsx>{`

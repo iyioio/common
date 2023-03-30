@@ -16,6 +16,11 @@ export interface DesignTokens
     readonly panelColor:string;
     readonly containerPadding:string;
 
+    readonly infoColor:string;
+    readonly successColor:string;
+    readonly warnColor:string;
+    readonly dangerColor:string;
+
     readonly entityBgColor:string;
     readonly entityNameColor:string;
     readonly entityTypeColor:string;
@@ -46,6 +51,11 @@ const darkTokens:DesignTokens=Object.freeze(
     mutedColor:"#6F767E",
     panelColor:"#1B1D1F",
     containerPadding:'14px',
+
+    infoColor:'#5D93CA',
+    successColor:'#6FC5B1',
+    warnColor:'#DCDCAF',
+    dangerColor:'#CB5A58',
 
     entityBgColor:'#1c1c1c94',
     entityNameColor:'#BC8ABD',

@@ -4,6 +4,8 @@ import type { NodeCtrl } from "./NodeCtrl";
 
 export const anchorInset=0;
 
+export type UiState='info'|'success'|'warn'|'danger';
+
 export interface SaveRequest
 {
     /**

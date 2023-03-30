@@ -44,20 +44,6 @@ export default function ProtogenStyleSheet()
                 backdrop-filter: blur(3px);
             }
 
-            .min-button{
-                border:none;
-                border-radius:4px;
-                background:transparent;
-                padding:4px;
-                color:${dt().mutedColor}99;
-                font-weight:bold;
-                transition:opacity 0.1s ease-in-out;
-                cursor:pointer;
-            }
-            .min-button:active, .min-button.active{
-                color:${dt().mutedColor};
-            }
-
 
         `}</style>
     )
