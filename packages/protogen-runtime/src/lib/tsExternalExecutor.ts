@@ -6,7 +6,7 @@ import { join } from "path";
 export const tsExternalExecutor:ProtoExternalExecutor=async (ctx,{plugin,action})=>{
 
     const dir='./.protogen';
-    const path=getFullPath(join(dir,ctx.executionId+'.json'));
+    const path=getFullPath(join(dir,'.ctx-'+ctx.executionId+'.json'));
 
     if(action==='clean-up'){
         if(await pathExistsAsync(path)){
