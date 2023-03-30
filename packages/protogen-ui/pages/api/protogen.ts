@@ -10,7 +10,6 @@ import { SaveRequest } from '../../lib/protogen-ui-lib';
 const defaultFile=process.env['NX_PROTOGEN_DEFAULT_FILE']??'protogen';
 const saveDir=process.env['NX_PROTOGEN_SAVE_DIR']??'.';
 const snapshotDir=process.env['NX_PROTOGEN_SNAPSHOT_DIR']??'.';
-const tsDir=process.env['NX_PROTOGEN_TS_DIR'];
 const protoArgs=process.env['NX_PROTOGEN_ARGS']??'-o models.ts';
 const notNameReg=/[^\w-]/g;
 
@@ -34,7 +33,7 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 await writeFile(path,request.content);
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
-                if(tsDir && !request.snapshot){
+                if(request.executePipeline && !request.snapshot){
                     await runProtogenCliAsync(dump([
                         '-i',
                         path,

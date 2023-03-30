@@ -136,7 +136,7 @@ export class ProtogenCtrl
     }
 
     private exporting=false;
-    public async exportAsync()
+    public async saveAsync(options:Omit<SaveRequest,'content'>={})
     {
         if(this.exporting || this._isDisposed){
             return;
@@ -147,6 +147,7 @@ export class ProtogenCtrl
             const content:string=this.entities.value.map(e=>e.getFullCode()).join('\n\n');
 
             const request:SaveRequest={
+                ...options,
                 content
             }
 

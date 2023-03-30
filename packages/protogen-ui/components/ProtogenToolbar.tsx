@@ -25,7 +25,8 @@ export function ProtogenToolbar({
                 {activeAnchor?'( Select a connecting point )':''}
             </View>
             <View row flex1 justifyEnd g1>
-                <button onClick={()=>ctrl.exportAsync()}>export</button>
+                <button onClick={()=>ctrl.saveAsync({executePipeline:true})}>execute</button>
+                <button onClick={()=>ctrl.saveAsync()}>save</button>
             </View>
 
 

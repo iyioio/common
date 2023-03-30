@@ -6,9 +6,16 @@ export const anchorInset=0;
 
 export interface SaveRequest
 {
+    /**
+     * File name
+     */
     name?:string;
     content:string;
     snapshot?:boolean;
+    /**
+     * Can not be used with snapshot
+     */
+    executePipeline?:boolean;
 }
 
 export interface LoadRequest
