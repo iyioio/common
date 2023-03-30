@@ -25,9 +25,13 @@ export class LineCtrl
         this.parent=parent;
     }
 
-    private getLine(ctrlId:string, nodeName:string,propName?:string){
+    private getLine(excludeUpdateId:number,ctrlId:string, nodeName:string,propName?:string){
         for(const line of this.lines){
-            if(line.nodeCtrlId===ctrlId && line.nodeName===nodeName && line.propName===propName){
+            if( line.updateId!==excludeUpdateId &&
+                line.nodeCtrlId===ctrlId &&
+                line.nodeName===nodeName &&
+                line.propName===propName)
+            {
                 return line;
             }
         }
@@ -55,102 +59,103 @@ export class LineCtrl
 
                 for(const link of links){
 
-                    const match=this.parent.getMatch(link.nodeName,link.propName);
-                    if(!match){
+                    const matches=this.parent.getMatches(link.nodeName,link.propName);
+                    if(!matches){
                         continue;
                     }
 
-                    const end=link.propName?match.prop:getProtoLayout(match.node.node.value);
-                    if(!end){
-                        continue;
-                    }
-
-                    const nodeName=match.node.node.value.name;
-                    const propName=match.prop?.node?.name;
-                    let line=this.getLine(node.id,nodeName,propName);
-
-                    if(!line){
-                        line={
-                            nodeCtrlId:node.id,
-                            updateId,
-                            elem:document.createElementNS("http://www.w3.org/2000/svg", "path"),
-                            elem2:document.createElementNS("http://www.w3.org/2000/svg", "path"),
-                            nodeName,
-                            propName,
-                            p1:{x:0,y:0},
-                            p2:{x:0,y:0},
+                    for(const match of matches){
+                        const end=link.propName?match.prop:getProtoLayout(match.node.node.value);
+                        if(!end){
+                            continue;
                         }
-                        line.elem.setAttribute('stroke','#88B6BA99');
-                        line.elem.setAttribute('fill','none');
-                        line.elem.setAttribute('stroke-width','2');
-                        line.elem2.setAttribute('stroke',dt().bgColor+'cc');
-                        line.elem2.setAttribute('stroke-width','4');
-                        line.elem2.setAttribute('fill','none');
-                        this.lines.push(line);
-                        group.appendChild(line.elem2);
-                        group.appendChild(line.elem);
-                    }
 
-                    if( onlyForType!==undefined &&
-                        anchor.typeNode &&
-                        end.typeNode &&
-                        anchor.typeNode.name!==onlyForType &&
-                        end.typeNode.name!==onlyForType
-                    ){
+                        const nodeName=match.node.node.value.name;
+                        const propName=match.prop?.node?.name;
+                        let line=this.getLine(updateId,node.id,nodeName,propName);
+
+                        if(!line){
+                            line={
+                                nodeCtrlId:node.id,
+                                updateId,
+                                elem:document.createElementNS("http://www.w3.org/2000/svg", "path"),
+                                elem2:document.createElementNS("http://www.w3.org/2000/svg", "path"),
+                                nodeName,
+                                propName,
+                                p1:{x:0,y:0},
+                                p2:{x:0,y:0},
+                            }
+                            line.elem.setAttribute('stroke','#88B6BA99');
+                            line.elem.setAttribute('fill','none');
+                            line.elem.setAttribute('stroke-width','2');
+                            line.elem2.setAttribute('stroke',dt().bgColor+'cc');
+                            line.elem2.setAttribute('stroke-width','4');
+                            line.elem2.setAttribute('fill','none');
+                            this.lines.push(line);
+                            group.appendChild(line.elem2);
+                            group.appendChild(line.elem);
+                        }
+
+                        if( onlyForType!==undefined &&
+                            anchor.typeNode &&
+                            end.typeNode &&
+                            anchor.typeNode.name!==onlyForType &&
+                            end.typeNode.name!==onlyForType
+                        ){
+                            line.updateId=updateId;
+                            continue;
+                        }
+
+                        let dist=Number.MAX_SAFE_INTEGER;
+
+                        let dir1:1|-1=1;
+                        let dir2:1|-1=1;
+
+                        let checkDist=getDistanceBetweenPoints(anchor.lPt,end.lPt);
+                        if(checkDist<dist){
+                            dist=checkDist;
+                            line.p1=anchor.lPt;
+                            line.p2=end.lPt;
+                            dir1=-1;
+                            dir2=-1;
+                        }
+                        checkDist=getDistanceBetweenPoints(anchor.rPt,end.lPt);
+                        if(checkDist<dist){
+                            dist=checkDist;
+                            line.p1=anchor.rPt;
+                            line.p2=end.lPt;
+                            dir1=1;
+                            dir2=-1;
+                        }
+                        checkDist=getDistanceBetweenPoints(anchor.lPt,end.rPt);
+                        if(checkDist<dist){
+                            dist=checkDist;
+                            line.p1=anchor.lPt;
+                            line.p2=end.rPt;
+                            dir1=-1;
+                            dir2=1;
+                        }
+                        checkDist=getDistanceBetweenPoints(anchor.rPt,end.rPt);
+                        if(checkDist<dist){
+                            dist=checkDist;
+                            line.p1=anchor.rPt;
+                            line.p2=end.rPt;
+                            dir1=1;
+                            dir2=1;
+                        }
+
                         line.updateId=updateId;
-                        continue;
+
+                        const dir=anchor.typeNode && anchor.typeNode===end.typeNode?30:Math.min(dist/4,150);
+                        const d=(
+                            `M ${line.p1.x} ${line.p1.y
+                            } C ${line.p1.x+(dir*dir1)} ${line.p1.y
+                            } ${line.p2.x+(dir*dir2)} ${line.p2.y
+                            }  ${line.p2.x} ${line.p2.y}`
+                        )
+                        line.elem.setAttribute('d',d);
+                        line.elem2.setAttribute('d',d);
                     }
-
-                    let dist=Number.MAX_SAFE_INTEGER;
-
-                    let dir1:1|-1=1;
-                    let dir2:1|-1=1;
-
-                    let checkDist=getDistanceBetweenPoints(anchor.lPt,end.lPt);
-                    if(checkDist<dist){
-                        dist=checkDist;
-                        line.p1=anchor.lPt;
-                        line.p2=end.lPt;
-                        dir1=-1;
-                        dir2=-1;
-                    }
-                    checkDist=getDistanceBetweenPoints(anchor.rPt,end.lPt);
-                    if(checkDist<dist){
-                        dist=checkDist;
-                        line.p1=anchor.rPt;
-                        line.p2=end.lPt;
-                        dir1=1;
-                        dir2=-1;
-                    }
-                    checkDist=getDistanceBetweenPoints(anchor.lPt,end.rPt);
-                    if(checkDist<dist){
-                        dist=checkDist;
-                        line.p1=anchor.lPt;
-                        line.p2=end.rPt;
-                        dir1=-1;
-                        dir2=1;
-                    }
-                    checkDist=getDistanceBetweenPoints(anchor.rPt,end.rPt);
-                    if(checkDist<dist){
-                        dist=checkDist;
-                        line.p1=anchor.rPt;
-                        line.p2=end.rPt;
-                        dir1=1;
-                        dir2=1;
-                    }
-
-                    line.updateId=updateId;
-
-                    const dir=anchor.typeNode && anchor.typeNode===end.typeNode?30:Math.min(dist/4,150);
-                    const d=(
-                        `M ${line.p1.x} ${line.p1.y
-                        } C ${line.p1.x+(dir*dir1)} ${line.p1.y
-                        } ${line.p2.x+(dir*dir2)} ${line.p2.y
-                        }  ${line.p2.x} ${line.p2.y}`
-                    )
-                    line.elem.setAttribute('d',d);
-                    line.elem2.setAttribute('d',d);
-
                 }
             }
         }

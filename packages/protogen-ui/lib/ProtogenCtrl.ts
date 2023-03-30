@@ -244,5 +244,33 @@ export class ProtogenCtrl
         return null;
     }
 
+    public getMatches(nodeName:string,propName?:string):NodeCtrlAndProp[]|null{
+        let matches:NodeCtrlAndProp[]|null=null;
+        for(const node of this.entities.value){
+            if(node.node.value.name!==nodeName){
+                continue;
+            }
+            if(propName){
+                for(const a of node.nodeLayouts.value){
+                    if(a.node?.name===propName){
+                        if(!matches){
+                            matches=[];
+                        }
+                        matches.push({
+                            node,
+                            prop:a
+                        })
+                    }
+                }
+            }else{
+                if(!matches){
+                    matches=[];
+                }
+                matches.push({node});
+            }
+        }
+        return matches;
+    }
+
 
 }
