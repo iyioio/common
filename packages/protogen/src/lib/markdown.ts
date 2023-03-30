@@ -437,8 +437,10 @@ export const addMarkdownAttribute=(
         }
     }
 
+
     const attLine=`  - ${attName}:${value?' '+value:''}`;
-    const hiddenIndex=hidden?-1:code.indexOf(markdownHidden);
+    const hi=code.indexOf(markdownHidden);
+    const hiddenIndex=hidden?-1:hi;
 
     if(!match || (hidden && (match.index??0)<hiddenIndex)){
         return `${hidden?addMarkdownHidden(code):code}\n- ${childName}\n${attLine}`
@@ -446,7 +448,14 @@ export const addMarkdownAttribute=(
 
     const insertAt=code.indexOf('\n',(match.index??0)+1);
     if(insertAt===-1){
-        return `${hidden?addMarkdownHidden(code):code}\n- ${childName}\n${attLine}`
+        return `${hidden?addMarkdownHidden(code):code}${match[3]?`\n- ${childName}`:''}\n${attLine}`
+    }
+    if(hidden){
+        if(insertAt>hi){
+            return `${code.substring(0,insertAt+1)}${attLine}\n${code.substring(insertAt+1)}`;
+        }else{
+            return `${addMarkdownHidden(code)}\n- ${childName}\n${attLine}`
+        }
     }
     return `${code.substring(0,insertAt+1)}${attLine}\n${code.substring(insertAt+1)}`;
 }
@@ -479,6 +488,7 @@ export const mergeMarkdownCode=(code:string,addCode:string,viewMode:ProtoViewMod
         ).matchAll(/(\n|^)(-|##)\s+([$\w]+)\??\s*(\n|[:(].*?\n)((?!-\s|##\s)(.|\n)*?)(?=(\n(-(?! \()|##)\s))/g);
         for(const match of matches){
             const name=match[3];
+
             for(const line of namedLines){
                 if(line.name===name){
                     line.line+='\n'+match[5];
@@ -536,7 +546,7 @@ export const getHiddenMarkdownCode=(code:string,viewMode:ProtoViewMode)=>{
         return getHiddenMarkdownBlock(code);
     }
 
-    return code.replace(/(^|\n)#.*?(\n|$)/g,'\n- $self');
+    return code.replace(/(^|\n)#.*?(\n|$)/g,(_,_2,end)=>'\n- $self'+end);
 }
 
 

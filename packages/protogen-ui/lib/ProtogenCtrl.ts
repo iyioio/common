@@ -102,7 +102,7 @@ export class ProtogenCtrl
                     }${
                         layout.node.name===ctrl.node.value.name?'':'.'+layout.node.name
                     }`,
-                    true
+                    false
                 )
             }
         }else{
