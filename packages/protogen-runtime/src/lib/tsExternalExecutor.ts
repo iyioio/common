@@ -45,7 +45,10 @@ export const tsExternalExecutor:ProtoExternalExecutor=async (ctx,{plugin,action}
     process.env['PROTOGEN_CURRENT_PLUGIN']=plugin;
     process.env['NX_PROTOGEN_CURRENT_PLUGIN']=plugin;
 
-    await execAsync(`npx ts-node${tsConfigPath?` -r tsconfig-paths/register --project ${tsConfigPath}`:''} ${pluginPath}`);
+    await execAsync({
+        cmd:`npx ts-node${tsConfigPath?` -r tsconfig-paths/register --project ${tsConfigPath}`:''} ${pluginPath}`,
+        out:ctx.log
+    });
 
     const json=JSON.parse((await readFile(path)).toString());
     const log=ctx.log;
