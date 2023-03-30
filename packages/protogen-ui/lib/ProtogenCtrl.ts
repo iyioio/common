@@ -143,7 +143,6 @@ export class ProtogenCtrl
         this._apiOutput.next('');
     }
 
-    private _exportWarm=false;
     private exporting=false;
     public async saveAsync(options:Omit<SaveRequest,'content'>={})
     {
@@ -156,10 +155,7 @@ export class ProtogenCtrl
         try{
 
             // A workaround to first call of route not warning memory with other routes
-            if(!this._exportWarm){
-                await fetch(`/api/protogen/output/_warmup`);
-                this._exportWarm=true;
-            }
+            await fetch(`/api/protogen/output/_warmup`);
 
             const outputId=uuid();
             const content:string=this.entities.value.map(e=>e.getFullCode()).join('\n\n');
