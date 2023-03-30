@@ -1,4 +1,4 @@
-import { dump, splitStringWithQuotes } from '@iyio/common';
+import { splitStringWithQuotes } from '@iyio/common';
 import { pathExistsAsync } from '@iyio/node-common';
 import { runProtogenCliAsync } from '@iyio/protogen-runtime';
 import chalk from 'chalk';
@@ -34,7 +34,7 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
                 if(request.executePipeline && !request.snapshot){
-                    await runProtogenCliAsync(dump([
+                    await runProtogenCliAsync([
                         '-i',
                         path,
                         ...splitStringWithQuotes(protoArgs,{
@@ -44,7 +44,8 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                             trimValues:true,
                         })
 
-                    ]),0);
+                    ],0);
+                    console.info(chalk.green(`protogen pipeline execution success`));
                 }
 
                 res.status(204).send('');
