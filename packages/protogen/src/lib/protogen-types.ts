@@ -13,6 +13,7 @@ export interface ProtoTypeInfo
 {
     type:string;
     isArray:boolean;
+    flags?:string[];
 }
 
 export interface ProtoNode extends ProtoTypeInfo{

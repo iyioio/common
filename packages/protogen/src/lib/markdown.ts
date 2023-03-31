@@ -262,12 +262,43 @@ export const parseMarkdownNodes=(
     if(typeNode){
         pushTypeNode();
     }
+
+    for(const n of nodes){
+        applyAutoLinks(n);
+    }
+
     //console.info(nodes);
     return nodes;
 }
 
+const applyAutoLinks=(node:ProtoNode)=>{
+
+    if(node.name!==node.type && node.types.length){
+        const refType=node.types[node.types.length-1];
+        const pri=refType.flags?.includes('*');
+        if(refType && refType.type.charAt(0).toUpperCase()===refType.type.charAt(0) && !node.links?.length){
+            if(!node.links){
+                node.links=[];
+            }
+            node.links.push({
+                nodeName:refType.type,
+                meta:{
+                    color:pri?'':'#222222',
+                    low:pri?'false':'true'
+                }
+            })
+        }
+    }
+
+    if(node.children){
+        for(const n of node.children){
+            applyAutoLinks(n);
+        }
+    }
+}
+
 const parseTypes=(line:string):ProtoTypeInfo[]=>{
-    const parts=line.split(':');
+    const parts=line.split(/[: ]/);
     const types:ProtoTypeInfo[]=[];
 
     for(const p of parts){
@@ -275,14 +306,26 @@ const parseTypes=(line:string):ProtoTypeInfo[]=>{
         if(!type){
             continue;
         }
+        let isArray:boolean;
         if(type.endsWith('[]')){
             type=type.substring(0,type.length-2).trim();
+            isArray=true;
             if(!type){
                 continue;
             }
-            types.push({type,isArray:true});
         }else{
-            types.push({type,isArray:false})
+            isArray=false;
+        }
+        if(/\W/.test(type)){
+            const lastType=types[types.length-1];
+            if(lastType){
+                if(!lastType.flags){
+                    lastType.flags=[];
+                }
+                lastType.flags.push(type);
+            }
+        }else{
+            types.push({type,isArray})
         }
     }
 

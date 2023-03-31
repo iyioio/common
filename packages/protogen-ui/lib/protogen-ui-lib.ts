@@ -46,6 +46,7 @@ export interface ProtoUiLine{
     p1:Point;
     p2:Point;
     color:string;
+    low:boolean;
 }
 
 export interface ProtoAnchor

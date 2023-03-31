@@ -74,6 +74,7 @@ export class LineCtrl
                         const propName=match.prop?.node?.name;
                         let line=this.getLine(updateId,node.id,nodeName,propName);
                         const lineColor=getLinkColor(link);
+                        const low=getLinkLow(link);
 
                         if(!line){
                             line={
@@ -85,7 +86,8 @@ export class LineCtrl
                                 propName,
                                 p1:{x:0,y:0},
                                 p2:{x:0,y:0},
-                                color:lineColor
+                                color:lineColor,
+                                low,
                             }
                             line.elem.setAttribute('stroke',lineColor);
                             line.elem.setAttribute('fill','none');
@@ -94,8 +96,13 @@ export class LineCtrl
                             line.elem2.setAttribute('stroke-width','4');
                             line.elem2.setAttribute('fill','none');
                             this.lines.push(line);
-                            group.appendChild(line.elem2);
-                            group.appendChild(line.elem);
+                            if(low && group.childNodes.length){
+                                group.insertBefore(line.elem,group.childNodes.item(0));
+                                group.insertBefore(line.elem2,group.childNodes.item(0));
+                            }else{
+                                group.appendChild(line.elem2);
+                                group.appendChild(line.elem);
+                            }
                         }
 
                         if( onlyForType!==undefined &&
@@ -186,4 +193,15 @@ const getLinkColor=(link:NodeAndPropName):string=>{
         return '#444444';
     }
     return meta['color']||'#88B6BA99';
+}
+
+const getLinkLow=(link:NodeAndPropName):boolean=>{
+    const meta=link.meta;
+    if(!meta){
+        return false;
+    }
+    if(meta['low']!==undefined){
+        return Boolean(meta['low'])
+    }
+    return false;
 }
