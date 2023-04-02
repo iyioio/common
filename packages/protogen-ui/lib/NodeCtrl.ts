@@ -1,7 +1,8 @@
-import { DisposeCallback, getSubstringCount, Point, shortUuid } from "@iyio/common";
-import { addMarkdownAttribute, addMarkdownHidden, applyMarkdownViewMode, getHiddenMarkdownCode, getMarkdownProtoPos, getProtoLayout, mergeMarkdownCode, parseMarkdownNodes, ProtoLayout, ProtoNode, ProtoPosScale, ProtoViewMode, setMarkdownProtoPos, splitMarkdownSections } from "@iyio/protogen";
+import { deepClone, DisposeCallback, getSubstringCount, Point, ReadonlySubject, shortUuid } from "@iyio/common";
+import { ProtoAddressMap, protoClearRevLinks, protoFlattenHierarchy, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownParseNodes, protoMarkdownRenderer, protoMergeNodes, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
-import { DomViewCharPointer, getElemProtoLayout, getNodesProtoLayout } from "./protogen-ui-lib";
+import { dt } from "./lib-design-tokens";
+import { getElemProtoLayout } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
 
 
@@ -11,28 +12,38 @@ export class NodeCtrl
     public readonly parent:ProtogenCtrl;
     public autoFocus:boolean=false;
     public autoFocusType:boolean=false;
-    public readonly node:BehaviorSubject<ProtoNode>;
-    public readonly nodeLayouts:BehaviorSubject<ProtoLayout[]>=new BehaviorSubject<ProtoLayout[]>([]);
+
+    private nodeParsingResult:ProtoParsingResult;
+    private readonly _node:BehaviorSubject<ProtoNode>;
+    public get nodeSubject():ReadonlySubject<ProtoNode>{return this._node}
+    public get node(){return this._node.value}
+
     public readonly code:BehaviorSubject<string>;
     public readonly pos:BehaviorSubject<ProtoPosScale>;
     public readonly viewElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
     public readonly codeElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
 
+    private readonly _layoutNodes:BehaviorSubject<ProtoLayout[]>=new BehaviorSubject<ProtoLayout[]>([]);
+    public get layoutNodesSubject():ReadonlySubject<ProtoLayout[]>{return this._layoutNodes}
+    public get layoutNodes(){return this._layoutNodes.value}
+
     private codeChangeId=0;
-    private codeBackup:string;
-    private lastViewMode:ProtoViewMode='all';
+    private fullViewNodesParsingResult:ProtoParsingResult|null=null;
+    private fullViewNodes:ProtoNode[]|null=null;
     private lastLineCount=0;
     private removeResizeListener?:DisposeCallback;
 
-    public constructor(code:string,parent:ProtogenCtrl)
+    public constructor(node:ProtoNode,parent:ProtogenCtrl)
     {
-        this.codeBackup=code;
-        const nodes=parseMarkdownNodes(code);
+        //this.codeBackup=code;
         this.id=shortUuid();
         this.parent=parent;
-        this.node=new BehaviorSubject<ProtoNode>(nodes[0]??parseMarkdownNodes('## NewType')[0]);
-        this.code=new BehaviorSubject(code);
-        this.pos=new BehaviorSubject<ProtoPosScale>(getMarkdownProtoPos(code)??{x:0,y:0,scale:1});
+        this._node=new BehaviorSubject<ProtoNode>(node);
+        this.nodeParsingResult=protoParsingResultFromNode(node);
+        this.code=new BehaviorSubject(protoRenderLines(
+            {nodes:this.nodeParsingResult.allNodes,renderer:protoMarkdownRenderer}
+        ).join('\n'));
+        this.pos=new BehaviorSubject<ProtoPosScale>(protoGetPosScale(node));
         combineLatest([this.viewElem,this.pos]).subscribe(([elem,pos])=>{
             if(elem){
                 elem.style.transform=`translate(${pos.x}px,${pos.y}px)`;
@@ -44,7 +55,7 @@ export class NodeCtrl
             const lineCount=getSubstringCount(code,'\n');
             const lc=this.lastLineCount;
             this.lastLineCount=lineCount;
-            this.update(true,lc!==lineCount?0:700);
+            this.update(lc!==lineCount?0:700);
         })
         this.codeElem.subscribe(this.updateBound);
 
@@ -63,12 +74,16 @@ export class NodeCtrl
                 }
                 width=w;
                 height=h;
-                this.update(true,15);
+                this.updateLayout(15);
             })
 
             ob.observe(view);
 
             this.removeResizeListener=()=>ob.disconnect();
+        })
+
+        this.nodeSubject.subscribe(()=>{
+            this.parent.clearAddressMap();
         })
 
     }
@@ -81,24 +96,47 @@ export class NodeCtrl
         }
         this._isDisposed=true;
         this.removeResizeListener?.();
-        this.parent.removeEntity(this);
+        this.parent.removeNode(this);
+    }
+
+    private setNode(node:ProtoNode,parsingResult:ProtoParsingResult)
+    {
+        this.nodeParsingResult=parsingResult;
+        this._node.next(node);
+    }
+
+    public addToAddressMap(addressMap:ProtoAddressMap){
+
+        for(const node of this.nodeParsingResult.allNodes){
+            if(!addressMap[node.address]){
+                addressMap[node.address]=node;
+            }
+        }
+
+        if(this.fullViewNodesParsingResult){
+            for(const node of this.fullViewNodesParsingResult.allNodes){
+                if(!addressMap[node.address]){
+                    addressMap[node.address]=node;
+                }
+            }
+        }
     }
 
     public readonly setCodeBound=(code:string)=>this.code.next(code);
     public readonly updateBound=()=>this.update();
 
-    _updateViewMode()
+    _updateViewMode()// todo
     {
         this.codeChangeId++;
-        const fullCode=this.getFullCode(this.lastViewMode);
-        const viewMode=this.parent.viewMode;
+        // const fullCode=this.getFullCode(this.lastViewMode);
+        // const viewMode=this.parent.viewMode;
 
-        const code=applyMarkdownViewMode(fullCode,viewMode);
+        // const code=protoRenderLines(fullCode,viewMode);
 
-        this.lastViewMode=viewMode;
-        this.codeBackup=fullCode;
-        this.code.next(code);
-        this.update(false);
+        // this.lastViewMode=viewMode;
+        // this.codeBackup=fullCode;
+        // this.code.next(code);
+        // this.update(false);
     }
 
     private _moveTo(point:Point){
@@ -107,72 +145,128 @@ export class NodeCtrl
 
     public moveTo(point:Point){
         this._moveTo(point);
-        this.update();
+        this.parent.lineCtrl.updateLines(this._node.value.address);
     }
 
     public updateCodeLayout(point?:Point){
         if(point){
             this._moveTo(point);
         }
-        const code=this.getFullCode();
-        const updated=setMarkdownProtoPos(code,this.pos.value);
-        if(this.parent.viewMode==='all'){
-            this.code.next(updated);
-        }else{
-            this.codeBackup=updated;
-        }
-        this.update();
+        protoSetPosScale(this.nodeSubject.value,{...this.pos.value,...point});
+        this.pushNodeToCode();
     }
 
-    public updateNodeLayouts()
+    public getNodeByAddress(address:string):ProtoNode|null{
+        return this.nodeParsingResult.addressMap[address]??null;
+    }
+
+    public clearRevLinks()
     {
+        protoClearRevLinks(this.nodeParsingResult.allNodes);
+    }
+
+    public updateLinks(addressMap:ProtoAddressMap=this.parent.addressMap)
+    {
+        protoUpdateLinks(this.nodeParsingResult.allNodes,addressMap);
+    }
+
+    private lastLayoutUpdateId=0;
+    public updateLayout(delay:number=0)
+    {
+        const id=++this.lastLayoutUpdateId;
+        if(delay<=0){
+            this._updateLayout();
+        }else{
+            setTimeout(()=>{
+                if(!this._isDisposed && id===this.lastLayoutUpdateId){
+                    this._updateLayout();
+                }
+            },delay)
+        }
+
+    }
+
+    private readonly getOffset=(layout:ProtoLayout):Point=>{
+        return this.pos.value;
+    };
+
+    public _updateLayout()
+    {
+
+        protoUpdateLayouts(this.nodeParsingResult.allNodes,{
+            x:0,
+            yStart:dt().codeLineHeight+dt().codeVPadding,
+            width:this.viewElem.value?.clientWidth,
+            lineHeight:dt().codeLineHeight,
+            getOffset:this.getOffset
+        })
+
         const layouts:ProtoLayout[]=[];
-        const rootLayout=getProtoLayout(this.node.value);
-        if(rootLayout){
-            layouts.push(rootLayout);
-        }
-
-        const children=this.node.value.children??[];
-        for(const child of children){
-            const layout=getProtoLayout(child);
-            if(layout){
-                layouts.push(layout);
+        for(const node of this.nodeParsingResult.allNodes){
+            if(node.isContent || node.special){
+                continue;
             }
+            const layout=protoGetLayout(node);
+            if(!layout){
+                continue;
+            }
+            layouts.push(layout);
         }
 
-        this.nodeLayouts.next(layouts)
+        this._layoutNodes.next(layouts);
 
+        this.parent.lineCtrl.updateLines(this._node.value.address);
+
+        // todo
+        // const layouts:ProtoLayout[]=[];
+        // const rootLayout=protoGetLayout(this.node.value);
+        // if(rootLayout){
+        //     layouts.push(rootLayout);
+        // }
+
+        // const children=this.node.value.children??[];
+        // for(const child of children){
+        //     const layout=protoGetLayout(child);
+        //     if(layout){
+        //         layouts.push(layout);
+        //     }
+        // }
+
+        // this.nodeLayouts.next(layouts)
     }
 
     private lastFullCode:string='';
     private lastFullCodeId=-2;
 
-    public getFullCode(viewMode:ProtoViewMode=this.parent.viewMode):string{
+    public getFullCode():string{
+        if(!this.fullViewNodes){
+            return this.code.value;
+        }
         if(this.codeChangeId===this.lastFullCodeId){
             return this.lastFullCode;
         }
-        const fullCode=mergeMarkdownCode(
-            this.code.value,
-            this.codeBackup,
-            viewMode
-        );
+        const dest=protoFlattenHierarchy(deepClone(this.nodeSubject.value,500));
+        protoMergeNodes(dest,this.fullViewNodes);
+        const fullCode=protoRenderLines({nodes:dest,renderer:protoMarkdownRenderer}).join('\n');
         this.lastFullCodeId=this.codeChangeId;
         this.lastFullCode=fullCode;
         return fullCode;
     }
 
     public setFullCode(code:string){
-        if(this.parent.viewMode==='all'){
+        if(this.parent.viewDepth===null){
             this.code.next(code);
         }else{
-            this.codeBackup=code;
-            this.code.next(applyMarkdownViewMode(code,this.parent.viewMode));
+            this.fullViewNodes=protoMarkdownParseNodes(code).allNodes;
+            this.code.next(protoRenderLines(
+                {nodes:this.fullViewNodes,maxDepth:this.parent.viewDepth,renderer:protoMarkdownRenderer}
+            ).join('\n'));
 
         }
     }
 
     private updateId=0;
-    public update(updateLines=true,delay=0){
+    public update(delay=0){
         const codeElem=this.codeElem.value;
         if(!codeElem || this._isDisposed){
             return;
@@ -187,79 +281,67 @@ export class NodeCtrl
                 }
                 if(this.code.value.trim()===codeElem.innerText.trim()){
                     clearInterval(iv);
-                    this.doUpdate(updateLines,codeElem);
+                    this.doUpdate();
                 }
             },delay>0?delay:15);
 
         }else{
-            this.doUpdate(updateLines,codeElem);
+            this.doUpdate();
         }
 
     }
 
-    private doUpdate(updateLines:boolean,codeElem:HTMLElement){
-
-        if(!this.getFullCode().trim()){
-            this.dispose();
-            return;
-        }
-
-        const pointer=new DomViewCharPointer(codeElem);
+    private doUpdate(){
 
         const code=this.code.value;
-        const hiddenCode=getHiddenMarkdownCode(this.codeBackup,this.parent.viewMode);
 
-        const nodes=parseMarkdownNodes(code,hiddenCode,pointer,views=>{
-            return getNodesProtoLayout(
-                views,
-                this.parent.pos.value.scale
-            );
-        })
+        const parsingResult=protoMarkdownParseNodes(code);
+        const nodes=parsingResult.rootNodes;
         if(!nodes.length){
             this.dispose();
             return;
         }
 
-        this.node.next(nodes[0]);
+        this.setNode(nodes[0],parsingResult);
 
         if(nodes.length>1){
-            const sections=splitMarkdownSections(hiddenCode?addMarkdownHidden(code)+hiddenCode:code);
+            const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
+            for(let i=1;i<nodes.length;i++){
+                const newNode=nodes[i];
+                protoSetPosScale(newNode,{
+                    x:nodeLayout.left,
+                    y:nodeLayout.bottom+30,
+                    scale:this.parent.pos.value.scale,
+                    width:this.pos.value.width
+                })
+                this.parent.addNode(newNode,i===nodes.length-1);
+            }
 
-                this.code.next(sections[0]);
-                const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
-                for(let i=1;i<sections.length;i++){
-                    this.parent.addEntity(
-                        setMarkdownProtoPos(
-                            sections[i].trim()+'\n',
-                            {
-                                x:nodeLayout.left,
-                                y:nodeLayout.bottom+30,
-                                scale:this.parent.pos.value.scale,
-                                width:this.pos.value.width
-                            }
-                        ),
-                        i===sections.length-1
-                    );
-                }
+            this.pushNodeToCode();
+
         }
 
-        this.updateNodeLayouts();
-
-        if(updateLines){
-            this.parent.lineCtrl.updateLines(this.node.value.name);
-        }
+        this.updateLayout();
 
     }
 
+    private pushNodeToCode()
+    {
+        this.code.next(protoRenderLines(
+            {rootNode:this._node.value,renderer:protoMarkdownRenderer}
+        ).join('\n'))
+    }
+
     public addAttribute(childName:string,attName:string,value:string,hidden:boolean){
-        const code=addMarkdownAttribute(
-            this.getFullCode(),
-            childName,
-            attName,
-            value,
-            hidden
-        )
-        this.setFullCode(code);
+        // todo
+        // const code=addMarkdownAttribute(
+        //     this.getFullCode(),
+        //     childName,
+        //     attName,
+        //     value,
+        //     hidden
+        // )
+        // this.setFullCode(code);
     }
 
 }

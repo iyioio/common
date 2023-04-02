@@ -1,25 +1,18 @@
 import { HashMap, Point } from "@iyio/common";
 
-export interface ProtoAttribute
-{
-    name:string;
-    value:string;
-    multiValue?:string[];
-    tags?:string[];
-    props:{[name:string]:string};
-}
 
 export interface ProtoTypeInfo
 {
     type:string;
     isArray?:boolean;
     flags?:string[];
+    refProp?:string;
 }
 
-export type ProtoChildren={[name:string]:_ProtoNode}
-export type ProtoAddressMap={[address:string]:_ProtoNode}
+export type ProtoChildren={[name:string]:ProtoNode}
+export type ProtoAddressMap={[address:string]:ProtoNode}
 
-export interface ProtoNodeParserMetadata
+export interface ProtoNodeRenderData
 {
     indent?:string;
     input?:string;
@@ -27,16 +20,6 @@ export interface ProtoNodeParserMetadata
     before?:string;
 }
 
-export type _ProtoNode=Omit<ProtoNode,'attributes'|'children'|'links'> & {
-    address:string;
-    children?:ProtoChildren;
-    value?:string;
-    links?:ProtoLink[];
-    /**
-     * Used by parsing systems. Generators should ignore this value
-     */
-    parserMetadata?:ProtoNodeParserMetadata;
-};
 
 export interface ProtoLink
 {
@@ -47,6 +30,9 @@ export interface ProtoLink
      * Low priority
      */
     low?:boolean;
+
+
+    color?:string;
     /**
      * If true the link is the reverse side of a user defined link
      */
@@ -79,9 +65,14 @@ export interface ProtoNode extends ProtoTypeInfo{
 
     comment?:string;// move to get comments
 
-    attributes:{[name:string]:ProtoAttribute}; // remove
-
-    children?:ProtoNode[];
+    address:string;
+    children?:ProtoChildren;
+    value?:string;
+    links?:ProtoLink[];
+    /**
+     * Used by parsing and rending systems. Generators should ignore this value
+     */
+    renderData?:ProtoNodeRenderData;
 
 
     hidden?:boolean;
@@ -93,8 +84,6 @@ export interface ProtoNode extends ProtoTypeInfo{
     isContent?:boolean;
 
     importantContent?:boolean;
-
-    links?:NodeAndPropName[];
 
     section?:string;
 
@@ -166,16 +155,6 @@ export interface ProtoPipeline
 
 
 
-export interface EntityLayout
-{
-    name:string;
-    x:number;
-    y:number;
-    width:number;
-    height:number;
-}
-
-
 export type RelationType='one-one'|'one-many'|'many-many'|'node-node';
 
 export interface ProtoLayout
@@ -185,11 +164,8 @@ export interface ProtoLayout
     top:number;
     bottom:number;
     y:number;
-    localY:number;
-    lPt:Point;
-    rPt:Point;
     node?:ProtoNode;
-    typeNode?:ProtoNode;
+    getOffset?:(layout:ProtoLayout)=>Point;
 }
 
 export interface NodeAndPropName
@@ -207,8 +183,6 @@ export interface ProtoPosScale
     scale:number;
 }
 
-export type ProtoViewMode='all'|'atts'|'children';
-
 export type ProtoStage='preprocess'|'input'|'parse'|'generate'|'output';
 
 export type ProtoPluginCallback=(ctx:ProtoContext)=>Promise<void|boolean>|void|boolean;
@@ -220,4 +194,11 @@ export interface ProtoPluginExecutionOptions
     parse?:ProtoPluginCallback;
     generate?:ProtoPluginCallback;
     output?:ProtoPluginCallback;
+}
+
+export interface ProtoParsingResult
+{
+    rootNodes:ProtoNode[];
+    allNodes:ProtoNode[];
+    addressMap:ProtoAddressMap;
 }

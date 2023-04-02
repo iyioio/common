@@ -1,9 +1,9 @@
 import { delayAsync, ReadonlySubject, uuid } from "@iyio/common";
-import { ProtoLayout, ProtoPosScale, ProtoViewMode, splitMarkdown } from "@iyio/protogen";
+import { ProtoAddressMap, ProtoLayout, protoMarkdownParseNodes, ProtoNode, ProtoPosScale } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
-import { NodeCtrlAndProp, ProtoAnchor, SaveRequest } from "./protogen-ui-lib";
+import { ProtoAnchor, SaveRequest } from "./protogen-ui-lib";
 import { ProtoKeyListener } from "./ProtoKeyListener";
 
 export class ProtogenCtrl
@@ -12,7 +12,7 @@ export class ProtogenCtrl
     public readonly lineCtrl:LineCtrl;
     public readonly keyListener:ProtoKeyListener;
 
-    public readonly entities:BehaviorSubject<NodeCtrl[]>;
+    public readonly nodes:BehaviorSubject<NodeCtrl[]>;
 
     public readonly pos:BehaviorSubject<ProtoPosScale>=new BehaviorSubject<ProtoPosScale>({
         x:0,
@@ -24,16 +24,15 @@ export class ProtogenCtrl
     public get activeAnchorSubject():ReadonlySubject<ProtoAnchor|null>{return this._activeAnchor}
     public get activeAnchor(){return this._activeAnchor.value}
 
-    private readonly _viewMode:BehaviorSubject<ProtoViewMode>=new BehaviorSubject<ProtoViewMode>('all');
-    public get viewModeSubject():ReadonlySubject<ProtoViewMode>{return this._viewMode}
-    public get viewMode(){return this._viewMode.value}
-    public set viewMode(value:ProtoViewMode){
-        if(value==this._viewMode.value){
+    private readonly _viewDepth:BehaviorSubject<number|null>=new BehaviorSubject<number|null>(null);
+    public get viewDepthSubject():ReadonlySubject<number|null>{return this._viewDepth}
+    public get viewDepth(){return this._viewDepth.value}
+    public set viewDepth(value:number|null){
+        if(value==this._viewDepth.value){
             return;
         }
-        this._viewMode.next(value);
+        this._viewDepth.next(value);
         this.updateViewMode();
-
     }
 
     private readonly _apiOutput:BehaviorSubject<string>=new BehaviorSubject<string>('');
@@ -42,7 +41,7 @@ export class ProtogenCtrl
 
     public constructor(code?:string)
     {
-        this.entities=new BehaviorSubject<NodeCtrl[]>([]);
+        this.nodes=new BehaviorSubject<NodeCtrl[]>([]);
 
         this.lineCtrl=new LineCtrl(this);
         this.keyListener=new ProtoKeyListener(this);
@@ -66,7 +65,7 @@ export class ProtogenCtrl
 
         window.removeEventListener('mouseup',this.mouseUpListener);
 
-        for(const e of this.entities.value){
+        for(const e of this.nodes.value){
             e.dispose();
         }
     }
@@ -82,7 +81,7 @@ export class ProtogenCtrl
 
     private updateViewMode()
     {
-        for(const n of this.entities.value){
+        for(const n of this.nodes.value){
             n._updateViewMode()
         }
         this.lineCtrl.updateLines();
@@ -95,12 +94,12 @@ export class ProtogenCtrl
             this._activeAnchor.next(null);
             if((a.layout!==layout || a.side!==side) && layout.node && a.layout.node){
                 a.ctrl.addAttribute(
-                    a.layout.node.name===a.ctrl.node.value.name?'$self':a.layout.node.name,
+                    a.layout.node.name===a.ctrl.nodeSubject.value.name?'$self':a.layout.node.name,
                     '$link',
                     `${
-                        ctrl.node.value.name
+                        ctrl.nodeSubject.value.name
                     }${
-                        layout.node.name===ctrl.node.value.name?'':'.'+layout.node.name
+                        layout.node.name===ctrl.nodeSubject.value.name?'':'.'+layout.node.name
                     }`,
                     false
                 )
@@ -111,7 +110,7 @@ export class ProtogenCtrl
     }
 
     public getNodeByElem(elem:HTMLElement){
-        for(const n of this.entities.value){
+        for(const n of this.nodes.value){
             if(n.viewElem.value===elem){
                 return n;
             }
@@ -119,23 +118,47 @@ export class ProtogenCtrl
         return null;
     }
 
-    public addEntity(code:string,autoFocus?:boolean|'type'):NodeCtrl
+    public addNode(node:ProtoNode,autoFocus?:boolean|'type'):NodeCtrl
     {
-        const ctrl=new NodeCtrl(code,this);
+        const ctrl=new NodeCtrl(node,this);
         if(autoFocus==='type'){
             ctrl.autoFocusType=true;
         }else if(autoFocus){
             ctrl.autoFocus=true;
         }
-        this.entities.next([...this.entities.value,ctrl]);
+        this.clearAddressMap();
+        this.nodes.next([...this.nodes.value,ctrl]);
         return ctrl;
     }
 
-    public removeEntity(entity:NodeCtrl)
+    public addNodes(code:string,autoFocus?:boolean|'type'):NodeCtrl[]
     {
-        if(this.entities.value.includes(entity)){
-            this.entities.next(this.entities.value.filter(e=>e!==entity));
+        const parsingResult=protoMarkdownParseNodes(code);
+        const nodes=parsingResult.rootNodes;
+        const ctrls:NodeCtrl[]=[];
+        this.clearAddressMap();
+        for(let i=0;i<nodes.length;i++){
+            const end=i===nodes.length-1;
+            const ctrl=new NodeCtrl(nodes[i],this);
+            ctrls.push(ctrl);
+            if(end){
+                if(autoFocus==='type'){
+                    ctrl.autoFocusType=true;
+                }else if(autoFocus){
+                    ctrl.autoFocus=true;
+                }
+            }
+            this.nodes.next([...this.nodes.value,ctrl]);
         }
+        return ctrls;
+    }
+
+    public removeNode(node:NodeCtrl)
+    {
+        if(this.nodes.value.includes(node)){
+            this.nodes.next(this.nodes.value.filter(e=>e!==node));
+        }
+        this.clearAddressMap();
         this.lineCtrl.updateLines();
     }
 
@@ -158,7 +181,7 @@ export class ProtogenCtrl
             await fetch(`/api/protogen/output/_warmup`);
 
             const outputId=uuid();
-            const content:string=this.entities.value.map(e=>e.getFullCode()).join('\n\n');
+            const content:string=this.nodes.value.map(e=>e.getFullCode()).join('\n\n');
 
             const request:SaveRequest={
                 ...options,
@@ -193,7 +216,9 @@ export class ProtogenCtrl
 
     public clearState()
     {
-        this.entities.next([]);
+        this.clearAddressMap();
+
+        this.nodes.next([]);
     }
 
     private setStateIndex=0;
@@ -202,9 +227,11 @@ export class ProtogenCtrl
     {
         this.setStateIndex++;
 
-        const nodes=splitMarkdown(code);
+        const parsingResult=protoMarkdownParseNodes(code);
 
-        this.entities.next(nodes.map(e=>(
+        this.clearAddressMap();
+
+        this.nodes.next(parsingResult.rootNodes.map(e=>(
             new NodeCtrl(e,this)
         )))
     }
@@ -223,54 +250,36 @@ export class ProtogenCtrl
 
     }
 
-
-    public getMatch(nodeName:string,propName?:string):NodeCtrlAndProp|null{
-        for(const node of this.entities.value){
-            if(node.node.value.name!==nodeName){
-                continue;
+    private _addressMap:ProtoAddressMap|null=null;
+    public get addressMap(){
+        if(!this._addressMap){
+            for(const node of this.nodes.value){
+                node.clearRevLinks();
             }
-            if(!propName){
-                return {node}
-            }
-            for(const a of node.nodeLayouts.value){
-                if(a.node?.name===propName){
-                    return {
-                        node,
-                        prop:a
-                    }
-                }
+            const map=this.createAddressMap();
+            this._addressMap=map;
+            for(const node of this.nodes.value){
+                node.updateLinks(map);
             }
         }
-        return null;
+        return this._addressMap;
+    }
+    public clearAddressMap()
+    {
+        this._addressMap=null;
     }
 
-    public getMatches(nodeName:string,propName?:string):NodeCtrlAndProp[]|null{
-        let matches:NodeCtrlAndProp[]|null=null;
-        for(const node of this.entities.value){
-            if(node.node.value.name!==nodeName){
-                continue;
-            }
-            if(propName){
-                for(const a of node.nodeLayouts.value){
-                    if(a.node?.name===propName){
-                        if(!matches){
-                            matches=[];
-                        }
-                        matches.push({
-                            node,
-                            prop:a
-                        })
-                    }
-                }
-            }else{
-                if(!matches){
-                    matches=[];
-                }
-                matches.push({node});
-            }
+    public getNodeByAddress(address:string):ProtoNode|null{
+        return this.addressMap[address]??null;
+    }
+
+    public createAddressMap():ProtoAddressMap
+    {
+        const map:ProtoAddressMap={};
+        for(const node of this.nodes.value){
+            node.addToAddressMap(map);
         }
-        return matches;
+        return map;
     }
-
 
 }

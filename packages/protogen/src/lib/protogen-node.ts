@@ -1,5 +1,6 @@
-import { deleteUndefined } from "@iyio/common";
-import { ProtoAddressMap, ProtoLink, _ProtoNode as ProtoNode } from "./protogen-types";
+import { deleteUndefined, getSubstringCount, Point, safeParseNumber } from "@iyio/common";
+import { protoSetLayout } from "./protogen-lib";
+import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale } from "./protogen-types";
 
 const parentKey=Symbol('ProtoNodeParent');
 
@@ -130,8 +131,8 @@ export const protoMergeNodes=(destNodes:ProtoNode[],srcNodes:ProtoNode[])=>
             protoAddChild(parent,node);
         }
 
-        if(node.parserMetadata?.before){
-            const before=destMap[node.parserMetadata.before];
+        if(node.renderData?.before){
+            const before=destMap[node.renderData.before];
             const bi=destNodes.indexOf(before);
             if(before && bi!==-1){
                 destNodes.splice(bi+1,0,node);
@@ -153,7 +154,7 @@ export const protoMergeNodes=(destNodes:ProtoNode[],srcNodes:ProtoNode[])=>
             }
             destNodes.splice(i+1,0,node);
         }else{
-            if(node.parserMetadata && !node.parserMetadata.before){
+            if(node.renderData && !node.renderData.before){
                 destNodes.unshift(node);
             }else{
                 destNodes.push(node);
@@ -183,13 +184,14 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
     updateBefore=true,
     addressMap=protoCreateNodeAddressMap(nodes),
 }:ProtoNormalizeNodesOptions={})=>{
+
     let lastNode=null;
     for(const node of nodes){
 
         const parent=protoGetNodeParent(node);
 
-        if(updateBefore && node.parserMetadata && lastNode){
-            node.parserMetadata.before=lastNode?.address
+        if(updateBefore && node.renderData && lastNode){
+            node.renderData.before=lastNode?.address
         }
         if(srcLink && parent && node.name==='$src' && node.value){
             const address=getLinkAddress(node,node.value)
@@ -219,9 +221,14 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
 
     }
 
-    lastNode=null;
+    if(revLink){
+        protoUpdateLinks(nodes,addressMap);
+    }
+}
+
+export const protoUpdateLinks=(nodes:ProtoNode[],addressMap:ProtoAddressMap)=>{
     for(const node of nodes){
-        if(revLink && node.links){
+        if(node.links){
             for(const link of node.links){
                 const to=addressMap[link.address];
                 if(to){
@@ -237,7 +244,6 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
                 }
             }
         }
-        lastNode=node;
     }
 }
 
@@ -266,10 +272,11 @@ export const protoAddAutoLinks=(node:ProtoNode)=>{
         }
         const pri=refType.flags?.includes('*');
         if(refType && refType.type.charAt(0).toUpperCase()===refType.type.charAt(0) && !node.links?.length){
+            const address=refType.type+(refType.refProp?'.'+refType.refProp:'');
             protoAddLink(node,{
-                name:refType.type,
-                address:refType.type,
-                low:pri
+                name:address,
+                address:address,
+                low:!pri
             })
         }
     }
@@ -306,5 +313,206 @@ const getLinkAddress=(node:ProtoNode,value:string)=>{
         }
     }else{
         return value;
+    }
+}
+
+export const protoChildrenToArray=(children:ProtoChildren|null|undefined):ProtoNode[]=>{
+    if(!children){
+        return [];
+    }
+    const ary:ProtoNode[]=[];
+    for(const name in children){
+        ary.push(children[name]);
+    }
+    return ary;
+}
+
+export const protoFlattenHierarchy=(node:ProtoNode):ProtoNode[]=>{
+    const ary:ProtoNode[]=[];
+
+    protoAddFlattenedHierarchy(node,ary);
+
+    return ary;
+}
+
+
+export const protoAddFlattenedHierarchy=(node:ProtoNode, ary:ProtoNode[])=>{
+    ary.push(node);
+    if(node.children){
+        for(const name in node.children){
+            protoAddFlattenedHierarchy(node.children[name],ary)
+        }
+    }
+}
+
+export interface ProtoRenderOptions
+{
+    rootNode?:ProtoNode,
+    nodes?:ProtoNode[],
+    maxDepth?:number,
+    filter?:(node:ProtoNode)=>boolean,
+    renderer?:(node:ProtoNode,renderData:ProtoNodeRenderData)=>ProtoNodeRenderData;
+}
+
+export const protoRenderLines=({
+    rootNode,
+    nodes,
+    maxDepth,
+    filter,
+    renderer,
+}:ProtoRenderOptions):string[]=>{
+
+    if(!nodes && rootNode){
+        nodes=protoFlattenHierarchy(rootNode);
+    }
+
+    if(!nodes){
+        return []
+    }
+
+    const lines:string[]=[];
+
+    for(const node of nodes){
+
+        if(node.renderData?.input===undefined){
+            if(!renderer){
+                continue;
+            }
+            if(!node.renderData){
+                node.renderData={}
+            }
+            node.renderData=renderer(node,node.renderData);
+        }
+
+        if( !node.importantContent &&
+            maxDepth!==undefined &&
+            (maxDepth<(node.renderData.depth??0) || !node.renderData.input)
+        ){
+            continue;
+        }
+
+        if(filter && !filter(node)){
+            continue;
+        }
+        lines.push(node.renderData.input??'');
+    }
+
+    return lines;
+
+}
+
+
+export const protoGetPosScale=(node:ProtoNode):ProtoPosScale=>
+{
+    const layout=node.children?.['$layout'];
+    if(!layout?.value){
+        return {
+            x:0,
+            y:0,
+            scale:1,
+        };
+    }
+    const [x,y,w]=layout.value.split(/\s+/);
+
+    return {
+        x:safeParseNumber(x),
+        y:safeParseNumber(y),
+        width:safeParseNumber(w,300),
+        scale:1,
+    }
+}
+
+export const protoSetPosScale=(node:ProtoNode,posScale:ProtoPosScale)=>{
+    let layout=node.children?.['$layout'];
+    const scale=posScale.scale??1;
+    const value=`${Math.round(posScale.x*scale)} ${Math.round(posScale.y*scale)} ${Math.round((posScale.width??300)*scale)}`
+    if(layout){
+        layout.value=value;
+    }else{
+        layout={
+            address:'$layout',
+            name:'$layout',
+            type:'',
+            types:[{type:''}],
+            value
+        }
+        protoAddChild(node,layout);
+    }
+    if(layout.renderData?.input!==undefined){
+        delete layout.renderData.input;
+    }
+
+}
+
+export const protoParsingResultFromNode=(node:ProtoNode):ProtoParsingResult=>{
+
+    const allNodes=protoFlattenHierarchy(node);
+    const addressMap:ProtoAddressMap={};
+    for(const node of allNodes){
+        if(!addressMap[node.address]){
+            addressMap[node.address]=node;
+        }
+    }
+    return {
+        rootNodes:[node],
+        allNodes,
+        addressMap,
+    }
+
+}
+
+export interface ProtoUpdateLayoutsOptions
+{
+    x?:number;
+    yStart?:number;
+    width?:number;
+    lineHeight:number;
+    getOffset?:(layout:ProtoLayout)=>Point;
+}
+export const protoUpdateLayouts=(nodes:ProtoNode[],{
+    x=0,
+    yStart=0,
+    width=300,
+    lineHeight,
+    getOffset
+}:ProtoUpdateLayoutsOptions)=>{
+    let y=yStart;
+    for(const node of nodes){
+        if(!node.renderData){
+            node.renderData={};
+        }
+
+        protoSetLayout(node,{
+            left:x,
+            right:x+width,
+            top:y,
+            bottom:y+lineHeight,
+            y:y+lineHeight/2,
+            node,
+            getOffset,
+        })
+
+        y+=lineHeight+(getSubstringCount(node.renderData.input??'','\n')*lineHeight)
+    }
+    return y;
+}
+
+
+export const protoClearRevLinks=(nodes:ProtoNode[])=>{
+    for(const node of nodes){
+        if(!node.links){
+            continue;
+        }
+        for(let i=0;i<node.links.length;i++){
+            const link=node.links[i];
+            if(link.rev){
+                node.links.splice(i,1);
+                i--;
+            }
+        }
+        if(node.links.length===0){
+            delete node.links;
+        }
+
     }
 }

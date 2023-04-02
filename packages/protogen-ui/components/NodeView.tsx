@@ -18,7 +18,7 @@ export default function NodeView({
 }:NodeViewProps){
 
     const ctrl=useProtogenCtrl();
-    const anchors=useSubject(node.nodeLayouts);
+    const anchors=useSubject(node.layoutNodesSubject);
     const activeAnchor=useSubject(ctrl.activeAnchorSubject);
     const [view,setView]=useState<HTMLElement|null>(null);
     useEffect(()=>{
@@ -37,20 +37,20 @@ export default function NodeView({
             {anchors.map((a,i)=>(
                 <Fragment key={i}>
                     <button
-                        onClick={()=>ctrl.selectAnchor(a,'left',node)}
+                        onClick={()=>{/*ctrl.selectAnchor(a,'left',node)*/}}
                         className={cn("NodeView-anchor left",{active:activeAnchor?.layout===a && activeAnchor.side==='left'})}
                             style={{
                             left:(-dt().anchorSize/2)+anchorInset+'px',
-                            top:(a.localY-dt().anchorSize/2)+'px'
+                            top:(a.y-dt().anchorSize/2)+'px'
                         }}
                     />
 
                     <button
-                        onClick={()=>ctrl.selectAnchor(a,'right',node)}
+                        onClick={()=>{/*ctrl.selectAnchor(a,'right',node)*/}}
                         className={cn("NodeView-anchor right",{active:activeAnchor?.layout===a && activeAnchor.side==='right'})}
                         style={{
                             right:(-dt().anchorSize/2)+anchorInset+'px',
-                            top:(a.localY-dt().anchorSize/2)+'px'
+                            top:(a.y-dt().anchorSize/2)+'px'
                         }}
                     />
                 </Fragment>
@@ -65,7 +65,7 @@ export default function NodeView({
                     border-radius:${dt().borderRadius};
                 }
                 .NodeView-drag{
-                    height:12px;
+                    height:${dt().codeLineHeight}px;
                     background:${dt().foreground}07;
                     border-radius:${dt().borderRadius} ${dt().borderRadius} 0 0;
                     cursor:move;
@@ -79,7 +79,7 @@ export default function NodeView({
                     bottom:-4px;
                 }
                 .NodeView-code{
-                    padding:0 6px;
+                    padding:${dt().codeVPadding}px ${dt().codeHPadding}px;
                 }
                 .NodeView-anchor{
                     position:absolute;

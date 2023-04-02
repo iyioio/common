@@ -1,4 +1,3 @@
-import { markdownHidden } from "@iyio/protogen";
 import { useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
 import { NodeCtrl } from "../lib/NodeCtrl";
@@ -28,12 +27,7 @@ export function NodeCode({
         }
         if(node.autoFocus){
             node.autoFocus=false;
-            const i=textarea.value.indexOf(markdownHidden);
-            if(i===-1){
-                textarea.setSelectionRange(textarea.value.length,textarea.value.length);
-            }else{
-                textarea.setSelectionRange(i-1,i-1);
-            }
+            textarea.setSelectionRange(textarea.value.length,textarea.value.length);
             textarea.focus();
         }
 

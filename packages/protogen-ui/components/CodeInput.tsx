@@ -1,6 +1,7 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, escapeHtml } from '@iyio/common';
 import hljs from 'highlight.js';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { dt } from '../lib/lib-design-tokens';
 import { registerGrammars } from '../lib/registerGrammars';
 import { CodeLanguage } from './code-lib';
 import "./code-style";
@@ -178,12 +179,17 @@ export function CodeInput({
                     overflow-y:hidden !important;
                     white-space:pre;
                     font-family:Courier !important;
-                    font-size:14px !important;
-                    min-height:60px;
+                    font-size:${dt().codeFontSize}px !important;
+                    line-height:${dt().codeLineHeight}px !important;
+                    min-height:${dt().codeLineHeight}px;
+                }
+                .CodeInput code *{
+                    font-size:${dt().codeFontSize}px !important;
+                    line-height:${dt().codeLineHeight}px !important;
                 }
                 .CodeInput pre{
                     margin:0 !important;
-                    padding:8px !important;
+                    padding:0 !important;
                     display:block;
                     overflow-x:hidden !important;
                     overflow-y:hidden !important;
@@ -193,10 +199,10 @@ export function CodeInput({
                 }
                 .CodeInput textarea{
                     position:absolute;
-                    left:8px;
-                    top:8px;
-                    right:8px;
-                    bottom:8px;
+                    left:0;
+                    top:0;
+                    right:0;
+                    bottom:0;
                     border:none;
                     background:none;
                     resize:none;

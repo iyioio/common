@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "fs";
-import { protoMarkdownParseNodes, protoMarkdownRenderLines } from "./markdown-2";
-import { protoMergeNodes } from "./protogen-node";
+import { protoMarkdownParseNodes } from "./markdown-2";
+import { protoMergeNodes, protoRenderLines } from "./protogen-node";
 
 // update mdTestOutputs and mdParsed by setting NX_WRITE_PROTOGEN_TEST_OUTPUT to true
 // then copying and passing the test output files. Update mdParsed first, run the test
@@ -28,10 +28,10 @@ describe('markdown',()=>{
             writeFileSync('.protogen-testing/allNodes.json',JSON.stringify(allNodes,null,4));
             writeFileSync('.protogen-testing/short-allNodes.json',JSON.stringify(allNodes.map(n=>({address:n.address,name:n.name})),null,4));
             writeFileSync('.protogen-testing/mdTestOutput.md',[
-                protoMarkdownRenderLines(allNodes).join('\n'),
-                protoMarkdownRenderLines(allNodes,0).join('\n'),
-                protoMarkdownRenderLines(allNodes,1).join('\n'),
-                protoMarkdownRenderLines(allNodes,2).join('\n'),
+                protoRenderLines({nodes:allNodes}).join('\n'),
+                protoRenderLines({nodes:allNodes,maxDepth:0}).join('\n'),
+                protoRenderLines({nodes:allNodes,maxDepth:1}).join('\n'),
+                protoRenderLines({nodes:allNodes,maxDepth:2}).join('\n'),
             ].join(nSep).replace(/`/g,'\\`'));
         }
 
@@ -40,15 +40,15 @@ describe('markdown',()=>{
 
 
         const mdParts=mdTestOutput.split(nSep);
-        expect(protoMarkdownRenderLines(allNodes).join('\n')).toBe(mdParts[0]);
+        expect(protoRenderLines({nodes:allNodes}).join('\n')).toBe(mdParts[0]);
 
-        const render0=protoMarkdownRenderLines(allNodes,0).join('\n');
+        const render0=protoRenderLines({nodes:allNodes,maxDepth:0}).join('\n');
         expect(render0).toBe(mdParts[1]);
 
-        const render1=protoMarkdownRenderLines(allNodes,1).join('\n');
+        const render1=protoRenderLines({nodes:allNodes,maxDepth:1}).join('\n');
         expect(render1).toBe(mdParts[2]);
 
-        const render2=protoMarkdownRenderLines(allNodes,2).join('\n');
+        const render2=protoRenderLines({nodes:allNodes,maxDepth:2}).join('\n');
         expect(render2).toBe(mdParts[3]);
 
         const nodes0=protoMarkdownParseNodes(render0);
@@ -431,7 +431,7 @@ const mdParsed=[
             }
         ],
         "value": "Ungrouped content here\n+ list item 2\n+ content 2\n",
-        "parserMetadata": {
+        "renderData": {
             "indent": "",
             "input": "Ungrouped content here\n+ list item 2\n+ content 2\n",
             "depth": 1
@@ -448,7 +448,7 @@ const mdParsed=[
             }
         ],
         "value": "struct",
-        "parserMetadata": {
+        "renderData": {
             "input": "## Thread: struct",
             "depth": 0,
             "before": "#"
@@ -464,7 +464,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "A collection of Posts that can be displayed\nas a space, session, chat or any other view\nthat represents a time series of events\nand content.\n",
-                "parserMetadata": {
+                "renderData": {
                     "indent": "",
                     "input": "A collection of Posts that can be displayed\nas a space, session, chat or any other view\nthat represents a time series of events\nand content.\n",
                     "depth": 1,
@@ -482,7 +482,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string (key)",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- id string (key)",
                     "depth": 1,
                     "before": "Thread.#"
@@ -501,7 +501,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "number",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- uv number",
                     "depth": 1,
                     "before": "Thread.id"
@@ -517,7 +517,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  + deny out of sync writes\n  + track number of changes\n",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "  ",
                             "input": "  Used to sync access\n  Add 1 to uv each time updating\n  Other uses\n    + deny out of sync writes\n    + track number of changes\n",
                             "depth": 2,
@@ -537,7 +537,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "abc",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- $trigger: abc",
                     "depth": 1,
                     "before": "Thread.uv.#"
@@ -554,7 +554,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "",
                             "input": "",
                             "depth": 1,
@@ -576,7 +576,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "Post[]",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- post Post[]",
                     "depth": 1,
                     "before": "Thread.$trigger.#"
@@ -592,7 +592,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "string",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - name: string",
                             "depth": 2,
                             "before": "Thread.post"
@@ -608,7 +608,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "number",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - name: number",
                             "depth": 2,
                             "before": "Thread.post.name"
@@ -630,7 +630,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "string :User * (fon)",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - ownerId: string :User * (fon)",
                             "depth": 2,
                             "before": "Thread.post.name#2"
@@ -656,7 +656,7 @@ const mdParsed=[
                                     }
                                 ],
                                 "value": "(managed)",
-                                "parserMetadata": {
+                                "renderData": {
                                     "indent": "    ",
                                     "input": "    - (managed)",
                                     "depth": 3,
@@ -669,7 +669,7 @@ const mdParsed=[
                             {
                                 "name": "User",
                                 "address": "User",
-                                "low": true
+                                "low": false
                             }
                         ]
                     },
@@ -683,7 +683,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - tracker",
                             "depth": 2,
                             "before": "Thread.post.ownerId.#"
@@ -699,7 +699,7 @@ const mdParsed=[
                                     }
                                 ],
                                 "value": "``` ts\ninvalid ts here\ngetTrackers().find(t=>t.ready)\n```\n",
-                                "parserMetadata": {
+                                "renderData": {
                                     "indent": "  ",
                                     "input": "  ``` ts\n  - invalid ts here\n  getTrackers().find(t=>t.ready)\n  ```\n",
                                     "depth": 2,
@@ -719,7 +719,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "number",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - weight: number",
                             "depth": 2,
                             "before": "Thread.post.tracker.#"
@@ -735,7 +735,7 @@ const mdParsed=[
                                     }
                                 ],
                                 "value": "[User weight](User.weight)\n\n",
-                                "parserMetadata": {
+                                "renderData": {
                                     "indent": "    ",
                                     "input": "    - [User weight](User.weight)\n\n",
                                     "depth": 3,
@@ -756,6 +756,7 @@ const mdParsed=[
                     {
                         "name": "Post",
                         "address": "Post",
+                        "low": true,
                         "broken": true
                     }
                 ]
@@ -772,7 +773,7 @@ const mdParsed=[
             }
         ],
         "value": "(dude)",
-        "parserMetadata": {
+        "renderData": {
             "input": "## User (dude)",
             "depth": 0,
             "before": "Thread.post.weight.#"
@@ -791,7 +792,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- id: string",
                     "depth": 1,
                     "before": "User"
@@ -807,7 +808,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- name: string",
                     "depth": 1,
                     "before": "User.id"
@@ -816,6 +817,12 @@ const mdParsed=[
                     {
                         "name": "name",
                         "address": "SettingsView.name",
+                        "rev": true,
+                        "low": true
+                    },
+                    {
+                        "name": "$link",
+                        "address": "SettingsView.name.$link",
                         "rev": true,
                         "low": true
                     }
@@ -831,7 +838,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "int",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- age: int",
                     "depth": 1,
                     "before": "User.name"
@@ -843,6 +850,12 @@ const mdParsed=[
                         "rev": true,
                         "low": true,
                         "src": true
+                    },
+                    {
+                        "name": "$src",
+                        "address": "UserView.age.$src",
+                        "rev": true,
+                        "low": true
                     },
                     {
                         "name": "age",
@@ -862,7 +875,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "number",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- weight: number",
                     "depth": 1,
                     "before": "User.age"
@@ -886,7 +899,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "number",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- likes: number",
                     "depth": 1,
                     "before": "User.weight"
@@ -902,7 +915,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "",
                             "input": "",
                             "depth": 1,
@@ -953,7 +966,7 @@ const mdParsed=[
             }
         ],
         "value": "comp (ui)",
-        "parserMetadata": {
+        "renderData": {
             "input": "## UserView: comp (ui)",
             "depth": 0,
             "before": "User.likes.#"
@@ -972,7 +985,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "User",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- model: User",
                     "depth": 1,
                     "before": "UserView"
@@ -980,7 +993,8 @@ const mdParsed=[
                 "links": [
                     {
                         "name": "User",
-                        "address": "User"
+                        "address": "User",
+                        "low": true
                     }
                 ]
             },
@@ -994,7 +1008,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- title",
                     "depth": 1,
                     "before": "UserView.model"
@@ -1004,22 +1018,18 @@ const mdParsed=[
                         "name": "$src",
                         "address": "UserView.title.$src",
                         "type": "model",
+                        "refProp": "likes",
                         "types": [
                             {
-                                "type": "model"
-                            },
-                            {
-                                "type": "likes"
+                                "type": "model",
+                                "refProp": "likes"
                             }
                         ],
                         "value": ".model.likes",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $src: .model.likes",
                             "depth": 2,
                             "before": "UserView.title"
-                        },
-                        "refType": {
-                            "type": "likes"
                         },
                         "special": true
                     }
@@ -1045,7 +1055,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- age",
                     "depth": 1,
                     "before": "UserView.title.$src"
@@ -1055,24 +1065,27 @@ const mdParsed=[
                         "name": "$src",
                         "address": "UserView.age.$src",
                         "type": "User",
+                        "refProp": "age",
                         "types": [
                             {
-                                "type": "User"
-                            },
-                            {
-                                "type": "age"
+                                "type": "User",
+                                "refProp": "age"
                             }
                         ],
                         "value": "User.age",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $src: User.age",
                             "depth": 2,
                             "before": "UserView.age"
                         },
-                        "refType": {
-                            "type": "age"
-                        },
-                        "special": true
+                        "special": true,
+                        "links": [
+                            {
+                                "name": "User.age",
+                                "address": "User.age",
+                                "low": true
+                            }
+                        ]
                     }
                 },
                 "sourceAddress": "User.age",
@@ -1096,7 +1109,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- brokenPropLink",
                     "depth": 1,
                     "before": "UserView.age.$src"
@@ -1106,22 +1119,18 @@ const mdParsed=[
                         "name": "$src",
                         "address": "UserView.brokenPropLink.$src",
                         "type": "notAProp",
+                        "refProp": "age",
                         "types": [
                             {
-                                "type": "notAProp"
-                            },
-                            {
-                                "type": "age"
+                                "type": "notAProp",
+                                "refProp": "age"
                             }
                         ],
                         "value": ".notAProp.age",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $src: .notAProp.age",
                             "depth": 2,
                             "before": "UserView.brokenPropLink"
-                        },
-                        "refType": {
-                            "type": "age"
                         },
                         "special": true
                     }
@@ -1148,7 +1157,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- brokenTypeLink",
                     "depth": 1,
                     "before": "UserView.brokenPropLink.$src"
@@ -1158,22 +1167,18 @@ const mdParsed=[
                         "name": "$src",
                         "address": "UserView.brokenTypeLink.$src",
                         "type": "NotAType",
+                        "refProp": "age",
                         "types": [
                             {
-                                "type": "NotAType"
-                            },
-                            {
-                                "type": "age"
+                                "type": "NotAType",
+                                "refProp": "age"
                             }
                         ],
                         "value": "NotAType.age",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $src: NotAType.age",
                             "depth": 2,
                             "before": "UserView.brokenTypeLink"
-                        },
-                        "refType": {
-                            "type": "age"
                         },
                         "special": true,
                         "children": {
@@ -1187,7 +1192,7 @@ const mdParsed=[
                                     }
                                 ],
                                 "value": "\n",
-                                "parserMetadata": {
+                                "renderData": {
                                     "indent": "",
                                     "input": "\n",
                                     "depth": 1,
@@ -1195,7 +1200,15 @@ const mdParsed=[
                                 },
                                 "isContent": true
                             }
-                        }
+                        },
+                        "links": [
+                            {
+                                "name": "NotAType.age",
+                                "address": "NotAType.age",
+                                "low": true,
+                                "broken": true
+                            }
+                        ]
                     }
                 },
                 "sourceAddress": "NotAType.age",
@@ -1222,7 +1235,7 @@ const mdParsed=[
             }
         ],
         "value": "comp",
-        "parserMetadata": {
+        "renderData": {
             "input": "## SettingsView: comp",
             "depth": 0,
             "before": "UserView.brokenTypeLink.$src.#"
@@ -1238,7 +1251,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "User",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- model: User",
                     "depth": 1,
                     "before": "SettingsView"
@@ -1246,7 +1259,8 @@ const mdParsed=[
                 "links": [
                     {
                         "name": "User",
-                        "address": "User"
+                        "address": "User",
+                        "low": true
                     }
                 ]
             },
@@ -1260,7 +1274,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- name",
                     "depth": 1,
                     "before": "SettingsView.model"
@@ -1270,24 +1284,27 @@ const mdParsed=[
                         "name": "$link",
                         "address": "SettingsView.name.$link",
                         "type": "User",
+                        "refProp": "name",
                         "types": [
                             {
-                                "type": "User"
-                            },
-                            {
-                                "type": "name"
+                                "type": "User",
+                                "refProp": "name"
                             }
                         ],
                         "value": "User.name",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $link: User.name",
                             "depth": 2,
                             "before": "SettingsView.name"
                         },
-                        "refType": {
-                            "type": "name"
-                        },
-                        "special": true
+                        "special": true,
+                        "links": [
+                            {
+                                "name": "User.name",
+                                "address": "User.name",
+                                "low": true
+                            }
+                        ]
                     }
                 },
                 "links": [
@@ -1307,7 +1324,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- age",
                     "depth": 1,
                     "before": "SettingsView.name.$link"
@@ -1317,22 +1334,18 @@ const mdParsed=[
                         "name": "$link",
                         "address": "SettingsView.age.$link",
                         "type": "model",
+                        "refProp": "age",
                         "types": [
                             {
-                                "type": "model"
-                            },
-                            {
-                                "type": "age"
+                                "type": "model",
+                                "refProp": "age"
                             }
                         ],
                         "value": ".model.age",
-                        "parserMetadata": {
+                        "renderData": {
                             "input": "  - $link: .model.age",
                             "depth": 2,
                             "before": "SettingsView.age"
-                        },
-                        "refType": {
-                            "type": "age"
                         },
                         "special": true,
                         "children": {
@@ -1346,7 +1359,7 @@ const mdParsed=[
                                     }
                                 ],
                                 "value": "",
-                                "parserMetadata": {
+                                "renderData": {
                                     "indent": "",
                                     "input": "",
                                     "depth": 1,
@@ -1376,7 +1389,7 @@ const mdParsed=[
             }
         ],
         "value": "---\n\nUnattached comments\n",
-        "parserMetadata": {
+        "renderData": {
             "indent": "",
             "input": "----\n\nUnattached comments\n",
             "depth": 1,
@@ -1394,7 +1407,7 @@ const mdParsed=[
             }
         ],
         "value": "",
-        "parserMetadata": {
+        "renderData": {
             "input": "## CopyType",
             "depth": 0,
             "before": "#2"
@@ -1410,7 +1423,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- name: string",
                     "depth": 1,
                     "before": "CopyType"
@@ -1426,7 +1439,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "",
                             "input": "",
                             "depth": 1,
@@ -1448,7 +1461,7 @@ const mdParsed=[
             }
         ],
         "value": "",
-        "parserMetadata": {
+        "renderData": {
             "input": "## CopyType",
             "depth": 0,
             "before": "CopyType.name.#"
@@ -1464,7 +1477,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- age: string",
                     "depth": 1,
                     "before": "CopyType#2"
@@ -1480,7 +1493,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "[Check age]($1)\n\n\n",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "  ",
                             "input": "  [Check age]($1)\n\n\n",
                             "depth": 2,
@@ -1508,7 +1521,7 @@ const mdParsed=[
             }
         ],
         "value": "",
-        "parserMetadata": {
+        "renderData": {
             "input": "###### $1",
             "depth": 0,
             "before": "CopyType#2.age.#"
@@ -1526,7 +1539,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "Is older that 21?",
-                "parserMetadata": {
+                "renderData": {
                     "indent": "",
                     "input": "Is older that 21?",
                     "depth": 1,
@@ -1545,7 +1558,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- yes",
                     "depth": 1,
                     "before": "$1.#"
@@ -1562,7 +1575,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- no",
                     "depth": 1,
                     "before": "$1.yes"
@@ -1579,7 +1592,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "",
                             "input": "",
                             "depth": 1,
@@ -1609,7 +1622,7 @@ const mdParsed=[
             }
         ],
         "value": "",
-        "parserMetadata": {
+        "renderData": {
             "input": "###### OtherType",
             "depth": 0,
             "before": "$1.no.#"
@@ -1625,7 +1638,7 @@ const mdParsed=[
                     }
                 ],
                 "value": "string",
-                "parserMetadata": {
+                "renderData": {
                     "input": "- prop1: string",
                     "depth": 1,
                     "before": "OtherType"
@@ -1641,7 +1654,7 @@ const mdParsed=[
                             }
                         ],
                         "value": "",
-                        "parserMetadata": {
+                        "renderData": {
                             "indent": "",
                             "input": "",
                             "depth": 1,

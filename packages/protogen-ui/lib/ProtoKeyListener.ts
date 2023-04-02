@@ -39,7 +39,7 @@ export class ProtoKeyListener
 
             case 'c:i':
                 console.info('ProtogenCtrl',this.ctrl);
-                console.info('ProtoNodes',this.ctrl.entities.value.map(n=>n.node.value));
+                console.info('ProtoNodes',this.ctrl.nodes.value.map(n=>n.nodeSubject.value));
                 break;
 
             case 'escape':

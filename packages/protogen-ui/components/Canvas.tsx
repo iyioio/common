@@ -16,7 +16,7 @@ export default function Canvas({
 }:CanvasProps){
 
     const ctrl=useProtogenCtrl();
-    const entities=useSubject(ctrl.entities);
+    const entities=useSubject(ctrl.nodes);
     const panZoomCtrl=usePanZoomCtrl();
     useEffect(()=>{
         if(!panZoomCtrl){
@@ -32,14 +32,19 @@ export default function Canvas({
     },[panZoomCtrl,ctrl])
 
     const [lineGroup,setLineGroup]=useState<SVGGElement|null>(null);
+    const [lineGroupLow,setLineGroupLow]=useState<SVGGElement|null>(null);
     useEffect(()=>{
         ctrl.lineCtrl.lineGroup=lineGroup;
     },[ctrl,lineGroup])
+    useEffect(()=>{
+        ctrl.lineCtrl.lineGroupLow=lineGroupLow;
+    },[ctrl,lineGroupLow])
 
     return (
         <div className={cn('Canvas proto-canvas-pos',{editable})}>
 
             <svg viewBox={`-${svgSpan} -${svgSpan} ${svgSpan*2} ${svgSpan*2}`} width={svgSpan*2} height={svgSpan*2}>
+                <g ref={setLineGroupLow}/>
                 <g ref={setLineGroup}/>
             </svg>
 

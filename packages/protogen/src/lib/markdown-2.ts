@@ -1,5 +1,5 @@
-import { protoAddChild, protoCreateEmptyNode, protoCreateNodeAddressMap, protoEnsureUniqueAddress, protoNormalizeNodes } from "./protogen-node";
-import { ProtoAddressMap, ProtoTypeInfo, _ProtoNode as ProtoNode } from "./protogen-types";
+import { protoAddChild, protoCreateEmptyNode, protoCreateNodeAddressMap, protoEnsureUniqueAddress, protoNormalizeNodes, ProtoNormalizeNodesOptions } from "./protogen-node";
+import { ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoTypeInfo } from "./protogen-types";
 
 const lineReg=/^([ \t]*)(#+|-)[ \t]+(\$?\w+)(\??)[ \t]*:?[ \t]*(.*)(?=\n|$)/;
 const lineRegSpace=1;
@@ -17,14 +17,8 @@ const spaceStartRegIndex=1;
 
 const getIndent=(value:string)=>spaceStartReg.exec(value)?.[spaceStartRegIndex]??''
 
-export interface ParseMdNodesResult
-{
-    rootNodes:ProtoNode[];
-    allNodes:ProtoNode[];
-    addressMap:ProtoAddressMap;
-}
 
-export const protoMarkdownParseNodes=(code:string):ParseMdNodesResult=>{
+export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOptions):ProtoParsingResult=>{
 
     const rootNodes:ProtoNode[]=[];
     const allNodes:ProtoNode[]=[];
@@ -54,20 +48,20 @@ export const protoMarkdownParseNodes=(code:string):ParseMdNodesResult=>{
 
         if( lastNode &&
             lastNode.isContent &&
-            lastNode.parserMetadata
+            lastNode.renderData
         ){
-            const indent=lastNode.parserMetadata.indent??'';
+            const indent=lastNode.renderData.indent??'';
             if(indent && line.startsWith(indent)){
                 line=line.substring(indent.length);
             }
-            lastNode.parserMetadata.input+='\n'+(line?lastNode.parserMetadata.indent:'')+line;
+            lastNode.renderData.input+='\n'+(line?lastNode.renderData.indent:'')+line;
             lastNode.value+='\n'+(getIndent(line))+value;
             return;
         }
 
         const content=protoCreateEmptyNode('#','',value);
         allNodes.push(content);
-        content.parserMetadata={
+        content.renderData={
             indent:/^([ \t]+)/.exec(line)?.[1]??'',
             input:line,
             depth,
@@ -109,7 +103,7 @@ export const protoMarkdownParseNodes=(code:string):ParseMdNodesResult=>{
                     ...types[0],
                     types,
                     value,
-                    parserMetadata:{
+                    renderData:{
                         input:line,
                         depth,
                     }
@@ -187,7 +181,7 @@ export const protoMarkdownParseNodes=(code:string):ParseMdNodesResult=>{
 
     const addressMap=protoCreateNodeAddressMap(allNodes);
 
-    protoNormalizeNodes(allNodes,{addressMap});
+    protoNormalizeNodes(allNodes,{...(options??{}),addressMap});
 
     return {rootNodes,allNodes,addressMap};
 
@@ -195,35 +189,45 @@ export const protoMarkdownParseNodes=(code:string):ParseMdNodesResult=>{
 
 const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>{
 
-    const matches=value.matchAll(/(\(?)[ \t]*(\w+)[ \t]*(\)?)(\[[ \t]*\])?[ \t]*([*? \t])?/g);
+    const matches=value.matchAll(/(\(?)[ \t]*(\w+)[ \t]*(\)?)(\[[ \t]*\])?(\.(\w+))?[ \t]*([*?! \t]+)?/g);
+    const tagOpenI=1;
+    const nameI=2;
+    const tagCloseI=3;
+    const arrayI=4;
+    const propNameI=6;
+    const flagsI=7;
+
 
     const types:ProtoTypeInfo[]=[];
     let tags:string[]|undefined;
 
     for(const match of matches){
 
-        if(match[1]){
-            if(!match[3]){
+        if(match[tagOpenI]){
+            if(!match[tagCloseI]){
                 continue;
             }
             if(!tags){
                 tags=[];
             }
-            if(!tags.includes(match[2])){
-                tags.push(match[2])
+            if(!tags.includes(match[nameI])){
+                tags.push(match[nameI])
             }
 
             continue;
         }
 
         const type:ProtoTypeInfo={
-            type:match[2]
+            type:match[nameI]
+        }
+        if(match[propNameI]){
+            type.refProp=match[propNameI];
         }
         types.push(type);
-        if(match[4]){
+        if(match[arrayI]){
             type.isArray=true;
         }
-        const flags=match[5];
+        const flags=match[flagsI];
         if(flags){
             for(const f of flags){
                 if(!/\s/.test(f)){
@@ -250,35 +254,16 @@ const getDepth=(space:string,markdownType:string):number=>{
     return (Math.floor(space.length/2))+(markdownType.startsWith('#')?0:1)
 }
 
-export const protoMarkdownSplitCode=(code:string):string[]=>{
-    return code.split(hrReg)
-}
 
+export const protoMarkdownRenderer=(
+    node:ProtoNode,
+    renderData:ProtoNodeRenderData
+):ProtoNodeRenderData=>{
 
-export const protoMarkdownRenderLines=(
-    nodes:ProtoNode[],
-    maxDepth?:number,
-    filter?:(node:ProtoNode)=>boolean
-):string[]=>{
+    const input=`- ${node.name}${node.value?': '+node.value:''}`;
 
-    const lines:string[]=[];
-
-    for(const node of nodes){
-
-        if(!node.parserMetadata){
-            continue;
-        }
-
-        if(!node.importantContent && maxDepth!==undefined && (maxDepth<(node.parserMetadata.depth??0) || !node.parserMetadata.input)){
-            continue;
-        }
-
-        if(filter && !filter(node)){
-            continue;
-        }
-        lines.push(node.parserMetadata.input??'');
+    return {
+        ...renderData,
+        input
     }
-
-    return lines;
-
 }

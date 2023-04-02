@@ -35,6 +35,11 @@ export interface DesignTokens
     readonly anchorSize:number;
     readonly anchorColor:string;
     readonly lineColor:string;
+
+    readonly codeLineHeight:number;
+    readonly codeFontSize:number;
+    readonly codeVPadding:number;
+    readonly codeHPadding:number;
 }
 
 
@@ -71,6 +76,11 @@ const darkTokens:DesignTokens=Object.freeze(
     anchorSize:10,
     anchorColor:'#444444',
     lineColor:'#88B6BA',
+
+    codeLineHeight:18,
+    codeFontSize:15,
+    codeVPadding:8,
+    codeHPadding:16,
 
 })
 

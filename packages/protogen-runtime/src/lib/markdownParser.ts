@@ -1,4 +1,4 @@
-import { parseMarkdownNodes, ProtoContext } from "@iyio/protogen";
+import { ProtoContext, protoMarkdownParseNodes } from "@iyio/protogen";
 
 export const markdownParser=async ({
     sources,
@@ -15,7 +15,7 @@ export const markdownParser=async ({
 
         log(`markdownParser parse source - ${source.input}`);
 
-        const mNodes=parseMarkdownNodes(source.content);
+        const mNodes=protoMarkdownParseNodes(source.content).allNodes;
 
         log(`${mNodes.length} node(s) parsed`);
 

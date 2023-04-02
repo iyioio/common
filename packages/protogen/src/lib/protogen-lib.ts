@@ -1,10 +1,12 @@
-import { ProtoAttribute, ProtoLayout, ProtoNode } from "./protogen-types";
+import { ProtoLayout, ProtoNode } from "./protogen-types";
 
 const layoutKey=Symbol('protoLayout');
 
-export const getProtoLayout=(node:ProtoNode):ProtoLayout|null=>(node as any)[layoutKey]??null;
+export const protoGetLayout=(node:ProtoNode):ProtoLayout|null=>(node as any)[layoutKey]??null;
 
-export const setProtoLayout=(node:ProtoNode,layout:ProtoLayout|null)=>{
+export const protoGetLayoutOrDefault=(node:ProtoNode):ProtoLayout=>(node as any)[layoutKey]??protoGetEmptyLayout();
+
+export const protoSetLayout=(node:ProtoNode,layout:ProtoLayout|null)=>{
     if(layout){
         (node as any)[layoutKey]=layout;
     }else{
@@ -12,34 +14,10 @@ export const setProtoLayout=(node:ProtoNode,layout:ProtoLayout|null)=>{
     }
 }
 
-export const getEmptyProtoLayout=():ProtoLayout=>({
+export const protoGetEmptyLayout=():ProtoLayout=>({
     left:0,
     right:0,
     top:0,
     bottom:0,
     y:0,
-    localY:0,
-    lPt:{x:0,y:0},
-    rPt:{x:0,y:0},
 })
-
-export const getMultiProtoAttValue=(att:ProtoAttribute|null|undefined):string[]=>{
-    return att?att.multiValue??[att.value]:[];
-}
-
-export const addProtoTags=(item:ProtoNode|ProtoAttribute,tags:string[]|null|undefined)=>{
-    if(!tags?.length){
-        return;
-    }
-
-    if(!item.tags){
-        item.tags=[];
-    }
-
-    for(const tag of tags){
-        const t=tag.trim();
-        if(t && !item.tags.includes(t)){
-            item.tags.push(t);
-        }
-    }
-}

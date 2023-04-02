@@ -16,7 +16,7 @@ export function ProtogenToolbar({
 }:ProtogenToolbarProps){
 
     const activeAnchor=useSubject(ctrl.activeAnchorSubject);
-    const mode=useSubject(ctrl.viewModeSubject);
+    const mode=useSubject(ctrl.viewDepthSubject);
 
     const [saveState,setSaveState]=useState<UiState|undefined>();
     const [executeState,setExecuteState]=useState<UiState|undefined>();
@@ -58,9 +58,9 @@ export function ProtogenToolbar({
     return (
         <div className="ProtogenToolbar node-container">
             <View flex1 g1>
-                <ProtoButton active={mode==='all'} text="more" onClick={()=>ctrl.viewMode='all'}/>
-                <ProtoButton active={mode==='atts'} text="less" onClick={()=>ctrl.viewMode='atts'}/>
-                <ProtoButton active={mode==='children'} text="min" onClick={()=>ctrl.viewMode='children'}/>
+                <ProtoButton active={mode===0} text="0" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===0?null:0}/>
+                <ProtoButton active={mode===1} text="1" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===1?null:1}/>
+                <ProtoButton active={mode===2} text="2" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===2?null:2}/>
             </View>
             <View row justifyCenter alignCenter flex1 g1 className="ProtogenToolbar-message">
                 {activeAnchor?'( Select a connecting point )':''}

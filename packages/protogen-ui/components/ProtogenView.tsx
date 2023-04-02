@@ -1,4 +1,3 @@
-import { markdownHidden } from "@iyio/protogen";
 import { DragTarget, PanZoomCtrl, PanZoomView } from "@iyio/react-common";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
@@ -59,9 +58,8 @@ export default function ProtogenView({
 
         const code=defaultType();
 
-        ctrl.addEntity(
+        ctrl.addNodes(
             code.trim()+
-            (code.includes(markdownHidden)?'':'\n\n'+markdownHidden)+
             `\n- $layout: ${Math.round(pt.x)} ${Math.round(pt.y)} 300`
         ,'type');
 

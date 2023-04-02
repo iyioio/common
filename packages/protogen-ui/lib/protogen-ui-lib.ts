@@ -1,5 +1,5 @@
-import { getNodeDOMRect, Point } from "@iyio/common";
-import { getEmptyProtoLayout, ProtoLayout, ViewCharPointer } from "@iyio/protogen";
+import { Point } from "@iyio/common";
+import { protoGetEmptyLayout, ProtoLayout, ProtoLink } from "@iyio/protogen";
 import type { NodeCtrl } from "./NodeCtrl";
 
 export const anchorInset=0;
@@ -37,15 +37,15 @@ export interface LoadRequest
 
 
 export interface ProtoUiLine{
-    nodeCtrlId:string;
+    fromAddress:string;
+    toAddress:string;
     updateId:number;
     elem:SVGPathElement;
     elem2:SVGPathElement;
-    nodeName:string;
-    propName?:string;
     p1:Point;
     p2:Point;
     color:string;
+    link:ProtoLink;
     low:boolean;
 }
 
@@ -97,72 +97,10 @@ export const getNodesOnLineAtIndex=(elem:Node,index:number):Node[]=>{
 
 
 
-export const getNodesProtoLayout=(nodes:Node[],scale:number):ProtoLayout=>{
-    if(!nodes.length){
-        return getEmptyProtoLayout();
-    };
-    let layout:ProtoLayout|undefined;
-    for(const node of nodes){
-        if(node instanceof Element){
-            layout=getNodeProtoLayout(node,scale);
-            break;
-        }
-    }
-    if(!layout){
-        layout=getNodeProtoLayout(nodes[0],scale);
-    }
-    return layout;
-}
-
-export const getNodeProtoLayout=(node:Node|null,scale:number):ProtoLayout=>{
-    if(!node){
-        return getEmptyProtoLayout();
-    }
-    const elemRect=getNodeDOMRect(node);
-    if(!elemRect){
-        return getEmptyProtoLayout();
-    }
-    let canvasRect:DOMRect|null=null;
-    let nodeRect:DOMRect|null=null;
-    node=node?.parentNode;
-
-    while(node){
-        const elem=node instanceof Element?node:null;
-        if(elem){
-            if(elem.classList.contains('proto-node-pos')){
-                nodeRect=elem.getBoundingClientRect();
-            }else if(elem.classList.contains('proto-canvas-pos')){
-                canvasRect=elem.getBoundingClientRect();
-                break;
-            }
-        }
-        node=node.parentNode;
-    }
-
-    if(!canvasRect || !nodeRect){
-        return getEmptyProtoLayout();
-    }
-
-    const localY=(elemRect.bottom-elemRect.top)/2+(elemRect.top-nodeRect.top);
-    const y=((elemRect.bottom-elemRect.top)/2+elemRect.top)-canvasRect.top;
-    const left=nodeRect.left-canvasRect.left+anchorInset;
-    const right=nodeRect.right-canvasRect.right-anchorInset;
-
-    return {
-        left:left/scale,
-        right:right/scale,
-        localY:localY/scale,
-        y:y/scale,
-        top:(elemRect.top-canvasRect.top)/scale,
-        bottom:(elemRect.bottom-canvasRect.bottom)/scale,
-        lPt:{x:left/scale,y:y/scale},
-        rPt:{x:right/scale,y:y/scale},
-    }
-}
 
 export const getElemProtoLayout=(elem:HTMLElement|null,scale:number):ProtoLayout=>{
     let canvasRect:DOMRect|null=null;
-    const nodeRect=elem?.getBoundingClientRect()??getEmptyProtoLayout();
+    const nodeRect=elem?.getBoundingClientRect()??protoGetEmptyLayout();
     let node=elem?.parentNode;
 
     while(node){
@@ -177,7 +115,7 @@ export const getElemProtoLayout=(elem:HTMLElement|null,scale:number):ProtoLayout
     }
 
     if(!canvasRect || !nodeRect){
-        return getEmptyProtoLayout();
+        return protoGetEmptyLayout();
     }
 
     const localY=(nodeRect.bottom-nodeRect.top)/2+nodeRect.top;
@@ -188,16 +126,13 @@ export const getElemProtoLayout=(elem:HTMLElement|null,scale:number):ProtoLayout
     return {
         left:left*scale,
         right:right*scale,
-        localY:localY*scale,
         y:y*scale,
         top:(nodeRect.top-canvasRect.top)*scale,
         bottom:(nodeRect.bottom-canvasRect.bottom)*scale,
-        lPt:{x:left*scale,y:y*scale},
-        rPt:{x:right*scale,y:y*scale},
     }
 }
 
-export class DomViewCharPointer implements ViewCharPointer
+export class DomViewCharPointer
 {
     public index:number=0;
     public view:any;
