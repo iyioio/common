@@ -74,7 +74,7 @@ export class LineCtrl
                         const propName=match.prop?.node?.name;
                         let line=this.getLine(updateId,node.id,nodeName,propName);
                         const lineColor=getLinkColor(link);
-                        const low=getLinkLow(link);
+                        const low=getLinkLow(link);// todo - replace with link.low
 
                         if(!line){
                             line={
@@ -191,6 +191,9 @@ const getLinkColor=(link:NodeAndPropName):string=>{
     }
     if(meta['min']!==undefined){
         return '#444444';
+    }
+    if(meta['low'] && Boolean(meta['low'])){
+        return '#222222';
     }
     return meta['color']||'#88B6BA99';
 }

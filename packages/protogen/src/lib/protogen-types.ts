@@ -12,8 +12,53 @@ export interface ProtoAttribute
 export interface ProtoTypeInfo
 {
     type:string;
-    isArray:boolean;
+    isArray?:boolean;
     flags?:string[];
+}
+
+export type ProtoChildren={[name:string]:_ProtoNode}
+export type ProtoAddressMap={[address:string]:_ProtoNode}
+
+export interface ProtoNodeParserMetadata
+{
+    indent?:string;
+    input?:string;
+    depth?:number;
+    before?:string;
+}
+
+export type _ProtoNode=Omit<ProtoNode,'attributes'|'children'|'links'> & {
+    address:string;
+    children?:ProtoChildren;
+    value?:string;
+    links?:ProtoLink[];
+    /**
+     * Used by parsing systems. Generators should ignore this value
+     */
+    parserMetadata?:ProtoNodeParserMetadata;
+};
+
+export interface ProtoLink
+{
+    name?:string;
+    address:string;
+
+    /**
+     * Low priority
+     */
+    low?:boolean;
+    /**
+     * If true the link is the reverse side of a user defined link
+     */
+    rev?:boolean;
+    meta?:HashMap<string>;
+
+    /**
+     * If true the link is a source reference
+     */
+    src?:boolean;
+
+    broken?:boolean;
 }
 
 export interface ProtoNode extends ProtoTypeInfo{
@@ -25,27 +70,39 @@ export interface ProtoNode extends ProtoTypeInfo{
      */
     refType?:ProtoTypeInfo;
 
-    optional:boolean;
+    optional?:boolean;
 
     /**
      * All types the node implements
      */
     types:ProtoTypeInfo[];
 
-    comment?:string;
+    comment?:string;// move to get comments
 
-    attributes:{[name:string]:ProtoAttribute};
+    attributes:{[name:string]:ProtoAttribute}; // remove
 
     children?:ProtoNode[];
 
 
     hidden?:boolean;
 
+    special?:boolean;
+
+    contentFocused?:boolean;
+
+    isContent?:boolean;
+
+    importantContent?:boolean;
+
     links?:NodeAndPropName[];
 
     section?:string;
 
     tags?:string[];
+
+    sourceAddress?:string;
+
+    sourceLinked?:boolean;
 }
 
 export interface ProtoOutput
