@@ -525,7 +525,8 @@ const mdParsed=[
                         },
                         "isContent": true
                     }
-                }
+                },
+                "comment": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  + deny out of sync writes\n  + track number of changes"
             },
             "$trigger": {
                 "name": "$trigger",
@@ -562,7 +563,8 @@ const mdParsed=[
                         },
                         "isContent": true
                     }
-                }
+                },
+                "comment": ""
             },
             "post": {
                 "name": "post",
@@ -665,6 +667,7 @@ const mdParsed=[
                                 "isContent": true
                             }
                         },
+                        "comment": "(managed)",
                         "links": [
                             {
                                 "name": "User",
@@ -707,7 +710,8 @@ const mdParsed=[
                                 },
                                 "isContent": true
                             }
-                        }
+                        },
+                        "comment": "``` ts\ninvalid ts here\ngetTrackers().find(t=>t.ready)\n```"
                     },
                     "weight": {
                         "name": "weight",
@@ -749,7 +753,8 @@ const mdParsed=[
                                 "name": "User weight",
                                 "address": "User.weight"
                             }
-                        ]
+                        ],
+                        "comment": "[User weight](User.weight)"
                     }
                 },
                 "links": [
@@ -761,7 +766,8 @@ const mdParsed=[
                     }
                 ]
             }
-        }
+        },
+        "comment": "A collection of Posts that can be displayed\nas a space, session, chat or any other view\nthat represents a time series of events\nand content."
     },
     {
         "name": "User",
@@ -924,6 +930,7 @@ const mdParsed=[
                         "isContent": true
                     }
                 },
+                "comment": "",
                 "links": [
                     {
                         "name": "title",
@@ -1201,6 +1208,7 @@ const mdParsed=[
                                 "isContent": true
                             }
                         },
+                        "comment": "",
                         "links": [
                             {
                                 "name": "NotAType.age",
@@ -1367,7 +1375,8 @@ const mdParsed=[
                                 },
                                 "isContent": true
                             }
-                        }
+                        },
+                        "comment": ""
                     }
                 },
                 "links": [
@@ -1447,7 +1456,8 @@ const mdParsed=[
                         },
                         "isContent": true
                     }
-                }
+                },
+                "comment": ""
             }
         }
     },
@@ -1507,7 +1517,8 @@ const mdParsed=[
                         "name": "Check age",
                         "address": "$1"
                     }
-                ]
+                ],
+                "comment": "[Check age]($1)"
             }
         }
     },
@@ -1600,9 +1611,11 @@ const mdParsed=[
                         },
                         "isContent": true
                     }
-                }
+                },
+                "comment": ""
             }
         },
+        "comment": "Is older that 21?",
         "links": [
             {
                 "name": "age",
@@ -1662,7 +1675,8 @@ const mdParsed=[
                         },
                         "isContent": true
                     }
-                }
+                },
+                "comment": ""
             }
         }
     }

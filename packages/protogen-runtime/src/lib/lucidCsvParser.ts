@@ -39,7 +39,7 @@ export const lucidCsvParser=async ({
             nodes.push(typeNode);
             log('typeNode',typeNode);
             if(!typeNode.children){
-                typeNode.children=[];
+                typeNode.children={};
             }
 
             addDetachedComments(typeNode.name,null,null,typeNode,csv);
@@ -62,7 +62,7 @@ export const lucidCsvParser=async ({
 
                     addDetachedComments(typeNode.name+'.'+propNode.name,Number(textAreaIndex[0]),row,propNode,csv);
                     log('propNode',propNode);
-                    typeNode.children.push(propNode)
+                    typeNode.children[propNode.name]=propNode;
                 }
             }
 

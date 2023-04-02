@@ -175,6 +175,7 @@ export interface ProtoNormalizeNodesOptions
     updateBefore?:boolean;
     addressMap?:ProtoAddressMap;
     srcLink?:boolean;
+    addComments?:boolean;
 }
 
 export const protoNormalizeNodes=(nodes:ProtoNode[],{
@@ -182,11 +183,16 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
     revLink=true,
     srcLink=true,
     updateBefore=true,
+    addComments=true,
     addressMap=protoCreateNodeAddressMap(nodes),
 }:ProtoNormalizeNodesOptions={})=>{
 
     let lastNode=null;
     for(const node of nodes){
+
+        if(addComments && node.children?.['#']){
+            node.comment=(node.children['#'].value??'').trimEnd();
+        }
 
         const parent=protoGetNodeParent(node);
 

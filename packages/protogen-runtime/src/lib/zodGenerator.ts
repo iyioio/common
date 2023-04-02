@@ -1,5 +1,5 @@
 import { asArray, getObjKeyCount, HashMap } from "@iyio/common";
-import { ProtoAttribute, ProtoContext, ProtoNode } from "@iyio/protogen";
+import { protoChildrenToArray, ProtoContext, ProtoNode } from "@iyio/protogen";
 
 const typeMap:HashMap<string>={
     'int':'number',
@@ -21,11 +21,14 @@ export interface ZodGeneratorOptions
 }
 
 export const zodGenerator=async ({
+    log,
     nodes,
     outputs,
     args,
     tab,
 }:ProtoContext)=>{
+
+    log(`zodGenerator. node count = ${nodes.length}`)
 
     const options:Required<ZodGeneratorOptions>={
         defPrefix:args['--zod-def-prefix']?.[0]??'',
@@ -48,7 +51,7 @@ export const zodGenerator=async ({
 
     for(const node of nodes){
 
-        switch(node.refType?.type){
+        switch(node.type){
 
             case 'union':
                 addUnion(node,out,tab,getFullName);
@@ -80,13 +83,14 @@ const addEnum=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=
 
     const fullName=getFullName(node.name);
 
-    const children=node.children??[];
-
     out.push('');
     out.push(`export enum ${node.name}{`);
 
-    for(const child of children){
-        out.push(`${tab}${child.name}${child.type?'='+child.type:''},`)
+    if(node.children){
+        for(const name in node.children){
+            const child=node.children[name];
+            out.push(`${tab}${child.name}${child.type?'='+child.type:''},`)
+        }
     }
 
     out.push('}')
@@ -102,9 +106,11 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
     out.push('');
     out.push(`export const ${fullName}=z.enum([`);
 
-    const children=node.children??[];
-    for(const child of children){
-        out.push(`${tab}${JSON.stringify(child.name)},`)
+    if(node.children){
+        for(const name in node.children){
+            const child=node.children[name];
+            out.push(`${tab}${JSON.stringify(child.name)},`)
+        }
     }
 
     out.push(`]);`);
@@ -114,7 +120,8 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
 const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[])=>{
     const fullName=getFullName(node.name);
 
-    const hasCustoms=node.children?.some(c=>!isBuiltInType(c.type))?true:false;
+    const children=protoChildrenToArray(node.children)
+    const hasCustoms=children.some(c=>!isBuiltInType(c.type))?true:false;
 
     out.push('');
     if(hasCustoms){
@@ -126,7 +133,10 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
     const lazyProps:string[]=[];
 
     if(node.children){
-        for(const prop of node.children){
+        for(const prop of children){
+            if(prop.special || prop.isContent){
+                continue;
+            }
 
             const propType=typeMap[prop.type]??prop.type??'string';
             const isBuiltIn=isBuiltInType(propType);
@@ -228,13 +238,12 @@ interface AddCallOptions
     defaultValue?:string;
     hasMessage?:boolean;
     rawValue?:boolean;
-    option?:(att:ProtoAttribute)=>string|null;
+    option?:(att:ProtoNode)=>string|null;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
     let call='';
 
-    const add=(type:string|string[],name:string,att:ProtoAttribute|undefined,getValue?:((att:ProtoAttribute)=>string|number|null|undefined)|null,{
+    const add=(type:string|string[],name:string,att:ProtoNode|undefined,getValue?:((att:ProtoNode)=>string|number|null|undefined)|null,{
         defaultValue,
         hasMessage=true,
         rawValue,
@@ -254,84 +263,86 @@ const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
         if(!rawValue && (typeof value ==='string')){
             value=JSON.stringify(value)
         }
-        const message=option?option(att):att.props['message']?.trim();
+        const message=option?option(att):att.children?.['message']?.value?.trim();
         call+=`.${name}(${value??''}${(message && hasMessage)?(value?',':'')+(option?message:JSON.stringify(message)):''})`
 
     }
 
-    let noAutoLength=prop.attributes['email']?true:false;
+    const attChildren=prop.children??{};
 
-    if(propType==='string' && !prop.attributes['email'] && /(^e|E)mail($|[A-Z\d_])/.test(prop.name)){
+    let noAutoLength=attChildren['email']?true:false;
+
+    if(propType==='string' && !attChildren['email'] && /(^e|E)mail($|[A-Z\d_])/.test(prop.name)){
         call+='.email()';
         noAutoLength=true;
     }
 
     if( !noAutoLength &&
         propType==='string' &&
-        !prop.attributes['max'] &&
-        !parseBool(prop.attributes['long']?.value,false)
+        !attChildren['max'] &&
+        !parseBool(attChildren['long']?.value,false)
     ){
         call+='.max(255)';
     }
 
-    if(propType==='number' && !prop.attributes['int']){
+    if(propType==='number' && !attChildren['int']){
         call+='.int()';
     }
 
-    add(['string',...numTypes],'min',prop.attributes['min'],att=>parseNum(att.value))
-    add(['string',...numTypes],'max',prop.attributes['max'],att=>parseNum(att.value))
-    add(['string'],'length',prop.attributes['length'],att=>parseNum(att.value))
-    add(['string'],'endsWith',prop.attributes['endsWith'],att=>att.value)
-    add(['string'],'startsWith',prop.attributes['startsWith'],att=>att.value)
-    add(['string'],'email',prop.attributes['email']);
-    add(['string'],'url',prop.attributes['url']);
-    add(['string'],'emoji',prop.attributes['emoji']);
-    add(['string'],'uuid',prop.attributes['uuid']);
-    add(['string'],'cuid',prop.attributes['cuid']);
-    add(['string'],'cuid2',prop.attributes['cuid2']);
-    add(['string'],'ulid',prop.attributes['ulid']);
-    add(['string'],'nonempty',prop.attributes['notEmpty']);
-    add(['string'],'trim',prop.attributes['trim'],null,{hasMessage:false});
-    add(['string'],'toLowerCase',prop.attributes['lower'],null,{hasMessage:false});
-    add(['string'],'toUpperCase',prop.attributes['upper'],null,{hasMessage:false});
+    add(['string',...numTypes],'min',attChildren['min'],att=>parseNum(att.value))
+    add(['string',...numTypes],'max',attChildren['max'],att=>parseNum(att.value))
+    add(['string'],'length',attChildren['length'],att=>parseNum(att.value))
+    add(['string'],'endsWith',attChildren['endsWith'],att=>att.value)
+    add(['string'],'startsWith',attChildren['startsWith'],att=>att.value)
+    add(['string'],'email',attChildren['email']);
+    add(['string'],'url',attChildren['url']);
+    add(['string'],'emoji',attChildren['emoji']);
+    add(['string'],'uuid',attChildren['uuid']);
+    add(['string'],'cuid',attChildren['cuid']);
+    add(['string'],'cuid2',attChildren['cuid2']);
+    add(['string'],'ulid',attChildren['ulid']);
+    add(['string'],'nonempty',attChildren['notEmpty']);
+    add(['string'],'trim',attChildren['trim'],null,{hasMessage:false});
+    add(['string'],'toLowerCase',attChildren['lower'],null,{hasMessage:false});
+    add(['string'],'toUpperCase',attChildren['upper'],null,{hasMessage:false});
 
-    add('string','ip',prop.attributes['ip'],att=>parseObj({
+    add('string','ip',attChildren['ip'],att=>parseObj({
         version:att.value||'v4',
-        message:att.props['message'],
+        message:att.children?.['message']?.value,
     }),{hasMessage:false,rawValue:true})
 
-    add('string','datetime',prop.attributes['date'],att=>parseObj({
+    add('string','datetime',attChildren['date'],att=>parseObj({
         precision:parseNum(att.value),
         offset:Boolean(att.value),
-        message:att.props['message'],
+        message:att.children?.['message']?.value,
     }),{hasMessage:false,rawValue:true})
 
-    add('string','regex',prop.attributes['regex'],att=>paseRegex(att),{rawValue:true})
+    add('string','regex',attChildren['regex'],att=>paseRegex(att),{rawValue:true})
 
-    add('string','includes',prop.attributes['includes'],att=>att.value,{
+    add('string','includes',attChildren['includes'],att=>att.value,{
         option:att=>parseObj({
             position:parseNum(att.value),
-            message:att.props['message'],
+            message:att.children?.['message']?.value,
         })
     })
 
 
-    add(numTypes,'gte',prop.attributes['gte'],att=>parseNum(att.value))
-    add(numTypes,'gt',prop.attributes['gt'],att=>parseNum(att.value))
-    add(numTypes,'lte',prop.attributes['lte'],att=>parseNum(att.value))
-    add(numTypes,'lt',prop.attributes['lt'],att=>parseNum(att.value))
-    add(numTypes,'multipleOf',prop.attributes['multipleOf'],att=>parseNum(att.value))
-    add(numTypes,'step',prop.attributes['step'],att=>parseNum(att.value))
-    add(numTypes,'int',prop.attributes['int'])
-    add(numTypes,'positive',prop.attributes['positive'])
-    add(numTypes,'negative',prop.attributes['negative'])
-    add(numTypes,'nonpositive',prop.attributes['notPositive'])
-    add(numTypes,'nonnegative',prop.attributes['notNegative'])
-    add(numTypes,'finite',prop.attributes['finite'])
-    add(numTypes,'safe',prop.attributes['safe'])
+    add(numTypes,'gte',attChildren['gte'],att=>parseNum(att.value))
+    add(numTypes,'gt',attChildren['gt'],att=>parseNum(att.value))
+    add(numTypes,'lte',attChildren['lte'],att=>parseNum(att.value))
+    add(numTypes,'lt',attChildren['lt'],att=>parseNum(att.value))
+    add(numTypes,'multipleOf',attChildren['multipleOf'],att=>parseNum(att.value))
+    add(numTypes,'step',attChildren['step'],att=>parseNum(att.value))
+    add(numTypes,'int',attChildren['int'])
+    add(numTypes,'positive',attChildren['positive'])
+    add(numTypes,'negative',attChildren['negative'])
+    add(numTypes,'nonpositive',attChildren['notPositive'])
+    add(numTypes,'nonnegative',attChildren['notNegative'])
+    add(numTypes,'finite',attChildren['finite'])
+    add(numTypes,'safe',attChildren['safe'])
 
-    add('date','min',prop.attributes['min'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
-    add('date','max',prop.attributes['max'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
+    add('date','min',attChildren['min'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
+    add('date','max',attChildren['max'],att=>`new Date(${JSON.stringify(att.value)})`,{rawValue:true})
 
     return call;
 
@@ -358,26 +369,20 @@ const parseObj=(obj:any)=>{
     return getObjKeyCount(obj)?JSON.stringify(obj):null;
 }
 
-const paseRegex=(att:ProtoAttribute)=>{
+const paseRegex=(att:ProtoNode)=>{
     if(!att.value){
         return null;
     }
     try{
-        new RegExp(att.value);
-        const flags=att.props['flags']??'';
-        return `/${att.value}/${
-            flags.includes('i')?'i':''
-        }${
-            flags.includes('g')?'g':''
-        }${
-            flags.includes('m')?'m':''
-        }${
-            flags.includes('s')?'s':''
-        }${
-            flags.includes('u')?'u':''
-        }${
-            flags.includes('y')?'y':''
-        }`;
+        let value=att.value??'';
+        let flags:string|undefined=undefined;
+        if(value.startsWith('/')){
+            const i=value.lastIndexOf('/');
+            flags=value.substring(i+1);
+            value=value.substring(1,i);
+        }
+        new RegExp(value,flags);
+        return '/'+value+'/'+(flags??'');
     }catch{
         return null;
     }
