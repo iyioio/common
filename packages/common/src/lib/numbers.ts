@@ -22,3 +22,11 @@ export const formatNumberWithBases=(n:number):string=>{
     n=Math.round(n*desc)/desc;
     return n.toLocaleString()+unit;
 }
+
+export const safeParseNumber=(value:any,fallback=0):number=>{
+    if(value===undefined || value===null){
+        return fallback;
+    }
+    const num=Number(value);
+    return isFinite(num)?num:fallback;
+}
