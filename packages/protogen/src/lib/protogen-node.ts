@@ -216,11 +216,11 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
             protoAddLink(parent,{
                 name:address,
                 address,
+                color:node.children?.['color']?.value
             })
         }
 
-        if(autoLink){
-
+        if(autoLink && !node.special){
             protoAddAutoLinks(node);
         }
         lastNode=node;
