@@ -1,5 +1,5 @@
 export * from './lib/executeTGenPipelineAsync';
-export * from './lib/markdown-2';
+export * from './lib/markdown';
 export * from './lib/parseNodeLine';
 export * from './lib/protogen-cli-const';
 export * from './lib/protogen-lib';

@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from "fs";
-import { protoMarkdownParseNodes } from "./markdown-2";
+import { protoMarkdownParseNodes } from "./markdown";
 import { protoMergeNodes, protoRenderLines } from "./protogen-node";
 
 // update mdTestOutputs and mdParsed by setting NX_WRITE_PROTOGEN_TEST_OUTPUT to true
