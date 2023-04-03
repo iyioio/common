@@ -98,7 +98,9 @@ export class ProtogenCtrl
                 }${
                     layout.node.name===ctrl.nodeSubject.value.name?'':'.'+layout.node.name
                 }`
-                a.ctrl.addCodeAfterAddress(a.layout.node.address,`- $link: ${to}`,true);
+                if(!a.ctrl.node.links?.some(l=>l.address===to)){
+                    a.ctrl.addCodeAfterAddress(a.layout.node.address,`- $link: ${to}`,true);
+                }
             }
         }else{
             this._activeAnchor.next({layout,side,ctrl,time:Date.now()});
