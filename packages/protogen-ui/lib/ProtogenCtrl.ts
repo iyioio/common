@@ -93,16 +93,12 @@ export class ProtogenCtrl
         if(a){
             this._activeAnchor.next(null);
             if((a.layout!==layout || a.side!==side) && layout.node && a.layout.node){
-                a.ctrl.addAttribute(
-                    a.layout.node.name===a.ctrl.nodeSubject.value.name?'$self':a.layout.node.name,
-                    '$link',
-                    `${
-                        ctrl.nodeSubject.value.name
-                    }${
-                        layout.node.name===ctrl.nodeSubject.value.name?'':'.'+layout.node.name
-                    }`,
-                    false
-                )
+                const to=`${
+                    ctrl.nodeSubject.value.name
+                }${
+                    layout.node.name===ctrl.nodeSubject.value.name?'':'.'+layout.node.name
+                }`
+                a.ctrl.addCodeAfterAddress(a.layout.node.address,`- $link: ${to}`,true);
             }
         }else{
             this._activeAnchor.next({layout,side,ctrl,time:Date.now()});

@@ -13,6 +13,8 @@ interface CodeInputProps extends BaseLayoutOuterProps
 {
     tab?:string;
     language?:CodeLanguage;
+    readOnly?:boolean;
+    valueOverride?:string;
     value:string;
     disabled?:boolean;
     onChange?:(value:string)=>void;
@@ -33,6 +35,8 @@ export function CodeInput({
     tab='    ',
     language='auto',
     value,
+    readOnly,
+    valueOverride,
     disabled,
     onChange,
     onSubmit,
@@ -55,9 +59,9 @@ export function CodeInput({
         if(!code){
             return;
         }
-        code.innerHTML=escapeHtml(value||' ')+'&nbsp;';
+        code.innerHTML=escapeHtml((valueOverride??value)||' ')+'&nbsp;';
         hljs.highlightElement(code);
-    },[code,value,language]);
+    },[code,valueOverride,value,language]);
 
     useEffect(()=>{
         onElem?.(code);
@@ -137,7 +141,7 @@ export function CodeInput({
 
 
     return (
-        <div className={cn("CodeInput",{tall,disabled},baseLayoutCn(props))}>
+        <div className={cn("CodeInput",{tall,disabled,readOnly},baseLayoutCn(props))}>
 
             <pre className="no-select">
                 <code
@@ -151,7 +155,8 @@ export function CodeInput({
                 onKeyDown={onKeyDown}
                 onChange={e=>onChange?.(e.target.value)}
                 onBlur={e=>onBlur?.(e.target.value)}
-                value={value}/>
+                value={value}
+                readOnly={readOnly}/>
 
 
             <style global jsx>{`
@@ -211,8 +216,14 @@ export function CodeInput({
                     outline:none;
                     outline-width:0;
                 }
+                .CodeInput.readOnly textarea{
+                    pointer-events:none;
+                }
                 .CodeInput .no-select{
                     pointer-events:none;
+                }
+                .CodeInput.readOnly .no-select{
+                    pointer-events:auto;
                 }
             `}</style>
         </div>

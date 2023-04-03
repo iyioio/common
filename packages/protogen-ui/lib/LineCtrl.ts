@@ -226,11 +226,14 @@ export class LineCtrl
 }
 
 const getLinkColor=(link:ProtoLink):string=>{
-    if(link.low){
-        return '#222222';
-    }
     if(link.color){
         return link.color;
+    }
+    if(link.src){
+        return '#90550f';
+    }
+    if(link.low){
+        return '#222222';
     }
     return '#88B6BA99';
 }

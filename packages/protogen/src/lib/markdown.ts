@@ -15,7 +15,7 @@ const hrReg=/(^|\n)-{2,}[ \t]*/;
 const spaceStartReg=/^([ \t]+)/;
 const spaceStartRegIndex=1;
 
-const getIndent=(value:string)=>spaceStartReg.exec(value)?.[spaceStartRegIndex]??''
+export const protoMarkdownGetIndent=(value:string)=>spaceStartReg.exec(value)?.[spaceStartRegIndex]??''
 
 
 export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOptions):ProtoParsingResult=>{
@@ -43,7 +43,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
     }
 
     const addContent=(line:string)=>{
-        const depth=getDepth(getIndent(line),'');
+        const depth=getDepth(protoMarkdownGetIndent(line),'');
         const value=line.replace(/[ \t]*(#+|-)?[ \t]*/,'').trim();
 
         if( lastNode &&
@@ -55,7 +55,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                 line=line.substring(indent.length);
             }
             lastNode.renderData.input+='\n'+(line?lastNode.renderData.indent:'')+line;
-            lastNode.value+='\n'+(getIndent(line))+value;
+            lastNode.value+='\n'+(protoMarkdownGetIndent(line))+value;
             return;
         }
 

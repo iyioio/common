@@ -6,6 +6,8 @@ import { UiState } from "../lib/protogen-ui-lib";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
 import { ProtoButton } from "./ProtoButton";
 
+const depths=[0,1,2,3]
+
 interface ProtogenToolbarProps
 {
     ctrl:ProtogenCtrl;
@@ -58,12 +60,19 @@ export function ProtogenToolbar({
     return (
         <div className="ProtogenToolbar node-container">
             <View flex1 g1>
-                <ProtoButton active={mode===0} text="0" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===0?null:0}/>
-                <ProtoButton active={mode===1} text="1" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===1?null:1}/>
-                <ProtoButton active={mode===2} text="2" onClick={()=>ctrl.viewDepth=ctrl.viewDepth===2?null:2}/>
+                <ProtoButton active={mode===null} text="-" onClick={()=>ctrl.viewDepth=null}/>
+                {depths.map(d=>(
+                    <ProtoButton key={d} success={mode===d} text={d.toString()} onClick={()=>ctrl.viewDepth=ctrl.viewDepth===d?null:d}/>
+                ))}
             </View>
             <View row justifyCenter alignCenter flex1 g1 className="ProtogenToolbar-message">
-                {activeAnchor?'( Select a connecting point )':''}
+                {activeAnchor?
+                    '( Select a connecting point )'
+                :mode===null?
+                    ''
+                :
+                    `( View depth = ${mode}, View only )`
+                }
             </View>
             <View row flex1 justifyEnd g1>
                 <ProtoButton state={executeState} text="execute" onClick={execute}/>

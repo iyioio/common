@@ -37,8 +37,9 @@ export default function NodeView({
             {anchors.map((a,i)=>(
                 <Fragment key={i}>
                     <button
-                        onClick={()=>{/*ctrl.selectAnchor(a,'left',node)*/}}
-                        className={cn("NodeView-anchor left",{active:activeAnchor?.layout===a && activeAnchor.side==='left'})}
+                        onClick={()=>{ctrl.selectAnchor(a,'left',node)}}
+                        disabled={a.disabled}
+                        className={cn("NodeView-anchor left",{active:activeAnchor?.layout===a && activeAnchor.side==='left',disabled:a.disabled})}
                             style={{
                             left:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.y-dt().anchorSize/2)+'px'
@@ -46,8 +47,9 @@ export default function NodeView({
                     />
 
                     <button
-                        onClick={()=>{/*ctrl.selectAnchor(a,'right',node)*/}}
-                        className={cn("NodeView-anchor right",{active:activeAnchor?.layout===a && activeAnchor.side==='right'})}
+                        onClick={()=>{ctrl.selectAnchor(a,'right',node)}}
+                        className={cn("NodeView-anchor right",{active:activeAnchor?.layout===a && activeAnchor.side==='right',disabled:a.disabled})}
+                        disabled={a.disabled}
                         style={{
                             right:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.y-dt().anchorSize/2)+'px'
@@ -90,6 +92,7 @@ export default function NodeView({
                     border:none;
                     padding:0;
                     transition:background-color 0.2s ease-in-out;
+                    z-index:1;
                 }
                 .NodeView-anchor.left{
                     cursor:w-resize;
@@ -102,6 +105,10 @@ export default function NodeView({
                 }
                 .NodeView-anchor.active{
                     background:${dt().lineColor};
+                }
+                .NodeView-anchor.disabled{
+                    z-index:0;
+
                 }
             `}</style>
         </div>

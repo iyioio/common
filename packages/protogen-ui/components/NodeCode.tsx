@@ -16,6 +16,8 @@ export function NodeCode({
 
     const code=useSubject(node.code);
 
+    const viewOnlyCode=useSubject(node.viewOnlyCodeSubject);
+
     useEffect(()=>{
         node.codeElem.next(codeElem);
     },[node,codeElem]);
@@ -47,8 +49,10 @@ export function NodeCode({
     return (
         <CodeInput
             language="p-markdown"
-            value={code}
+            value={viewOnlyCode??code}
             tab={'  '}
+            readOnly={!!viewOnlyCode}
+            valueOverride={viewOnlyCode??undefined}
             onChange={node.setCodeBound}
             onSubmit={node.updateBound}
             onBlur={node.updateBound}

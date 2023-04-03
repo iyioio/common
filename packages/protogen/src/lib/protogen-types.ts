@@ -164,8 +164,10 @@ export interface ProtoLayout
     top:number;
     bottom:number;
     y:number;
+    disabled?:boolean;
     node?:ProtoNode;
     getOffset?:(layout:ProtoLayout)=>Point;
+    altNode?:ProtoNode;
 }
 
 export interface NodeAndPropName

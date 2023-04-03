@@ -356,6 +356,8 @@ export interface ProtoRenderOptions
     rootNode?:ProtoNode,
     nodes?:ProtoNode[],
     maxDepth?:number,
+    hideSpecial?:boolean;
+    hideContent?:boolean;
     filter?:(node:ProtoNode)=>boolean,
     renderer?:(node:ProtoNode,renderData:ProtoNodeRenderData)=>ProtoNodeRenderData;
 }
@@ -364,6 +366,8 @@ export const protoRenderLines=({
     rootNode,
     nodes,
     maxDepth,
+    hideContent,
+    hideSpecial,
     filter,
     renderer,
 }:ProtoRenderOptions):string[]=>{
@@ -390,9 +394,14 @@ export const protoRenderLines=({
             node.renderData=renderer(node,node.renderData);
         }
 
-        if( !node.importantContent &&
-            maxDepth!==undefined &&
-            (maxDepth<(node.renderData.depth??0) || !node.renderData.input)
+        if( (hideContent && node.isContent) ||
+            (hideSpecial && node.special) ||
+            (
+                !node.importantContent &&
+                maxDepth!==undefined &&
+                (maxDepth<(node.renderData.depth??0) || !node.renderData.input)
+            )
+
         ){
             continue;
         }
@@ -474,13 +483,15 @@ export interface ProtoUpdateLayoutsOptions
     width?:number;
     lineHeight:number;
     getOffset?:(layout:ProtoLayout)=>Point;
+    transform?:(node:ProtoNode,layout:ProtoLayout)=>ProtoLayout;
 }
 export const protoUpdateLayouts=(nodes:ProtoNode[],{
     x=0,
     yStart=0,
     width=300,
     lineHeight,
-    getOffset
+    getOffset,
+    transform,
 }:ProtoUpdateLayoutsOptions)=>{
     let y=yStart;
     for(const node of nodes){
@@ -488,7 +499,7 @@ export const protoUpdateLayouts=(nodes:ProtoNode[],{
             node.renderData={};
         }
 
-        protoSetLayout(node,{
+        const layout:ProtoLayout={
             left:x,
             right:x+width,
             top:y,
@@ -496,7 +507,9 @@ export const protoUpdateLayouts=(nodes:ProtoNode[],{
             y:y+lineHeight/2,
             node,
             getOffset,
-        })
+        }
+
+        protoSetLayout(node,transform?transform(node,layout):layout)
 
         y+=lineHeight+(getSubstringCount(node.renderData.input??'','\n')*lineHeight)
     }

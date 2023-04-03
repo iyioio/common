@@ -1,5 +1,5 @@
-import { deepClone, DisposeCallback, getSubstringCount, Point, ReadonlySubject, shortUuid } from "@iyio/common";
-import { ProtoAddressMap, protoClearRevLinks, protoFlattenHierarchy, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownParseNodes, protoMarkdownRenderer, protoMergeNodes, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
+import { DisposeCallback, getSubstringCount, Point, ReadonlySubject, shortUuid } from "@iyio/common";
+import { protoAddChild, ProtoAddressMap, protoClearRevLinks, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownGetIndent, protoMarkdownParseNodes, protoMarkdownRenderer, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { dt } from "./lib-design-tokens";
 import { getElemProtoLayout } from "./protogen-ui-lib";
@@ -13,6 +13,7 @@ export class NodeCtrl
     public autoFocus:boolean=false;
     public autoFocusType:boolean=false;
 
+    private viewOnlyNodeParsingResult:ProtoParsingResult|null=null
     private nodeParsingResult:ProtoParsingResult;
     private readonly _node:BehaviorSubject<ProtoNode>;
     public get nodeSubject():ReadonlySubject<ProtoNode>{return this._node}
@@ -23,19 +24,19 @@ export class NodeCtrl
     public readonly viewElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
     public readonly codeElem:BehaviorSubject<HTMLElement|null>=new BehaviorSubject<HTMLElement|null>(null);
 
+    private readonly _viewOnlyCode:BehaviorSubject<string|null>=new BehaviorSubject<string|null>(null);
+    public get viewOnlyCodeSubject():ReadonlySubject<string|null>{return this._viewOnlyCode}
+    public get viewOnlyCode(){return this._viewOnlyCode.value}
+
     private readonly _layoutNodes:BehaviorSubject<ProtoLayout[]>=new BehaviorSubject<ProtoLayout[]>([]);
     public get layoutNodesSubject():ReadonlySubject<ProtoLayout[]>{return this._layoutNodes}
     public get layoutNodes(){return this._layoutNodes.value}
 
-    private codeChangeId=0;
-    private fullViewNodesParsingResult:ProtoParsingResult|null=null;
-    private fullViewNodes:ProtoNode[]|null=null;
     private lastLineCount=0;
     private removeResizeListener?:DisposeCallback;
 
     public constructor(node:ProtoNode,parent:ProtogenCtrl)
     {
-        //this.codeBackup=code;
         this.id=shortUuid();
         this.parent=parent;
         this._node=new BehaviorSubject<ProtoNode>(node);
@@ -51,10 +52,12 @@ export class NodeCtrl
             }
         })
         this.code.subscribe((code)=>{
-            this.codeChangeId++;
             const lineCount=getSubstringCount(code,'\n');
             const lc=this.lastLineCount;
             this.lastLineCount=lineCount;
+            if(this.viewOnlyNodeParsingResult){
+                this._updateViewMode();
+            }
             this.update(lc!==lineCount?0:700);
         })
         this.codeElem.subscribe(this.updateBound);
@@ -112,31 +115,30 @@ export class NodeCtrl
                 addressMap[node.address]=node;
             }
         }
-
-        if(this.fullViewNodesParsingResult){
-            for(const node of this.fullViewNodesParsingResult.allNodes){
-                if(!addressMap[node.address]){
-                    addressMap[node.address]=node;
-                }
-            }
-        }
     }
 
     public readonly setCodeBound=(code:string)=>this.code.next(code);
     public readonly updateBound=()=>this.update();
 
-    _updateViewMode()// todo
+    _updateViewMode(delay=0)
     {
-        this.codeChangeId++;
-        // const fullCode=this.getFullCode(this.lastViewMode);
-        // const viewMode=this.parent.viewMode;
+        if(this.parent.viewDepth===null){
+            this.viewOnlyNodeParsingResult=null;
+            this._viewOnlyCode.next(null);
+            return;
+        }
 
-        // const code=protoRenderLines(fullCode,viewMode);
+        const code=protoRenderLines({
+            nodes:this.nodeParsingResult.allNodes,
+            maxDepth:this.parent.viewDepth??0,
+            hideContent:true,
+            hideSpecial:true,
+        }).join('\n')
 
-        // this.lastViewMode=viewMode;
-        // this.codeBackup=fullCode;
-        // this.code.next(code);
-        // this.update(false);
+        this.viewOnlyNodeParsingResult=protoMarkdownParseNodes(code);
+        this._viewOnlyCode.next(code);
+
+        this.updateLayout(delay);
     }
 
     private _moveTo(point:Point){
@@ -170,6 +172,10 @@ export class NodeCtrl
         protoUpdateLinks(this.nodeParsingResult.allNodes,addressMap);
     }
 
+    private readonly getOffset=(layout:ProtoLayout):Point=>{
+        return this.pos.value;
+    };
+
     private lastLayoutUpdateId=0;
     public updateLayout(delay:number=0)
     {
@@ -186,23 +192,46 @@ export class NodeCtrl
 
     }
 
-    private readonly getOffset=(layout:ProtoLayout):Point=>{
-        return this.pos.value;
-    };
-
     public _updateLayout()
     {
 
-        protoUpdateLayouts(this.nodeParsingResult.allNodes,{
+        const nodes=this.nodeParsingResult.allNodes;
+        const viewOnly=this.viewOnlyNodeParsingResult;
+
+        if(viewOnly){
+            protoUpdateLayouts(viewOnly.allNodes,{
+                x:0,
+                yStart:dt().codeLineHeight+dt().codeVPadding,
+                width:this.viewElem.value?.clientWidth,
+                lineHeight:dt().codeLineHeight,
+                getOffset:this.getOffset
+            })
+        }
+
+        protoUpdateLayouts(nodes,{
             x:0,
             yStart:dt().codeLineHeight+dt().codeVPadding,
             width:this.viewElem.value?.clientWidth,
             lineHeight:dt().codeLineHeight,
-            getOffset:this.getOffset
+            getOffset:this.getOffset,
+            transform:viewOnly?(node,layout)=>(viewOnly.addressMap[node.address]?
+                (protoGetLayout(viewOnly.addressMap[node.address])??layout):
+                {
+                    ...layout,
+                    y:(
+                        dt().codeLineHeight*(viewOnly.allNodes.length)+
+                        dt().codeLineHeight/2+
+                        dt().codeVPadding
+                    ),
+                    disabled:true
+                }
+            ):undefined
         })
 
+
+
         const layouts:ProtoLayout[]=[];
-        for(const node of this.nodeParsingResult.allNodes){
+        for(const node of nodes){
             if(node.isContent || node.special){
                 continue;
             }
@@ -216,53 +245,14 @@ export class NodeCtrl
         this._layoutNodes.next(layouts);
 
         this.parent.lineCtrl.updateLines(this._node.value.address);
-
-        // todo
-        // const layouts:ProtoLayout[]=[];
-        // const rootLayout=protoGetLayout(this.node.value);
-        // if(rootLayout){
-        //     layouts.push(rootLayout);
-        // }
-
-        // const children=this.node.value.children??[];
-        // for(const child of children){
-        //     const layout=protoGetLayout(child);
-        //     if(layout){
-        //         layouts.push(layout);
-        //     }
-        // }
-
-        // this.nodeLayouts.next(layouts)
     }
 
-    private lastFullCode:string='';
-    private lastFullCodeId=-2;
-
     public getFullCode():string{
-        if(!this.fullViewNodes){
-            return this.code.value;
-        }
-        if(this.codeChangeId===this.lastFullCodeId){
-            return this.lastFullCode;
-        }
-        const dest=protoFlattenHierarchy(deepClone(this.nodeSubject.value,500));
-        protoMergeNodes(dest,this.fullViewNodes);
-        const fullCode=protoRenderLines({nodes:dest,renderer:protoMarkdownRenderer}).join('\n');
-        this.lastFullCodeId=this.codeChangeId;
-        this.lastFullCode=fullCode;
-        return fullCode;
+        return this.code.value;
     }
 
     public setFullCode(code:string){
-        if(this.parent.viewDepth===null){
-            this.code.next(code);
-        }else{
-            this.fullViewNodes=protoMarkdownParseNodes(code).allNodes;
-            this.code.next(protoRenderLines(
-                {nodes:this.fullViewNodes,maxDepth:this.parent.viewDepth,renderer:protoMarkdownRenderer}
-            ).join('\n'));
-
-        }
+        this.code.next(code);
     }
 
     private updateId=0;
@@ -331,17 +321,35 @@ export class NodeCtrl
             {rootNode:this._node.value,renderer:protoMarkdownRenderer}
         ).join('\n'))
     }
+    public addCodeAfterAddress(address:string,code:string,autoIndent?:boolean){
+        const index=this.nodeParsingResult.allNodes.findIndex(n=>n.address===address);
+        if(index===-1){
+            return false;
+        }
 
-    public addAttribute(childName:string,attName:string,value:string,hidden:boolean){
-        // todo
-        // const code=addMarkdownAttribute(
-        //     this.getFullCode(),
-        //     childName,
-        //     attName,
-        //     value,
-        //     hidden
-        // )
-        // this.setFullCode(code);
+        const lines=this.nodeParsingResult.allNodes.map(n=>(
+            n.renderData?.input??(protoMarkdownRenderer(n,n.renderData??{})).input)??''
+        );
+
+        if(autoIndent!==undefined){
+            const before=lines[index];
+            code=protoMarkdownGetIndent(before)+(/^\s*#/.test(before)?'':'  ')+code;
+        }
+
+        lines.splice(index+1,0,code);
+        const r=protoMarkdownParseNodes(lines.join('\n'));
+        this.setNode(r.rootNodes[0],r);
+        this.pushNodeToCode();
+    }
+
+    public addChildToAddress(address:string,child:ProtoNode){
+        const node=this.nodeParsingResult.addressMap[address];
+        if(!node){
+            return false;
+        }
+        protoAddChild(node,child);
+        this.pushNodeToCode();
+        return true;
     }
 
 }
