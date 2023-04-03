@@ -196,7 +196,12 @@ export class LineCtrl
 
                 line.updateId=updateId;
 
-                const dir=start.node && start.node===end.node?30:Math.min(dist/4,150);
+                const dir=(
+                    start.node &&
+                    end.node &&
+                    start.node.address.split('.',1)[0]===end.node.address.split('.',1)[0]?
+                    30:Math.min(dist/4,150)
+                );
                 const d=(
                     `M ${line.p1.x} ${line.p1.y
                     } C ${line.p1.x+(dir*dir1)} ${line.p1.y

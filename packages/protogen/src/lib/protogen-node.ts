@@ -27,7 +27,7 @@ export const protoAddChild=(parent:ProtoNode,child:ProtoNode)=>{
 
 }
 
-export const protoGetNodeParent=(node:ProtoNode):ProtoNode|undefined=>(node as any)[parentKey];
+export const protoGetNodeParent=(node:ProtoNode|null|undefined):ProtoNode|undefined=>(node as any)?.[parentKey];
 
 export const protoApplyParent=(node:ProtoNode)=>{
     if(!node.children){

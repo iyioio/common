@@ -43,7 +43,7 @@ export class NodeCtrl
         this.nodeParsingResult=protoParsingResultFromNode(node);
         this.code=new BehaviorSubject(protoRenderLines(
             {nodes:this.nodeParsingResult.allNodes,renderer:protoMarkdownRenderer}
-        ).join('\n'));
+        ).join('\n').trimEnd());
         this.pos=new BehaviorSubject<ProtoPosScale>(protoGetPosScale(node));
         combineLatest([this.viewElem,this.pos]).subscribe(([elem,pos])=>{
             if(elem){
