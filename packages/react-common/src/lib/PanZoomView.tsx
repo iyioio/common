@@ -11,12 +11,18 @@ export interface DragTarget{
     onMove?:(pt:Point,elem:HTMLElement)=>void;
 }
 
+/**
+ * Editor mode requires users use the middle button to pan and cmd + scroll wheel to zoom
+ */
+export type PanZoomMode='default'|'editor';
+
 export interface PanZoomViewProps
 {
     children?:any;
     minScale?:number;
     maxScale?:number;
     initState?:PanZoomState;
+    mode?:PanZoomMode;
     getCtrl?:(ctrl:PanZoomCtrl)=>void;
     /**
      * class names of elements to ignore touches from
@@ -41,6 +47,7 @@ export function PanZoomView({
     ignoreClasses,
     ignore,
     dragTargets,
+    mode='default'
 }:PanZoomViewProps){
 
 
@@ -70,6 +77,7 @@ export function PanZoomView({
     const stateRef=useRef({
         ctrl,
         isTouch:false,
+        mode,
         scale:initState?.scale??1,
         x:initState?.x??0,
         y:initState?.y??0,
@@ -82,6 +90,7 @@ export function PanZoomView({
         anchorPanT:null as {x:number,y:number}|null,
         anchorPanCount:null as number|null,
         mouseDown:false,
+        middleDown:false,
         lastWheelTime:0,
         wheelScale:1,
         wheelX:0,
@@ -95,19 +104,24 @@ export function PanZoomView({
 
         ignore,
         ignoreClasses,
-        dragTargets
+        dragTargets,
     })
+    stateRef.current.mode=mode;
     stateRef.current.ignore=ignore;
     stateRef.current.ignoreClasses=ignoreClasses;
     stateRef.current.dragTargets=dragTargets;
 
-    const onPoints=useCallback((points:TouchPoint[])=>{
+    const onPoints=useCallback((points:TouchPoint[], simTouch=false)=>{
         if(!plane){
             return;
         }
+
         const state=stateRef.current;
 
-        if(!state.dragTarget && (state.ignore || state.ignoreClasses)){
+        const editorDrag=!simTouch && state.mode==='editor' && state.middleDown;
+        const dragTargetOnly=!simTouch && state.mode==='editor' && !state.middleDown
+
+        if(!editorDrag && (!state.dragTarget && (state.ignore || state.ignoreClasses))){
             for(let i=0;i<points.length;i++){
                 if(matchHierarchy(points[i].target,state.ignoreClasses,state.ignore)){
                     if(state.dragTargets){
@@ -143,7 +157,7 @@ export function PanZoomView({
             return;
         }
 
-        if(state.dragTargets && !state.dragTarget && !state.anchorPanT && points.length){
+        if(state.dragTargets && !state.dragTarget && !state.anchorPanT && points.length && !editorDrag){
             for(const t of state.dragTargets){
                 let match=matchHierarchy(points[0].target,t.className,t.selector);
                 if(t.targetParentClass){
@@ -229,7 +243,7 @@ export function PanZoomView({
             if(state.dragTarget){
                 state.dragX=(x-state.anchorX)/state.scale+state.dragAnchorX;
                 state.dragY=(y-state.anchorY)/state.scale+state.dragAnchorY
-            }else{
+            }else if(!dragTargetOnly){
                 state.x=(state.anchorX??0)+x-state.anchorPanT.x;
                 state.y=(state.anchorY??0)+y-state.anchorPanT.y;
 
@@ -256,7 +270,7 @@ export function PanZoomView({
             state.dragTarget.dt.onMove?.({x:state.dragX,y:state.dragY},state.dragTarget.elem);
         }else{
             const pState=state.ctrl.state.value;
-            if(pState.x!==state.x || pState.y!==state.y || pState.scale!==state.scale){
+            if((pState.x!==state.x || pState.y!==state.y || pState.scale!==state.scale) && !dragTargetOnly){
                 state.ctrl.state.next({
                     x:state.x,
                     y:state.y,
@@ -286,7 +300,7 @@ export function PanZoomView({
                 }
             }
         }
-        onPoints(points);
+        onPoints(points,true);
     },[onPoints])
 
     const onMouseDown=useCallback((e:MouseEvent)=>{
@@ -295,6 +309,7 @@ export function PanZoomView({
             return;
         }
         state.mouseDown=true;
+        state.middleDown=e.button===1;
         onPoints([{
             target:e.target,
             identifier:-1,
@@ -328,19 +343,24 @@ export function PanZoomView({
 
     const onWheel=useCallback((e:WheelEvent)=>{
         const state=stateRef.current;
+        if(state.mouseDown){
+            return;
+        }
         const now=Date.now();
-        if(now-state.lastWheelTime>1000){
+
+        const xd=Math.abs(state.wheelX-e.clientX);
+        const yd=Math.abs(state.wheelY-e.clientY);
+        const eDiff=Math.sqrt(xd*xd+yd*yd);
+
+        if(now-state.lastWheelTime>1000 || (eDiff>20)){
             state.wheelScale=1;
             state.wheelX=e.clientX;
             state.wheelY=e.clientY;
+            onPoints([],true);
         }else{
-            const scaleUnit=100;
             const baseSize=1000;
-            state.wheelScale-=e.deltaY/scaleUnit;
-            if(state.wheelScale<0.1){
-                state.wheelScale=0.1;
-            }
-            const dist=baseSize*state.wheelScale;
+            state.wheelScale-=e.deltaY;
+            const dist=Math.max(baseSize*0.05,baseSize+state.wheelScale);
             onPoints([
                 {
                     target:document.body,
@@ -354,7 +374,7 @@ export function PanZoomView({
                     clientX:state.wheelX,
                     clientY:state.wheelY+dist/2
                 },
-            ])
+            ],true)
         }
         state.lastWheelTime=now;
     },[onPoints])
