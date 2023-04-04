@@ -94,6 +94,7 @@ export default function ProtogenView({
 
                 {enablePanZoom?
                     <PanZoomView
+                        mode="editor"
                         getCtrl={setPanZoom}
                         ignoreClasses="NodeView"
                         dragTargets={dragTargets}>
