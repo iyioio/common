@@ -285,6 +285,15 @@ export class NodeCtrl
 
         const code=this.code.value;
 
+        if(!code.trim()){
+            setTimeout(()=>{
+                if(!this._isDisposed && !this.code.value.trim()){
+                    this.dispose();
+                }
+            },1500)
+            return;
+        }
+
         const parsingResult=protoMarkdownParseNodes(code);
         const nodes=parsingResult.rootNodes;
         if(!nodes.length){
