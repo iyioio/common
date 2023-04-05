@@ -39,8 +39,12 @@ export default function NodeView({
                     <button
                         onClick={()=>{ctrl.selectAnchor(a,'left',node)}}
                         disabled={a.disabled}
-                        className={cn("NodeView-anchor left",{active:activeAnchor?.layout===a && activeAnchor.side==='left',disabled:a.disabled})}
-                            style={{
+                        className={cn("NodeView-anchor left",{
+                            active:activeAnchor?.layout===a && activeAnchor.side==='left',
+                            disabled:a.disabled,
+                            broken:a.broken,
+                        })}
+                        style={{
                             left:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.y-dt().anchorSize/2)+'px'
                         }}
@@ -48,8 +52,12 @@ export default function NodeView({
 
                     <button
                         onClick={()=>{ctrl.selectAnchor(a,'right',node)}}
-                        className={cn("NodeView-anchor right",{active:activeAnchor?.layout===a && activeAnchor.side==='right',disabled:a.disabled})}
                         disabled={a.disabled}
+                        className={cn("NodeView-anchor right",{
+                            active:activeAnchor?.layout===a && activeAnchor.side==='right',
+                            disabled:a.disabled,
+                            broken:a.broken,
+                        })}
                         style={{
                             right:(-dt().anchorSize/2)+anchorInset+'px',
                             top:(a.y-dt().anchorSize/2)+'px'
@@ -108,7 +116,10 @@ export default function NodeView({
                 }
                 .NodeView-anchor.disabled{
                     z-index:0;
-
+                }
+                .NodeView-anchor.broken{
+                    background:${dt().dangerColor};
+                    z-index:2;
                 }
             `}</style>
         </div>

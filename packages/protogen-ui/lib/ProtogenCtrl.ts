@@ -1,5 +1,5 @@
 import { delayAsync, ReadonlySubject, uuid } from "@iyio/common";
-import { ProtoAddressMap, ProtoLayout, protoMarkdownParseNodes, ProtoNode, ProtoPosScale } from "@iyio/protogen";
+import { ProtoAddressMap, protoGetNodeAtPath, ProtoLayout, protoMarkdownParseNodes, ProtoNode, ProtoPosScale } from "@iyio/protogen";
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
@@ -268,7 +268,7 @@ export class ProtogenCtrl
     }
 
     public getNodeByAddress(address:string):ProtoNode|null{
-        return this.addressMap[address]??null;
+        return protoGetNodeAtPath(address,this.addressMap)??null;
     }
 
     public createAddressMap():ProtoAddressMap

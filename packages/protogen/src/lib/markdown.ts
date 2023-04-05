@@ -100,7 +100,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                 const node:ProtoNode={
                     name,
                     address:name,
-                    ...types[0],
+                    type:types[0].type,
                     types,
                     value,
                     renderData:{
@@ -189,13 +189,12 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
 
 const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>{
 
-    const matches=value.matchAll(/(\(?)[ \t]*(\w+)[ \t]*(\)?)(\[[ \t]*\])?(\.(\w+))?[ \t]*([*?! \t]+)?/g);
+    const matches=value.matchAll(/(\(?)[ \t]*([\w.-]+)(\)?)(\[[ \t]*\])?[ \t]*([*?! \t]+)?/g);
     const tagOpenI=1;
     const nameI=2;
     const tagCloseI=3;
     const arrayI=4;
-    const propNameI=6;
-    const flagsI=7;
+    const flagsI=6;
 
 
     const types:ProtoTypeInfo[]=[];
@@ -217,11 +216,13 @@ const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>
             continue;
         }
 
+        const path=match[nameI].split('.');
+        const name=path[0];
+
         const type:ProtoTypeInfo={
-            type:match[nameI]
-        }
-        if(match[propNameI]){
-            type.refProp=match[propNameI];
+            type:name,
+            isRefType:/[A-Z]/.test(name.charAt(0)),
+            path,
         }
         types.push(type);
         if(match[arrayI]){
@@ -243,7 +244,7 @@ const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>
     }
 
     if(!types.length){
-        types.push({type:''})
+        types.push({type:'',path:[]})
     }
 
     return {types,tags};

@@ -1,6 +1,7 @@
 import { getDistanceBetweenPoints, Point } from "@iyio/common";
-import { protoGetLayout, ProtoLink } from "@iyio/protogen";
+import { protoGetLayout, protoGetNodeCtrl, ProtoLink, ProtoNode } from "@iyio/protogen";
 import { dt } from "./lib-design-tokens";
+import { NodeCtrl } from "./NodeCtrl";
 import { ProtoUiLine } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
 
@@ -55,12 +56,17 @@ export class LineCtrl
     {
         const group=this._lineGroup;
         const groupLow=this._lineGroupLow;
+
         if(!group || !groupLow){
             return;
         }
         const updateId=++this.lineUpdateId;
 
         const addressMap=this.parent.addressMap;
+
+        const updateNodeLayout=(node:ProtoNode)=>{
+            (protoGetNodeCtrl(node) as NodeCtrl|undefined)?.updateLayout(50);
+        }
 
         for(const fromAddress in addressMap){
             const fromNode=addressMap[fromAddress];
@@ -76,8 +82,17 @@ export class LineCtrl
 
                 const toNode=this.parent.getNodeByAddress(link.address);
                 if(!toNode){
+                    if(!link.broken){
+                        updateNodeLayout(fromNode);
+                    }
+                    link.broken=true;
                     continue;
                 }
+                if(link.broken){
+                    delete link.broken;
+                    updateNodeLayout(fromNode);
+                }
+                const toAddress=toNode.address;
 
                 const end=protoGetLayout(toNode);
                 const start=protoGetLayout(fromNode);
@@ -85,14 +100,14 @@ export class LineCtrl
                     continue;
                 }
 
-                let line=this.getLine(updateId,fromAddress,link.address);
+                let line=this.getLine(updateId,fromAddress,toAddress);
                 const lineColor=getLinkColor(link);
                 const low=link.low??false;
 
                 if(!line){
                     line={
                         fromAddress,
-                        toAddress:link.address,
+                        toAddress,
                         updateId,
                         elem:document.createElementNS("http://www.w3.org/2000/svg", "path"),
                         elem2:document.createElementNS("http://www.w3.org/2000/svg", "path"),

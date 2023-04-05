@@ -1,6 +1,6 @@
 import { deleteUndefined, getSubstringCount, Point, safeParseNumber } from "@iyio/common";
 import { protoSetLayout } from "./protogen-lib";
-import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale } from "./protogen-types";
+import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale, ProtoTypeInfo } from "./protogen-types";
 
 const parentKey=Symbol('ProtoNodeParent');
 
@@ -53,7 +53,7 @@ export const protoCreateEmptyNode=(name:string,type:string,value?:string):ProtoN
         name,
         address:name,
         type,
-        types:[{type}]
+        types:[{type,path:[]}]
     }
     if(value!==undefined){
         node.value=value;
@@ -245,8 +245,6 @@ export const protoUpdateLinks=(nodes:ProtoNode[],addressMap:ProtoAddressMap)=>{
                         low:true,
                         src:link.src
                     })
-                }else{
-                    link.broken=true;
                 }
             }
         }
@@ -277,8 +275,8 @@ export const protoAddAutoLinks=(node:ProtoNode)=>{
             return;
         }
         const pri=refType.flags?.includes('*');
-        if(refType && refType.type.charAt(0).toUpperCase()===refType.type.charAt(0) && !node.links?.length){
-            const address=refType.type+(refType.refProp?'.'+refType.refProp:'');
+        if(refType && refType.isRefType && !node.links?.length){
+            const address=refType.path.join('.');
             protoAddLink(node,{
                 name:address,
                 address:address,
@@ -286,6 +284,58 @@ export const protoAddAutoLinks=(node:ProtoNode)=>{
             })
         }
     }
+}
+
+export const protoGetTypeRef=(type:ProtoTypeInfo,addressMap:ProtoAddressMap):ProtoNode|undefined=>{
+    if(!type?.isRefType){
+        return undefined;
+    }
+    if(!type.path){
+        return addressMap[type.type];
+    }
+    return protoGetNodeAtPath(type.path,addressMap);
+}
+
+export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap):ProtoNode|undefined=>{
+    if(typeof path === 'string'){
+        if(!path.includes('.')){
+            return addressMap[path];
+        }
+        path=path.split('.');
+    }
+    if(!path?.length){
+        return undefined;
+    }
+    let node:ProtoNode|undefined=addressMap[path[0]];
+
+    for(let i=1;i<path.length;i++){
+
+        if(!node){
+            return undefined;
+        }
+
+        const key=path[i];
+
+        let jmp=false;
+        for(const type of node.types){
+            if(!type.isRefType){
+                continue;
+            }
+            const refType:ProtoNode|undefined=addressMap[type.type];
+            const refNode:ProtoNode|undefined=refType?.children?.[key];
+            if(refNode){
+                node=refNode;
+                jmp=true;
+                break;
+            }
+        }
+        if(jmp){
+            continue;
+        }
+
+        node=node?.children?.[key];
+    }
+    return node;
 }
 
 
@@ -448,7 +498,7 @@ export const protoSetPosScale=(node:ProtoNode,posScale:ProtoPosScale)=>{
             address:'$layout',
             name:'$layout',
             type:'',
-            types:[{type:''}],
+            types:[{type:'',path:[]}],
             value
         }
         protoAddChild(node,layout);
@@ -507,6 +557,7 @@ export const protoUpdateLayouts=(nodes:ProtoNode[],{
             y:y+lineHeight/2,
             node,
             getOffset,
+            broken:node.links?.some(l=>l.broken)
         }
 
         protoSetLayout(node,transform?transform(node,layout):layout)
@@ -533,5 +584,29 @@ export const protoClearRevLinks=(nodes:ProtoNode[])=>{
             delete node.links;
         }
 
+    }
+}
+
+
+const nodeCtrlKey=Symbol('nodeCtrlKey');
+
+export const protoGetNodeCtrl=(node:ProtoNode|null|undefined):any=>{
+    while(node){
+        const ctrl=(node as any)[nodeCtrlKey];
+        if(ctrl){
+            return ctrl;
+        }
+        node=protoGetNodeParent(node);
+    }
+    return undefined;
+}
+
+export const protoSetNodeCtrl=(node:ProtoNode,ctrl:any)=>{
+    if(node){
+        if(ctrl){
+            (node as any)[nodeCtrlKey]=ctrl;
+        }else{
+            delete (node as any)[nodeCtrlKey];
+        }
     }
 }

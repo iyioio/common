@@ -6,7 +6,8 @@ export interface ProtoTypeInfo
     type:string;
     isArray?:boolean;
     flags?:string[];
-    refProp?:string;
+    path:string[];
+    isRefType?:boolean;
 }
 
 export type ProtoChildren={[name:string]:ProtoNode}
@@ -19,7 +20,6 @@ export interface ProtoNodeRenderData
     depth?:number;
     before?:string;
 }
-
 
 export interface ProtoLink
 {
@@ -47,9 +47,11 @@ export interface ProtoLink
     broken?:boolean;
 }
 
-export interface ProtoNode extends ProtoTypeInfo{
+export interface ProtoNode{
 
     name:string;
+
+    type:string;
 
     /**
      * The reference or secondary type of the node. The second type in types.
@@ -165,6 +167,7 @@ export interface ProtoLayout
     bottom:number;
     y:number;
     disabled?:boolean;
+    broken?:boolean;
     node?:ProtoNode;
     getOffset?:(layout:ProtoLayout)=>Point;
     altNode?:ProtoNode;

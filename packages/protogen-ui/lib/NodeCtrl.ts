@@ -1,5 +1,5 @@
 import { DisposeCallback, getSubstringCount, Point, ReadonlySubject, shortUuid } from "@iyio/common";
-import { protoAddChild, ProtoAddressMap, protoClearRevLinks, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownGetIndent, protoMarkdownParseNodes, protoMarkdownRenderer, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
+import { protoAddChild, ProtoAddressMap, protoClearRevLinks, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownGetIndent, protoMarkdownParseNodes, protoMarkdownRenderer, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetNodeCtrl, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { dt } from "./lib-design-tokens";
 import { getElemProtoLayout } from "./protogen-ui-lib";
@@ -105,6 +105,9 @@ export class NodeCtrl
     private setNode(node:ProtoNode,parsingResult:ProtoParsingResult)
     {
         this.nodeParsingResult=parsingResult;
+        for(const node of parsingResult.rootNodes){
+            protoSetNodeCtrl(node,this);
+        }
         this._node.next(node);
     }
 
@@ -192,7 +195,7 @@ export class NodeCtrl
 
     }
 
-    public _updateLayout()
+    private _updateLayout()
     {
 
         const nodes=this.nodeParsingResult.allNodes;
