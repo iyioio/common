@@ -80,7 +80,7 @@ export class LineCtrl
                     continue;
                 }
 
-                const toNode=this.parent.getNodeByAddress(link.address);
+                const toNode=this.parent.getNodeByAddress(link.address,fromNode);
                 if(!toNode){
                     if(!link.broken){
                         updateNodeLayout(fromNode);

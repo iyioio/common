@@ -200,7 +200,7 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
             node.renderData.before=lastNode?.address
         }
         if(srcLink && parent && node.name==='$src' && node.value){
-            const address=getLinkAddress(node,node.value)
+            const address=node.value;
             parent.sourceAddress=address;
             parent.sourceLinked=addressMap[address]?true:false;
             protoAddLink(parent,{
@@ -212,7 +212,7 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
         }
 
         if(parent && node.name==='$link' && node.value){
-            const address=getLinkAddress(node,node.value)
+            const address=node.value;
             protoAddLink(parent,{
                 name:address,
                 address,
@@ -251,22 +251,6 @@ export const protoUpdateLinks=(nodes:ProtoNode[],addressMap:ProtoAddressMap)=>{
     }
 }
 
-const getDecProp=(node:ProtoNode,propName:string):ProtoNode|null=>{
-
-    const parent=protoGetNodeParent(node);
-    if(!parent?.children){
-        return null;
-    }
-
-    const match=parent.children[propName];
-    if(match){
-        return match;
-    }
-
-    return getDecProp(parent,propName);
-
-}
-
 export const protoAddAutoLinks=(node:ProtoNode)=>{
 
     if(node.name!==node.type && node.types.length){
@@ -296,8 +280,12 @@ export const protoGetTypeRef=(type:ProtoTypeInfo,addressMap:ProtoAddressMap):Pro
     return protoGetNodeAtPath(type.path,addressMap);
 }
 
-export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap):ProtoNode|undefined=>{
+export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap,relative?:ProtoNode):ProtoNode|undefined=>{
+
     if(typeof path === 'string'){
+        if(!path){
+            return undefined;
+        }
         if(!path.includes('.')){
             return addressMap[path];
         }
@@ -305,6 +293,12 @@ export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap
     }
     if(!path?.length){
         return undefined;
+    }
+    if(!path[0] && relative){
+        const p=protoGetNodeParent(relative);
+        if(p){
+            path[0]=p.address;
+        }
     }
     let node:ProtoNode|undefined=addressMap[path[0]];
 
@@ -356,20 +350,6 @@ export const protoAddLink=(node:ProtoNode,link:ProtoLink,allowDuplicates=false):
     }
     node.links.push(link);
     return true;
-}
-
-const getLinkAddress=(node:ProtoNode,value:string)=>{
-    const match=/^\.(\$?\w+)(.*)/.exec(value);
-    if(match){
-        const prop=getDecProp(node,match[1]);
-        if(prop){
-            return prop.type+match[2];
-        }else{
-            return value;
-        }
-    }else{
-        return value;
-    }
 }
 
 export const protoChildrenToArray=(children:ProtoChildren|null|undefined):ProtoNode[]=>{

@@ -267,8 +267,8 @@ export class ProtogenCtrl
         this._addressMap=null;
     }
 
-    public getNodeByAddress(address:string):ProtoNode|null{
-        return protoGetNodeAtPath(address,this.addressMap)??null;
+    public getNodeByAddress(address:string,relative?:ProtoNode):ProtoNode|null{
+        return protoGetNodeAtPath(address,this.addressMap,relative)??null;
     }
 
     public createAddressMap():ProtoAddressMap
