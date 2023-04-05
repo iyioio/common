@@ -218,15 +218,15 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
     }
 }
 
-const customBuiltIns=['StringMap','NumberMap','BooleanMap','DateMap','BigIntMap'] as const;
+const customBuiltIns=['stringMap','numberMap','booleanMap','dateMap','bigIntMap'] as const;
 type CustomBuiltInsType=typeof customBuiltIns[number];
 const getRealCustomType=(type:CustomBuiltInsType)=>{
     switch(type){
-        case 'StringMap': return 'z.record(z.string())';
-        case 'NumberMap': return 'z.record(z.number())';
-        case 'BooleanMap': return 'z.record(z.boolean())';
-        case 'DateMap': return 'z.record(z.date())';
-        case 'BigIntMap': return 'z.record(z.bigint())';
+        case 'stringMap': return 'z.record(z.string())';
+        case 'numberMap': return 'z.record(z.number())';
+        case 'booleanMap': return 'z.record(z.boolean())';
+        case 'dateMap': return 'z.record(z.date())';
+        case 'bigIntMap': return 'z.record(z.bigint())';
         default: return null;
     }
 }
