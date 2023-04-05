@@ -1,6 +1,7 @@
-import { Point } from "@iyio/common";
+import { css, Point } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState, WheelEvent } from "react";
 import { BehaviorSubject } from "rxjs";
+import Style from "styled-jsx/style";
 
 export interface DragTarget{
     selector?:(elem:Element)=>boolean;
@@ -464,7 +465,7 @@ export function PanZoomView({
 
                 <div ref={setDragCover} className="PanZoomView-dragCover"/>
 
-                <style global jsx>{`
+                <Style id="iyio-PanZoomView-SNyz9F0LKoBIjqY6DAXi" global jsx>{css`
                     .PanZoomView{
                         position:absolute;
                         left:0;
@@ -492,7 +493,7 @@ export function PanZoomView({
                         cursor:move;
                         background:transparent;
                     }
-                `}</style>
+                `}</Style>
             </div>
         </PanZoomContext.Provider>
     )
