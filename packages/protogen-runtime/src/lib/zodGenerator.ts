@@ -3,6 +3,9 @@ import { protoChildrenToArray, ProtoContext, ProtoNode } from "@iyio/protogen";
 
 const typeMap:HashMap<string>={
     'int':'number',
+    'time':'number',
+    'float':'number',
+    'double':'number',
     '':'null'
 };
 const numTypes=['number','bigint'];
@@ -160,7 +163,9 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                         prop.name
                     }:z.lazy(()=>${
                         getFullName(propType)
-                    })${getFormatCalls(prop,propType)}${
+                    })${
+                        prop.types[0]?.isArray?'.array()':''
+                    }${getFormatCalls(prop,propType)}${
                         prop.optional?'.optional()':''
                     },`
                 );
@@ -181,7 +186,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                 }:${
                     customType||`z.${propType}()${getFormatCalls(prop,propType)}`
                 }${
-                    prop.isArray?'.array()':''
+                    prop.types[0]?.isArray?'.array()':''
                 }${
                     prop.optional?'.optional()':''
                 },`
@@ -269,6 +274,10 @@ const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
     }
 
     const attChildren=prop.children??{};
+
+    if(attChildren['zod']?.value){
+        call+='.'+attChildren['zod'].value;
+    }
 
     let noAutoLength=attChildren['email']?true:false;
 
