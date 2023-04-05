@@ -49,6 +49,26 @@ export interface ProtoUiLine{
     low:boolean;
 }
 
+
+export interface ProtoUiLengthStyle
+{
+    min:number;
+    max:number;
+    minOpacity:number;
+}
+
+export const getDistanceOpacity=(length:number,style:ProtoUiLengthStyle):number=>{
+    if(length<=style.min){
+        return 1;
+    }else if(length>=style.max){
+        return style.minOpacity;
+    }else{
+        length-=style.min;
+        const max=style.max-style.min;
+        return style.minOpacity+ ((max-length)/max)*(1-style.minOpacity);
+    }
+}
+
 export interface ProtoAnchor
 {
     side:'left'|'right';

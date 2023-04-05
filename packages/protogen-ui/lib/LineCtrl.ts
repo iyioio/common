@@ -2,7 +2,7 @@ import { getDistanceBetweenPoints, Point } from "@iyio/common";
 import { protoGetLayout, protoGetNodeCtrl, ProtoLink, ProtoNode } from "@iyio/protogen";
 import { dt } from "./lib-design-tokens";
 import { NodeCtrl } from "./NodeCtrl";
-import { ProtoUiLine } from "./protogen-ui-lib";
+import { getDistanceOpacity, ProtoUiLine } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
 
 export class LineCtrl
@@ -208,6 +208,10 @@ export class LineCtrl
                     dir1=1;
                     dir2=1;
                 }
+
+                const distOpacity=getDistanceOpacity(dist,this.parent.lineDistances);
+                line.elem.setAttribute('opacity',distOpacity.toString());
+                line.elem2.setAttribute('opacity',distOpacity.toString());
 
                 line.updateId=updateId;
 

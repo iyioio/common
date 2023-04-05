@@ -3,7 +3,7 @@ import { ProtoAddressMap, protoGetNodeAtPath, ProtoLayout, protoMarkdownParseNod
 import { BehaviorSubject } from "rxjs";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
-import { ProtoAnchor, SaveRequest } from "./protogen-ui-lib";
+import { ProtoAnchor, ProtoUiLengthStyle, SaveRequest } from "./protogen-ui-lib";
 import { ProtoKeyListener } from "./ProtoKeyListener";
 
 export class ProtogenCtrl
@@ -38,6 +38,21 @@ export class ProtogenCtrl
     private readonly _apiOutput:BehaviorSubject<string>=new BehaviorSubject<string>('');
     public get apiOutputSubject():ReadonlySubject<string>{return this._apiOutput}
     public get apiOutput(){return this._apiOutput.value}
+
+    private readonly _lineDistances:BehaviorSubject<ProtoUiLengthStyle>=new BehaviorSubject<ProtoUiLengthStyle>({
+        min:1000,
+        max:3000,
+        minOpacity:0.2,
+    });
+    public get lineDistancesSubject():ReadonlySubject<ProtoUiLengthStyle>{return this._lineDistances}
+    public get lineDistances(){return this._lineDistances.value}
+    public set lineDistances(value:ProtoUiLengthStyle){
+        if(value==this._lineDistances.value){
+            return;
+        }
+        this._lineDistances.next(value);
+        this.lineCtrl.updateLines();
+    }
 
     public constructor(code?:string)
     {
