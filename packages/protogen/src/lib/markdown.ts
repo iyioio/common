@@ -194,7 +194,7 @@ const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>
     const nameI=2;
     const tagCloseI=3;
     const arrayI=4;
-    const flagsI=6;
+    const flagsI=5;
 
 
     const types:ProtoTypeInfo[]=[];
