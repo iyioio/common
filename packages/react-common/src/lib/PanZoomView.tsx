@@ -1,5 +1,5 @@
-import { css, Point } from "@iyio/common";
-import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState, WheelEvent } from "react";
+import { css, isDomNodeDescendantOf, Point } from "@iyio/common";
+import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
 import Style from "styled-jsx/style";
 
@@ -51,6 +51,7 @@ export function PanZoomView({
     mode='default'
 }:PanZoomViewProps){
 
+    const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
 
     const initRef=useRef(initState);
 
@@ -93,12 +94,7 @@ export function PanZoomView({
         mouseDown:false,
         dragDown:false,
         dragKeyDown:false,
-        cmdCtrlDown:false,
-        lastWheelTime:0,
         lastMiddleUp:0,
-        wheelScale:1,
-        wheelX:0,
-        wheelY:0,
 
         dragTarget:null as {elem:HTMLElement,dt:DragTarget}|null,
         dragX:0,
@@ -353,62 +349,83 @@ export function PanZoomView({
         onPoints([])
     },[onPoints]);
 
-    const onWheel=useCallback((e:WheelEvent)=>{
-        const state=stateRef.current;
-        if(state.mouseDown || e.button===1){
+    useEffect(()=>{
+
+        if(!rootElem){
             return;
         }
 
-        if(state.mode==='default' || state.cmdCtrlDown){
+        const listener=(e:WheelEvent)=>{
 
-            const now=Date.now();
-
-            const xd=Math.abs(state.wheelX-e.clientX);
-            const yd=Math.abs(state.wheelY-e.clientY);
-            const eDiff=Math.sqrt(xd*xd+yd*yd);
-
-            if(now-state.lastWheelTime>1000 || (eDiff>20)){
-                state.wheelScale=1;
-                state.wheelX=e.clientX;
-                state.wheelY=e.clientY;
-                onPoints([],true);
-            }else{
-                const baseSize=700;
-                state.wheelScale-=e.deltaY;
-                const dist=Math.max(baseSize*0.05,baseSize+state.wheelScale);
-                onPoints([
-                    {
-                        target:document.body,
-                        identifier:-1,
-                        clientX:state.wheelX,
-                        clientY:state.wheelY-dist/2
-                    },
-                    {
-                        target:document.body,
-                        identifier:-2,
-                        clientX:state.wheelX,
-                        clientY:state.wheelY+dist/2
-                    },
-                ],true)
+            if(!isDomNodeDescendantOf(e.target as any,rootElem,true)){
+                return;
             }
-            state.lastWheelTime=now;
-        }else if(Date.now()-state.lastMiddleUp>200){
-            onPoints([],true);
-            onPoints([{
-                target:document.body,
-                identifier:-1,
-                clientX:0,
-                clientY:0
-            }],true);
-            onPoints([{
-                target:document.body,
-                identifier:-1,
-                clientX:-e.deltaX,
-                clientY:-e.deltaY
-            }],true);
-            onPoints([],true);
+
+            e.preventDefault();
+            const state=stateRef.current;
+            if(state.mouseDown || e.button===1){
+                return;
+            }
+
+            const ctrl=e.metaKey || e.ctrlKey;
+
+            if(state.mode==='default' || ctrl){
+
+                const startDiff=300;
+                const delta=-e.deltaY;
+
+                onPoints([],true);
+                onPoints([{
+                    target:document.body,
+                    identifier:-1,
+                    clientX:e.clientX,
+                    clientY:e.clientY-startDiff
+                },{
+                    target:document.body,
+                    identifier:-2,
+                    clientX:e.clientX,
+                    clientY:e.clientY+startDiff
+                }],true);
+                onPoints([{
+                    target:document.body,
+                    identifier:-1,
+                    clientX:e.clientX,
+                    clientY:e.clientY-startDiff-delta
+                },{
+                    target:document.body,
+                    identifier:-2,
+                    clientX:e.clientX,
+                    clientY:e.clientY+startDiff+delta
+                }],true);
+                onPoints([],true);
+
+            }else if(Date.now()-state.lastMiddleUp>200){
+
+                onPoints([],true);
+                onPoints([{
+                    target:document.body,
+                    identifier:-1,
+                    clientX:0,
+                    clientY:0
+                }],true);
+                onPoints([{
+                    target:document.body,
+                    identifier:-1,
+                    clientX:-e.deltaX,
+                    clientY:-e.deltaY
+                }],true);
+                onPoints([],true);
+            }
         }
-    },[onPoints])
+
+        window.addEventListener('wheel',listener,{passive:false});
+
+        return ()=>{
+            window.removeEventListener('wheel',listener)
+        }
+
+
+    },[onPoints,rootElem]);
 
 
     const [dragCover,setDragCover]=useState<HTMLElement|null>(null);
@@ -424,7 +441,6 @@ export function PanZoomView({
                 state.dragKeyDown=true;
                 dragCover.style.display='block';
             }
-            state.cmdCtrlDown=e.metaKey || e.ctrlKey;
         }
 
         const onKeyUp=(e:KeyboardEvent)=>{
@@ -432,7 +448,6 @@ export function PanZoomView({
                 state.dragKeyDown=false;
                 dragCover.style.display='none';
             }
-            state.cmdCtrlDown=e.metaKey || e.ctrlKey;
         }
 
         window.addEventListener('keydown',onKeyDown);
@@ -447,6 +462,7 @@ export function PanZoomView({
     return (
         <PanZoomContext.Provider value={ctrl}>
             <div
+                ref={setRootElem}
                 className="PanZoomView"
                 onTouchStart={onTouch}
                 onTouchMove={onTouch}
@@ -456,7 +472,6 @@ export function PanZoomView({
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
-                onWheel={onWheel}
             >
 
                 <div className="PanZoomView-plane" ref={setPlane}>
