@@ -196,6 +196,23 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
 
         const parent=protoGetNodeParent(node);
 
+        for(const type of node.types){
+            if(type.source){
+                const address=type.path.join('.');
+                node.sourceAddress=address;
+                node.sourceLinked=addressMap[address]?true:false;
+                protoAddLink(node,{
+                    name:address,
+                    address,
+                    low:true,
+                    src:true,
+                })
+            }
+            if(type.copySource){
+                node.copySource=true;
+            }
+        }
+
         if(updateBefore && node.renderData && lastNode){
             node.renderData.before=lastNode?.address
         }
@@ -254,18 +271,17 @@ export const protoUpdateLinks=(nodes:ProtoNode[],addressMap:ProtoAddressMap)=>{
 export const protoAddAutoLinks=(node:ProtoNode)=>{
 
     if(node.name!==node.type && node.types.length){
-        const refType=node.types[node.types.length-1];
-        if(!refType.type){
-            return;
-        }
-        const pri=refType.flags?.includes('*');
-        if(refType && refType.isRefType && !node.links?.length){
-            const address=refType.path.join('.');
-            protoAddLink(node,{
-                name:address,
-                address:address,
-                low:!pri
-            })
+        for(const type of node.types){
+            if(!type.type || type.less || !type.isRefType){
+                continue;
+            }
+            const pri=type.important;
+                const address=type.path.join('.');
+                protoAddLink(node,{
+                    name:address,
+                    address:address,
+                    low:!pri
+                })
         }
     }
 }

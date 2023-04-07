@@ -45,6 +45,8 @@ export const runProtogenCliAsync=async ({
                 values.push(v);
                 i++;
             }
+        }else if(a.startsWith('#')){
+            break;
         }else{
             let values=args[tgenCliFlags.input];
             if(!values){

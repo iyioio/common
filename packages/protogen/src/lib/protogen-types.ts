@@ -5,9 +5,15 @@ export interface ProtoTypeInfo
 {
     type:string;
     isArray?:boolean;
-    flags?:string[];
     path:string[];
     isRefType?:boolean;
+    important?:boolean;
+    source?:boolean;
+    copySource?:boolean;
+    question?:boolean;
+    hash?:boolean;
+    ex?:boolean;
+    less?:boolean;
 }
 
 export type ProtoChildren={[name:string]:ProtoNode}
@@ -94,6 +100,11 @@ export interface ProtoNode{
     sourceAddress?:string;
 
     sourceLinked?:boolean;
+
+    /**
+     * If true the value from the source of the node should be copied to the node
+     */
+    copySource?:boolean;
 }
 
 export interface ProtoOutput

@@ -50,42 +50,50 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
     ],
     end:/$/
   };
+  const PROP_FLAG:Mode={
+    scope:'doctag',
+    match:/[@>#~*?!]/
+  }
+  const propContains=[TAG,PROP_FLAG];
   const PROP_LIST:Mode = {
-    scope:{
+    beginScope:{
         1:'type',
-        2:'type'
     },
-    match:[
-        '^-\\s+',
-        '[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    begin:[
+        /^-\s+\w[-\w]*/,
+        /\??:/
     ],
+    end:'\n',
+    contains:propContains,
+
   };
   const SUB_PROP_LIST:Mode = {
-    scope:{
+    beginScope:{
         1:'attr',
-        2:'attr'
     },
-    match:[
-        '^[ \t]+-\\s+',
-        '[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    begin:[
+        /^[ \t]+-\s+\w[-\w]*/,
+        /\??:/
     ],
+    end:'\n',
+    contains:propContains,
   };
   const SPECIAL_PROP_LIST:Mode = {
-    scope:{
+    beginScope:{
         1:'operator',
-        2:'operator'
     },
-    match:[
-        '^[ \t]*-\\s+',
-        '\\$[\\w]+(?=(\\?)?\\s*(:\\s*|\\s*$))'
+    begin:[
+        /^[ \t]*-\s+\$\w[-\w]*/,
+        /\??:/
     ],
+    end:'\n',
+    contains:propContains,
   };
   const LIST:Mode = {
     scope: 'bullet',
     begin: '^[ \t]*([*+-]|(\\d+\\.))(?=\\s+)',
     end: '\\s+',
     excludeEnd: true,
-    contains:[PROP_LIST]
 
   };
   const LINK_REFERENCE:Mode = {
@@ -187,7 +195,7 @@ export const pMarkdown:LanguageFn=(hljs:HLJSApi):Language=>{
     variants: [
       {
         begin: /\*(?![*\s])/,
-        end: /\*/
+        end: /\*/,
       },
       {
         begin: /_(?![_\s])/,

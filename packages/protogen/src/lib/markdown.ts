@@ -1,12 +1,13 @@
 import { protoAddChild, protoCreateEmptyNode, protoCreateNodeAddressMap, protoEnsureUniqueAddress, protoNormalizeNodes, ProtoNormalizeNodesOptions } from "./protogen-node";
 import { ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoTypeInfo } from "./protogen-types";
 
-const lineReg=/^([ \t]*)(#+|-)[ \t]+(\$?\w+)(\??)[ \t]*:?[ \t]*(.*)(?=\n|$)/;
+const lineReg=/^([ \t]*)(#+|-)[ \t]+(\$?\w[\w-]*)(\??)(:)?[ \t]*(.*)(?=\n|$)/;
 const lineRegSpace=1;
 const lineRegMarkdownType=2;
 const lineRegName=3;
 const lineRegOptional=4;
-const lineRegRest=5;
+const lineCol=5;
+const lineRegRest=6;
 
 const codeReg=/[ \t]*```/;
 
@@ -88,7 +89,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
             }
         }else{
             const match=lineReg.exec(line);
-            if(match){
+            if(match && (match[lineCol] || match[lineRegMarkdownType].startsWith('#'))){
 
                 const mdType=match[lineRegMarkdownType];
                 const depth=getDepth(match[lineRegSpace],mdType);
@@ -96,7 +97,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
 
                 const name=match[lineRegName];
                 const value=match[lineRegRest];
-                const {types,tags}=parseTypesAndFlags(value);
+                const {types,tags}=parseTypesAndFlags(rootNodes[rootNodes.length-1]??null,value);
                 const node:ProtoNode={
                     name,
                     address:name,
@@ -152,7 +153,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
 
                     // check for tags
                     if(/^[ \t]*-[ \t]+\([ \t]*(\w+)[ \t]*\)/.test(line)){
-                        const {tags}=parseTypesAndFlags(line);
+                        const {tags}=parseTypesAndFlags(rootNodes[rootNodes.length-1]??null,line);
                         if(tags){
                             for(const t of tags){
                                 if(!currentNode.tags){
@@ -187,20 +188,24 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
 
 }
 
-const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>{
+const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
+    types:ProtoTypeInfo[],
+    tags?:string[],
+}=>{
 
-    const matches=value.matchAll(/(\(?)[ \t]*([\w.-]+)(\)?)(\[[ \t]*\])?[ \t]*([*?! \t]+)?/g);
-    const tagOpenI=1;
-    const nameI=2;
-    const tagCloseI=3;
-    const arrayI=4;
-    const flagsI=5;
+    const matches=value.matchAll(/([@>#~*?! \t]+)?(\(?)[ \t]*([\w.\-[\]]+)(\)?)/g);
+    const flagsI=1;
+    const tagOpenI=2;
+    const nameI=3;
+    const tagCloseI=4;
 
 
     const types:ProtoTypeInfo[]=[];
     let tags:string[]|undefined;
 
     for(const match of matches){
+
+        const nameMatch=match[nameI];
 
         if(match[tagOpenI]){
             if(!match[tagCloseI]){
@@ -209,14 +214,24 @@ const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>
             if(!tags){
                 tags=[];
             }
-            if(!tags.includes(match[nameI])){
-                tags.push(match[nameI])
+            if(!tags.includes(nameMatch)){
+                tags.push(nameMatch)
             }
 
             continue;
         }
 
-        const path=match[nameI].split('.');
+        const path=nameMatch.split('.');
+        const isArray=path[0].includes('[]');
+        for(let i=0;i<path.length;i++){
+            if(path[i].includes('[]')){
+                path[i]=path[i].replace(/\[\]/g,'');
+            }
+        }
+
+        if(!path[0] && rootNode){
+            path[0]=rootNode.name;
+        }
         const name=path[0];
 
         const type:ProtoTypeInfo={
@@ -225,20 +240,31 @@ const parseTypesAndFlags=(value:string):{types:ProtoTypeInfo[],tags?:string[]}=>
             path,
         }
         types.push(type);
-        if(match[arrayI]){
+        if(isArray){
             type.isArray=true;
         }
         const flags=match[flagsI];
         if(flags){
-            for(const f of flags){
-                if(!/\s/.test(f)){
-                    if(!type.flags){
-                        type.flags=[];
-                    }
-                    if(!type.flags.includes(f)){
-                        type.flags.push(f);
-                    }
-                }
+            if(flags.includes('*')){
+                type.important=true;
+            }
+            if(flags.includes('>')){
+                type.source=true;
+            }
+            if(flags.includes('@')){
+                type.copySource=true;
+            }
+            if(flags.includes('!')){
+                type.ex=true;
+            }
+            if(flags.includes('?')){
+                type.question=true;
+            }
+            if(flags.includes('#')){
+                type.hash=true;
+            }
+            if(flags.includes('~')){
+                type.less=true;
             }
         }
     }

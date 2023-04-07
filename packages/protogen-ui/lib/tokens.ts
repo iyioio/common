@@ -77,7 +77,7 @@ const darkTokens:DesignTokens=Object.freeze(
     anchorColor:'#444444',
     lineColor:'#88B6BA',
 
-    codeLineHeight:18,
+    codeLineHeight:20,
     codeFontSize:15,
     codeVPadding:8,
     codeHPadding:16,

@@ -92,7 +92,9 @@ const addEnum=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
-            out.push(`${tab}${child.name}${child.type?'='+child.type:''},`)
+            if(!child.isContent && !child.special){
+                out.push(`${tab}${child.name}${child.type?'='+child.type:''},`);
+            }
         }
     }
 
@@ -108,12 +110,20 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
 
     out.push('');
     out.push(`export const ${fullName}=z.enum([`);
+    let added=false;
 
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
-            out.push(`${tab}${JSON.stringify(child.name)},`)
+            if(!child.isContent && !child.special){
+                added=true;
+                out.push(`${tab}${JSON.stringify(child.name)},`);
+            }
         }
+    }
+
+    if(!added){
+        out.push(`''`);
     }
 
     out.push(`]);`);
