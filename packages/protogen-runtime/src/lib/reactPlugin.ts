@@ -92,10 +92,14 @@ const generateComponentAsync=async (node:ProtoNode,{
 
     let startI:number;
     const out:string[]=[];
-    const props=node.children?.['props']?.children;
+    const propsNode=node.children?.['props'];
+    const props=propsNode?.children;
 
     if(props){
         out.push('');
+        if(propsNode.comment){
+            out.push(...protoFormatTsComment(propsNode.comment,'').split('\n'))
+        }
         startI=out.length;
         out.push(`export interface ${name}Props`);
         out.push('{')
@@ -118,7 +122,13 @@ const generateComponentAsync=async (node:ProtoNode,{
         out.push('');
     }
 
+    if(node.comment){
+        out.push(...protoFormatTsComment(node.comment,'').split('\n'))
+    }
+
+    startI=out.length;
     out.push(`export function ${name}(${props?'{':')'}`);
+    protoLabelOutputLines(out,'comp',startI);
     if(props){
         for(const name in props){
             const p=props[name];

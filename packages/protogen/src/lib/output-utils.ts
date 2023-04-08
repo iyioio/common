@@ -44,11 +44,14 @@ export const protoMergeSourceCode=({
         return overwriting;
     }
 
-    const oSections=createSections(overwriting,true);
-    const existingSections=createSections(existing,false);
+    const oSections=createSections(overwriting);
+    const existingSections=createSections(existing);
 
     for(let i=0;i<existingSections.length;i++){
         const section=existingSections[i];
+        if(!section.name){
+            continue;
+        }
         const match=oSections.find(s=>s.name===section.name);
         if(match){
             existingSections[i]=match;
@@ -65,7 +68,7 @@ export const protoMergeSourceCode=({
     return output;
 }
 
-const createSections=(code:string[],discardUnnamed:boolean):CodeSection[]=>{
+const createSections=(code:string[]):CodeSection[]=>{
 
     const sections:CodeSection[]=[];
 
@@ -74,15 +77,43 @@ const createSections=(code:string[],discardUnnamed:boolean):CodeSection[]=>{
         lines:[]
     }
 
+    const pushSection=()=>{
+        if(!section.lines.length){
+            return;
+        }
+        const lastSection=sections[sections.length-1];
+        if(lastSection && section.name && !lastSection.name){
+            let startCommentIndex:number|null=null;
+            for(let i=lastSection.lines.length-1;i>=0;i--){
+                const line=lastSection.lines[i];
+                if(!line.trim() || /^\s*\*/.test(line)){
+                    continue;
+                }
+                if(/^\s*\/\*\*/.test(line)){
+                    startCommentIndex=i;
+                    break;
+                }
+
+            }
+            if(startCommentIndex!==null){
+                for(let i=lastSection.lines.length-1;i>=startCommentIndex;i--){
+                    section.lines.unshift(lastSection.lines.pop()??'')
+                }
+            }
+            if(!lastSection.lines.length){
+                sections.pop();
+            }
+        }
+        sections.push(section);
+    }
+
     for(const line of code){
         const match=/\/\/\s*<<(.*)$/.exec(line);
 
         if(match){
             let name=/proto\s+(.*)/.exec(match[1].trim())?.[1];
             if(name){
-                if(section.lines.length){
-                    sections.push(section);
-                }
+                pushSection();
                 if(sections.some(s=>s.name===name)){
                     let i=2;
                     while(sections.some(s=>s.name===(name??'')+i)){
@@ -96,22 +127,16 @@ const createSections=(code:string[],discardUnnamed:boolean):CodeSection[]=>{
                 }
             }
         }else if(section.name){
-            if(section.lines.length){
-                sections.push(section);
-            }
+            pushSection();
             section={
                 name:'',
                 lines:[]
             }
         }
-        if(!discardUnnamed || section.name){
-            section.lines.push(line);
-        }
+        section.lines.push(line);
     }
 
-    if(section.lines.length){
-        sections.push(section);
-    }
+    pushSection();
 
     return sections;
 }
