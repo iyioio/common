@@ -238,7 +238,7 @@ export class LineCtrl
                     start.node &&
                     end.node &&
                     start.node.address.split('.',1)[0]===end.node.address.split('.',1)[0]?
-                    30:Math.min(dist/2,220)
+                    30:Math.min(dist/2,Math.min(300,Math.max(60,Math.abs(line.p1.x-line.p2.x)*0.7)))
                 );
                 const d=(
                     `M ${line.p1.x} ${line.p1.y
