@@ -125,3 +125,26 @@ export const isRooted=(path:string|null|undefined):boolean=>
     }
     return path[0]==='/' || protocolReg.test(path);
 }
+
+export const unrootPath=(path:string|null|undefined):string|null=>{
+    path=path?.trim();
+    if(!path){
+        return null;
+    }
+
+    let p:string;
+    while((p=path.replace(/^(\/|\\|\w+:\/\/+)\s*/,''))!==path){
+        path=p;
+    }
+
+    return path?path:null;
+}
+
+
+export const requireUnrootPath=(path:string|null|undefined):string=>{
+    const newPath=unrootPath(path);
+    if(!newPath){
+        throw new Error(`No path returned after un-rooting. path=${path}`);
+    }
+    return newPath;
+}
