@@ -1,3 +1,5 @@
+import { HashMap } from "@iyio/common";
+
 export const protoLabelOutputLines=(
     lines:string[],
     label:string,
@@ -21,15 +23,21 @@ export const protoLabelOutputLines=(
 
 }
 
+export type ProtoSourceCodeMerger=(options:ProtoMergeSourceCodeOptions)=>string[];
+
 export interface ProtoMergeSourceCodeOptions
 {
     overwriting:string|string[];
     existing:string|string[];
+    mergeSections?:(existing:ProtoCodeSection,overwriting:ProtoCodeSection)=>ProtoCodeSection;
+    createSectionsConfig?:ProtoCreateCodeSectionsOptions;
 
 }
 export const protoMergeSourceCode=({
     overwriting,
-    existing
+    existing,
+    mergeSections,
+    createSectionsConfig
 }:ProtoMergeSourceCodeOptions):string[]=>{
 
     if(typeof overwriting === 'string'){
@@ -44,8 +52,8 @@ export const protoMergeSourceCode=({
         return overwriting;
     }
 
-    const oSections=createSections(overwriting);
-    const existingSections=createSections(existing);
+    const oSections=protoCreateCodeSections(overwriting,createSectionsConfig);
+    const existingSections=protoCreateCodeSections(existing,createSectionsConfig);
 
     for(let i=0;i<existingSections.length;i++){
         const section=existingSections[i];
@@ -54,7 +62,7 @@ export const protoMergeSourceCode=({
         }
         const match=oSections.find(s=>s.name===section.name);
         if(match){
-            existingSections[i]=match;
+            existingSections[i]=mergeSections?mergeSections(match,section):match;
         }
     }
 
@@ -68,11 +76,42 @@ export const protoMergeSourceCode=({
     return output;
 }
 
-const createSections=(code:string[]):CodeSection[]=>{
 
-    const sections:CodeSection[]=[];
+export interface ProtoCreateCodeSectionsOptions
+{
+    sectionRegex:RegExp;
+    sectionContentIndex?:number;
 
-    let section:CodeSection={
+    nameReg?:RegExp;
+    nameIndex?:number;
+    getName?:(sectionContent:string)=>string;
+    defaultName?:string;
+
+    takeCommentPrefix?:boolean;
+
+    debug?:boolean;
+
+}
+export const protoCreateCodeSections=(code:string[],{
+    sectionRegex,
+    sectionContentIndex=0,
+    nameReg,
+    nameIndex=0,
+    getName,
+    defaultName,
+    takeCommentPrefix,
+    debug
+}:ProtoCreateCodeSectionsOptions={
+    sectionRegex:/\/\/\s*<<(.*)$/,
+    sectionContentIndex:1,
+    nameReg:/proto\s+(.*)/,
+    nameIndex:1,
+    takeCommentPrefix:true,
+}):ProtoCodeSection[]=>{
+
+    const sections:ProtoCodeSection[]=[];
+
+    let section:ProtoCodeSection={
         name:'',
         lines:[]
     }
@@ -82,7 +121,7 @@ const createSections=(code:string[]):CodeSection[]=>{
             return;
         }
         const lastSection=sections[sections.length-1];
-        if(lastSection && section.name && !lastSection.name){
+        if(takeCommentPrefix && lastSection && section.name && !lastSection.name){
             let startCommentIndex:number|null=null;
             for(let i=lastSection.lines.length-1;i>=0;i--){
                 const line=lastSection.lines[i];
@@ -108,11 +147,15 @@ const createSections=(code:string[]):CodeSection[]=>{
     }
 
     for(const line of code){
-        const match=/\/\/\s*<<(.*)$/.exec(line);
+        const match=sectionRegex.exec(line);
 
         if(match){
-            let name=/proto\s+(.*)/.exec(match[1].trim())?.[1];
-            if(name){
+            let name=(
+                getName?.(match[sectionContentIndex])??
+                nameReg?.exec(match[sectionContentIndex]?.trim()??'')?.[nameIndex]??
+                defaultName
+            );
+            if(name && name!==section.name){
                 pushSection();
                 if(sections.some(s=>s.name===name)){
                     let i=2;
@@ -138,15 +181,69 @@ const createSections=(code:string[]):CodeSection[]=>{
 
     pushSection();
 
+    if(debug && sections.some(s=>s.name)){
+        console.debug('code sections',sections);
+    }
+
     return sections;
 }
 
-interface CodeSection
+export interface ProtoCodeSection
 {
     name:string;
     lines:string[];
 }
 
+export const protoMergeTsImports=({
+    createSectionsConfig=defaultMergeTsImportsSectionConfig,
+    mergeSections=defaultMergeTsImportsMerger,
+    ...props
+}:ProtoMergeSourceCodeOptions):string[]=>{
 
-// todo
-// export const protoFormatTsImports=(code:string|string[]):string[]
+    return protoMergeSourceCode({
+        createSectionsConfig,
+        mergeSections,
+        ...props
+    })
+}
+
+const importReg=/^import\s+\{(.*?)\}\s+from\s+['"](.*?)['"]/
+const defaultMergeTsImportsSectionConfig:ProtoCreateCodeSectionsOptions={
+    sectionRegex:importReg,
+    defaultName:'import',
+}
+
+const defaultMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCodeSection):ProtoCodeSection=>{
+
+    const map:HashMap<string[]>={};
+
+    addImportsToMap(existing.lines,map);
+    addImportsToMap(overwriting.lines,map);
+
+    return {
+        name:existing.name,
+        lines:Object.keys(map).map(k=>`import { ${map[k].join(', ')} } from '${k}';`),
+    }
+}
+
+const addImportsToMap=(code:string[],map:HashMap<string[]>)=>{
+    for(const line of code){
+        const match=importReg.exec(line);
+        if(!match){
+            continue;
+        }
+
+        const packageName=match[2].trim();
+        let pkg=map[packageName];
+        if(!pkg){
+            map[packageName]=pkg=[];
+        }
+        const names=match[1].split(',');
+        for(const n of names){
+            const name=n.trim();
+            if(name && !pkg.includes(name)){
+                pkg.push(name);
+            }
+        }
+    }
+}

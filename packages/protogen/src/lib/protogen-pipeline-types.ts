@@ -1,5 +1,6 @@
 import { CliArgsAliasMap, CliArgsConverter, HashMap } from "@iyio/common";
 import { z, ZodSchema } from "zod";
+import { ProtoSourceCodeMerger } from "./output-utils";
 import { ProtoNode } from "./protogen-types";
 
 export type ProtoStage='init'|'input'|'preprocess'|'parse'|'generate'|'output';
@@ -9,7 +10,7 @@ export interface ProtoOutput
     path:string;
     content:string;
     autoMerge?:boolean;
-    mergeHandler?:(existingContent:string[],overwriting:string[])=>string[]|Promise<string[]>;
+    mergeHandler?:ProtoSourceCodeMerger|((ProtoSourceCodeMerger|null|undefined)[]);
 }
 
 export interface ProtoSource

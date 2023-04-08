@@ -1,5 +1,5 @@
 import { joinPaths, requireUnrootPath } from "@iyio/common";
-import { ProtoContext, protoFormatTsComment, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoContext, protoFormatTsComment, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['comp','view','screen'];
@@ -185,6 +185,7 @@ const generateComponentAsync=async (node:ProtoNode,{
         path:filename,
         content:out.join('\n'),
         autoMerge:true,
+        mergeHandler:protoMergeTsImports
     })
 
     return name;

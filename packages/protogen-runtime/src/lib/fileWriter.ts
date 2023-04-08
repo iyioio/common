@@ -1,6 +1,6 @@
-import { unrootPath } from "@iyio/common";
+import { asArray, unrootPath } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
-import { ProtoContext, protoMergeSourceCode } from "@iyio/protogen";
+import { ProtoContext, protoMergeSourceCode, protoMergeTsImports } from "@iyio/protogen";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname } from "path";
 
@@ -22,19 +22,28 @@ export const fileWriter=async ({
             }
         }
 
-        if((output.autoMerge || output.mergeHandler!==undefined) && await pathExistsAsync(name)){
+        const mergers=output.mergeHandler?asArray(output.mergeHandler):null;
+
+        if((output.autoMerge || mergers) && await pathExistsAsync(name)){
             const existing=(await readFile(name)).toString();
 
             const contentLines=output.content.split('\n');
+
+            protoMergeTsImports({existing,overwriting:contentLines})
 
             let mergedLines=(output.autoMerge?
                 protoMergeSourceCode({existing,overwriting:contentLines}):
                 existing.split('\n')
             )
 
-            if(output.mergeHandler){
-                mergedLines=await output.mergeHandler(mergedLines,contentLines);
+            if(mergers){
+                for(const merger of mergers){
+                    if(merger){
+                        mergedLines=merger({existing:mergedLines,overwriting:contentLines});
+                    }
+                }
             }
+
 
             const content=mergedLines.join('\n');
             log(`write merged - ${name} - ${content.length/1000}kb`);
