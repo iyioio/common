@@ -121,3 +121,7 @@ interface CodeSection
     name:string;
     lines:string[];
 }
+
+
+// todo
+// export const protoFormatTsImports=(code:string|string[]):string[]

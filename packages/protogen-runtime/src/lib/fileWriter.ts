@@ -1,3 +1,4 @@
+import { unrootPath } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
 import { ProtoContext, protoMergeSourceCode } from "@iyio/protogen";
 import { mkdir, readFile, writeFile } from "fs/promises";
@@ -9,7 +10,10 @@ export const fileWriter=async ({
 }:ProtoContext)=>{
 
     for(const output of outputs){
-        const name=output.path;
+        const name=unrootPath(output.path);
+        if(!name){
+            continue;
+        }
 
         if(name.includes('/') || name.includes('\\')){
             const dirName=dirname(name);

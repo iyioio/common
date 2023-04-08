@@ -1,4 +1,5 @@
-import { ProtoContext, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { joinPaths, requireUnrootPath } from "@iyio/common";
+import { ProtoContext, protoFormatTsComment, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['comp','view','screen'];
@@ -10,7 +11,12 @@ const ReactPluginConfig=z.object(
     /**
      * @default "components"
      */
-    reactCompDir:z.string().optional()
+    reactCompDir:z.string().optional(),
+
+    /**
+     * @default false
+     */
+    reactUseStyledJsx:z.boolean().optional(),
 })
 
 export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfig>=
@@ -49,9 +55,6 @@ export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfi
                 content:index.join('\n'),
             })
         }
-
-
-
     }
 }
 
@@ -60,7 +63,8 @@ const generateComponentAsync=async (node:ProtoNode,{
     importMap,
     outputs
 }:ProtoContext,{
-    reactCompDir=defaultDir
+    reactCompDir=defaultDir,
+    reactUseStyledJsx=false
 }:z.infer<typeof ReactPluginConfig>):Promise<string>=>{
 
     if(reactCompDir.endsWith('/') || reactCompDir.endsWith('\\')){
@@ -68,50 +72,93 @@ const generateComponentAsync=async (node:ProtoNode,{
     }
 
     const imports:string[]=[];
+    const addImport=(im:string,packageName?:string)=>{
+        if(!imports.includes(im)){
+            imports.push(im);
+        }
+        if(packageName){
+            importMap[im]=packageName;
+        }
+    }
     const name=node.name;
+    let filename=node.children?.['$filename']?.value?.trim()||name;
+
+    const baseLayout=node.children?.['baseLayout'];
+    const baseLayoutType=baseLayout?getBaseLayoutName(baseLayout.value||'outer'):null;
+    if(baseLayoutType){
+        addImport(baseLayoutType,'@iyio/common');
+        addImport('bcn','@iyio/common');
+    }
+
     let startI:number;
     const out:string[]=[];
     const props=node.children?.['props']?.children;
+
     if(props){
+        out.push('');
         startI=out.length;
         out.push(`export interface ${name}Props`);
         out.push('{')
         for(const name in props){
             const p=props[name];
-            if(p.special || p.comment){
+            if(p.special || p.isContent){
                 continue;
             }
             const type=protoGetTsType(p.type);
-            if(!protoIsTsBuiltType(type) && !imports.includes(type)){
-                imports.push(type);
+            if(!protoIsTsBuiltType(type)){
+                addImport(type);
+            }
+            if(p.comment){
+                out.push(...protoFormatTsComment(p.comment,tab).split('\n'));
             }
             out.push(`${tab}${name}:${type};`);
         }
-        out.push('}');
         protoLabelOutputLines(out,'props',startI);
+        out.push('}');
         out.push('');
     }
 
-    startI=out.length;
     out.push(`export function ${name}(${props?'{':')'}`);
     if(props){
         for(const name in props){
             const p=props[name];
-            if(p.special || p.comment){
+            if(p.special || p.isContent){
                 continue;
             }
             const defaultValue=p.children?.['default']?.value;
             out.push(`${tab}${name}${defaultValue?'='+defaultValue:''},`);
         }
-        out.push(`}:${name}Props){`);
+        if(baseLayoutType){
+            out.push(`${tab}...props`)
+            out.push(`}:${name}Props & ${baseLayoutType}){`);
+        }else{
+            out.push(`}:${name}Props){`);
+        }
     }else{
         out.push('{')
     }
 
-    protoLabelOutputLines(out,'comp-head',startI);
-
+    out.push('');
     out.push(`${tab}return (`)
-    out.push(`${tab}${tab}<div></div>`)
+
+    if(baseLayoutType){
+        out.push(`${tab}${tab}<div className={bcn(props,'${name}')}>`)
+    }else{
+        out.push(`${tab}${tab}<div className="${name}">`)
+    }
+    const bodyTab=`${tab}${tab}${tab}`;
+    out.push('');
+    out.push(`${bodyTab}${name}`);
+    out.push('');
+    if(reactUseStyledJsx || node.children?.['styled-jsx']){
+        out.push(`${bodyTab}<style global jsx>{\``);
+        out.push(`${bodyTab}${tab}.${name}{`);
+        out.push(`${bodyTab}${tab}${tab}display:flex;`);
+        out.push(`${bodyTab}${tab}${tab}flex-direction:column;`);
+        out.push(`${bodyTab}${tab}}`);
+        out.push(`${bodyTab}\`}</style>`);
+    }
+    out.push(`${tab}${tab}</div>`)
     out.push(`${tab})`)
     out.push('}')
 
@@ -119,8 +166,13 @@ const generateComponentAsync=async (node:ProtoNode,{
         protoPrependTsImports(imports,importMap,out);
     }
 
+    filename=filename.startsWith('/')?requireUnrootPath(filename):joinPaths(reactCompDir,filename);
+    if(!filename.toLowerCase().endsWith('.tsx')){
+        filename+='.tsx';
+    }
+
     outputs.push({
-        path:reactCompDir+'/'+name+'.tsx',
+        path:filename,
         content:out.join('\n'),
         autoMerge:true,
     })
@@ -130,3 +182,15 @@ const generateComponentAsync=async (node:ProtoNode,{
 }
 
 
+const getBaseLayoutName=(type:string)=>{
+
+    switch(type){
+        case "inner": return 'BaseLayoutInnerProps';
+        case "outer-no-flex": return 'BaseLayoutOuterNoFlexProps';
+        case "base": return 'BaseLayoutProps';
+        case "all": return 'AllBaseLayoutProps';
+        case "outer":
+        default:
+            return 'BaseLayoutOuterProps';
+    }
+}

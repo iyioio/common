@@ -39,7 +39,7 @@ export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>):s
         }
     }
 
-    return Object.keys(imports).map(path=>`import {${imports[path].join(', ')}} from '${path}';`);
+    return Object.keys(imports).map(path=>`import { ${imports[path].join(', ')} } from '${path}';`);
 }
 
 
@@ -50,3 +50,7 @@ export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,pre
         prependTo.splice(0,0,...imports);
     }
 }
+
+export const protoFormatTsComment=(comment:string,tab:string)=>(
+    `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
+)

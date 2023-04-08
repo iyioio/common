@@ -1,5 +1,5 @@
 import { asArray, getObjKeyCount } from "@iyio/common";
-import { protoChildrenToArray, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
+import { protoChildrenToArray, protoFormatTsComment, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
 
 
@@ -169,7 +169,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
 
             if(!isBuiltIn){
                 interfaceProps.push(`${
-                        prop.comment?formatComment(prop.comment,tab)+'\n':''
+                        prop.comment?protoFormatTsComment(prop.comment,tab)+'\n':''
                     }${
                         tab
                     }${
@@ -201,7 +201,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
             }
 
             out.push(`${
-                    prop.comment?formatComment(prop.comment,tab)+'\n':''
+                    prop.comment?protoFormatTsComment(prop.comment,tab)+'\n':''
                 }${
                     tab
                 }${
@@ -227,7 +227,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
         out.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.merge(__lazy__${fullName}) as any;`);
     }
     if(node.comment){
-        out.push(formatComment(node.comment,''));
+        out.push(protoFormatTsComment(node.comment,''));
     }
     if(interfaceProps.length){
         out.push(`export type ${node.name}=z.infer<typeof ${hasCustoms?'__base__':''}${fullName}> & {`);
@@ -257,10 +257,6 @@ const getRealCustomType=(type:CustomBuiltInsType)=>{
 const isBuiltInType=(type:string)=>{
     return protoTsBuiltTypes.includes(type as any) || customBuiltIns.includes(type as any);
 }
-
-const formatComment=(comment:string,tab:string)=>(
-    `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
-)
 
 interface AddCallOptions
 {
