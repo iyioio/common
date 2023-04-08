@@ -8,7 +8,8 @@ const getConfig=(ctx:ProtoContext,plugin:ProtoPipelinePlugin):any=>{
 
 export const executeTGenPipelineAsync=async ({
     context,
-    plugins
+    plugins,
+    config
 }:ProtoPipeline):Promise<void>=>{
 
     const log=context.log;
@@ -61,6 +62,10 @@ export const executeTGenPipelineAsync=async ({
             log(`afterAll ${info.source}:${info.name}`)
             await info.plugin.afterAll(context,getConfig(context,info.plugin),info);
         }
+    }
+
+    if(config.logImportMap){
+        log(`\nimportMap:${JSON.stringify(context.importMap,null,4)}`);
     }
 
     log(`\nEnd pipeline - ${context.executionId}\n--------------------------\n`)
