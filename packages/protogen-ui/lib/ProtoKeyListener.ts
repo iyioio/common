@@ -11,11 +11,11 @@ export class ProtoKeyListener
     {
         this.ctrl=ctrl;
         window.addEventListener('keypress',this.onKeyPress);
-        window.addEventListener('keyup',this.onKeyUp);
+        window.addEventListener('keydown',this.onKeyDown);
 
         this.removeCallbacks=()=>{
             window.removeEventListener('keypress',this.onKeyPress);
-            window.removeEventListener('keyup',this.onKeyUp);
+            window.removeEventListener('keydown',this.onKeyDown);
         }
     }
 
@@ -42,6 +42,25 @@ export class ProtoKeyListener
                 console.info('ProtoNodes',this.ctrl.nodes.value.map(n=>n.nodeSubject.value));
                 break;
 
+            default:
+                handled=false;
+                break;
+        }
+
+        if(handled){
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+
+    private readonly onKeyDown=(e:KeyboardEvent)=>{
+        let handled=true;
+
+        const key=getKey(e);
+
+        switch(key){
+
+            case 'c:k':
             case 'escape':
                 this.ctrl.clearApiOutput();
                 break;
@@ -54,18 +73,6 @@ export class ProtoKeyListener
         if(handled){
             e.preventDefault();
             e.stopPropagation();
-        }
-    }
-
-    private readonly onKeyUp=(e:KeyboardEvent)=>{
-
-        const key=getKey(e);
-
-        switch(key){
-
-            case 'escape':
-                this.ctrl.clearApiOutput();
-                break;
         }
     }
 }
