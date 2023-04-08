@@ -307,7 +307,7 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
                 protoAddLink(node,{
                     name:address,
                     address,
-                    low:true,
+                    priority:'med',
                     src:true,
                 })
             }
@@ -326,7 +326,7 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
             protoAddLink(parent,{
                 name:address,
                 address,
-                low:true,
+                priority:'med',
                 src:true,
             })
         }
@@ -362,7 +362,7 @@ export const protoUpdateLinks=(nodes:ProtoNode[],addressMap:ProtoAddressMap)=>{
                         name:node.name,
                         address:node.address,
                         rev:true,
-                        low:true,
+                        priority:'med',
                         src:link.src
                     })
                 }
@@ -383,7 +383,7 @@ export const protoAddAutoLinks=(node:ProtoNode)=>{
                 protoAddLink(node,{
                     name:address,
                     address:address,
-                    low:!pri
+                    priority:pri?'high':'low'
                 })
         }
     }

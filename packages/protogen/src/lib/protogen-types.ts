@@ -35,6 +35,8 @@ export interface ProtoNodeRenderData
     before?:string;
 }
 
+export type ProtoLinkPriority='low'|'med'|'high';
+
 export interface ProtoLink
 {
     name?:string;
@@ -43,7 +45,7 @@ export interface ProtoLink
     /**
      * Low priority
      */
-    low?:boolean;
+    priority?:ProtoLinkPriority;
 
 
     color?:string;

@@ -21,6 +21,17 @@ export class LineCtrl
         this.updateLines();
     }
 
+    private _lineGroupMid:SVGGElement|null=null;
+    public get lineGroupMid(){return this._lineGroupMid}
+    public set lineGroupMid(value:SVGGElement|null){
+        if(this._lineGroupMid===value){return}
+        this._lineGroupMid=value;
+        if(value){
+            value.innerHTML='';
+        }
+        this.updateLines();
+    }
+
     private _lineGroupLow:SVGGElement|null=null;
     public get lineGroupLow(){return this._lineGroupLow}
     public set lineGroupLow(value:SVGGElement|null){
@@ -47,6 +58,28 @@ export class LineCtrl
             }
         }
         return null;
+    }
+
+    private insertLineElements(line:ProtoUiLine){
+        line.elem.remove();
+        line.elem2.remove();
+        switch(line.priority){
+
+            case 'high':
+                this._lineGroup?.appendChild(line.elem2);
+                this._lineGroup?.appendChild(line.elem);
+                break;
+
+            case 'med':
+                this._lineGroupMid?.appendChild(line.elem2);
+                this._lineGroupMid?.appendChild(line.elem);
+                break;
+
+            case 'low':
+                this._lineGroupLow?.appendChild(line.elem2);
+                this._lineGroupLow?.appendChild(line.elem);
+                break;
+        }
     }
 
 
@@ -102,7 +135,7 @@ export class LineCtrl
 
                 let line=this.getLine(updateId,fromAddress,toAddress);
                 const lineColor=getLinkColor(link);
-                const low=link.low??false;
+                const priority=link.priority??'high';
 
                 if(!line){
                     line={
@@ -115,7 +148,7 @@ export class LineCtrl
                         p2:{x:0,y:0},
                         color:lineColor,
                         link,
-                        low,
+                        priority,
                     }
                     line.elem.setAttribute('stroke',lineColor);
                     line.elem.setAttribute('fill','none');
@@ -124,26 +157,12 @@ export class LineCtrl
                     line.elem2.setAttribute('stroke-width','4');
                     line.elem2.setAttribute('fill','none');
                     this.lines.push(line);
-                    if(low){
-                        groupLow.appendChild(line.elem2);
-                        groupLow.appendChild(line.elem);
-                    }else{
-                        group.appendChild(line.elem2);
-                        group.appendChild(line.elem);
-                    }
+                    this.insertLineElements(line);
                 }
 
-                if(low!==line.low){
-                    line.low=low;
-                    line.elem.remove();
-                    line.elem2.remove();
-                    if(low){
-                        groupLow.appendChild(line.elem2);
-                        groupLow.appendChild(line.elem);
-                    }else{
-                        group.appendChild(line.elem2);
-                        group.appendChild(line.elem);
-                    }
+                if(priority!==line.priority){
+                    line.priority=priority;
+                    this.insertLineElements(line);
                 }
 
                 if( onlyForAddress!==undefined &&
@@ -219,7 +238,7 @@ export class LineCtrl
                     start.node &&
                     end.node &&
                     start.node.address.split('.',1)[0]===end.node.address.split('.',1)[0]?
-                    30:Math.min(dist/4,150)
+                    30:Math.min(dist/2,220)
                 );
                 const d=(
                     `M ${line.p1.x} ${line.p1.y
@@ -256,7 +275,7 @@ const getLinkColor=(link:ProtoLink):string=>{
     if(link.src){
         return '#90550f';
     }
-    if(link.low){
+    if(link.priority==='low'){
         return '#222222';
     }
     return '#88B6BA99';

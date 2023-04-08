@@ -1,5 +1,5 @@
 import { Point } from "@iyio/common";
-import { protoGetEmptyLayout, ProtoLayout, ProtoLink } from "@iyio/protogen";
+import { protoGetEmptyLayout, ProtoLayout, ProtoLink, ProtoLinkPriority } from "@iyio/protogen";
 import type { NodeCtrl } from "./NodeCtrl";
 
 export const anchorInset=0;
@@ -46,7 +46,7 @@ export interface ProtoUiLine{
     p2:Point;
     color:string;
     link:ProtoLink;
-    low:boolean;
+    priority:ProtoLinkPriority,
 }
 
 
