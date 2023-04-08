@@ -17,6 +17,11 @@ const ReactPluginConfig=z.object(
      * @default false
      */
     reactUseStyledJsx:z.boolean().optional(),
+
+    /**
+     * @default context.defaultPackageName
+     */
+    reactPackageName:z.string().optional(),
 })
 
 export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfig>=
@@ -44,6 +49,8 @@ export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfi
 
         for(const node of supported){
 
+            log(`component - ${node.name}`);
+
             const name=await generateComponentAsync(node,ctx,config);
 
             index.push(`export * from './${name}';`);
@@ -61,15 +68,18 @@ export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfi
 const generateComponentAsync=async (node:ProtoNode,{
     tab,
     importMap,
-    outputs
+    outputs,
+    defaultPackageName,
 }:ProtoContext,{
     reactCompDir=defaultDir,
-    reactUseStyledJsx=false
+    reactUseStyledJsx=false,
+    reactPackageName=defaultPackageName,
 }:z.infer<typeof ReactPluginConfig>):Promise<string>=>{
 
     if(reactCompDir.endsWith('/') || reactCompDir.endsWith('\\')){
         reactCompDir=reactCompDir.substring(0,reactCompDir.length-1);
     }
+
 
     const imports:string[]=[];
     const addImport=(im:string,packageName?:string)=>{
@@ -82,6 +92,9 @@ const generateComponentAsync=async (node:ProtoNode,{
     }
     const name=node.name;
     let filename=node.children?.['$filename']?.value?.trim()||name;
+
+    importMap[name]=reactPackageName;
+    importMap[name+'Props']=reactPackageName;
 
     const baseLayout=node.children?.['baseLayout'];
     const baseLayoutType=baseLayout?getBaseLayoutName(baseLayout.value||'outer'):null;

@@ -5,6 +5,7 @@ import { fileWriter } from "./fileWriter";
 import { lucidCsvParser } from "./lucidCsvParser";
 import { markdownParser } from "./markdownParser";
 import { reactPlugin } from "./reactPlugin";
+import { tablePlugin } from "./tablePlugin";
 import { zodPlugin } from "./zodPlugin";
 
 export interface RunProtogenCliAsyncOptions
@@ -54,6 +55,7 @@ export const runProtogenCliAsync=async ({
                 nodes:[],
                 outputs:[],
                 verbose,
+                defaultPackageName:config.defaultPackageName??'common',
                 tab:'    ',
                 stage:'init',
                 importMap:{},
@@ -138,6 +140,13 @@ export const runProtogenCliAsync=async ({
                 source:'@',
                 paths:[],
                 plugin:zodPlugin
+            });
+
+            pipeline.plugins.push({
+                name:'tablePlugin',
+                source:'@',
+                paths:[],
+                plugin:tablePlugin
             });
 
             pipeline.plugins.push({

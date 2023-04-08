@@ -27,6 +27,109 @@ export const protoAddChild=(parent:ProtoNode,child:ProtoNode)=>{
 
 }
 
+export const protoFindChild=(
+    parent:ProtoNode|null|undefined,
+    recursive:boolean,
+    filter:(child:ProtoNode,key:string,parent:ProtoNode)=>boolean
+):ProtoNode|undefined=>{
+
+    if(!parent?.children){
+        return undefined;
+    }
+
+    for(const key in parent.children){
+        const child=parent.children[key];
+        if(filter(child,key,parent)){
+            return child;
+        }
+        if(recursive){
+            const found=protoFindChild(child,true,filter);
+            if(found){
+                return found;
+            }
+        }
+    }
+    return undefined;
+}
+
+export const protoFindChildren=(
+    parent:ProtoNode|null|undefined,
+    recursive:boolean,
+    filter:(child:ProtoNode,key:string,parent:ProtoNode)=>boolean,
+    appendTo?:ProtoNode[]
+):ProtoNode[]=>{
+    const children:ProtoNode[]=appendTo??[];
+    if(!parent){
+        return children;
+    }
+    _protoFindChildren(parent,recursive,filter,children);
+    return children;
+}
+
+const _protoFindChildren=(
+    parent:ProtoNode,
+    recursive:boolean,
+    filter:(child:ProtoNode,key:string,parent:ProtoNode)=>boolean,
+    children:ProtoNode[]
+)=>{
+
+    if(!parent.children){
+        return;
+    }
+
+    for(const key in parent.children){
+        const child=parent.children[key];
+        if(filter(child,key,parent)){
+            children.push(child);
+        }
+        if(recursive){
+            _protoFindChildren(child,true,filter,children);
+        }
+    }
+}
+
+export const protoGetChildren=(
+    parent:ProtoNode|null|undefined,
+    recursive:boolean,
+    appendTo?:ProtoNode[]
+):ProtoNode[]=>{
+    const children:ProtoNode[]=appendTo??[];
+    if(!parent){
+        return children;
+    }
+    _protoGetChildren(parent,recursive,children);
+    return children;
+}
+
+const _protoGetChildren=(
+    parent:ProtoNode,
+    recursive:boolean,
+    children:ProtoNode[]
+)=>{
+
+    if(!parent.children){
+        return;
+    }
+
+    for(const key in parent.children){
+        const child=parent.children[key];
+        children.push(child);
+        if(recursive){
+            _protoGetChildren(child,true,children);
+        }
+    }
+}
+
+
+export const protoGetChildrenByName=(
+    parent:ProtoNode|null|undefined,
+    name:string,
+    recursive:boolean,
+    appendTo?:ProtoNode[]
+):ProtoNode[]=>{
+    return protoFindChildren(parent,recursive,c=>c.name===name,appendTo);
+}
+
 export const protoGetNodeParent=(node:ProtoNode|null|undefined):ProtoNode|undefined=>(node as any)?.[parentKey];
 
 export const protoApplyParent=(node:ProtoNode)=>{

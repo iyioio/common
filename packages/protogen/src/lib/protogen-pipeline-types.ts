@@ -35,6 +35,7 @@ export interface ProtoContext
     verbose:boolean;
     tab:string;
     stage:ProtoStage;
+    defaultPackageName:string;
     importMap:HashMap<string>;
     metadata:{[name:string]:any};
     log:(...values:any[])=>void;
@@ -87,6 +88,8 @@ export interface ProtoPipelineConfig
     workingDirectory?:string;
     verbose?:boolean;
     loadDefaultPlugins?:boolean;
+    defaultPackageName?:string;
+    logImportMap?:boolean;
 }
 
 export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
@@ -95,12 +98,15 @@ export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
     workingDirectory:'-d',
     verbose:'-v',
     loadDefaultPlugins:'-l',
+    defaultPackageName:'-m',
 } as const;
 
 export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfig>={
     inputs:(args:string[])=>args,
     plugins:(args:string[])=>args,
     workingDirectory:(args:string[])=>args[0],
+    defaultPackageName:(args:string[])=>args[0],
     verbose:(args:string[])=>Boolean(args[0]),
+    logImportMap:(args:string[])=>Boolean(args[0]),
     loadDefaultPlugins:(args:string[])=>Boolean(args[0]),
 } as const;
