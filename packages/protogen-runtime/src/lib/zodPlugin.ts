@@ -224,7 +224,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
             out.push(prop);
         }
         out.push('});')
-        out.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.and(__lazy__${fullName}) as any;`);
+        out.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.merge(__lazy__${fullName}) as any;`);
     }
     if(node.comment){
         out.push(formatComment(node.comment,''));
