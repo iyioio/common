@@ -28,6 +28,11 @@ const TablePluginConfig=z.object(
      */
     dataTableDescriptionPackage:z.string().optional(),
 
+    /**
+     * @default 'allTables'
+     */
+    allTableArrayName:z.string().optional(),
+
 }).merge(SharedTsPluginConfigScheme);
 
 export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfig>=
@@ -46,6 +51,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         tablePackageName=defaultPackageName,
         tableUseParamIds,
         dataTableDescriptionPackage='@iyio/common',
+        allTableArrayName='allTables',
         ...tsConfig
     })=>{
 
@@ -73,11 +79,15 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         const paramImportName='./'+getFileNameNoExt(tableOutPath)+'-params';
         const paramsOutPath=joinPaths(getDirectoryName(tableOutPath),getFileNameNoExt(tableOutPath)+'-params.ts');
 
+        const tableNames:string[]=[];
+
         for(const node of supported){
 
             const name=node.name;
             const paramName=strFirstToLower(name)+'TableParam';
             importMap[name+'Table']=tablePackageName;
+
+            tableNames.push(name+'Table');
 
             log(`table - ${name}Table`);
 
@@ -178,6 +188,10 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
 
             out.push('}')
         }
+
+        importMap[allTableArrayName]=tablePackageName;
+        out.push(`export const ${allTableArrayName}=[${tableNames.join(',')}] as const`)
+        out.push(`Object.freeze(${allTableArrayName})`)
 
 
         if(imports.length){
