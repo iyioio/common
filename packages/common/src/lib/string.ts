@@ -37,6 +37,15 @@ export const strFirstToUpper=(str:string)=>
     return str.substring(0,1).toUpperCase()+str.substring(1);
 }
 
+export const strFirstToLower=(str:string)=>
+{
+    if(!str){
+        return str;
+    }
+
+    return str.substring(0,1).toLowerCase()+str.substring(1);
+}
+
 
 export const addSpacesToCamelCase=(value:string):string=>{
     if(!value){
