@@ -60,6 +60,14 @@ export class ProtoKeyListener
 
         switch(key){
 
+            case 'c:s':
+                this.ctrl.saveAsync();
+                break;
+
+            case 'c:o':
+                this.ctrl.saveAsync({executePipeline:true});
+                break;
+
             case 'c:k':
             case 'escape':
                 this.ctrl.clearApiOutput();
