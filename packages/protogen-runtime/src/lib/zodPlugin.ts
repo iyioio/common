@@ -219,11 +219,12 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
 
     out.push('});');
     if(hasCustoms){
-        out.push(`export const ${fullName}=z.object({`);
+        out.push(`const __lazy__${fullName}=z.object({`);
         for(const prop of lazyProps){
             out.push(prop);
         }
         out.push('});')
+        out.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.and(__lazy__${fullName}) as any;`);
     }
     if(node.comment){
         out.push(formatComment(node.comment,''));
