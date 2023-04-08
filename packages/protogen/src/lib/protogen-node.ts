@@ -404,6 +404,7 @@ export interface ProtoRenderOptions
     maxDepth?:number,
     hideSpecial?:boolean;
     hideContent?:boolean;
+    hideTypeInfo?:boolean;
     filter?:(node:ProtoNode)=>boolean,
     renderer?:(node:ProtoNode,renderData:ProtoNodeRenderData)=>ProtoNodeRenderData;
 }
@@ -414,6 +415,7 @@ export const protoRenderLines=({
     maxDepth,
     hideContent,
     hideSpecial,
+    hideTypeInfo,
     filter,
     renderer,
 }:ProtoRenderOptions):string[]=>{
@@ -455,7 +457,14 @@ export const protoRenderLines=({
         if(filter && !filter(node)){
             continue;
         }
-        lines.push(node.renderData.input??'');
+        let input=node.renderData.input??'';
+        if(hideTypeInfo){
+            const c=input.indexOf(':');
+            if(c!==-1){
+                input=input.substring(0,c)+':';
+            }
+        }
+        lines.push(input);
     }
 
     return lines;

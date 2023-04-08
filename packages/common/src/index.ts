@@ -11,6 +11,7 @@ export * from './lib/BaseStore';
 export * from './lib/BaseUser';
 export * from './lib/BrowserUiRouter';
 export * from './lib/CancelToken';
+export * from './lib/cli-parser';
 export * from './lib/client-download';
 export * from './lib/clipboard';
 export * from './lib/common-lib';

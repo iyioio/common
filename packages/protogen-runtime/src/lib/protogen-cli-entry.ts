@@ -1,3 +1,6 @@
+import { protoParseCliArgs } from "@iyio/protogen";
 import { runProtogenCliAsync } from "./runProtogenCliAsync";
 
-runProtogenCliAsync(globalThis.process?.argv??[],2,require);
+const {config,args}=protoParseCliArgs(globalThis.process?.argv??[],2)
+
+runProtogenCliAsync({config,args,loadModule:require});

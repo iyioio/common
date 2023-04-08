@@ -1,65 +1,74 @@
-import { execAsync, getFullPath, pathExistsAsync } from "@iyio/node-common";
-import { ProtoExternalExecutor } from "@iyio/protogen";
-import { mkdir, readFile, rm, writeFile } from "fs/promises";
-import { join } from "path";
-
-export const tsExternalExecutor:ProtoExternalExecutor=async (ctx,{plugin,action})=>{
-
-    const dir='./.protogen';
-    const path=getFullPath(join(dir,'.ctx-'+ctx.executionId+'.json'));
-
-    if(action==='clean-up'){
-        if(await pathExistsAsync(path)){
-            await rm(path);
-        }
-        return true;
-    }
-
-    if(!plugin){
-        return true;
-    }
-
-    const [pluginPath,_tsConfigPath]=plugin.split(':');
-
-    const tsConfigPath=_tsConfigPath??ctx.args['--ts-config'];
+import { ProtoPipelinePlugin } from "@iyio/protogen";
 
 
-    if(!pathExistsAsync(pluginPath)){
-        return false;
-    }
+export const tsExternalExecutor:ProtoPipelinePlugin={
 
-    const pluginMeta=ctx.metadata['plugin-'+plugin];
-    if(pluginMeta && !pluginMeta[ctx.stage]){
-        return true;
-    }
+    // beforeAll:async (ctx)=>{
+    //     //
+    // },
+    // stage:async (ctx)=>{
+
+    //     const {
+    //         stage
+    //     }=ctx;
+
+    //     const dir='./.protogen';
+    //     const path=getFullPath(join(dir,'.ctx-'+ctx.executionId+'.json'));
+
+    //     if(action==='clean-up'){
+    //         if(await pathExistsAsync(path)){
+    //             await rm(path);
+    //         }
+    //         return;
+    //     }
+
+    //     if(!plugin){
+    //         return;
+    //     }
+
+    //     const [pluginPath,_tsConfigPath]=plugin.split(':');
+
+    //     const tsConfigPath=_tsConfigPath??ctx.args['--ts-config'];
 
 
-    if(!await pathExistsAsync(dir)){
-        await mkdir(dir);
-    }
+    //     if(!pathExistsAsync(pluginPath)){
+    //         return;
+    //     }
 
-    await writeFile(path,JSON.stringify(ctx,null,4));
+    //     const pluginMeta=ctx.metadata['plugin-'+plugin];
+    //     if(pluginMeta && !pluginMeta[ctx.stage]){
+    //         return;
+    //     }
 
-    process.env['PROTOGEN_CONTEXT_PATH']=path;
-    process.env['NX_PROTOGEN_CONTEXT_PATH']=path;
-    process.env['PROTOGEN_CURRENT_PLUGIN']=plugin;
-    process.env['NX_PROTOGEN_CURRENT_PLUGIN']=plugin;
 
-    await execAsync({
-        cmd:`npx ts-node${tsConfigPath?` -r tsconfig-paths/register --project ${tsConfigPath}`:''} ${pluginPath}`,
-        out:ctx.log
-    });
+    //     if(!await pathExistsAsync(dir)){
+    //         await mkdir(dir);
+    //     }
 
-    const json=JSON.parse((await readFile(path)).toString());
-    const log=ctx.log;
-    for(const e in ctx){
-        delete (ctx as any)[e];
-    }
-    for(const e in json){
-        (ctx as any)[e]=json[e];
-    }
-    ctx.log=log;
+    //     await writeFile(path,JSON.stringify(ctx,null,4));
 
-    return true;
+    //     process.env['PROTOGEN_CONTEXT_PATH']=path;
+    //     process.env['NX_PROTOGEN_CONTEXT_PATH']=path;
+    //     process.env['PROTOGEN_CURRENT_PLUGIN']=plugin;
+    //     process.env['NX_PROTOGEN_CURRENT_PLUGIN']=plugin;
 
+    //     await execAsync({
+    //         cmd:`npx ts-node${tsConfigPath?` -r tsconfig-paths/register --project ${tsConfigPath}`:''} ${pluginPath}`,
+    //         out:ctx.log
+    //     });
+
+    //     const json=JSON.parse((await readFile(path)).toString());
+    //     const log=ctx.log;
+    //     for(const e in ctx){
+    //         delete (ctx as any)[e];
+    //     }
+    //     for(const e in json){
+    //         (ctx as any)[e]=json[e];
+    //     }
+    //     ctx.log=log;
+
+    // },
+    // afterAll:(ctx)=>{
+    //     //
+    // }
 }

@@ -6,14 +6,14 @@ export const markdownParser=async ({
     nodes
 }:ProtoContext)=>{
 
+    const supported=sources.filter(s=>s.ext==='md' ||s.contentType==='text/markdown');
 
-    for(const source of sources){
+    log(`${supported.length} supported source(s)`);
 
-        if(source.ext!=='md' && source.contentType!=='text/markdown'){
-            continue;
-        }
 
-        log(`markdownParser parse source - ${source.input}`);
+    for(const source of supported){
+
+        log(`parse - ${source.input}`);
 
         const mNodes=protoMarkdownParseNodes(source.content).rootNodes;
 

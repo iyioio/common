@@ -14,16 +14,15 @@ export const lucidCsvParser=async ({
     nodes
 }:ProtoContext)=>{
 
+    const supported=sources.filter(s=>s.ext==='csv' || s.contentType==='text/csv');
 
-    for(const source of sources){
+    log(`${supported.length} supported source(s)`);
 
-        if(source.ext!=='csv' && source.contentType!=='text/css'){
-            continue;
-        }
+    for(const source of supported){
 
         const csv=parseCsvRows(source.content);
 
-        log(`lucidCsvParser parse source - ${source.input}`);
+        log(`parse - ${source.input}`);
 
         for(const row of csv){
 

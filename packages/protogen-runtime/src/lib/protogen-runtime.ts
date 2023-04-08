@@ -1,5 +1,5 @@
 import { pathExistsAsync } from "@iyio/node-common";
-import { ProtoContext, ProtoPluginExecutionOptions } from "@iyio/protogen";
+import { ProtoContext, ProtoPipelinePlugin } from "@iyio/protogen";
 import { readFile, writeFile } from "fs/promises";
 
 let cachedCtx:ProtoContext|null=null;
@@ -61,29 +61,33 @@ export const saveProtoRuntimeCtxAsync=async (ctx:ProtoContext)=>{
 
 }
 
-export const executeProtoPluginAsync=async (options?:ProtoPluginExecutionOptions)=>{
+export const executeProtoPluginAsync=async (plugin?:ProtoPipelinePlugin)=>{
     const ctx=await loadProtoRuntimeCtxAsync();
     const pluginName=(
         process.env['PROTOGEN_CURRENT_PLUGIN']??
         process.env['NX_PROTOGEN_CURRENT_PLUGIN']
     )
 
-    if(ctx.stage==='preprocess' && pluginName){
+    if(ctx.stage==='init' && pluginName){
         ctx.metadata['plugin-'+pluginName]={
-            preprocess:options?.preprocess?true:undefined,
-            input:options?.input?true:undefined,
-            parse:options?.parse?true:undefined,
-            generate:options?.generate?true:undefined,
-            output:options?.output?true:undefined,
+            init:plugin?.init?true:undefined,
+            input:plugin?.input?true:undefined,
+            preprocess:plugin?.preprocess?true:undefined,
+            parse:plugin?.parse?true:undefined,
+            generate:plugin?.generate?true:undefined,
+            output:plugin?.output?true:undefined,
         }
         await saveProtoRuntimeCtxAsync(ctx);
     }
 
-    const callback=options?.[ctx.stage];
+    const callback=plugin?.[ctx.stage];
     if(callback){
-        const result=await callback(ctx);
-        if(result!==false){
-            await saveProtoRuntimeCtxAsync(ctx);
-        }
+        await callback(ctx,null,{
+            name:'@',// todo - update - pass correct param from executor
+            source:'@',// todo - update - pass correct param from executor
+            paths:[],// todo - update - pass correct param from executor
+            plugin:{}// todo - update - pass correct param from executor
+        });
+        await saveProtoRuntimeCtxAsync(ctx);
     }
 }

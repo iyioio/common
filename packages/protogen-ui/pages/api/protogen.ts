@@ -1,22 +1,35 @@
-import { splitStringWithQuotes } from '@iyio/common';
 import { pathExistsAsync } from '@iyio/node-common';
+import { ProtoConfig } from '@iyio/protogen';
 import { runProtogenCliAsync } from '@iyio/protogen-runtime';
 import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { setApiOutput } from '../../lib/protogen-api-lib';
 import { SaveRequest } from '../../lib/protogen-ui-lib';
 
-const defaultFile=process.env['NX_PROTOGEN_DEFAULT_FILE']??'protogen';
-const saveDir=process.env['NX_PROTOGEN_SAVE_DIR']??'.';
-const snapshotDir=process.env['NX_PROTOGEN_SNAPSHOT_DIR']??'.';
-const protoArgs=process.env['NX_PROTOGEN_ARGS']??'-o models.ts';
+const configPath=process.env['NX_PROTOGEN_CONFIG'];
+
 const notNameReg=/[^\w-]/g;
 
 export default async function protogenApiHandler (req: NextApiRequest, res: NextApiResponse)
 {
     try{
+
+        const json=(await readFile(configPath??'./protogen-config.json')).toString();
+        const {
+            pipeline,
+            saveDir='.',
+            snapshotDir='.protogen/snapshots',
+            defaultFile='protogen'
+        }=JSON.parse(json) as ProtoConfig;
+
+        if(!pipeline.workingDirectory && configPath){
+            pipeline.workingDirectory=dirname(configPath);
+        }
+
+        const workingDir=pipeline?.workingDirectory??'.';
+
         switch(req.method){
 
             case 'POST':{
@@ -30,7 +43,7 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                 const name=(request.name??defaultFile).replace(notNameReg,'')+(
                     request.snapshot?getSnapName():''
                 )+'.md';
-                const path=join(request.snapshot?saveDir:snapshotDir,name);
+                const path=join(workingDir,request.snapshot?snapshotDir:saveDir,name);
                 await writeFile(path,request.content);
                 console.info(chalk.green(`protogen state saved to ${path}`));
 
@@ -38,18 +51,8 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
                     const outputId=request.outputId;
                     let isVerbose:boolean;
                     await runProtogenCliAsync({
-                        argList:[
-                            '-i',
-                            path,
-                            ...splitStringWithQuotes(protoArgs,{
-                                separator:' ',
-                                removeEmptyValues:true,
-                                escapeStyle:'double-quote',
-                                trimValues:true,
-                            })
-
-                        ],
-                        argStart:0,
+                        config:pipeline,
+                        args:pipeline,
                         onOutputReady:v=>isVerbose=v,
                         logOutput:outputId?(...args:any[])=>{
                             if(isVerbose){
@@ -72,7 +75,7 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
 
             case 'GET':{
                 const name=(defaultFile).replace(notNameReg,'')+'.md';
-                const path=join(saveDir,name);
+                const path=join(workingDir,saveDir,name);
                 const state=(await pathExistsAsync(path))?(await readFile(path)).toString():'';
                 res.status(200).json(state);
                 return;

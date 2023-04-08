@@ -1,16 +1,16 @@
-import { uuid } from "@iyio/common";
-import { executeTGenPipelineAsync, ProtoCallback, ProtoPipeline, tgenCliFlags } from "@iyio/protogen";
+import { HashMap, uuid } from "@iyio/common";
+import { executeTGenPipelineAsync, protoGetStageFromName, ProtoPipeline, ProtoPipelineConfig } from "@iyio/protogen";
 import { fileReader } from "./fileReader";
 import { fileWriter } from "./fileWriter";
 import { lucidCsvParser } from "./lucidCsvParser";
 import { markdownParser } from "./markdownParser";
-import { tsExternalExecutor } from "./tsExternalExecutor";
-import { zodGenerator } from "./zodGenerator";
+import { reactPlugin } from "./reactPlugin";
+import { zodPlugin } from "./zodPlugin";
 
 export interface RunProtogenCliAsyncOptions
 {
-    argList:string[];
-    argStart?:number;
+    config:ProtoPipelineConfig;
+    args:HashMap<any>;
     loadModule?:(name:string)=>any;
     logOutput?:(...args:any[])=>void;
     verbose?:boolean;
@@ -19,8 +19,8 @@ export interface RunProtogenCliAsyncOptions
 }
 
 export const runProtogenCliAsync=async ({
-    argList,
-    argStart=0,
+    config,
+    args,
     loadModule,
     logOutput,
     verbose: _verbose,
@@ -28,138 +28,145 @@ export const runProtogenCliAsync=async ({
     onPipelineReady,
 }:RunProtogenCliAsyncOptions):Promise<ProtoPipeline>=>{
 
-    const args:{[name:string]:string[]}={}
+    let startDir:string|null=null;
+    if(config.workingDirectory && globalThis.process?.chdir!==undefined && globalThis.process?.cwd!==undefined){
+        startDir=globalThis.process.cwd();
+        globalThis.process.chdir(config.workingDirectory);
+    }
 
-    for(let i=argStart;i<argList.length;i++){
-        const a=argList[i];
-        if(a.startsWith('-')){
-            const v=argList[i+1]??'';
-            let values=args[a];
-            if(!values){
-                values=[];
-                args[a]=values;
-            }
-            if(v.startsWith('-')){
-                values.push('');
-            }else{
-                values.push(v);
-                i++;
-            }
-        }else if(a.startsWith('#')){
-            break;
-        }else{
-            let values=args[tgenCliFlags.input];
-            if(!values){
-                values=[];
-                args[tgenCliFlags.input]=values;
-            }
-            values.push(a);
+    try{
+
+        const verbose=_verbose??config.verbose??false;
+        const log=logOutput??(verbose?console.log:()=>{/* */})
+        onOutputReady?.(verbose,log);
+        if(verbose){
+            log('Verbose mode enabled');
         }
-    }
 
-    const verbose=_verbose??(args[tgenCliFlags.verbose]?true:false);
-    const log=logOutput??(verbose?console.log:()=>{/* */})
-    onOutputReady?.(verbose,log);
-    if(verbose){
-        log('Verbose mode enabled');
-    }
-
-    const pipeline:ProtoPipeline={
-        context:{
-            executionId:uuid(),
-            metadata:{},
-            args,
-            inputArgs:args[tgenCliFlags.input]??[],
-            outputArgs:args[tgenCliFlags.output]??[],
-            sources:[],
-            nodes:[],
-            outputs:[],
-            verbose,
-            tab:'    ',
-            stage:'input',
-            log,
-        },
-        readers:[],
-        parsers:[],
-        generators:[],
-        writers:[],
-        plugins:{},
-        externalPlugins:[],
-        externalExecutors:[tsExternalExecutor]
-    };
+        const pipeline:ProtoPipeline={
+            config,
+            context:{
+                executionId:uuid(),
+                metadata:{},
+                args,
+                inputs:config.inputs??[],
+                sources:[],
+                nodes:[],
+                outputs:[],
+                verbose,
+                tab:'    ',
+                stage:'init',
+                importMap:{},
+                log,
+            },
+            plugins:[],
+        };
 
 
-    const plugins=args[tgenCliFlags.loadPlugin]??[];
-    for(const p of plugins){
+        const plugins=config.plugins??[];
+        for(const p of plugins){
 
-        log(`Load plugin module - ${p}`);
+            const [source,_name,...paths]=p.split(':');
+            const name=_name||'default';
 
-        const mod=loadModule?.(p)??{};
-        for(const name of mod){
-            const callback=mod[name];
-            if(typeof callback === 'function'){
-                log(`Add plugin ${name} from ${p}`);
-                pipeline.plugins[name]=callback;
-            }
-        }
-    }
+            log(`Load plugin ${name} from ${source}`);
 
-    const exPlugins=args[tgenCliFlags.loadPluginPath]??[];
-    for(const p of exPlugins){
-
-        log(`Add external plugin path - ${p}`);
-
-        pipeline.externalPlugins.push(p);
-    }
-
-    const addToList=(flag:keyof typeof tgenCliFlags,ary:(ProtoCallback|string)[])=>{
-        const names=args[tgenCliFlags[flag]]??[];
-        for(const name of names){
-            log(`Add ${flag} - ${name}`);
-            const plugin=pipeline.plugins[name];
+            const plugin=loadModule?.(p)?.[name];
             if(!plugin){
-                throw new Error(`No plugin found by name ${name}`)
+                throw new Error(`No plugin found for plugin path ${p}`)
             }
-            ary.push(plugin);
+            if(typeof plugin === 'function'){
+                const stage=protoGetStageFromName(name)??protoGetStageFromName(source);
+                if(!stage){
+                    throw new Error('Unable to determine plugin stage by name')
+                }
+                pipeline.plugins.push({
+                    name,
+                    source,
+                    paths,
+                    plugin:{[stage]:plugin}
+                })
+
+            }else if(typeof plugin === 'object'){
+                pipeline.plugins.push({
+                    name,
+                    source,
+                    paths,
+                    plugin
+                })
+            }else{
+                throw new Error(
+                    `Invalid plugin returned from ${p}. `+
+                    `A ProtoPipelinePlugin, ProtoPipelineConfigurablePlugin or `+
+                    `function should be returned.`
+                )
+            }
+        }
+
+
+        if(config.loadDefaultPlugins){
+
+            pipeline.plugins.push({
+                name:'fileReader',
+                source:'@',
+                paths:[],
+                plugin:{
+                    input:fileReader
+                }
+            });
+
+            pipeline.plugins.push({
+                name:'markdownParser',
+                source:'@',
+                paths:[],
+                plugin:{
+                    parse:markdownParser
+                }
+            });
+
+            pipeline.plugins.push({
+                name:'lucidCsvParser',
+                source:'@',
+                paths:[],
+                plugin:{
+                    parse:lucidCsvParser
+                }
+            });
+
+            pipeline.plugins.push({
+                name:'zodPlugin',
+                source:'@',
+                paths:[],
+                plugin:zodPlugin
+            });
+
+            pipeline.plugins.push({
+                name:'reactPlugin',
+                source:'@',
+                paths:[],
+                plugin:reactPlugin
+            });
+
+            pipeline.plugins.push({
+                name:'fileWriter',
+                source:'@',
+                paths:[],
+                plugin:{
+                    output:fileWriter
+                }
+            });
+        }
+
+        onPipelineReady?.(pipeline);
+
+        await executeTGenPipelineAsync(pipeline);
+
+        //log('context',inspect(pipeline.context,{showHidden:false,depth:20,colors:true}));
+
+        return pipeline;
+    }finally{
+        if(startDir){
+            globalThis.process.chdir(startDir);
         }
     }
-
-    addToList('reader',pipeline.readers);
-    addToList('parser',pipeline.parsers);
-    addToList('generator',pipeline.generators);
-    addToList('writer',pipeline.writers);
-
-
-    if(!args[tgenCliFlags.noDefaultPlugins]?.length){
-
-        if(!pipeline.readers.length){
-            log('Add default reader - fileReader');
-            pipeline.readers.push(fileReader);
-        }
-
-        if(!pipeline.parsers.length){
-            log('Add default parser - markdownParser');
-            pipeline.parsers.push(markdownParser);
-            log('Add default parser - lucidCsvParser');
-            pipeline.parsers.push(lucidCsvParser);
-        }
-
-        if(!pipeline.generators.length){
-            log('Add default generator - zodGenerator');
-            pipeline.generators.push(zodGenerator);
-        }
-
-        if(!pipeline.writers.length){
-            log('Add default writer - fileWriter');
-            pipeline.writers.push(fileWriter);
-        }
-    }
-
-    onPipelineReady?.(pipeline);
-
-    await executeTGenPipelineAsync(pipeline);
-
-    //log('context',inspect(pipeline.context,{showHidden:false,depth:20,colors:true}));
-
-    return pipeline;
 }

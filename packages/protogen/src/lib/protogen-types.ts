@@ -1,5 +1,13 @@
 import { HashMap, Point } from "@iyio/common";
+import { ProtoPipelineConfig } from "./protogen-pipeline-types";
 
+export interface ProtoConfig
+{
+    pipeline:ProtoPipelineConfig;
+    defaultFile?:string;
+    saveDir?:string;
+    snapshotDir?:string;
+}
 
 export interface ProtoTypeInfo
 {
@@ -107,64 +115,7 @@ export interface ProtoNode{
     copySource?:boolean;
 }
 
-export interface ProtoOutput
-{
-    name?:string;
-    ext:string;
-    content:string;
-}
 
-export interface ProtoSource
-{
-    input?:string;
-    ext?:string;
-    contentType?:string;
-    content:string;
-}
-
-export interface ProtoContext
-{
-    executionId:string;
-    /**
-     * Args passed from the command line
-     */
-    args:{[name:string]:string[]};
-    inputArgs:string[];
-    outputArgs:string[];
-    sources:ProtoSource[];
-    nodes:ProtoNode[];
-    outputs:ProtoOutput[];
-    verbose:boolean;
-    tab:string;
-    stage:ProtoStage;
-    metadata:{[name:string]:any};
-    log:(...values:any[])=>void;
-}
-
-/**
- * Callback type used to call plugin while running a protogen pipeline
- */
-export type ProtoCallback=(ctx:ProtoContext)=>Promise<void>|void;
-
-export interface ProtoExternalExecutorOptions
-{
-    action:'run-plugin'|'clean-up';
-    plugin?:string;
-}
-
-export type ProtoExternalExecutor=(ctx:ProtoContext,options:ProtoExternalExecutorOptions)=>Promise<boolean>
-
-export interface ProtoPipeline
-{
-    context:ProtoContext;
-    readers:ProtoCallback[];
-    parsers:ProtoCallback[];
-    generators:ProtoCallback[];
-    writers:ProtoCallback[];
-    plugins:{[name:string]:ProtoCallback};
-    externalPlugins:string[];
-    externalExecutors:ProtoExternalExecutor[];
-}
 
 
 
@@ -199,18 +150,6 @@ export interface ProtoPosScale
     scale:number;
 }
 
-export type ProtoStage='preprocess'|'input'|'parse'|'generate'|'output';
-
-export type ProtoPluginCallback=(ctx:ProtoContext)=>Promise<void|boolean>|void|boolean;
-
-export interface ProtoPluginExecutionOptions
-{
-    preprocess?:ProtoPluginCallback;
-    input?:ProtoPluginCallback;
-    parse?:ProtoPluginCallback;
-    generate?:ProtoPluginCallback;
-    output?:ProtoPluginCallback;
-}
 
 export interface ProtoParsingResult
 {
