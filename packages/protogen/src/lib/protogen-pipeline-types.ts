@@ -9,7 +9,7 @@ export interface ProtoOutput
     path:string;
     content:string;
     autoMerge?:boolean;
-    mergeHandler?:(existingContent:string,output:ProtoOutput)=>string;
+    mergeHandler?:(existingContent:string[],overwriting:string[])=>string[]|Promise<string[]>;
 }
 
 export interface ProtoSource
