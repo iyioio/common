@@ -14,7 +14,7 @@ export const executeTGenPipelineAsync=async ({
 
     const log=context.log;
 
-    log(`\n--------------------------\nStart pipeline - ${context.executionId}}`);
+    log(`\n--------------------------\nStart pipeline${config.dryRun?' ( DRY RUN )':''} - ${context.executionId}}`);
 
     const runPluginsAsync=async (stage:ProtoStage)=>{
         context.stage=stage;
@@ -68,6 +68,6 @@ export const executeTGenPipelineAsync=async ({
         log(`\nimportMap:${JSON.stringify(context.importMap,null,4)}`);
     }
 
-    log(`\nEnd pipeline - ${context.executionId}\n--------------------------\n`)
+    log(`\nEnd pipeline${config.dryRun?' ( DRY RUN )':''} - ${context.executionId}\n--------------------------\n`)
 
 }

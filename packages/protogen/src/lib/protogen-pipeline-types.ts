@@ -5,12 +5,24 @@ import { ProtoNode } from "./protogen-types";
 
 export type ProtoStage='init'|'input'|'preprocess'|'parse'|'generate'|'output';
 
+export interface ProtoIndexGenerator
+{
+    root:string;
+    recursive?:boolean;
+    generator:(ctx:ProtoContext,generator:ProtoIndexGenerator,generatorOutput:ProtoOutput)=>string|Promise<string>;
+    /**
+     * Array of filenames, full paths or regular expresses to exclude from the index
+     */
+    exclude?:(string|RegExp)[];
+}
+
 export interface ProtoOutput
 {
     path:string;
     content:string;
     autoMerge?:boolean;
     mergeHandler?:ProtoSourceCodeMerger|((ProtoSourceCodeMerger|null|undefined)[]);
+    generator?:ProtoIndexGenerator;
 }
 
 export interface ProtoSource
@@ -35,9 +47,11 @@ export interface ProtoContext
     verbose:boolean;
     tab:string;
     stage:ProtoStage;
-    defaultPackageName:string;
+    namespace:string;
     importMap:HashMap<string>;
+    packagePaths:HashMap<string[]>;
     metadata:{[name:string]:any};
+    dryRun:boolean;
     log:(...values:any[])=>void;
 
 }
@@ -88,8 +102,10 @@ export interface ProtoPipelineConfig
     workingDirectory?:string;
     verbose?:boolean;
     loadDefaultPlugins?:boolean;
-    defaultPackageName?:string;
+    namespace?:string;
     logImportMap?:boolean;
+    dryRun?:boolean;
+    disablePlugins?:string[];
 }
 
 export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
@@ -98,15 +114,18 @@ export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
     workingDirectory:'-d',
     verbose:'-v',
     loadDefaultPlugins:'-l',
-    defaultPackageName:'-m',
+    namespace:'-n',
+    disablePlugins:'-x'
 } as const;
 
 export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfig>={
     inputs:(args:string[])=>args,
     plugins:(args:string[])=>args,
     workingDirectory:(args:string[])=>args[0],
-    defaultPackageName:(args:string[])=>args[0],
+    namespace:(args:string[])=>args[0],
     verbose:(args:string[])=>Boolean(args[0]),
     logImportMap:(args:string[])=>Boolean(args[0]),
+    dryRun:(args:string[])=>Boolean(args[0]),
     loadDefaultPlugins:(args:string[])=>Boolean(args[0]),
+    disablePlugins:(args:string[])=>args,
 } as const;

@@ -1,3 +1,4 @@
+export * from './lib/default-plugins';
 export * from './lib/fileReader';
 export * from './lib/fileWriter';
 export * from './lib/lucidCsvParser';

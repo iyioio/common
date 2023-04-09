@@ -91,6 +91,22 @@ export const getFileNameNoExt=(path?:string|null): string=>
     return i===-1?path:path.substring(0,i);
 }
 
+export const getPathNoExt=(path?:string|null): string=>
+{
+    if(!path){
+        return '.';
+    }
+
+    const i=path.lastIndexOf('.');
+    const s=Math.max(path.indexOf('/'),path.indexOf('\\'));
+
+    if(i<s){
+        return path;
+    }
+
+    return i===-1?path:path.substring(0,i);
+}
+
 export const decodePathParts=<TPath extends string|null|undefined>(path:TPath):TPath=>
 {
     if(!path){

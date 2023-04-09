@@ -4,10 +4,17 @@ import { ProtoContext, protoMergeSourceCode, protoMergeTsImports } from "@iyio/p
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname } from "path";
 
-export const fileWriter=async ({
-    log,
-    outputs,
-}:ProtoContext)=>{
+export const fileWriter=async (ctx:ProtoContext)=>{
+
+    const {
+        log,
+        outputs,
+        dryRun,
+    }=ctx;
+
+    if(dryRun){
+        log('### DRY RUN');
+    }
 
     for(const output of outputs){
         const name=unrootPath(output.path);
@@ -18,8 +25,14 @@ export const fileWriter=async ({
         if(name.includes('/') || name.includes('\\')){
             const dirName=dirname(name);
             if(!await pathExistsAsync(dirName)){
-                await mkdir(dirName,{recursive:true})
+                if(!dryRun){
+                    await mkdir(dirName,{recursive:true})
+                }
             }
+        }
+
+        if(output.generator){
+            output.content=await output.generator.generator(ctx,output.generator,output);
         }
 
         const mergers=output.mergeHandler?asArray(output.mergeHandler):null;
@@ -47,11 +60,15 @@ export const fileWriter=async ({
 
             const content=mergedLines.join('\n');
             log(`write merged - ${name} - ${content.length/1000}kb`);
-            await writeFile(name,content);
+            if(!dryRun){
+                await writeFile(name,content);
+            }
 
         }else{
             log(`write - ${name} - ${output.content.length/1000}kb`);
-            await writeFile(name,output.content);
+            if(!dryRun){
+                await writeFile(name,output.content);
+            }
         }
     }
 

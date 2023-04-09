@@ -1,4 +1,5 @@
-import { HashMap } from "@iyio/common";
+import { getFileNameNoExt, getPathNoExt, HashMap } from "@iyio/common";
+import { ProtoContext, ProtoIndexGenerator, ProtoOutput } from "./protogen-pipeline-types";
 
 export const protoTsTypeMap:HashMap<string>={
     'int':'number',
@@ -18,7 +19,7 @@ export const protoGetTsType=(type:string|null|undefined):string=>{
 }
 
 
-export const protoTsBuiltTypes=['string','number','any','bigint','boolean','date','null'] as const;
+export const protoTsBuiltTypes=['string','number','any','bigint','boolean','date','null','void'] as const;
 
 export const protoIsTsBuiltType=(type:string):boolean=>protoTsBuiltTypes.includes(type as any);
 
@@ -54,3 +55,55 @@ export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,pre
 export const protoFormatTsComment=(comment:string,tab:string)=>(
     `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
 )
+
+export const addTsImport=(im:string,packageName:string|null|undefined,imports:string[],importMap:HashMap<string>)=>{
+    if(!imports.includes(im)){
+        imports.push(im);
+    }
+    if(packageName){
+        importMap[im]=packageName;
+    }
+}
+
+export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerator,indexOutput:ProtoOutput):string=>
+{
+    const out:string[]=[];
+
+    const exclude=generator.exclude??[];
+    const root=generator.root.endsWith('/')?generator.root:generator.root+'/';
+
+    for(const o of ctx.outputs){
+        if(o===indexOutput || !o.path.startsWith(root)){
+            continue;
+        }
+
+        let executed=false;
+        for(const ex of exclude){
+            if(typeof ex === 'string'){
+                if(ex.includes('/')){
+                    if(ex===o.path){
+                        executed=true;
+                        break;
+                    }
+                }else if(o.path.endsWith(ex)){
+                    executed=true;
+                    break;
+                }
+            }else if(ex.test(o.path)){
+                executed=true;
+                break;
+            }
+        }
+
+        if(executed){
+            continue;
+        }
+
+        getFileNameNoExt
+        out.push(`export * from './${getPathNoExt(o.path.substring(root.length))}';`)
+    }
+
+    out.sort();
+
+    return out.join('\n')
+}

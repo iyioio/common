@@ -1,65 +1,79 @@
 import { joinPaths, requireUnrootPath } from "@iyio/common";
-import { ProtoContext, protoFormatTsComment, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { addTsImport, getProtoPluginPackAndPath, ProtoContext, protoFormatTsComment, protoGenerateTsIndex, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoNode, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['comp','view','screen'];
 
-const defaultDir='components';
-
-const ReactPluginConfig=z.object(
+const ReactCompPluginConfig=z.object(
 {
     /**
-     * @default "components"
+     * @default .reactPackage
      */
-    reactCompDir:z.string().optional(),
+    reactCompPath:z.string().optional(),
+
+    /**
+     * @default "react-comp-index.ts"
+     */
+    reactCompIndexFilename:z.string().optional(),
 
     /**
      * @default false
      */
-    reactUseStyledJsx:z.boolean().optional(),
+    reactCompUseStyledJsx:z.boolean().optional(),
+
 
     /**
-     * @default context.defaultPackageName
+     * @default "components"
      */
-    reactPackageName:z.string().optional(),
+    reactCompPackage:z.string().optional(),
 })
 
-export const reactPlugin:ProtoPipelineConfigurablePlugin<typeof ReactPluginConfig>=
+export const reactCompPlugin:ProtoPipelineConfigurablePlugin<typeof ReactCompPluginConfig>=
 {
-    configScheme:ReactPluginConfig,
+    configScheme:ReactCompPluginConfig,
     generate:async (ctx,config)=>{
 
         const {
             log,
             nodes,
             outputs,
+            packagePaths,
+            namespace,
         }=ctx;
 
-        let {reactCompDir=defaultDir}=config;
+        const {
+            reactCompPackage='components',
+            reactCompPath,
+            reactCompIndexFilename='react-comp-index.ts'
+        }=config;
 
-        if(reactCompDir.endsWith('/') || reactCompDir.endsWith('\\')){
-            reactCompDir=reactCompDir.substring(0,reactCompDir.length-1);
-        }
+        const {path}=getProtoPluginPackAndPath(
+            namespace,
+            reactCompPackage,
+            reactCompPath,
+            {packagePaths,indexFilename:reactCompIndexFilename}
+            );
 
         const supported=nodes.filter(n=>supportedTypes.includes(n.type));
 
         log(`reactPlugin. ${supported.length} supported node(s)`);
 
-        const index:string[]=[];
-
         for(const node of supported){
 
             log(`component - ${node.name}`);
 
-            const name=await generateComponentAsync(node,ctx,config);
-
-            index.push(`export * from './${name}';`);
+            await generateComponentAsync(node,ctx,config);
         }
 
-        if(index.length){
+        if(supported.length){
             outputs.push({
-                path:reactCompDir+'/index.tsx',
-                content:index.join('\n'),
+                path:joinPaths(path,reactCompIndexFilename),
+                content:'',
+                generator:{
+                    root:path,
+                    recursive:true,
+                    generator:protoGenerateTsIndex
+                }
             })
         }
     }
@@ -69,32 +83,26 @@ const generateComponentAsync=async (node:ProtoNode,{
     tab,
     importMap,
     outputs,
-    defaultPackageName,
+    namespace,
 }:ProtoContext,{
-    reactCompDir=defaultDir,
-    reactUseStyledJsx=false,
-    reactPackageName=defaultPackageName,
-}:z.infer<typeof ReactPluginConfig>):Promise<string>=>{
+    reactCompPackage='components',
+    reactCompPath,
+    reactCompUseStyledJsx=false,
+}:z.infer<typeof ReactCompPluginConfig>):Promise<string>=>{
 
-    if(reactCompDir.endsWith('/') || reactCompDir.endsWith('\\')){
-        reactCompDir=reactCompDir.substring(0,reactCompDir.length-1);
-    }
+
+    const {path,packageName}=getProtoPluginPackAndPath(namespace,reactCompPackage,reactCompPath);
 
 
     const imports:string[]=[];
-    const addImport=(im:string,packageName?:string)=>{
-        if(!imports.includes(im)){
-            imports.push(im);
-        }
-        if(packageName){
-            importMap[im]=packageName;
-        }
+    const addImport=(im:string,pkg?:string)=>{
+        addTsImport(im,pkg,imports,importMap);
     }
     const name=node.name;
-    let filename=node.children?.['$filename']?.value?.trim()||name;
+    const filename=requireUnrootPath(node.children?.['$filename']?.value?.trim()??name+'.tsx');
 
-    importMap[name]=reactPackageName;
-    importMap[name+'Props']=reactPackageName;
+    importMap[name]=packageName;
+    importMap[name+'Props']=packageName;
 
     const baseLayout=node.children?.['baseLayout'];
     const baseLayoutType=baseLayout?getBaseLayoutName(baseLayout.value||'outer'):null;
@@ -173,7 +181,7 @@ const generateComponentAsync=async (node:ProtoNode,{
     out.push('');
     out.push(`${bodyTab}${name}`);
     out.push('');
-    if(reactUseStyledJsx || node.children?.['styled-jsx']){
+    if(reactCompUseStyledJsx || node.children?.['styled-jsx']){
         out.push(`${bodyTab}<style global jsx>{\``);
         out.push(`${bodyTab}${tab}.${name}{`);
         out.push(`${bodyTab}${tab}${tab}display:flex;`);
@@ -189,13 +197,8 @@ const generateComponentAsync=async (node:ProtoNode,{
         protoPrependTsImports(imports,importMap,out);
     }
 
-    filename=filename.startsWith('/')?requireUnrootPath(filename):joinPaths(reactCompDir,filename);
-    if(!filename.toLowerCase().endsWith('.tsx')){
-        filename+='.tsx';
-    }
-
     outputs.push({
-        path:filename,
+        path:joinPaths(path,filename),
         content:out.join('\n'),
         autoMerge:true,
         mergeHandler:protoMergeTsImports

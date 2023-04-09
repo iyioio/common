@@ -1,5 +1,5 @@
-import { asArray, getObjKeyCount } from "@iyio/common";
-import { protoChildrenToArray, protoFormatTsComment, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
+import { asArray, getObjKeyCount, joinPaths } from "@iyio/common";
+import { getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
 import { getTsSchemeName, SharedTsPluginConfigScheme } from "./sharedTsConfig";
 
@@ -9,15 +9,26 @@ const ZodPluginConfig=z.object(
 {
 
     /**
-     * @default "models.ts"
+     * @default .zodPackage
      */
-    zodOutPath:z.string().optional(),
+    zodPath:z.string().optional(),
+
+    /**
+     * @default "types.ts"
+     */
+    zodFilename:z.string().optional(),
+
+    /**
+     * @default "types-index.ts"
+     */
+    zodIndexFilename:z.string().optional(),
 
 
     /**
-     * @default context.defaultPackageName
+     * @default "types"
      */
-    zodPackageName:z.string().optional(),
+    zodPackage:z.string().optional(),
+
 }).merge(SharedTsPluginConfigScheme);
 
 export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
@@ -30,12 +41,22 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         outputs,
         importMap,
         tab,
-        defaultPackageName
+        packagePaths,
+        namespace,
     },{
-        zodOutPath='models.ts',
-        zodPackageName=defaultPackageName,
+        zodFilename='types.ts',
+        zodPackage='types',
+        zodIndexFilename='types-index.ts',
+        zodPath,
         ...tsConfig
     })=>{
+
+        const {path,packageName}=getProtoPluginPackAndPath(
+            namespace,
+            zodPackage,
+            zodPath,
+            {packagePaths,indexFilename:zodIndexFilename}
+            );
 
         log(`zodPlugin. node count = ${nodes.length}`)
 
@@ -77,10 +98,10 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
             }
 
             if(added){
-                importMap[node.name]=zodPackageName;
+                importMap[node.name]=packageName;
                 const fullName=getFullName(node.name);
                 if(fullName!==node.name){
-                    importMap[fullName]=zodPackageName;
+                    importMap[fullName]=packageName;
                 }
             }
 
@@ -88,8 +109,17 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         }
 
         outputs.push({
-            path:zodOutPath,
+            path:joinPaths(path,zodFilename),
             content:out.join('\n'),
+        })
+
+        outputs.push({
+            path:joinPaths(path,zodIndexFilename),
+            content:'',
+            generator:{
+                root:path,
+                generator:protoGenerateTsIndex
+            }
         })
     }
 }
@@ -177,6 +207,8 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                         prop.optional?'?':''
                     }:${
                         propType
+                    }${
+                        prop.types[0]?.isArray?'[]':''
                     };`
                 );
                 lazyProps.push(`${

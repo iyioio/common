@@ -1,12 +1,6 @@
 import { HashMap, uuid } from "@iyio/common";
 import { executeTGenPipelineAsync, protoGetStageFromName, ProtoPipeline, ProtoPipelineConfig } from "@iyio/protogen";
-import { fileReader } from "./fileReader";
-import { fileWriter } from "./fileWriter";
-import { lucidCsvParser } from "./lucidCsvParser";
-import { markdownParser } from "./markdownParser";
-import { reactPlugin } from "./reactPlugin";
-import { tablePlugin } from "./tablePlugin";
-import { zodPlugin } from "./zodPlugin";
+import { getDefaultProtoPipelinePlugins } from "./default-plugins";
 
 export interface RunProtogenCliAsyncOptions
 {
@@ -49,16 +43,18 @@ export const runProtogenCliAsync=async ({
             context:{
                 executionId:uuid(),
                 metadata:{},
+                packagePaths:{},
                 args,
                 inputs:config.inputs??[],
                 sources:[],
                 nodes:[],
                 outputs:[],
                 verbose,
-                defaultPackageName:config.defaultPackageName??'common',
+                namespace:config.namespace??'common',
                 tab:'    ',
                 stage:'init',
                 importMap:{},
+                dryRun:config.dryRun??false,
                 log,
             },
             plugins:[],
@@ -108,62 +104,18 @@ export const runProtogenCliAsync=async ({
 
         if(config.loadDefaultPlugins){
 
-            pipeline.plugins.push({
-                name:'fileReader',
-                source:'@',
-                paths:[],
-                plugin:{
-                    input:fileReader
+            pipeline.plugins.push(...getDefaultProtoPipelinePlugins());
+        }
+
+        if(config.disablePlugins){
+            for(let i=0;i<pipeline.plugins.length;i++){
+                const p=pipeline.plugins[i];
+                if(config.disablePlugins.includes(p.name)){
+                    log(`disabling plugin ${p.name}`);
+                    pipeline.plugins.splice(i,1);
+                    i--;
                 }
-            });
-
-            pipeline.plugins.push({
-                name:'markdownParser',
-                source:'@',
-                paths:[],
-                plugin:{
-                    parse:markdownParser
-                }
-            });
-
-            pipeline.plugins.push({
-                name:'lucidCsvParser',
-                source:'@',
-                paths:[],
-                plugin:{
-                    parse:lucidCsvParser
-                }
-            });
-
-            pipeline.plugins.push({
-                name:'zodPlugin',
-                source:'@',
-                paths:[],
-                plugin:zodPlugin
-            });
-
-            pipeline.plugins.push({
-                name:'tablePlugin',
-                source:'@',
-                paths:[],
-                plugin:tablePlugin
-            });
-
-            pipeline.plugins.push({
-                name:'reactPlugin',
-                source:'@',
-                paths:[],
-                plugin:reactPlugin
-            });
-
-            pipeline.plugins.push({
-                name:'fileWriter',
-                source:'@',
-                paths:[],
-                plugin:{
-                    output:fileWriter
-                }
-            });
+            }
         }
 
         onPipelineReady?.(pipeline);

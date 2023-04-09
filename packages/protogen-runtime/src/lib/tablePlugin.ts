@@ -1,5 +1,5 @@
-import { getDirectoryName, getFileNameNoExt, joinPaths, strFirstToLower } from "@iyio/common";
-import { protoFormatTsComment, protoGetChildren, protoGetChildrenByName, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { getFileNameNoExt, joinPaths, strFirstToLower } from "@iyio/common";
+import { addTsImport, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { getTsSchemeName, SharedTsPluginConfigScheme } from "./sharedTsConfig";
 
@@ -8,15 +8,30 @@ import { getTsSchemeName, SharedTsPluginConfigScheme } from "./sharedTsConfig";
 const TablePluginConfig=z.object(
 {
     /**
+     * @default .tablePackage
+     */
+    tablePath:z.string().optional(),
+
+    /**
      * @default "tables.ts"
      */
-    tableOutPath:z.string().optional(),
+    tableFilename:z.string().optional(),
+
+    /**
+     * @default "tables-index.ts"
+     */
+    tableIndexFilename:z.string().optional(),
+
+    /**
+     * @default "table-param.ts"
+     */
+    tableParamsFilename:z.string().optional(),
 
 
     /**
-     * @default context.defaultPackageName
+     * @default "tables"
      */
-    tablePackageName:z.string().optional(),
+    tablePackage:z.string().optional(),
 
     /**
      * If true the tableIdParam of generated tables will be populated and a table-params file will be generated.
@@ -45,24 +60,30 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         outputs,
         importMap,
         tab,
-        defaultPackageName,
+        packagePaths,
+        namespace,
     },{
-        tableOutPath='tables.ts',
-        tablePackageName=defaultPackageName,
+        tablePath,
+        tablePackage='tables',
+        tableFilename='tables.ts',
+        tableParamsFilename='table-params.ts',
+        tableIndexFilename='tables-index.ts',
         tableUseParamIds,
         dataTableDescriptionPackage='@iyio/common',
         allTableArrayName='allTables',
         ...tsConfig
     })=>{
 
+        const {path,packageName}=getProtoPluginPackAndPath(
+            namespace,
+            tablePackage,
+            tablePath,
+            {packagePaths,indexFilename:tableIndexFilename}
+        );
+
         const imports:string[]=[];
         const addImport=(im:string,packageName?:string)=>{
-            if(!imports.includes(im)){
-                imports.push(im);
-            }
-            if(packageName){
-                importMap[im]=packageName;
-            }
+            addTsImport(im,packageName,imports,importMap);
         }
 
         const supported=nodes.filter(node=>node.types.some(t=>t.type==='table'));
@@ -76,8 +97,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         const out:string[]=[];
         const paramsOut:string[]=[];
 
-        const paramImportName='./'+getFileNameNoExt(tableOutPath)+'-params';
-        const paramsOutPath=joinPaths(getDirectoryName(tableOutPath),getFileNameNoExt(tableOutPath)+'-params.ts');
+        const paramImportName='./'+getFileNameNoExt(tableParamsFilename);
 
         const tableNames:string[]=[];
 
@@ -85,7 +105,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
 
             const name=node.name;
             const paramName=strFirstToLower(name)+'TableParam';
-            importMap[name+'Table']=tablePackageName;
+            importMap[name+'Table']=packageName;
 
             tableNames.push(name+'Table');
 
@@ -189,7 +209,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             out.push('}')
         }
 
-        importMap[allTableArrayName]=tablePackageName;
+        importMap[allTableArrayName]=packageName;
         out.push(`export const ${allTableArrayName}=[${tableNames.join(',')}] as const`)
         out.push(`Object.freeze(${allTableArrayName})`)
 
@@ -202,7 +222,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         out.splice(1,0,`// generator = tablePlugin`);
 
         outputs.push({
-            path:tableOutPath,
+            path:joinPaths(path,tableFilename),
             content:out.join('\n'),
         })
 
@@ -212,9 +232,18 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             paramsOut.splice(2,0,'import { defineStringParam } from "@iyio/common";')
             paramsOut.splice(3,0,'');
             outputs.push({
-                path:paramsOutPath,
+                path:joinPaths(path,tableParamsFilename),
                 content:paramsOut.join('\n'),
             })
         }
+
+        outputs.push({
+            path:joinPaths(path,tableIndexFilename),
+            content:'',
+            generator:{
+                root:path,
+                generator:protoGenerateTsIndex
+            }
+        })
     }
 }
