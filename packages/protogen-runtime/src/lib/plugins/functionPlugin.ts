@@ -1,5 +1,5 @@
 import { joinPaths } from "@iyio/common";
-import { addTsImport, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, protoLabelOutputLines, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['function'];
@@ -50,14 +50,10 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
 
         log(`${supported.length} supported node(s)`);
 
-        const imports:string[]=[];
-        const addImport=(im:string,pkg?:string)=>{
-            addTsImport(im,pkg,imports,importMap);
-        }
-
         for(const node of supported){
 
             const out:string[]=[];
+            const imports:string[]=[];
 
             out.push('');
             if(node.comment){
@@ -66,6 +62,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
 
             const name=node.name;
 
+            // export name using packageName
             importMap[name]=packageName;
 
             const isAsync=name.toLowerCase().endsWith('async') || node.children?.['async']!==undefined;
@@ -74,9 +71,10 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
             const returnType=isAsync?`Promise<${returnTypeBase}>`:returnTypeBase;
 
             if(!protoIsTsBuiltType(returnTypeBase)){
-                addImport(returnTypeBase);
+                imports.push(returnTypeBase);
             }
 
+            const startI=out.length;
             const oneLiner=`export const ${name}=${isAsync?'async ':''}(${
                 args.map(a=>`${a.name}:${a.type}`).join(', ')}):${returnType}=>`;
             if(oneLiner.length<=90 || args.length===0){
@@ -90,6 +88,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
                 }
                 out.push(`):${returnType}=>{`);
             }
+            protoLabelOutputLines(out,'function',startI);
 
             out.push(`${tab}// ${name}`)
 

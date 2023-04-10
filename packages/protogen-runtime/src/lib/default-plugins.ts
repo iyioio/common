@@ -5,6 +5,7 @@ import { functionPlugin } from "./plugins/functionPlugin";
 import { lucidCsvParser } from "./plugins/lucidCsvParser";
 import { markdownParser } from "./plugins/markdownParser";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
+import { serverFnPlugin } from "./plugins/serverFnPlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
 import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
 import { zodPlugin } from "./plugins/zodPlugin";
@@ -58,6 +59,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:reactCompPlugin
+        },
+        {
+            name:'serverFnPlugin',
+            source:'@',
+            paths:[],
+            plugin:serverFnPlugin
         },
         {
             name:'fileWriter',

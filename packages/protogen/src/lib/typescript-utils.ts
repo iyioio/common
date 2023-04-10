@@ -21,7 +21,7 @@ export const protoGetTsType=(type:string|null|undefined):string=>{
 
 export const protoTsBuiltTypes=['string','number','any','bigint','boolean','date','null','void'] as const;
 
-export const protoIsTsBuiltType=(type:string):boolean=>protoTsBuiltTypes.includes(type as any);
+export const protoIsTsBuiltType=(type:string|null|undefined):boolean=>protoTsBuiltTypes.includes(type as any);
 
 export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>):string[]=>{
     const imports:HashMap<string[]>={};
@@ -45,6 +45,11 @@ export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>):s
 
 
 export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,prependTo:string[]):void=>{
+
+    if(!types.length){
+        return;
+    }
+
     const imports=protoGenerateTsImports(types,importMap);
 
     if(imports.length){
