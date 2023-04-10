@@ -26,6 +26,8 @@ export * from './lib/dom';
 export * from './lib/ElementSizeObserver';
 export * from './lib/EnvParams';
 export * from './lib/errors';
+export * from './lib/fn-handler-lib';
+export * from './lib/fn-handler-types';
 export * from './lib/fs';
 export * from './lib/getHttpParamsAsync';
 export * from './lib/html';

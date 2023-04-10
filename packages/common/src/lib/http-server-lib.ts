@@ -56,9 +56,15 @@ export const createHttpNotFoundResponse=(message:string,options:HttpResponseOpti
     body:JSON.stringify(message)
 })
 
-export const createHttpErrorResponse=(message:string,options:HttpResponseOptions=emptyObject)=>createHttpResponse({
+export const createHttpBadRequestResponse=(message:string,options:HttpResponseOptions=emptyObject)=>createHttpResponse({
     ...options,
-    statusCode:500,
+    statusCode:400,
+    body:JSON.stringify(message)
+})
+
+export const createHttpErrorResponse=(message:string,options:HttpResponseOptions=emptyObject,statusCode=500)=>createHttpResponse({
+    ...options,
+    statusCode,
     body:JSON.stringify(message)
 })
 
