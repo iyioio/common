@@ -1,13 +1,13 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
-import { fileReader } from "./fileReader";
-import { fileWriter } from "./fileWriter";
-import { functionPlugin } from "./functionPlugin";
-import { lucidCsvParser } from "./lucidCsvParser";
-import { markdownParser } from "./markdownParser";
-import { reactCompPlugin } from "./reactCompPlugin";
-import { tablePlugin } from "./tablePlugin";
-import { tsConfigPlugin } from "./tsConfigPathsPlugin";
-import { zodPlugin } from "./zodPlugin";
+import { fileReader } from "./plugins/fileReader";
+import { fileWriter } from "./plugins/fileWriter";
+import { functionPlugin } from "./plugins/functionPlugin";
+import { lucidCsvParser } from "./plugins/lucidCsvParser";
+import { markdownParser } from "./plugins/markdownParser";
+import { reactCompPlugin } from "./plugins/reactCompPlugin";
+import { tablePlugin } from "./plugins/tablePlugin";
+import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
+import { zodPlugin } from "./plugins/zodPlugin";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
     return [

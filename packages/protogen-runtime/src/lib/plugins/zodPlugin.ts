@@ -1,7 +1,7 @@
 import { asArray, getObjKeyCount, joinPaths } from "@iyio/common";
 import { getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
-import { getTsSchemeName, SharedTsPluginConfigScheme } from "./sharedTsConfig";
+import { getTsSchemeName, SharedTsPluginConfigScheme } from "../sharedTsConfig";
 
 
 

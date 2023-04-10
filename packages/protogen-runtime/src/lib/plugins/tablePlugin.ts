@@ -1,7 +1,7 @@
 import { getFileNameNoExt, joinPaths, strFirstToLower } from "@iyio/common";
 import { addTsImport, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
-import { getTsSchemeName, SharedTsPluginConfigScheme } from "./sharedTsConfig";
+import { getTsSchemeName, SharedTsPluginConfigScheme } from "../sharedTsConfig";
 
 
 
