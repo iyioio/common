@@ -118,9 +118,10 @@ export default async function runExecutor(
         }
 
         if(moreThanEqDeps){
-            updateDeps(/([0-9.]+)/,'>=',pkg.dependencies,updates);
-            updateDeps(/([0-9.]+)/,'>=',pkg.devDependencies,updates);
-            updateDeps(/([0-9.]+)/,'>=',pkg.peerDependencies,updates);
+            const reg=/([0-9][0-9.]*.*)/
+            updateDeps(reg,'>=',pkg.dependencies,updates);
+            updateDeps(reg,'>=',pkg.devDependencies,updates);
+            updateDeps(reg,'>=',pkg.peerDependencies,updates);
         }
 
         await writeFile(packageJsonPath,JSON.stringify(pkg,null,4));
