@@ -95,20 +95,20 @@ as a space, session, chat or any other view
 that represents a time series of events
 and content.
 
-- id string (key)
-- uv number
+- id: string (key)
+- uv: number
   Used to sync access
   Add 1 to uv each time updating
   Other uses
-    + deny out of sync writes
-    + track number of changes
+    - deny out of sync writes
+    - track number of changes
 
 - $trigger: abc
 
-- post Post[]
+- post: Post[]
   - name: string
   - name: number
-  - ownerId: string :User * (fon)
+  - ownerId: string *User (fon)
     - (managed)
   - tracker
   \`\`\` ts
@@ -192,26 +192,26 @@ as a space, session, chat or any other view
 that represents a time series of events
 and content.
 
-- id string (key)
-- uv number
+- id: string (key)
+- uv: number
   Used to sync access
   Add 1 to uv each time updating
   Other uses
-    + deny out of sync writes
-    + track number of changes
+    - deny out of sync writes
+    - track number of changes
 
 - $trigger: abc
 
-- post Post[]
+- post: Post[]
   - name: string
   - name: number
-  - ownerId: string :User * (fon)
+  - ownerId: string *User (fon)
     - (managed)
-  - tracker
-  \`\`\` ts
-  - invalid ts here
-  getTrackers().find(t=>t.ready)
-  \`\`\`
+      - tracker
+      \`\`\` ts
+      - invalid ts here
+      getTrackers().find(t=>t.ready)
+      \`\`\`
 
   - weight: number
     - [User weight](User.weight)
@@ -277,6 +277,7 @@ Is older that 21?
 Is older that 21?
 - yes
 - no
+
 ###### OtherType
 
 +++++++++++++++++++++++++++++
@@ -291,10 +292,10 @@ as a space, session, chat or any other view
 that represents a time series of events
 and content.
 
-- id string (key)
-- uv number
+- id: string (key)
+- uv: number
 - $trigger: abc
-- post Post[]
+- post: Post[]
 ## User (dude)
 - id: string
 - name: string
@@ -325,6 +326,7 @@ Unattached comments
 Is older that 21?
 - yes
 - no
+
 ###### OtherType
 - prop1: string
 
@@ -340,25 +342,19 @@ as a space, session, chat or any other view
 that represents a time series of events
 and content.
 
-- id string (key)
-- uv number
+- id: string (key)
+- uv: number
   Used to sync access
   Add 1 to uv each time updating
   Other uses
-    + deny out of sync writes
-    + track number of changes
+    - deny out of sync writes
+    - track number of changes
 
 - $trigger: abc
-- post Post[]
+- post: Post[]
   - name: string
   - name: number
-  - ownerId: string :User * (fon)
-  - tracker
-  \`\`\` ts
-  - invalid ts here
-  getTrackers().find(t=>t.ready)
-  \`\`\`
-
+  - ownerId: string *User (fon)
   - weight: number
 ## User (dude)
 - id: string
@@ -400,6 +396,7 @@ Unattached comments
 Is older that 21?
 - yes
 - no
+
 ###### OtherType
 - prop1: string`
 
@@ -427,7 +424,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "Ungrouped content here\n+ list item 2\n+ content 2\n",
@@ -444,7 +442,11 @@ const mdParsed=[
         "type": "struct",
         "types": [
             {
-                "type": "struct"
+                "type": "struct",
+                "isRefType": false,
+                "path": [
+                    "struct"
+                ]
             }
         ],
         "value": "struct",
@@ -460,7 +462,8 @@ const mdParsed=[
                 "type": "",
                 "types": [
                     {
-                        "type": ""
+                        "type": "",
+                        "path": []
                     }
                 ],
                 "value": "A collection of Posts that can be displayed\nas a space, session, chat or any other view\nthat represents a time series of events\nand content.\n",
@@ -478,12 +481,16 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string (key)",
                 "renderData": {
-                    "input": "- id string (key)",
+                    "input": "- id: string (key)",
                     "depth": 1,
                     "before": "Thread.#"
                 },
@@ -497,12 +504,16 @@ const mdParsed=[
                 "type": "number",
                 "types": [
                     {
-                        "type": "number"
+                        "type": "number",
+                        "isRefType": false,
+                        "path": [
+                            "number"
+                        ]
                     }
                 ],
                 "value": "number",
                 "renderData": {
-                    "input": "- uv number",
+                    "input": "- uv: number",
                     "depth": 1,
                     "before": "Thread.id"
                 },
@@ -513,20 +524,21 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
-                        "value": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  + deny out of sync writes\n  + track number of changes\n",
+                        "value": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  deny out of sync writes\n  track number of changes\n",
                         "renderData": {
                             "indent": "  ",
-                            "input": "  Used to sync access\n  Add 1 to uv each time updating\n  Other uses\n    + deny out of sync writes\n    + track number of changes\n",
+                            "input": "  Used to sync access\n  Add 1 to uv each time updating\n  Other uses\n    - deny out of sync writes\n    - track number of changes\n",
                             "depth": 2,
                             "before": "Thread.uv"
                         },
                         "isContent": true
                     }
                 },
-                "comment": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  + deny out of sync writes\n  + track number of changes"
+                "comment": "Used to sync access\nAdd 1 to uv each time updating\nOther uses\n  deny out of sync writes\n  track number of changes"
             },
             "$trigger": {
                 "name": "$trigger",
@@ -534,7 +546,11 @@ const mdParsed=[
                 "type": "abc",
                 "types": [
                     {
-                        "type": "abc"
+                        "type": "abc",
+                        "isRefType": false,
+                        "path": [
+                            "abc"
+                        ]
                     }
                 ],
                 "value": "abc",
@@ -551,7 +567,8 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
                         "value": "",
@@ -570,16 +587,19 @@ const mdParsed=[
                 "name": "post",
                 "address": "Thread.post",
                 "type": "Post",
-                "isArray": true,
                 "types": [
                     {
                         "type": "Post",
+                        "isRefType": true,
+                        "path": [
+                            "Post"
+                        ],
                         "isArray": true
                     }
                 ],
                 "value": "Post[]",
                 "renderData": {
-                    "input": "- post Post[]",
+                    "input": "- post: Post[]",
                     "depth": 1,
                     "before": "Thread.$trigger.#"
                 },
@@ -590,7 +610,11 @@ const mdParsed=[
                         "type": "string",
                         "types": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "isRefType": false,
+                                "path": [
+                                    "string"
+                                ]
                             }
                         ],
                         "value": "string",
@@ -606,7 +630,11 @@ const mdParsed=[
                         "type": "number",
                         "types": [
                             {
-                                "type": "number"
+                                "type": "number",
+                                "isRefType": false,
+                                "path": [
+                                    "number"
+                                ]
                             }
                         ],
                         "value": "number",
@@ -622,26 +650,34 @@ const mdParsed=[
                         "type": "string",
                         "types": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "isRefType": false,
+                                "path": [
+                                    "string"
+                                ]
                             },
                             {
                                 "type": "User",
-                                "flags": [
-                                    "*"
-                                ]
+                                "isRefType": true,
+                                "path": [
+                                    "User"
+                                ],
+                                "important": true
                             }
                         ],
-                        "value": "string :User * (fon)",
+                        "value": "string *User (fon)",
                         "renderData": {
-                            "input": "  - ownerId: string :User * (fon)",
+                            "input": "  - ownerId: string *User (fon)",
                             "depth": 2,
                             "before": "Thread.post.name#2"
                         },
                         "refType": {
                             "type": "User",
-                            "flags": [
-                                "*"
-                            ]
+                            "isRefType": true,
+                            "path": [
+                                "User"
+                            ],
+                            "important": true
                         },
                         "tags": [
                             "fon",
@@ -654,64 +690,28 @@ const mdParsed=[
                                 "type": "",
                                 "types": [
                                     {
-                                        "type": ""
+                                        "type": "",
+                                        "path": []
                                     }
                                 ],
-                                "value": "(managed)",
+                                "value": "(managed)\n  tracker\n  ``` ts\n  invalid ts here\n  getTrackers().find(t=>t.ready)\n  ```\n",
                                 "renderData": {
                                     "indent": "    ",
-                                    "input": "    - (managed)",
+                                    "input": "    - (managed)\n      - tracker\n      ``` ts\n      - invalid ts here\n      getTrackers().find(t=>t.ready)\n      ```\n",
                                     "depth": 3,
                                     "before": "Thread.post.ownerId"
                                 },
                                 "isContent": true
                             }
                         },
-                        "comment": "(managed)",
+                        "comment": "(managed)\n  tracker\n  ``` ts\n  invalid ts here\n  getTrackers().find(t=>t.ready)\n  ```",
                         "links": [
                             {
                                 "name": "User",
                                 "address": "User",
-                                "low": false
+                                "priority": "high"
                             }
                         ]
-                    },
-                    "tracker": {
-                        "name": "tracker",
-                        "address": "Thread.post.tracker",
-                        "type": "",
-                        "types": [
-                            {
-                                "type": ""
-                            }
-                        ],
-                        "value": "",
-                        "renderData": {
-                            "input": "  - tracker",
-                            "depth": 2,
-                            "before": "Thread.post.ownerId.#"
-                        },
-                        "children": {
-                            "#": {
-                                "name": "#",
-                                "address": "Thread.post.tracker.#",
-                                "type": "",
-                                "types": [
-                                    {
-                                        "type": ""
-                                    }
-                                ],
-                                "value": "``` ts\ninvalid ts here\ngetTrackers().find(t=>t.ready)\n```\n",
-                                "renderData": {
-                                    "indent": "  ",
-                                    "input": "  ``` ts\n  - invalid ts here\n  getTrackers().find(t=>t.ready)\n  ```\n",
-                                    "depth": 2,
-                                    "before": "Thread.post.tracker"
-                                },
-                                "isContent": true
-                            }
-                        },
-                        "comment": "``` ts\ninvalid ts here\ngetTrackers().find(t=>t.ready)\n```"
                     },
                     "weight": {
                         "name": "weight",
@@ -719,14 +719,18 @@ const mdParsed=[
                         "type": "number",
                         "types": [
                             {
-                                "type": "number"
+                                "type": "number",
+                                "isRefType": false,
+                                "path": [
+                                    "number"
+                                ]
                             }
                         ],
                         "value": "number",
                         "renderData": {
                             "input": "  - weight: number",
                             "depth": 2,
-                            "before": "Thread.post.tracker.#"
+                            "before": "Thread.post.ownerId.#"
                         },
                         "children": {
                             "#": {
@@ -735,7 +739,8 @@ const mdParsed=[
                                 "type": "",
                                 "types": [
                                     {
-                                        "type": ""
+                                        "type": "",
+                                        "path": []
                                     }
                                 ],
                                 "value": "[User weight](User.weight)\n\n",
@@ -761,8 +766,7 @@ const mdParsed=[
                     {
                         "name": "Post",
                         "address": "Post",
-                        "low": true,
-                        "broken": true
+                        "priority": "low"
                     }
                 ]
             }
@@ -775,7 +779,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "(dude)",
@@ -794,7 +799,11 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string",
@@ -810,7 +819,11 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string",
@@ -821,16 +834,10 @@ const mdParsed=[
                 },
                 "links": [
                     {
-                        "name": "name",
-                        "address": "SettingsView.name",
+                        "name": "model",
+                        "address": "SettingsView.model",
                         "rev": true,
-                        "low": true
-                    },
-                    {
-                        "name": "$link",
-                        "address": "SettingsView.name.$link",
-                        "rev": true,
-                        "low": true
+                        "priority": "med"
                     }
                 ]
             },
@@ -840,7 +847,11 @@ const mdParsed=[
                 "type": "int",
                 "types": [
                     {
-                        "type": "int"
+                        "type": "int",
+                        "isRefType": false,
+                        "path": [
+                            "int"
+                        ]
                     }
                 ],
                 "value": "int",
@@ -851,23 +862,11 @@ const mdParsed=[
                 },
                 "links": [
                     {
-                        "name": "age",
-                        "address": "UserView.age",
+                        "name": "model",
+                        "address": "UserView.model",
                         "rev": true,
-                        "low": true,
+                        "priority": "med",
                         "src": true
-                    },
-                    {
-                        "name": "$src",
-                        "address": "UserView.age.$src",
-                        "rev": true,
-                        "low": true
-                    },
-                    {
-                        "name": "age",
-                        "address": "SettingsView.age",
-                        "rev": true,
-                        "low": true
                     }
                 ]
             },
@@ -877,7 +876,11 @@ const mdParsed=[
                 "type": "number",
                 "types": [
                     {
-                        "type": "number"
+                        "type": "number",
+                        "isRefType": false,
+                        "path": [
+                            "number"
+                        ]
                     }
                 ],
                 "value": "number",
@@ -891,7 +894,7 @@ const mdParsed=[
                         "name": "weight",
                         "address": "Thread.post.weight",
                         "rev": true,
-                        "low": true
+                        "priority": "med"
                     }
                 ]
             },
@@ -901,7 +904,11 @@ const mdParsed=[
                 "type": "number",
                 "types": [
                     {
-                        "type": "number"
+                        "type": "number",
+                        "isRefType": false,
+                        "path": [
+                            "number"
+                        ]
                     }
                 ],
                 "value": "number",
@@ -917,7 +924,8 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
                         "value": "",
@@ -930,16 +938,7 @@ const mdParsed=[
                         "isContent": true
                     }
                 },
-                "comment": "",
-                "links": [
-                    {
-                        "name": "title",
-                        "address": "UserView.title",
-                        "rev": true,
-                        "low": true,
-                        "src": true
-                    }
-                ]
+                "comment": ""
             }
         },
         "links": [
@@ -947,19 +946,19 @@ const mdParsed=[
                 "name": "ownerId",
                 "address": "Thread.post.ownerId",
                 "rev": true,
-                "low": true
+                "priority": "med"
             },
             {
                 "name": "model",
                 "address": "UserView.model",
                 "rev": true,
-                "low": true
+                "priority": "med"
             },
             {
                 "name": "model",
                 "address": "SettingsView.model",
                 "rev": true,
-                "low": true
+                "priority": "med"
             }
         ]
     },
@@ -969,7 +968,11 @@ const mdParsed=[
         "type": "comp",
         "types": [
             {
-                "type": "comp"
+                "type": "comp",
+                "isRefType": false,
+                "path": [
+                    "comp"
+                ]
             }
         ],
         "value": "comp (ui)",
@@ -988,7 +991,11 @@ const mdParsed=[
                 "type": "User",
                 "types": [
                     {
-                        "type": "User"
+                        "type": "User",
+                        "isRefType": true,
+                        "path": [
+                            "User"
+                        ]
                     }
                 ],
                 "value": "User",
@@ -997,205 +1004,190 @@ const mdParsed=[
                     "depth": 1,
                     "before": "UserView"
                 },
-                "links": [
-                    {
-                        "name": "User",
-                        "address": "User",
-                        "low": true
-                    }
-                ]
-            },
-            "title": {
-                "name": "title",
-                "address": "UserView.title",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- title",
-                    "depth": 1,
-                    "before": "UserView.model"
-                },
                 "children": {
-                    "$src": {
-                        "name": "$src",
-                        "address": "UserView.title.$src",
-                        "type": "model",
-                        "refProp": "likes",
+                    "#": {
+                        "name": "#",
+                        "address": "UserView.model.#",
+                        "type": "",
                         "types": [
                             {
-                                "type": "model",
-                                "refProp": "likes"
+                                "type": "",
+                                "path": []
+                            }
+                        ],
+                        "value": "title",
+                        "renderData": {
+                            "indent": "",
+                            "input": "- title",
+                            "depth": 1,
+                            "before": "UserView.model"
+                        },
+                        "isContent": true
+                    },
+                    "$src": {
+                        "name": "$src",
+                        "address": "UserView.model.$src",
+                        "type": "UserView",
+                        "types": [
+                            {
+                                "type": "UserView",
+                                "isRefType": true,
+                                "path": [
+                                    "UserView",
+                                    "model",
+                                    "likes"
+                                ]
                             }
                         ],
                         "value": ".model.likes",
                         "renderData": {
                             "input": "  - $src: .model.likes",
                             "depth": 2,
-                            "before": "UserView.title"
+                            "before": "UserView.model.#"
                         },
-                        "special": true
-                    }
-                },
-                "sourceAddress": "User.likes",
-                "sourceLinked": true,
-                "links": [
-                    {
-                        "name": "User.likes",
-                        "address": "User.likes",
-                        "low": true,
-                        "src": true
-                    }
-                ]
-            },
-            "age": {
-                "name": "age",
-                "address": "UserView.age",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- age",
-                    "depth": 1,
-                    "before": "UserView.title.$src"
-                },
-                "children": {
-                    "$src": {
+                        "special": true,
+                        "children": {
+                            "#": {
+                                "name": "#",
+                                "address": "UserView.model.$src.#",
+                                "type": "",
+                                "types": [
+                                    {
+                                        "type": "",
+                                        "path": []
+                                    }
+                                ],
+                                "value": "age",
+                                "renderData": {
+                                    "indent": "",
+                                    "input": "- age",
+                                    "depth": 1,
+                                    "before": "UserView.model.$src"
+                                },
+                                "isContent": true
+                            }
+                        },
+                        "comment": "age"
+                    },
+                    "$src#2": {
                         "name": "$src",
-                        "address": "UserView.age.$src",
+                        "address": "UserView.model.$src#2",
                         "type": "User",
-                        "refProp": "age",
                         "types": [
                             {
                                 "type": "User",
-                                "refProp": "age"
+                                "isRefType": true,
+                                "path": [
+                                    "User",
+                                    "age"
+                                ]
                             }
                         ],
                         "value": "User.age",
                         "renderData": {
                             "input": "  - $src: User.age",
                             "depth": 2,
-                            "before": "UserView.age"
+                            "before": "UserView.model.$src.#"
                         },
                         "special": true,
-                        "links": [
-                            {
-                                "name": "User.age",
-                                "address": "User.age",
-                                "low": true
+                        "children": {
+                            "#": {
+                                "name": "#",
+                                "address": "UserView.model.$src#2.#",
+                                "type": "",
+                                "types": [
+                                    {
+                                        "type": "",
+                                        "path": []
+                                    }
+                                ],
+                                "value": "brokenPropLink",
+                                "renderData": {
+                                    "indent": "",
+                                    "input": "- brokenPropLink",
+                                    "depth": 1,
+                                    "before": "UserView.model.$src#2"
+                                },
+                                "isContent": true
                             }
-                        ]
-                    }
-                },
-                "sourceAddress": "User.age",
-                "sourceLinked": true,
-                "links": [
-                    {
-                        "name": "User.age",
-                        "address": "User.age",
-                        "low": true,
-                        "src": true
-                    }
-                ]
-            },
-            "brokenPropLink": {
-                "name": "brokenPropLink",
-                "address": "UserView.brokenPropLink",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- brokenPropLink",
-                    "depth": 1,
-                    "before": "UserView.age.$src"
-                },
-                "children": {
-                    "$src": {
+                        },
+                        "comment": "brokenPropLink"
+                    },
+                    "$src#3": {
                         "name": "$src",
-                        "address": "UserView.brokenPropLink.$src",
-                        "type": "notAProp",
-                        "refProp": "age",
+                        "address": "UserView.model.$src#3",
+                        "type": "UserView",
                         "types": [
                             {
-                                "type": "notAProp",
-                                "refProp": "age"
+                                "type": "UserView",
+                                "isRefType": true,
+                                "path": [
+                                    "UserView",
+                                    "notAProp",
+                                    "age"
+                                ]
                             }
                         ],
                         "value": ".notAProp.age",
                         "renderData": {
                             "input": "  - $src: .notAProp.age",
                             "depth": 2,
-                            "before": "UserView.brokenPropLink"
+                            "before": "UserView.model.$src#2.#"
                         },
-                        "special": true
-                    }
-                },
-                "sourceAddress": ".notAProp.age",
-                "sourceLinked": false,
-                "links": [
-                    {
-                        "name": ".notAProp.age",
-                        "address": ".notAProp.age",
-                        "low": true,
-                        "src": true,
-                        "broken": true
-                    }
-                ]
-            },
-            "brokenTypeLink": {
-                "name": "brokenTypeLink",
-                "address": "UserView.brokenTypeLink",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- brokenTypeLink",
-                    "depth": 1,
-                    "before": "UserView.brokenPropLink.$src"
-                },
-                "children": {
-                    "$src": {
+                        "special": true,
+                        "children": {
+                            "#": {
+                                "name": "#",
+                                "address": "UserView.model.$src#3.#",
+                                "type": "",
+                                "types": [
+                                    {
+                                        "type": "",
+                                        "path": []
+                                    }
+                                ],
+                                "value": "brokenTypeLink",
+                                "renderData": {
+                                    "indent": "",
+                                    "input": "- brokenTypeLink",
+                                    "depth": 1,
+                                    "before": "UserView.model.$src#3"
+                                },
+                                "isContent": true
+                            }
+                        },
+                        "comment": "brokenTypeLink"
+                    },
+                    "$src#4": {
                         "name": "$src",
-                        "address": "UserView.brokenTypeLink.$src",
+                        "address": "UserView.model.$src#4",
                         "type": "NotAType",
-                        "refProp": "age",
                         "types": [
                             {
                                 "type": "NotAType",
-                                "refProp": "age"
+                                "isRefType": true,
+                                "path": [
+                                    "NotAType",
+                                    "age"
+                                ]
                             }
                         ],
                         "value": "NotAType.age",
                         "renderData": {
                             "input": "  - $src: NotAType.age",
                             "depth": 2,
-                            "before": "UserView.brokenTypeLink"
+                            "before": "UserView.model.$src#3.#"
                         },
                         "special": true,
                         "children": {
                             "#": {
                                 "name": "#",
-                                "address": "UserView.brokenTypeLink.$src.#",
+                                "address": "UserView.model.$src#4.#",
                                 "type": "",
                                 "types": [
                                     {
-                                        "type": ""
+                                        "type": "",
+                                        "path": []
                                     }
                                 ],
                                 "value": "\n",
@@ -1203,33 +1195,48 @@ const mdParsed=[
                                     "indent": "",
                                     "input": "\n",
                                     "depth": 1,
-                                    "before": "UserView.brokenTypeLink.$src"
+                                    "before": "UserView.model.$src#4"
                                 },
                                 "isContent": true
                             }
                         },
-                        "comment": "",
-                        "links": [
-                            {
-                                "name": "NotAType.age",
-                                "address": "NotAType.age",
-                                "low": true,
-                                "broken": true
-                            }
-                        ]
+                        "comment": ""
                     }
                 },
-                "sourceAddress": "NotAType.age",
-                "sourceLinked": false,
+                "comment": "title",
                 "links": [
+                    {
+                        "name": "User",
+                        "address": "User",
+                        "priority": "low"
+                    },
+                    {
+                        "name": ".model.likes",
+                        "address": ".model.likes",
+                        "priority": "med",
+                        "src": true
+                    },
+                    {
+                        "name": "User.age",
+                        "address": "User.age",
+                        "priority": "med",
+                        "src": true
+                    },
+                    {
+                        "name": ".notAProp.age",
+                        "address": ".notAProp.age",
+                        "priority": "med",
+                        "src": true
+                    },
                     {
                         "name": "NotAType.age",
                         "address": "NotAType.age",
-                        "low": true,
-                        "src": true,
-                        "broken": true
+                        "priority": "med",
+                        "src": true
                     }
-                ]
+                ],
+                "sourceAddress": "NotAType.age",
+                "sourceLinked": false
             }
         }
     },
@@ -1239,14 +1246,18 @@ const mdParsed=[
         "type": "comp",
         "types": [
             {
-                "type": "comp"
+                "type": "comp",
+                "isRefType": false,
+                "path": [
+                    "comp"
+                ]
             }
         ],
         "value": "comp",
         "renderData": {
             "input": "## SettingsView: comp",
             "depth": 0,
-            "before": "UserView.brokenTypeLink.$src.#"
+            "before": "UserView.model.$src#4.#"
         },
         "children": {
             "model": {
@@ -1255,7 +1266,11 @@ const mdParsed=[
                 "type": "User",
                 "types": [
                     {
-                        "type": "User"
+                        "type": "User",
+                        "isRefType": true,
+                        "path": [
+                            "User"
+                        ]
                     }
                 ],
                 "value": "User",
@@ -1264,106 +1279,101 @@ const mdParsed=[
                     "depth": 1,
                     "before": "SettingsView"
                 },
-                "links": [
-                    {
-                        "name": "User",
-                        "address": "User",
-                        "low": true
-                    }
-                ]
-            },
-            "name": {
-                "name": "name",
-                "address": "SettingsView.name",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- name",
-                    "depth": 1,
-                    "before": "SettingsView.model"
-                },
                 "children": {
+                    "#": {
+                        "name": "#",
+                        "address": "SettingsView.model.#",
+                        "type": "",
+                        "types": [
+                            {
+                                "type": "",
+                                "path": []
+                            }
+                        ],
+                        "value": "name",
+                        "renderData": {
+                            "indent": "",
+                            "input": "- name",
+                            "depth": 1,
+                            "before": "SettingsView.model"
+                        },
+                        "isContent": true
+                    },
                     "$link": {
                         "name": "$link",
-                        "address": "SettingsView.name.$link",
+                        "address": "SettingsView.model.$link",
                         "type": "User",
-                        "refProp": "name",
                         "types": [
                             {
                                 "type": "User",
-                                "refProp": "name"
+                                "isRefType": true,
+                                "path": [
+                                    "User",
+                                    "name"
+                                ]
                             }
                         ],
                         "value": "User.name",
                         "renderData": {
                             "input": "  - $link: User.name",
                             "depth": 2,
-                            "before": "SettingsView.name"
+                            "before": "SettingsView.model.#"
                         },
                         "special": true,
-                        "links": [
-                            {
-                                "name": "User.name",
-                                "address": "User.name",
-                                "low": true
+                        "children": {
+                            "#": {
+                                "name": "#",
+                                "address": "SettingsView.model.$link.#",
+                                "type": "",
+                                "types": [
+                                    {
+                                        "type": "",
+                                        "path": []
+                                    }
+                                ],
+                                "value": "age",
+                                "renderData": {
+                                    "indent": "",
+                                    "input": "- age",
+                                    "depth": 1,
+                                    "before": "SettingsView.model.$link"
+                                },
+                                "isContent": true
                             }
-                        ]
-                    }
-                },
-                "links": [
-                    {
-                        "name": "User.name",
-                        "address": "User.name"
-                    }
-                ]
-            },
-            "age": {
-                "name": "age",
-                "address": "SettingsView.age",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- age",
-                    "depth": 1,
-                    "before": "SettingsView.name.$link"
-                },
-                "children": {
-                    "$link": {
+                        },
+                        "comment": "age"
+                    },
+                    "$link#2": {
                         "name": "$link",
-                        "address": "SettingsView.age.$link",
-                        "type": "model",
-                        "refProp": "age",
+                        "address": "SettingsView.model.$link#2",
+                        "type": "SettingsView",
                         "types": [
                             {
-                                "type": "model",
-                                "refProp": "age"
+                                "type": "SettingsView",
+                                "isRefType": true,
+                                "path": [
+                                    "SettingsView",
+                                    "model",
+                                    "age"
+                                ]
                             }
                         ],
                         "value": ".model.age",
                         "renderData": {
                             "input": "  - $link: .model.age",
                             "depth": 2,
-                            "before": "SettingsView.age"
+                            "before": "SettingsView.model.$link.#"
                         },
                         "special": true,
                         "children": {
                             "#": {
                                 "name": "#",
-                                "address": "SettingsView.age.$link.#",
+                                "address": "SettingsView.model.$link#2.#",
                                 "type": "",
                                 "types": [
                                     {
-                                        "type": ""
+                                        "type": "",
+                                        "path": []
                                     }
                                 ],
                                 "value": "",
@@ -1371,7 +1381,7 @@ const mdParsed=[
                                     "indent": "",
                                     "input": "",
                                     "depth": 1,
-                                    "before": "SettingsView.age.$link"
+                                    "before": "SettingsView.model.$link#2"
                                 },
                                 "isContent": true
                             }
@@ -1379,10 +1389,20 @@ const mdParsed=[
                         "comment": ""
                     }
                 },
+                "comment": "name",
                 "links": [
                     {
-                        "name": "User.age",
-                        "address": "User.age"
+                        "name": "User",
+                        "address": "User",
+                        "priority": "low"
+                    },
+                    {
+                        "name": "User.name",
+                        "address": "User.name"
+                    },
+                    {
+                        "name": ".model.age",
+                        "address": ".model.age"
                     }
                 ]
             }
@@ -1394,7 +1414,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "---\n\nUnattached comments\n",
@@ -1402,7 +1423,7 @@ const mdParsed=[
             "indent": "",
             "input": "----\n\nUnattached comments\n",
             "depth": 1,
-            "before": "SettingsView.age.$link.#"
+            "before": "SettingsView.model.$link#2.#"
         },
         "isContent": true
     },
@@ -1412,7 +1433,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "",
@@ -1428,7 +1450,11 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string",
@@ -1444,7 +1470,8 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
                         "value": "",
@@ -1467,7 +1494,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "",
@@ -1483,7 +1511,11 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string",
@@ -1499,7 +1531,8 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
                         "value": "[Check age]($1)\n\n\n",
@@ -1528,7 +1561,8 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "",
@@ -1546,82 +1580,28 @@ const mdParsed=[
                 "type": "",
                 "types": [
                     {
-                        "type": ""
+                        "type": "",
+                        "path": []
                     }
                 ],
-                "value": "Is older that 21?",
+                "value": "Is older that 21?\nyes\nno\n",
                 "renderData": {
                     "indent": "",
-                    "input": "Is older that 21?",
+                    "input": "Is older that 21?\n- yes\n- no\n",
                     "depth": 1,
                     "before": "$1"
                 },
                 "isContent": true,
                 "importantContent": true
-            },
-            "yes": {
-                "name": "yes",
-                "address": "$1.yes",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- yes",
-                    "depth": 1,
-                    "before": "$1.#"
-                },
-                "importantContent": true
-            },
-            "no": {
-                "name": "no",
-                "address": "$1.no",
-                "type": "",
-                "types": [
-                    {
-                        "type": ""
-                    }
-                ],
-                "value": "",
-                "renderData": {
-                    "input": "- no",
-                    "depth": 1,
-                    "before": "$1.yes"
-                },
-                "importantContent": true,
-                "children": {
-                    "#": {
-                        "name": "#",
-                        "address": "$1.no.#",
-                        "type": "",
-                        "types": [
-                            {
-                                "type": ""
-                            }
-                        ],
-                        "value": "",
-                        "renderData": {
-                            "indent": "",
-                            "input": "",
-                            "depth": 1,
-                            "before": "$1.no"
-                        },
-                        "isContent": true
-                    }
-                },
-                "comment": ""
             }
         },
-        "comment": "Is older that 21?",
+        "comment": "Is older that 21?\nyes\nno",
         "links": [
             {
                 "name": "age",
                 "address": "CopyType#2.age",
                 "rev": true,
-                "low": true
+                "priority": "med"
             }
         ]
     },
@@ -1631,14 +1611,15 @@ const mdParsed=[
         "type": "",
         "types": [
             {
-                "type": ""
+                "type": "",
+                "path": []
             }
         ],
         "value": "",
         "renderData": {
             "input": "###### OtherType",
             "depth": 0,
-            "before": "$1.no.#"
+            "before": "$1.#"
         },
         "children": {
             "prop1": {
@@ -1647,7 +1628,11 @@ const mdParsed=[
                 "type": "string",
                 "types": [
                     {
-                        "type": "string"
+                        "type": "string",
+                        "isRefType": false,
+                        "path": [
+                            "string"
+                        ]
                     }
                 ],
                 "value": "string",
@@ -1663,7 +1648,8 @@ const mdParsed=[
                         "type": "",
                         "types": [
                             {
-                                "type": ""
+                                "type": "",
+                                "path": []
                             }
                         ],
                         "value": "",
