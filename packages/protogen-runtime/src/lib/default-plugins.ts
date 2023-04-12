@@ -2,7 +2,6 @@ import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
-import { lucidCsvParser } from "./plugins/lucidCsvParser";
 import { markdownParser } from "./plugins/markdownParser";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
@@ -26,14 +25,6 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             paths:[],
             plugin:{
                 parse:markdownParser
-            }
-        },
-        {
-            name:'lucidCsvParser',
-            source:'@',
-            paths:[],
-            plugin:{
-                parse:lucidCsvParser
             }
         },
         {

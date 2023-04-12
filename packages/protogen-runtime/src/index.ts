@@ -2,7 +2,6 @@ export * from './lib/default-plugins';
 export * from "./lib/plugins/fileReader";
 export * from "./lib/plugins/fileWriter";
 export * from "./lib/plugins/functionPlugin";
-export * from "./lib/plugins/lucidCsvParser";
 export * from "./lib/plugins/markdownParser";
 export * from "./lib/plugins/reactCompPlugin";
 export * from "./lib/plugins/tablePlugin";

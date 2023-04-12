@@ -1,7 +1,6 @@
 export * from './lib/executeProtoPipelineAsync';
 export * from './lib/markdown';
 export * from './lib/output-utils';
-export * from './lib/parseNodeLine';
 export * from './lib/protogen-cli';
 export * from './lib/protogen-lib';
 export * from './lib/protogen-node';
