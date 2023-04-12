@@ -20,6 +20,7 @@
                 "packages/aws-credential-providers/src/index.ts"
             ],
             "@iyio/aws-dynamo": ["packages/aws-dynamo/src/index.ts"],
+            "@iyio/aws-lambda": ["packages/aws-lambda/src/index.ts"],
             "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
             "@iyio/aws-s3": ["packages/aws-s3/src/index.ts"],
             "@iyio/aws-tests": ["packages/aws-tests/src/index.ts"],

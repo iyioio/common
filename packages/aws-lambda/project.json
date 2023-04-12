@@ -1,0 +1,33 @@
+{
+    "name": "aws-lambda",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/aws-lambda/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/aws-lambda",
+                "main": "packages/aws-lambda/src/index.ts",
+                "tsConfig": "packages/aws-lambda/tsconfig.lib.json",
+                "assets": ["packages/aws-lambda/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs aws-lambda {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/aws-lambda/**/*.ts"]
+            }
+        }
+    },
+    "tags": []
+}
