@@ -1,5 +1,5 @@
 import { joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, protoLabelOutputLines, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['function'];
@@ -100,7 +100,9 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
 
             outputs.push({
                 path:joinPaths(path,name+'.ts'),
-                content:out.join('\n')
+                content:out.join('\n'),
+                autoMerge:true,
+                mergeHandler:protoMergeTsImports,
             })
 
         }
