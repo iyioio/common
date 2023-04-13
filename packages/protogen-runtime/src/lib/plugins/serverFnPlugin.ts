@@ -1,6 +1,7 @@
-import { getFileNameNoExt, joinPaths, strFirstToLower } from "@iyio/common";
+import { getFileNameNoExt, getSubstringCount, joinPaths, strFirstToLower } from "@iyio/common";
 import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
+import { serverFnCdkTemplate, ServerFnInfo } from "./serverFnCdkTemplate";
 
 const supportedTypes=['serverFn'];
 
@@ -55,6 +56,17 @@ const ServerFnPluginConfig=z.object(
      * @default "@iyio/aws-lambda"
      */
     serverFnLambdaPackage:z.string().optional(),
+
+    /**
+     * If defined a CDK construct file will be generated that can be used to deploy the
+     * functions
+     */
+    serverFnCdkConstructFile:z.string().optional(),
+
+    /**
+     * Path where
+     */
+    serverFnDistPath:z.string().optional(),
 })
 
 export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPluginConfig>=
@@ -79,6 +91,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         serverFnClientFilename='serverFnClients.ts',
         serverFnLambdaPackage='@iyio/aws-lambda',
         serverFnClientIndexFilename='serverFn-client-index.ts',
+        serverFnCdkConstructFile,
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
@@ -86,6 +99,11 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             serverFnPackage,
             serverFnPath
         );
+
+        const cdkRelPath=(
+            '../'
+            .repeat(getSubstringCount(path,'/')-1)
+        )
 
         const {path:clientPath}=getProtoPluginPackAndPath(
             namespace,
@@ -111,6 +129,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         clientOut.push(`import { lambdaClient } from '${serverFnLambdaPackage}';`);
         clientOut.push('');
 
+        const infos:ServerFnInfo[]=[];
 
 
         for(const node of supported){
@@ -119,6 +138,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const imports:string[]=[];
 
             const name=node.name;
+            const filepath=joinPaths(path,name+'.ts');
 
             const inputType=node.children?.['input']?.type??'void';
             const outputType=node.children?.['output']?.type??'void';
@@ -130,8 +150,21 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             clientParamImports.push(paramName);
             paramsOut.push(`export const ${paramName}=defineStringParam('${strFirstToLower(name)}Arn');`);
 
+            infos.push({
+                name,
+                node,
+                createProps:{
+                    createPublicUrl:node.children?.['$publicUrl']?.value==='true',
+                    handlerFileName:joinPaths(cdkRelPath,filepath),
+                    handler:'handler'
+                }
+            })
+
             const clientName=name.endsWith('Fn')?name.substring(0,name.length-2):name;
             importMap[clientName]=serverFnClientPackage;
+            if(node.comment){
+                clientOut.push(...protoFormatTsComment(node.comment,'').split('\n'))
+            }
             clientOut.push(`export const ${clientName}=(input:${inputType}):Promise<${outputType}>=>(`)
             clientOut.push(`${tab}lambdaClient().invokeAsync<${inputType},${outputType}>({`);
             clientOut.push(`${tab}${tab}fn:${paramName}(),`)
@@ -192,7 +225,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             protoPrependTsImports(imports,importMap,out);
 
             outputs.push({
-                path:joinPaths(path,name+'.ts'),
+                path:filepath,
                 content:out.join('\n'),
                 autoMerge:true,
                 mergeHandler:protoMergeTsImports
@@ -218,6 +251,13 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                 generator:protoGenerateTsIndex
             }
         })
+
+        if(serverFnCdkConstructFile){
+            outputs.push({
+                path:serverFnCdkConstructFile,
+                content:serverFnCdkTemplate(infos)
+            })
+        }
 
     }
 }
