@@ -718,3 +718,29 @@ export const protoSetNodeCtrl=(node:ProtoNode,ctrl:any)=>{
         }
     }
 }
+
+/**
+ * Removes children that are only used for display purposes such as $layout and renderData.
+ * Returns the same node that is passed in.
+ */
+export const protoRemoveDisplayChildren=(node:ProtoNode):ProtoNode=>{
+
+    delete node.renderData;
+
+    if(!node.children){
+        return node;
+    }
+
+    for(const e in node.children){
+
+        if(e.startsWith('$layout')){
+            delete node.children[e];
+        }else{
+            protoRemoveDisplayChildren(node.children[e]);
+        }
+
+    }
+
+    return node;
+
+}
