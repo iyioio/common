@@ -1,3 +1,4 @@
+import { isRooted, joinPaths } from "@iyio/common";
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -48,7 +49,7 @@ export class NodeFn extends Construct{
         minify=true,
         urlCors,
 
-        entry=handlerFileName?undefined:Path.join('src','handlers',toFileName(name)),
+        entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
         bundling={minify,sourceMap:true,target:'node18'},
         handler='handler',
         logRetention=logs.RetentionDays.ONE_WEEK,
@@ -59,6 +60,10 @@ export class NodeFn extends Construct{
     }:NodeFnProps){
 
         super(scope,name);
+
+        if(isRooted(entry)){
+            entry=joinPaths(process.cwd(),entry??'');
+        }
 
         const func=new lambdaNodeJs.NodejsFunction(this,name,{
             entry,
