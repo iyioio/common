@@ -719,17 +719,38 @@ export const protoSetNodeCtrl=(node:ProtoNode,ctrl:any)=>{
     }
 }
 
+export interface ProtoRemoveDisplayChildrenOptions
+{
+    removeComments?:boolean;
+}
 /**
  * Removes children that are only used for display purposes such as $layout and renderData.
  * Returns the same node that is passed in.
  */
-export const protoRemoveDisplayChildren=(node:ProtoNode):ProtoNode=>{
+export const protoRemoveDisplayChildren=<T extends ProtoNode|ProtoNode[]>(node:T,options:ProtoRemoveDisplayChildrenOptions={}):T=>{
+
+    if(Array.isArray(node)){
+        for(const n of node){
+            _protoRemoveDisplayChildren(n,options);
+        }
+    }else{
+        _protoRemoveDisplayChildren(node,options);
+    }
+
+    return node;
+
+
+}
+
+const _protoRemoveDisplayChildren=(node:ProtoNode,options:ProtoRemoveDisplayChildrenOptions={})=>{
 
     delete node.renderData;
-    delete node.comment;
+    if(options.removeComments){
+        delete node.comment;
+    }
 
     if(!node.children){
-        return node;
+        return;
     }
 
     for(const e in node.children){
@@ -741,7 +762,5 @@ export const protoRemoveDisplayChildren=(node:ProtoNode):ProtoNode=>{
         }
 
     }
-
-    return node;
 
 }

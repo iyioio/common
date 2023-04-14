@@ -7,6 +7,7 @@ import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
 import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
+import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin";
 import { zodPlugin } from "./plugins/zodPlugin";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
@@ -26,6 +27,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             plugin:{
                 parse:markdownParser
             }
+        },
+        {
+            name:'tsProtoNodePlugin',
+            source:'@',
+            paths:[],
+            plugin:tsProtoNodePlugin
         },
         {
             name:'zodPlugin',
