@@ -726,6 +726,7 @@ export const protoSetNodeCtrl=(node:ProtoNode,ctrl:any)=>{
 export const protoRemoveDisplayChildren=(node:ProtoNode):ProtoNode=>{
 
     delete node.renderData;
+    delete node.comment;
 
     if(!node.children){
         return node;

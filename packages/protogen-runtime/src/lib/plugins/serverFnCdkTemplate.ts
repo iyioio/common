@@ -1,26 +1,18 @@
 import type { NodeFnProps } from "@iyio/cdk-common";
-import { ProtoNode, protoRemoveDisplayChildren } from "@iyio/protogen";
 
 export interface ServerFnInfo
 {
     name:string;
-    node:ProtoNode;
     createProps:NodeFnProps;
 }
 
-export const serverFnCdkTemplate=(infos:ServerFnInfo[])=>{
-
-    infos=infos.map(i=>({
-        ...i,
-        node:protoRemoveDisplayChildren(i.node),
-    }))
+export const serverFnCdkTemplate=(constructName:string,infos:ServerFnInfo[])=>{
 
 
-    return `import { ProtoNode } from "@iyio/protogen";
-import { Construct } from "constructs";
+    return `import { Construct } from "constructs";
 import { NodeFn, NodeFnProps } from "@iyio/cdk-common";
 
-export interface NodeServerFn
+export interface ServerFnInfoAndNodeFn
 {
     info:ServerFnInfo;
     fn:NodeFn;
@@ -29,47 +21,38 @@ export interface NodeServerFn
 export interface ServerFnInfo
 {
     name:string;
-    node:ProtoNode;
     createProps:NodeFnProps;
 }
 
 export interface ServerFnsProps
 {
-    forAllFns?:(fnInfos:ServerFnInfo[])=>void;
-    beforeEach?:(fnInfo:ServerFnInfo)=>void|boolean;
-    afterEach?:(fn:NodeServerFn)=>void;
+    transformFns?:(fnInfos:ServerFnInfo[])=>ServerFnInfo[];
 }
 
-export class ServerFns extends Construct
+export class ${constructName} extends Construct
 {
 
-    public readonly fns:NodeServerFn[];
+    public readonly fns:ServerFnInfoAndNodeFn[];
 
     public constructor(scope:Construct,name:string,{
-        forAllFns,
-        beforeEach,
-        afterEach,
+        transformFns,
     }:ServerFnsProps={}){
 
         super(scope,name);
 
-        const fns:NodeServerFn[]=[];
+        const fns:ServerFnInfoAndNodeFn[]=[];
         this.fns=fns;
 
-        forAllFns?.(this.fnInfos);
+        if(transformFns){
+            this.fnInfos=transformFns(this.fnInfos);
+        }
 
         for(const info of this.fnInfos){
 
-            if(beforeEach?.(info)===false){
-                continue;
-            }
-
-            const fn:NodeServerFn={
+            const fn:ServerFnInfoAndNodeFn={
                 info,
                 fn:new NodeFn(this,info.name,info.createProps),
             }
-
-            afterEach?.(fn);
             fns.push(fn);
         }
 

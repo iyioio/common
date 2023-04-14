@@ -64,6 +64,11 @@ const ServerFnPluginConfig=z.object(
     serverFnCdkConstructFile:z.string().optional(),
 
     /**
+     * @default "ServerFns"
+     */
+    serverFnCdkConstructClassName:z.string().optional(),
+
+    /**
      * Path where
      */
     serverFnDistPath:z.string().optional(),
@@ -92,6 +97,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         serverFnLambdaPackage='@iyio/aws-lambda',
         serverFnClientIndexFilename='serverFn-client-index.ts',
         serverFnCdkConstructFile,
+        serverFnCdkConstructClassName='ServerFns'
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
@@ -152,7 +158,6 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
             infos.push({
                 name,
-                node,
                 createProps:{
                     createPublicUrl:node.children?.['$publicUrl']?.value==='true',
                     handlerFileName:joinPaths(cdkRelPath,filepath),
@@ -255,7 +260,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         if(serverFnCdkConstructFile){
             outputs.push({
                 path:serverFnCdkConstructFile,
-                content:serverFnCdkTemplate(infos)
+                content:serverFnCdkTemplate(serverFnCdkConstructClassName,infos)
             })
         }
 

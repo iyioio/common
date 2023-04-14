@@ -26,9 +26,14 @@ export interface DataTableIndex
     name:string;
 
     /**
-     * The properties that are included in the index
+     * The primary property of the index. For dynamodb tables this is the partition key of the index.
      */
-    props:string[];
+    primary:string;
+
+    /**
+     * The sort property of the index. For dynamodb tables this is the optional sort key of the index.
+     */
+    sort?:string;
 
     /**
      * Properties to copy data into the index for. This is primarily used with

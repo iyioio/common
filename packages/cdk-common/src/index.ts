@@ -10,4 +10,6 @@ export * from './lib/ParamOutput';
 export * from './lib/RedirectApi';
 export * from './lib/ses';
 export * from './lib/StaticWebSite';
+export * from './lib/TableBuilder';
 export * from './lib/WebsocketApi';
+

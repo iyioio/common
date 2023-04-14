@@ -23,11 +23,11 @@ export const protoTsBuiltTypes=['string','number','any','bigint','boolean','date
 
 export const protoIsTsBuiltType=(type:string|null|undefined):boolean=>protoTsBuiltTypes.includes(type as any);
 
-export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>):string[]=>{
+export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>,localImportMap:HashMap<string>):string[]=>{
     const imports:HashMap<string[]>={};
 
     for(const t of types){
-        const key=importMap[t];
+        const key=localImportMap[t]??importMap[t];
         if(!key){
             throw new Error(`Unable to find type ${t} in importMap`)
         }
@@ -44,13 +44,13 @@ export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>):s
 }
 
 
-export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,prependTo:string[]):void=>{
+export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,prependTo:string[],localImportMap:HashMap<string>={}):void=>{
 
     if(!types.length){
         return;
     }
 
-    const imports=protoGenerateTsImports(types,importMap);
+    const imports=protoGenerateTsImports(types,importMap,localImportMap);
 
     if(imports.length){
         prependTo.splice(0,0,...imports);

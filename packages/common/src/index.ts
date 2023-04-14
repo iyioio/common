@@ -21,6 +21,7 @@ export * from './lib/css';
 export * from './lib/csv-lib';
 export * from './lib/csv-types';
 export * from './lib/data-table';
+export * from './lib/data-table-lib';
 export * from './lib/DisposeContainer';
 export * from './lib/dom';
 export * from './lib/ElementSizeObserver';
