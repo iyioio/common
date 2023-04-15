@@ -46,7 +46,7 @@ export const fileWriter=async (ctx:ProtoContext)=>{
 
             let mergedLines=(output.autoMerge?
                 protoMergeSourceCode({existing,overwriting:contentLines}):
-                existing.split('\n')
+                contentLines
             )
 
             if(mergers){

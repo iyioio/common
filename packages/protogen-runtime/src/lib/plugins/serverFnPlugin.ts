@@ -1,7 +1,8 @@
+import { CommonAccessType } from "@iyio/cdk-common";
 import { getFileNameNoExt, getSubstringCount, joinPaths, strFirstToLower } from "@iyio/common";
 import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
-import { serverFnCdkTemplate, ServerFnInfo } from "./serverFnCdkTemplate";
+import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
 const supportedTypes=['serverFn'];
 
@@ -64,7 +65,7 @@ const ServerFnPluginConfig=z.object(
     serverFnCdkConstructFile:z.string().optional(),
 
     /**
-     * @default "ServerFns"
+     * @default "Fns"
      */
     serverFnCdkConstructClassName:z.string().optional(),
 
@@ -97,7 +98,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         serverFnLambdaPackage='@iyio/aws-lambda',
         serverFnClientIndexFilename='serverFn-client-index.ts',
         serverFnCdkConstructFile,
-        serverFnCdkConstructClassName='ServerFns'
+        serverFnCdkConstructClassName='Fns'
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
@@ -111,7 +112,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             .repeat(getSubstringCount(path,'/')-1)
         )
 
-        const {path:clientPath}=getProtoPluginPackAndPath(
+        const {path:clientPath,packageName:clientPackageName}=getProtoPluginPackAndPath(
             namespace,
             serverFnClientPackage,
             serverFnClientPath,
@@ -135,7 +136,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         clientOut.push(`import { lambdaClient } from '${serverFnLambdaPackage}';`);
         clientOut.push('');
 
-        const infos:ServerFnInfo[]=[];
+        const infos:FnInfoTemplate[]=[];
 
 
         for(const node of supported){
@@ -152,21 +153,66 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const outputPackage=importMap[outputType+'Scheme'];
 
             const paramName=strFirstToLower(name)+'ArnParam';
-            importMap[paramName]=serverFnClientPackage;
+            importMap[paramName]=clientPackageName;
             clientParamImports.push(paramName);
             paramsOut.push(`export const ${paramName}=defineStringParam('${strFirstToLower(name)}Arn');`);
 
-            infos.push({
+            const fnInfo:FnInfoTemplate={
                 name,
                 createProps:{
                     createPublicUrl:node.children?.['$publicUrl']?.value==='true',
                     handlerFileName:joinPaths(cdkRelPath,filepath),
                     handler:'handler'
+                },
+                arnParam:paramName,
+                accessRequests:[]
+            };
+            infos.push(fnInfo);
+
+            const accessProp=node.children?.['access'];
+            if(accessProp?.children){
+                for(const c in accessProp.children){
+                    const child=accessProp.children[c];
+                    const types=child.name.split('-') as CommonAccessType[];
+                    for(const type of child.types){
+                        fnInfo.accessRequests?.push({
+                            grantName:type.type,
+                            types,
+                        })
+                    }
+
                 }
-            })
+                let child=accessProp.children?.['read'];
+                if(child){
+                    for(const type of child.types){
+                        fnInfo.accessRequests?.push({
+                            grantName:type.type,
+                            types:['read'],
+                        })
+                    }
+                }
+                child=accessProp.children?.['write'];
+                if(child){
+                    for(const type of child.types){
+                        fnInfo.accessRequests?.push({
+                            grantName:type.type,
+                            types:['write'],
+                        })
+                    }
+                }
+                child=accessProp.children?.['readWrite'];
+                if(child){
+                    for(const type of child.types){
+                        fnInfo.accessRequests?.push({
+                            grantName:type.type,
+                            types:['read','write'],
+                        })
+                    }
+                }
+            }
 
             const clientName=name.endsWith('Fn')?name.substring(0,name.length-2):name;
-            importMap[clientName]=serverFnClientPackage;
+            importMap[clientName]=clientPackageName;
             if(node.comment){
                 clientOut.push(...protoFormatTsComment(node.comment,'').split('\n'))
             }
@@ -260,7 +306,8 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         if(serverFnCdkConstructFile){
             outputs.push({
                 path:serverFnCdkConstructFile,
-                content:serverFnCdkTemplate(serverFnCdkConstructClassName,infos)
+                content:serverFnCdkTemplate(serverFnCdkConstructClassName,infos,importMap),
+                mergeHandler:protoMergeTsImports,
             })
         }
 

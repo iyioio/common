@@ -1,36 +1,51 @@
-import { DataTableDescription, getDataTableShape, zodTypeToPrimitiveType } from "@iyio/common";
+import { DataTableDescription, getDataTableShape, ParamTypeDef, zodTypeToPrimitiveType } from "@iyio/common";
 import * as cdk from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
+import { grantTableQueryPerms } from "./cdk-lib";
+import { AccessGranter, IAccessGrantGroup } from "./common-cdk-types";
+import { ParamOutput } from "./ParamOutput";
 
 export interface TableBuilderProps
 {
-    tables:DataTableDescription[];
+    tables:TableInfo[];
+    params?:ParamOutput;
 }
 
 export interface TableInfo
+{
+    tableDescription:DataTableDescription;
+    arnParam?:ParamTypeDef<string>;
+    grantAccess?:boolean;
+}
+
+export interface TableInfoAndTable
 {
     description:DataTableDescription;
     table:db.Table;
 }
 
-export class TableBuilder extends Construct
+export class TableBuilder extends Construct implements IAccessGrantGroup
 {
-    public readonly tableInfo:TableInfo[];
+    public readonly tableInfo:TableInfoAndTable[];
+
+    public readonly accessGrants:AccessGranter[]=[];
 
     public constructor(scope:Construct, name:string, {
-        tables
+        tables,
+        params,
     }:TableBuilderProps)
     {
 
         super(scope,name);
 
-        const tableInfo:TableInfo[]=[];
+        const tableInfo:TableInfoAndTable[]=[];
 
 
-        for(const tbl of tables){
+        for(const info of tables){
 
+            const tbl=info.tableDescription;
 
             const shape=getDataTableShape(tbl);
 
@@ -48,8 +63,11 @@ export class TableBuilder extends Construct
                 stream:tbl.watchable?db.StreamViewType.NEW_IMAGE:undefined,
                 removalPolicy:cdk.RemovalPolicy.DESTROY,
                 timeToLiveAttribute:tbl.ttlProp,
-
             });
+
+            if(info.arnParam && params){
+                params.setParam(info.arnParam,table.tableArn);
+            }
 
 
             if(tbl.indexes?.length){
@@ -84,6 +102,21 @@ export class TableBuilder extends Construct
 
                     })
                 }
+            }
+
+            if(info.grantAccess){
+                this.accessGrants.push({
+                    grantName:tbl.name,
+                    grant:request=>{
+                        if(request.types?.includes('read')){
+                            table.grantReadData(request.grantee);
+                            grantTableQueryPerms(request.grantee,table);
+                        }
+                        if(request.types?.includes('write')){
+                            table.grantWriteData(request.grantee);
+                        }
+                    }
+                })
             }
 
             // todo - watchable

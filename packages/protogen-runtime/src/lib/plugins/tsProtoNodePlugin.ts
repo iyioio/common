@@ -65,7 +65,7 @@ export const tsProtoNodePlugin:ProtoPipelineConfigurablePlugin<typeof TsProtoNod
 
 export const ${tsProtoNodeExportName}=${JSON.stringify(
     protoCreateNodeAddressMap(protoRemoveDisplayChildren(deepClone(nodes))),
-null,tsProtoNodeMinify?0:tab.length)}${tsProtoNodeMinify?'\n':''}satisfies ProtoAddressMap;`,
+null,tsProtoNodeMinify?0:tab.length)} satisfies ProtoAddressMap;`,
         })
 
     }

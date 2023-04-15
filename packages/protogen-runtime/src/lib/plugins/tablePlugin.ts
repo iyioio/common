@@ -2,7 +2,7 @@ import { getFileNameNoExt, HashMap, joinPaths, strFirstToLower } from "@iyio/com
 import { addTsImport, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { getTsSchemeName, SharedTsPluginConfigScheme } from "../sharedTsConfig";
-import { tableCdkTemplate } from "./tableCdkTemplate";
+import { tableCdkTemplate, TableNameParamNamePair } from "./tableCdkTemplate";
 
 
 
@@ -56,7 +56,7 @@ const TablePluginConfig=z.object(
     tableCdkConstructFile:z.string().optional(),
 
     /**
-     * @default "Tables"
+     * @default "Tbls"
      */
     tableCdkConstructClassName:z.string().optional(),
 
@@ -85,7 +85,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         tableUseParamIds,
         dataTableDescriptionPackage='@iyio/common',
         allTableArrayName='allTables',
-        tableCdkConstructClassName='Tables',
+        tableCdkConstructClassName='Tbls',
         tableCdkConstructFile,
         ...tsConfig
     })=>{
@@ -118,6 +118,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         const paramNames:string[]=[];
 
         const tableNames:string[]=[];
+        const tableInfos:TableNameParamNamePair[]=[];
 
         for(const node of supported){
 
@@ -127,6 +128,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             importMap[name+'Table']=packageName;
 
             tableNames.push(name+'Table');
+            tableInfos.push({name:name+'Table',paramName})
 
             log(`table - ${name}Table`);
 
@@ -270,8 +272,8 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         if(tableCdkConstructFile){
             outputs.push({
                 path:tableCdkConstructFile,
-                content:tableCdkTemplate(tableCdkConstructClassName,tableNames,importMap),
-                mergeHandler:protoMergeTsImports
+                content:tableCdkTemplate(tableCdkConstructClassName,tableInfos,importMap),
+                mergeHandler:protoMergeTsImports,
             })
         }
     }

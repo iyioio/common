@@ -1,65 +1,55 @@
-import type { NodeFnProps } from "@iyio/cdk-common";
+import type { FnInfo } from "@iyio/cdk-common";
 
-export interface ServerFnInfo
-{
-    name:string;
-    createProps:NodeFnProps;
+export type FnInfoTemplate=Omit<FnInfo,'arnParam'> & {
+    arnParam:string;
 }
 
-export const serverFnCdkTemplate=(constructName:string,infos:ServerFnInfo[])=>{
+export const serverFnCdkTemplate=(constructName:string,infos:FnInfoTemplate[],importMap:Record<string,string>)=>{
+
+    const imports:string[]=[];
+    for(let i=0;i<infos.length;i++){
+        const t=infos[i];
+        imports.push(`import { ${t.arnParam} as _fnParam${i}} from '${importMap[t.arnParam]}';`);
+    }
 
 
     return `import { Construct } from "constructs";
-import { NodeFn, NodeFnProps } from "@iyio/cdk-common";
+import { FnsBuilder, FnInfo, ParamOutput } from "@iyio/cdk-common";
+${imports.join('\n')}
 
-export interface ServerFnInfoAndNodeFn
+export interface ${constructName}Props
 {
-    info:ServerFnInfo;
-    fn:NodeFn;
+    params?:ParamOutput;
+    transform?:(fnInfos:FnInfo[])=>FnInfo[];
 }
 
-export interface ServerFnInfo
+export class ${constructName} extends FnsBuilder
 {
-    name:string;
-    createProps:NodeFnProps;
-}
-
-export interface ServerFnsProps
-{
-    transformFns?:(fnInfos:ServerFnInfo[])=>ServerFnInfo[];
-}
-
-export class ${constructName} extends Construct
-{
-
-    public readonly fns:ServerFnInfoAndNodeFn[];
 
     public constructor(scope:Construct,name:string,{
-        transformFns,
-    }:ServerFnsProps={}){
+        transform,
+        ...props
+    }:${constructName}Props={}){
 
-        super(scope,name);
-
-        const fns:ServerFnInfoAndNodeFn[]=[];
-        this.fns=fns;
-
-        if(transformFns){
-            this.fnInfos=transformFns(this.fnInfos);
-        }
-
-        for(const info of this.fnInfos){
-
-            const fn:ServerFnInfoAndNodeFn={
-                info,
-                fn:new NodeFn(this,info.name,info.createProps),
-            }
-            fns.push(fn);
-        }
+        super(scope,name,{...props,fnsInfo:transform?transform(fnsInfo):fnsInfo});
 
     }
 
-    public readonly fnInfos:ServerFnInfo[]=${JSON.stringify(infos,null,4)};
-
 }
+
+const fnsInfo:FnInfo[]=[
+${
+    infos.map((info,i)=>`    {
+        name:${JSON.stringify(info.name)},
+        arnParam:_fnParam${i},
+        grantAccess:true,
+        accessRequests:${JSON.stringify(info.accessRequests??[])},
+        createProps:${JSON.stringify(info.createProps)},
+    }`)
+    .join(',\n')
+}
+];
+
 `
 }
+
