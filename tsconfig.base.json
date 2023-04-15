@@ -16,9 +16,7 @@
         "baseUrl": ".",
         "paths": {
             "@iyio/aws": ["packages/aws/src/index.ts"],
-            "@iyio/aws-credential-providers": [
-                "packages/aws-credential-providers/src/index.ts"
-            ],
+            "@iyio/aws-credential-providers": ["packages/aws-credential-providers/src/index.ts"],
             "@iyio/aws-dynamo": ["packages/aws-dynamo/src/index.ts"],
             "@iyio/aws-lambda": ["packages/aws-lambda/src/index.ts"],
             "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
@@ -26,14 +24,12 @@
             "@iyio/aws-tests": ["packages/aws-tests/src/index.ts"],
             "@iyio/browser-mocks": ["packages/browser-mocks/src/index.ts"],
             "@iyio/cdk-common": ["packages/cdk-common/src/index.ts"],
-            "@iyio/common": ["packages/common/src/index.ts"],
+            "@iyio/common": ["packages/iyio-common/src/index.ts"],
             "@iyio/nextjs-common": ["packages/nextjs-common/src/index.ts"],
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
             "@iyio/nx-common": ["packages/nx-common/src/index.ts"],
             "@iyio/protogen": ["packages/protogen/src/index.ts"],
-            "@iyio/protogen-runtime": [
-                "packages/protogen-runtime/src/index.ts"
-            ],
+            "@iyio/protogen-runtime": ["packages/protogen-runtime/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"],
             "@iyio/svg-charts": ["packages/svg-charts/src/index.ts"],
             "@iyio/svg-charts-react": ["packages/svg-charts-react/src/index.ts"]
