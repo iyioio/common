@@ -1,17 +1,17 @@
 {
-    "name": "common",
+    "name": "iyio-common",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "packages/common/src",
+    "sourceRoot": "packages/iyio-common/src",
     "projectType": "library",
     "targets": {
         "build": {
             "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/packages/common",
-                "main": "packages/common/src/index.ts",
-                "tsConfig": "packages/common/tsconfig.lib.json",
-                "assets": ["packages/common/*.md"]
+                "outputPath": "dist/packages/iyio-common",
+                "main": "packages/iyio-common/src/index.ts",
+                "tsConfig": "packages/iyio-common/tsconfig.lib.json",
+                "assets": ["packages/iyio-common/*.md"]
             }
         },
         "publish": {
@@ -30,14 +30,14 @@
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": ["packages/common/**/*.ts"]
+                "lintFilePatterns": ["packages/iyio-common/**/*.ts"]
             }
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/common"],
+            "outputs": ["coverage/packages/iyio-common"],
             "options": {
-                "jestConfig": "packages/common/jest.config.ts",
+                "jestConfig": "packages/iyio-common/jest.config.ts",
                 "passWithNoTests": true
             }
         }
