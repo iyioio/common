@@ -51,7 +51,7 @@ export const fnHandler=async ({
         const parsed=inputScheme.safeParse(input);
         if(parsed.success){
             input=parsed.data;
-        }else{
+        }else if(parsed.success===false){
             if(isHttp){
                 return createHttpBadRequestResponse(parsed.error.message);
             }else{
@@ -80,7 +80,7 @@ export const fnHandler=async ({
             const parsed=outputScheme.safeParse(result);
             if(parsed.success){
                 result=parsed.data;
-            }else{
+            }else if(parsed.success===false){
                 console.error(`handler result does does not match output scheme.`,parsed.error);
                 if(isHttp){
                     return createHttpErrorResponse('Internal server error - invalid return data',responseDefaults);
