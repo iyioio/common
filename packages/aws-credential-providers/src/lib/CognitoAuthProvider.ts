@@ -331,8 +331,8 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
                     }else{
                         resolve({
                             status:'error',
-                            message:result.message,
-                            error:result.error
+                            message:result.success===false?result.message:'error',
+                            error:result.success===false?result.error:null
                         })
                     }
                 }else{
