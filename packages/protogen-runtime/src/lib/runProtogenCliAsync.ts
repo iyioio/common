@@ -38,6 +38,9 @@ export const runProtogenCliAsync=async ({
             log('Verbose mode enabled');
         }
 
+        const namespace=config.namespace??'common';
+        const paramPackageName=config.paramPackageName??'params';
+
         const pipeline:ProtoPipeline={
             config,
             context:{
@@ -50,13 +53,16 @@ export const runProtogenCliAsync=async ({
                 nodes:[],
                 outputs:[],
                 verbose,
-                namespace:config.namespace??'common',
+                namespace,
                 tab:'    ',
                 stage:'init',
                 importMap:{},
                 dryRun:config.dryRun??false,
                 libStyle:config.libStyle??defaultProtoLibStyle,
                 autoIndexPackages:config.libStyle==='nx',
+                paramMap:{},
+                paramPackage:`@${namespace}/${paramPackageName}`,
+                paramPackageName:paramPackageName,
                 log,
             },
             plugins:[],

@@ -1,9 +1,11 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
+import { bucketPlugin } from "./plugins/bucketPlugin";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
 import { markdownParser } from "./plugins/markdownParser";
+import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
@@ -77,6 +79,18 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:serverFnPlugin
+        },
+        {
+            name:'bucketPlugin',
+            source:'@',
+            paths:[],
+            plugin:bucketPlugin
+        },
+        {
+            name:'paramPlugin',
+            source:'@',
+            paths:[],
+            plugin:paramPlugin
         },
         {// should always be the last generator
             name:'autoPackageIndexPlugin',

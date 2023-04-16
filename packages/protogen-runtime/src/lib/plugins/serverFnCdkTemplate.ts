@@ -31,13 +31,13 @@ export class ${constructName} extends FnsBuilder
         ...props
     }:${constructName}Props={}){
 
-        super(scope,name,{...props,fnsInfo:transform?transform(fnsInfo):fnsInfo});
+        super(scope,name,{...props,fnsInfo:transform?transform(getFnsInfo()):getFnsInfo()});
 
     }
 
 }
 
-const fnsInfo:FnInfo[]=[
+const getFnsInfo=():FnInfo[]=>[
 ${
     infos.map((info,i)=>`    {
         name:${JSON.stringify(info.name)},

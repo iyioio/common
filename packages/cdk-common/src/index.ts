@@ -1,4 +1,5 @@
 export * from './lib/AccessManager';
+export * from './lib/BucketBuilder';
 export * from './lib/cdk-lib';
 export * from './lib/cdk-types';
 export * from './lib/createBucket';

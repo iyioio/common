@@ -47,6 +47,8 @@ export interface ProtoSource
     content:string;
 }
 
+export type ProtoParamType='string'|'number'|'boolean';
+
 export interface ProtoContext
 {
     executionId:string;
@@ -68,6 +70,9 @@ export interface ProtoContext
     dryRun:boolean;
     libStyle:ProtoLibStyle;
     autoIndexPackages:boolean;
+    paramMap:Record<string,ProtoParamType>;
+    paramPackage:string;
+    paramPackageName:string;
     log:(...values:any[])=>void;
 
 }
@@ -123,6 +128,7 @@ export interface ProtoPipelineConfig
     dryRun?:boolean;
     disablePlugins?:string[];
     libStyle?:ProtoLibStyle;
+    paramPackageName?:string;
 }
 
 export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
@@ -141,6 +147,7 @@ export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfi
     plugins:(args:string[])=>args,
     workingDirectory:(args:string[])=>args[0],
     namespace:(args:string[])=>args[0],
+    paramPackageName:(args:string[])=>args[0],
     verbose:(args:string[])=>Boolean(args[0]),
     logImportMap:(args:string[])=>Boolean(args[0]),
     dryRun:(args:string[])=>Boolean(args[0]),

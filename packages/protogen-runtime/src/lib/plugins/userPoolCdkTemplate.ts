@@ -16,13 +16,13 @@ export class ${constructName} extends UserPoolBuilder
 
     public constructor(scope:Construct,name:string,props:${constructName}Props={}){
 
-        super(scope,name,props.transform?props.transform({...propDefaults,...props}):{...propDefaults,...props});
+        super(scope,name,props.transform?props.transform({...getDefaults(),...props}):{...getDefaults(),...props});
 
     }
 
 }
 
-const propDefaults:Omit<Partial<UserPoolBuilderProps>,'params'>=${JSON.stringify(params,null,4)};
+const getDefaults=():Omit<Partial<UserPoolBuilderProps>,'params'>=>(${JSON.stringify(params,null,4)});
 `
 }
 

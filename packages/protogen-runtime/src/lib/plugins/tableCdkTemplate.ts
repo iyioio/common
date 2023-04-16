@@ -31,13 +31,13 @@ export class ${constructName} extends TableBuilder
         ...props
     }:${constructName}Props={}){
 
-        super(scope,name,{...props,tables:transform?transform(tables):tables});
+        super(scope,name,{...props,tables:transform?transform(getTables()):getTables()});
 
     }
 
 }
 
-const tables:TableInfo[]=[${tables.map((_,i)=>`
+const getTables=():TableInfo[]=>[${tables.map((_,i)=>`
     {
         tableDescription:_table${i},
         arnParam:_tableParam${i},

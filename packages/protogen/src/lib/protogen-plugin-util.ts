@@ -1,6 +1,6 @@
 import { AccessRequestDescription, CommonAccessType } from "@iyio/cdk-common";
-import { HashMap, joinPaths } from "@iyio/common";
-import { ProtoLibStyle } from "./protogen-pipeline-types";
+import { HashMap, joinPaths, strFirstToLower } from "@iyio/common";
+import { ProtoLibStyle, ProtoParamType } from "./protogen-pipeline-types";
 import { ProtoNode } from "./protogen-types";
 
 export interface ProtoPluginPackagePath
@@ -60,19 +60,42 @@ export const getProtoPluginPackAndPath:getProtoPluginPackAndPathOverloads=(
     } as ProtoPluginPackagePathIndex;
 
     if(packageIndex){
-        let ary=packageIndex.packagePaths[r.packageName];
-        if(!ary){
-            packageIndex.packagePaths[r.packageName]=ary=[];
-        }
+
         const indexFilename=libStyle==='nx'?
             `packages/${packageDirName}/src/index.ts`:
             joinPaths(r.path,packageIndex.indexFilename);
-        ary.push(indexFilename);
+
+        protoAddIndexPathToPaths(r.packageName,indexFilename,packageIndex.packagePaths);
+
         r.indexFilename=indexFilename;
     }
 
     return r;
 
+}
+
+export const protoAddContextParam=(
+    baseName:string,
+    paramPackage:string,
+    paramMap:Record<string,ProtoParamType>,
+    importMap:Record<string,string>
+)=>{
+    const paramName=protoGetParamName(baseName);
+    paramMap[paramName]='string';
+    importMap[paramName]=paramPackage;
+}
+
+export const protoGetParamName=(baseName:string)=>strFirstToLower(baseName)+'Param';
+
+export const protoAddIndexPathToPaths=(packageName:string,indexPath:string,paths:Record<string,string[]>):string[]=>{
+    let ary=paths[packageName];
+    if(!ary){
+        paths[packageName]=ary=[];
+    }
+    if(!ary.includes(indexPath)){
+        ary.push(indexPath);
+    }
+    return ary;
 }
 
 

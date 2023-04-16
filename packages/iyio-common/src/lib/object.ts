@@ -216,7 +216,10 @@ export const objHasValues=(obj:any)=>
     if(!obj){
         return false;
     }
-    return Object.keys(obj).length!==0;
+    for(const e in obj){
+        return true;
+    }
+    return false;
 }
 
 
