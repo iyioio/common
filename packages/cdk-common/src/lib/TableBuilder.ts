@@ -4,7 +4,7 @@ import * as db from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
 import { grantTableQueryPerms } from "./cdk-lib";
-import { AccessGranter, IAccessGrantGroup } from "./common-cdk-types";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { ManagedProps } from "./ManagedProps";
 
 export interface TableBuilderProps

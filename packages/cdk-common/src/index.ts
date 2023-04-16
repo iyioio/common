@@ -1,7 +1,6 @@
 export * from './lib/AccessManager';
 export * from './lib/cdk-lib';
 export * from './lib/cdk-types';
-export * from './lib/common-cdk-types';
 export * from './lib/createBucket';
 export * from './lib/createUserPool';
 export * from './lib/dynamo';

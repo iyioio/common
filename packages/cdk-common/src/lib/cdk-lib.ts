@@ -5,7 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as Path from "path";
-import { Grantee } from "./common-cdk-types";
+import { Grantee } from "./cdk-types";
 
 export const getCommonFnProps=(handlerFileName?:string):lambdaNodeJs.NodejsFunctionProps=>{
 

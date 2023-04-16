@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from 'constructs';
-import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './common-cdk-types';
+import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
 import { ManagedProps } from './ManagedProps';
 
 export interface UserPoolBuilderProps{

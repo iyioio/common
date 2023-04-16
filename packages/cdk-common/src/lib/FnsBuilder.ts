@@ -1,6 +1,6 @@
 import { ParamTypeDef } from "@iyio/common";
 import { Construct } from "constructs";
-import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./common-cdk-types";
+import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./cdk-types";
 import { ManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
 
