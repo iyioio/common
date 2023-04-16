@@ -14,12 +14,12 @@ export const serverFnCdkTemplate=(constructName:string,infos:FnInfoTemplate[],im
 
 
     return `import { Construct } from "constructs";
-import { FnsBuilder, FnInfo, ParamOutput } from "@iyio/cdk-common";
+import { FnsBuilder, FnInfo, ManagedProps } from "@iyio/cdk-common";
 ${imports.join('\n')}
 
 export interface ${constructName}Props
 {
-    params?:ParamOutput;
+    managed?:ManagedProps;
     transform?:(fnInfos:FnInfo[])=>FnInfo[];
 }
 

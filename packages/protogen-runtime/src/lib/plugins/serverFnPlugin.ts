@@ -1,6 +1,5 @@
-import { CommonAccessType } from "@iyio/cdk-common";
 import { getFileNameNoExt, getSubstringCount, joinPaths, strFirstToLower } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -171,51 +170,13 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     handlerFileName:joinPaths(cdkRelPath,filepath),
                     handler:'handler'
                 },
-                arnParam:paramName,
-                accessRequests:[]
+                arnParam:paramName
             };
             infos.push(fnInfo);
 
-            const accessProp=node.children?.['access'];
+            const accessProp=node.children?.['$access'];
             if(accessProp?.children){
-                for(const c in accessProp.children){
-                    const child=accessProp.children[c];
-                    const types=child.name.split('-') as CommonAccessType[];
-                    for(const type of child.types){
-                        fnInfo.accessRequests?.push({
-                            grantName:type.type,
-                            types,
-                        })
-                    }
-
-                }
-                let child=accessProp.children?.['read'];
-                if(child){
-                    for(const type of child.types){
-                        fnInfo.accessRequests?.push({
-                            grantName:type.type,
-                            types:['read'],
-                        })
-                    }
-                }
-                child=accessProp.children?.['write'];
-                if(child){
-                    for(const type of child.types){
-                        fnInfo.accessRequests?.push({
-                            grantName:type.type,
-                            types:['write'],
-                        })
-                    }
-                }
-                child=accessProp.children?.['readWrite'];
-                if(child){
-                    for(const type of child.types){
-                        fnInfo.accessRequests?.push({
-                            grantName:type.type,
-                            types:['read','write'],
-                        })
-                    }
-                }
+                fnInfo.accessRequests=protoNodeChildrenToAccessRequests(accessProp);
             }
 
             const clientName=name.endsWith('Fn')?name.substring(0,name.length-2):name;

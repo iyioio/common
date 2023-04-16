@@ -1,8 +1,8 @@
 import { ParamTypeDef } from "@iyio/common";
 import { Construct } from "constructs";
-import { AccessGranter, AccessRequest, IAccessGrantGroup, IAccessRequestGroup } from "./common-cdk-types";
+import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./common-cdk-types";
+import { ManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
-import { ParamOutput } from "./ParamOutput";
 
 export interface FnInfoAndNodeFn
 {
@@ -16,13 +16,13 @@ export interface FnInfo
     createProps:NodeFnProps;
     arnParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
-    accessRequests?:Omit<AccessRequest,'grantee'>[];
+    accessRequests?:AccessRequestDescription[],
 }
 
 export interface FnsBuilderProps
 {
     fnsInfo:FnInfo[];
-    params?:ParamOutput;
+    managed?:ManagedProps;
 }
 
 export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessRequestGroup
@@ -37,7 +37,10 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
 
     public constructor(scope:Construct,name:string,{
         fnsInfo,
-        params,
+        managed:{
+            params,
+            accessManager
+        }={},
     }:FnsBuilderProps){
 
         super(scope,name);
@@ -77,6 +80,8 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
         }
 
         this.fns=fns;
+
+        accessManager?.addGroup(this);
 
     }
 

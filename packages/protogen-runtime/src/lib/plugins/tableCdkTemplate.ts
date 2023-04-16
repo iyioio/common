@@ -13,13 +13,13 @@ export const tableCdkTemplate=(constructName:string,tables:TableNameParamNamePai
         imports.push(`import { ${t.paramName} as _tableParam${i}} from '${importMap[t.paramName]}';`);
     }
 
-    return `import { TableBuilder, TableInfo, ParamOutput } from "@iyio/cdk-common";
+    return `import { TableBuilder, TableInfo, ManagedProps } from "@iyio/cdk-common";
 import { Construct } from "constructs";
 ${imports.join('\n')}
 
 export interface ${constructName}Props
 {
-    params?:ParamOutput;
+    managed?:ManagedProps;
     transform?:(tables:TableInfo[])=>TableInfo[];
 }
 

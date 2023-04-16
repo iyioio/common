@@ -9,6 +9,7 @@ import { serverFnPlugin } from "./plugins/serverFnPlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
 import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
 import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin";
+import { userPoolPlugin } from "./plugins/userPoolPlugin";
 import { zodPlugin } from "./plugins/zodPlugin";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
@@ -64,6 +65,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:reactCompPlugin
+        },
+        {
+            name:'userPoolPlugin',
+            source:'@',
+            paths:[],
+            plugin:userPoolPlugin
         },
         {
             name:'serverFnPlugin',

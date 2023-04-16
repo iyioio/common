@@ -1,5 +1,7 @@
+import { AccessRequestDescription, CommonAccessType } from "@iyio/cdk-common";
 import { HashMap, joinPaths } from "@iyio/common";
 import { ProtoLibStyle } from "./protogen-pipeline-types";
+import { ProtoNode } from "./protogen-types";
 
 export interface ProtoPluginPackagePath
 {
@@ -71,4 +73,27 @@ export const getProtoPluginPackAndPath:getProtoPluginPackAndPathOverloads=(
 
     return r;
 
+}
+
+
+export const protoNodeChildrenToAccessRequests=(node:ProtoNode):AccessRequestDescription[]=>{
+    const requests:AccessRequestDescription[]=[];
+
+    if(!node.children){
+        return requests;
+    }
+
+    for(const c in node.children){
+        const child=node.children[c];
+        const types=child.name.split('-') as CommonAccessType[];
+        for(const type of child.types){
+            requests.push({
+                grantName:type.type,
+                types,
+            })
+        }
+
+    }
+
+    return requests;
 }

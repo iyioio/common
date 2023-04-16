@@ -19,10 +19,14 @@ export interface IAccessGrantGroup
     accessGrants:AccessGranter[];
 }
 
-export interface AccessRequest
+export interface AccessRequestDescription
 {
     grantName:string;
     types?:CommonAccessType[];
+}
+
+export interface AccessRequest extends AccessRequestDescription
+{
     grantee:Grantee;
 }
 

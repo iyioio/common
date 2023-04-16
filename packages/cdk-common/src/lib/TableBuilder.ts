@@ -5,12 +5,12 @@ import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
 import { grantTableQueryPerms } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./common-cdk-types";
-import { ParamOutput } from "./ParamOutput";
+import { ManagedProps } from "./ManagedProps";
 
 export interface TableBuilderProps
 {
     tables:TableInfo[];
-    params?:ParamOutput;
+    managed?:ManagedProps;
 }
 
 export interface TableInfo
@@ -34,7 +34,10 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
 
     public constructor(scope:Construct, name:string, {
         tables,
-        params,
+        managed:{
+            params,
+            accessManager,
+        }={},
     }:TableBuilderProps)
     {
 
@@ -130,6 +133,8 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
         }
 
         this.tableInfo=tableInfo;
+
+        accessManager?.addGroup(this);
     }
 }
 
