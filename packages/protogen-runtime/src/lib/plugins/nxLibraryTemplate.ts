@@ -5,11 +5,13 @@ export interface NxLibraryTemplateOptions
 {
     path:string;
     packageName:string;
+    jsxType?:string;
 }
 
 export const nxLibraryTemplate=({
     path,
     packageName,
+    jsxType='react-jsx',
 }:NxLibraryTemplateOptions):ProtoOutput[]=>{
 
     const parts=packageName.split('/');
@@ -131,6 +133,7 @@ export default {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "module": "commonjs",
+        "jsx": "${jsxType}",
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "noUncheckedIndexedAccess": true,
