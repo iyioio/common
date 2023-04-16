@@ -70,7 +70,7 @@ export const addTsImport=(im:string,packageName:string|null|undefined,imports:st
     }
 }
 
-export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerator,indexOutput:ProtoOutput):string=>
+export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerator,indexOutput:ProtoOutput,existing:string):string=>
 {
     const out:string[]=[];
 
@@ -107,13 +107,28 @@ export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerato
         const name=getPathNoExt(o.path.substring(root.length));
         const exportPath=`./${name}`;
         if(o.mainExport){
-            out.push(`export { ${o.mainExport} as ${o.mainExportAs??name.replace(/\//g,'')} } from '${exportPath}';`)
+            out.push(`export { ${o.mainExport} as ${o.mainExportAs??name.replace(/\//g,'')} } from '${exportPath}'; ${generatorComment}`);
         }else{
-            out.push(`export * from '${exportPath}';`)
+            out.push(`export * from '${exportPath}'; ${generatorComment}`);
         }
     }
 
     out.sort();
 
-    return out.join('\n')
+    if(existing.trim()){
+        const lines=existing.split('\n');
+        for(let i=0;i<lines.length;i++){
+            if(generatorCommentReg.test(lines[i])){
+                lines.splice(i,1);
+                i--;
+            }
+        }
+        lines.unshift(...out);
+        return lines.join('\n').trim()+'\n';
+    }
+
+    return out.join('\n').trim()+'\n';
 }
+
+const generatorComment='// auto-generated';
+const generatorCommentReg=/\/\/\s*auto-generated\s*$/;

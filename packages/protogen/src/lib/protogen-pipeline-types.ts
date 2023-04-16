@@ -15,7 +15,7 @@ export interface ProtoIndexGenerator
 {
     root:string;
     recursive?:boolean;
-    generator:(ctx:ProtoContext,generator:ProtoIndexGenerator,generatorOutput:ProtoOutput)=>string|Promise<string>;
+    generator:(ctx:ProtoContext,generator:ProtoIndexGenerator,generatorOutput:ProtoOutput,existing:string)=>string|Promise<string>;
     /**
      * Array of filenames, full paths or regular expresses to exclude from the index
      */

@@ -30,19 +30,19 @@ export const fileWriter=async (ctx:ProtoContext)=>{
                 }
             }
         }
+        const exists=await pathExistsAsync(name);
+        const existing=exists?(await readFile(name)).toString():'';
 
         if(output.generator){
-            output.content=await output.generator.generator(ctx,output.generator,output);
+            output.content=await output.generator.generator(ctx,output.generator,output,existing);
         }
 
         const mergers=output.mergeHandler?asArray(output.mergeHandler):null;
 
-        const exists=await pathExistsAsync(name);
 
         if(exists && output.overwrite===false){
             continue;
         }else if((output.autoMerge || mergers) && exists){
-            const existing=(await readFile(name)).toString();
 
             const contentLines=output.content.split('\n');
 
