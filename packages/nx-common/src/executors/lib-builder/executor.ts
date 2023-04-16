@@ -109,7 +109,7 @@ export default async function runExecutor(
             updateDeps(compatibleDeps,'~',pkg.peerDependencies,updates);
         }
 
-        console.log(`__________________ ${approximatelyDeps}, ${moreThanEqDeps}, ${JSON.stringify(process.env['NX_LIB_MORE_EQ_DEPS'])}`)
+        //console.log(`__________________ ${approximatelyDeps}, ${moreThanEqDeps}, ${JSON.stringify(process.env['NX_LIB_MORE_EQ_DEPS'])}`)
 
         if(approximatelyDeps){
             updateDeps(approximatelyDeps,'^',pkg.dependencies,updates);
