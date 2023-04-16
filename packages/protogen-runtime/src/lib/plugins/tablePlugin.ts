@@ -76,6 +76,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         tab,
         packagePaths,
         namespace,
+        libStyle,
     },{
         tablePath,
         tablePackage='tables',
@@ -86,7 +87,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         dataTableDescriptionPackage='@iyio/common',
         allTableArrayName='allTables',
         tableCdkConstructClassName='Tbls',
-        tableCdkConstructFile,
+        tableCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${tableCdkConstructClassName}.ts`:undefined,
         ...tsConfig
     })=>{
 
@@ -94,6 +95,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             namespace,
             tablePackage,
             tablePath,
+            libStyle,
             {packagePaths,indexFilename:tableIndexFilename}
         );
 
@@ -263,6 +265,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         outputs.push({
             path:joinPaths(path,tableIndexFilename),
             content:'',
+            isPackageIndex:true,
             generator:{
                 root:path,
                 generator:protoGenerateTsIndex

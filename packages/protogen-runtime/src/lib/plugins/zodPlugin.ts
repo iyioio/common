@@ -43,6 +43,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         tab,
         packagePaths,
         namespace,
+        libStyle,
     },{
         zodFilename='types.ts',
         zodPackage='types',
@@ -55,8 +56,9 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
             namespace,
             zodPackage,
             zodPath,
+            libStyle,
             {packagePaths,indexFilename:zodIndexFilename}
-            );
+        );
 
         log(`zodPlugin. node count = ${nodes.length}`)
 
@@ -116,6 +118,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         outputs.push({
             path:joinPaths(path,zodIndexFilename),
             content:'',
+            isPackageIndex:true,
             generator:{
                 root:path,
                 generator:protoGenerateTsIndex

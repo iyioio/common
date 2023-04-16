@@ -1,5 +1,5 @@
 import { deepClone, joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoCreateNodeAddressMap, ProtoPipelineConfigurablePlugin, protoRemoveDisplayChildren } from "@iyio/protogen";
+import { getProtoPluginPackAndPath, protoCreateNodeAddressMap, protoGenerateTsIndex, ProtoPipelineConfigurablePlugin, protoRemoveDisplayChildren } from "@iyio/protogen";
 import { z } from "zod";
 
 const TsProtoNodePluginConfig=z.object(
@@ -10,7 +10,7 @@ const TsProtoNodePluginConfig=z.object(
     tsProtoNodePath:z.string().optional(),
 
     /**
-     * @default "types"
+     * @default "proto-nodes"
      */
     tsProtoNodePackage:z.string().optional(),
 
@@ -18,6 +18,11 @@ const TsProtoNodePluginConfig=z.object(
      * @default "protoNodes.ts"
      */
     tsProtoNodeFilename:z.string().optional(),
+
+    /**
+     * @default "protoNodes-index.ts"
+     */
+    tsProtoNodeIndexFilename:z.string().optional(),
 
     /**
      * @default "protoNodes"
@@ -40,18 +45,23 @@ export const tsProtoNodePlugin:ProtoPipelineConfigurablePlugin<typeof TsProtoNod
         log,
         nodes,
         namespace,
+        libStyle,
+        packagePaths
     },{
-        tsProtoNodePackage='types',
+        tsProtoNodePackage='proto-nodes',
         tsProtoNodePath=tsProtoNodePackage,
         tsProtoNodeFilename='protoNodes.ts',
         tsProtoNodeExportName='protoNodes',
+        tsProtoNodeIndexFilename='protoNodes-index',
         tsProtoNodeMinify=false,
     })=>{
 
         const {path,packageName}=getProtoPluginPackAndPath(
             namespace,
             tsProtoNodePackage,
-            tsProtoNodePath
+            tsProtoNodePath,
+            libStyle,
+            {packagePaths,indexFilename:tsProtoNodeIndexFilename}
         );
 
         log(`${nodes.length} node(s)`);
@@ -66,6 +76,16 @@ export const tsProtoNodePlugin:ProtoPipelineConfigurablePlugin<typeof TsProtoNod
 export const ${tsProtoNodeExportName}=${JSON.stringify(
     protoCreateNodeAddressMap(protoRemoveDisplayChildren(deepClone(nodes))),
 null,tsProtoNodeMinify?0:tab.length)} satisfies ProtoAddressMap;`,
+        })
+
+        outputs.push({
+            path:joinPaths(path,tsProtoNodeIndexFilename),
+            content:'',
+            isPackageIndex:true,
+            generator:{
+                root:path,
+                generator:protoGenerateTsIndex
+            }
         })
 
     }

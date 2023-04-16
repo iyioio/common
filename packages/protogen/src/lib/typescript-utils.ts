@@ -1,4 +1,4 @@
-import { getFileNameNoExt, getPathNoExt, HashMap } from "@iyio/common";
+import { getPathNoExt, HashMap } from "@iyio/common";
 import { ProtoContext, ProtoIndexGenerator, ProtoOutput } from "./protogen-pipeline-types";
 
 export const protoTsTypeMap:HashMap<string>={
@@ -104,8 +104,13 @@ export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerato
             continue;
         }
 
-        getFileNameNoExt
-        out.push(`export * from './${getPathNoExt(o.path.substring(root.length))}';`)
+        const name=getPathNoExt(o.path.substring(root.length));
+        const exportPath=`./${name}`;
+        if(o.mainExport){
+            out.push(`export { ${o.mainExport} as ${o.mainExportAs??name.replace(/\//g,'')} } from '${exportPath}';`)
+        }else{
+            out.push(`export * from '${exportPath}';`)
+        }
     }
 
     out.sort();

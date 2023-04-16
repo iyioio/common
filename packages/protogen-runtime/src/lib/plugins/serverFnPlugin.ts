@@ -14,7 +14,7 @@ const ServerFnPluginConfig=z.object(
     serverFnPath:z.string().optional(),
 
     /**
-     * @default "serverFns"
+     * @default "fns"
      */
     serverFnPackage:z.string().optional(),
 
@@ -24,22 +24,22 @@ const ServerFnPluginConfig=z.object(
     serverFnClientPath:z.string().optional(),
 
     /**
-     * @default "serverFnsClient"
+     * @default "fn-clients"
      */
     serverFnClientPackage:z.string().optional(),
 
     /**
-     * @default "serverFn-params.ts"
+     * @default "fn-params.ts"
      */
     serverFnParamsFilename:z.string().optional(),
 
     /**
-     * @default "serverFn-client-index.ts"
+     * @default "fn-clients-index.ts"
      */
     serverFnClientIndexFilename:z.string().optional(),
 
     /**
-     * @default "serverFnClients.ts"
+     * @default "fn-clients.ts"
      */
     serverFnClientFilename:z.string().optional(),
 
@@ -57,6 +57,8 @@ const ServerFnPluginConfig=z.object(
      * @default "@iyio/aws-lambda"
      */
     serverFnLambdaPackage:z.string().optional(),
+
+    serverFnIndexFilename:z.string().optional(),
 
     /**
      * If defined a CDK construct file will be generated that can be used to deploy the
@@ -86,25 +88,29 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         nodes,
         namespace,
         packagePaths,
+        libStyle,
     },{
-        serverFnPackage='serverFns',
+        serverFnPackage='fns',
         serverFnPath=serverFnPackage,
-        serverFnClientPackage='serverFnsClient',
+        serverFnClientPackage='fn-clients',
+        serverFnIndexFilename='fn-index.ts',
         serverFnClientPath=serverFnClientPackage,
-        serverFnParamsFilename='serverFn-params.ts',
+        serverFnParamsFilename='fn-params.ts',
         serverFnHandlerName='handler',
         serverFnLibPackage='@iyio/common',
-        serverFnClientFilename='serverFnClients.ts',
+        serverFnClientFilename='fn-clients.ts',
         serverFnLambdaPackage='@iyio/aws-lambda',
-        serverFnClientIndexFilename='serverFn-client-index.ts',
-        serverFnCdkConstructFile,
-        serverFnCdkConstructClassName='Fns'
+        serverFnClientIndexFilename='fn-clients-index.ts',
+        serverFnCdkConstructClassName='Fns',
+        serverFnCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${serverFnCdkConstructClassName}.ts`:undefined,
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
             namespace,
             serverFnPackage,
-            serverFnPath
+            serverFnPath,
+            libStyle,
+            {packagePaths,indexFilename:serverFnIndexFilename},
         );
 
         const cdkRelPath=(
@@ -116,6 +122,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             namespace,
             serverFnClientPackage,
             serverFnClientPath,
+            libStyle,
             {packagePaths,indexFilename:serverFnClientIndexFilename},
         );
 
@@ -278,11 +285,23 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             outputs.push({
                 path:filepath,
                 content:out.join('\n'),
+                mainExport:isDefault?undefined:handlerName,
+                mainExportAs:name,
                 autoMerge:true,
                 mergeHandler:protoMergeTsImports
             })
 
         }
+
+        outputs.push({
+            path:joinPaths(path,serverFnIndexFilename),
+            content:'',
+            isPackageIndex:true,
+            generator:{
+                root:path,
+                generator:protoGenerateTsIndex
+            }
+        })
 
         clientOut.unshift(`import { ${clientParamImports.join(', ')} } from './${getFileNameNoExt(serverFnParamsFilename)}';`)
         protoPrependTsImports(clientInputs,importMap,clientOut);
@@ -297,6 +316,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         outputs.push({
             path:joinPaths(clientPath,serverFnClientIndexFilename),
             content:'',
+            isPackageIndex:true,
             generator:{
                 root:clientPath,
                 generator:protoGenerateTsIndex

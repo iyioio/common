@@ -1,4 +1,5 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
+import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
@@ -12,6 +13,8 @@ import { zodPlugin } from "./plugins/zodPlugin";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
     return [
+
+        //// Read
         {
             name:'fileReader',
             source:'@',
@@ -20,6 +23,8 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
                 input:fileReader
             }
         },
+
+        //// Parse
         {
             name:'markdownParser',
             source:'@',
@@ -28,6 +33,8 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
                 parse:markdownParser
             }
         },
+
+        //// Generate
         {
             name:'tsProtoNodePlugin',
             source:'@',
@@ -64,6 +71,14 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             paths:[],
             plugin:serverFnPlugin
         },
+        {// should always be the last generator
+            name:'autoPackageIndexPlugin',
+            source:'@',
+            paths:[],
+            plugin:autoPackageIndexPlugin
+        },
+
+        //// Write
         {
             name:'fileWriter',
             source:'@',

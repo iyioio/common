@@ -5,6 +5,12 @@ import { ProtoNode } from "./protogen-types";
 
 export type ProtoStage='init'|'input'|'preprocess'|'parse'|'generate'|'output';
 
+export const allProtoLibStyles=['dir','nx'] as const;
+
+export type ProtoLibStyle=typeof allProtoLibStyles[number];
+
+export const defaultProtoLibStyle:ProtoLibStyle='dir';
+
 export interface ProtoIndexGenerator
 {
     root:string;
@@ -20,6 +26,14 @@ export interface ProtoOutput
 {
     path:string;
     content:string;
+    /**
+     * @default true
+     */
+    overwrite?:boolean;
+    mainExport?:string;
+    mainExportAs?:string;
+    isPackageIndex?:boolean;
+    isAutoPackageIndex?:boolean;
     autoMerge?:boolean;
     mergeHandler?:ProtoSourceCodeMerger|((ProtoSourceCodeMerger|null|undefined)[]);
     generator?:ProtoIndexGenerator;
@@ -52,6 +66,8 @@ export interface ProtoContext
     packagePaths:HashMap<string[]>;
     metadata:{[name:string]:any};
     dryRun:boolean;
+    libStyle:ProtoLibStyle;
+    autoIndexPackages:boolean;
     log:(...values:any[])=>void;
 
 }
@@ -106,6 +122,7 @@ export interface ProtoPipelineConfig
     logImportMap?:boolean;
     dryRun?:boolean;
     disablePlugins?:string[];
+    libStyle?:ProtoLibStyle;
 }
 
 export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
@@ -115,7 +132,8 @@ export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
     verbose:'-v',
     loadDefaultPlugins:'-l',
     namespace:'-n',
-    disablePlugins:'-x'
+    disablePlugins:'-x',
+    libStyle:'-s',
 } as const;
 
 export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfig>={
@@ -127,5 +145,6 @@ export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfi
     logImportMap:(args:string[])=>Boolean(args[0]),
     dryRun:(args:string[])=>Boolean(args[0]),
     loadDefaultPlugins:(args:string[])=>Boolean(args[0]),
+    libStyle:(args:string[])=>allProtoLibStyles.includes(args[0] as any)?args[0] as ProtoLibStyle:undefined,
     disablePlugins:(args:string[])=>args,
 } as const;

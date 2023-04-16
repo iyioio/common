@@ -54,6 +54,17 @@ export const executeTGenPipelineAsync=async ({
     await runPluginsAsync('preprocess');
     await runPluginsAsync('parse');
     await runPluginsAsync('generate');
+
+    if(context.autoIndexPackages){
+        for(let i=0;i<context.outputs.length;i++){
+            const out=context.outputs[i];
+            if(out.isPackageIndex && !out.isAutoPackageIndex){
+                context.outputs.splice(i,1);
+                i--;
+            }
+        }
+    }
+
     await runPluginsAsync('output');
 
 

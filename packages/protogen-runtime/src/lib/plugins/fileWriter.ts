@@ -37,7 +37,11 @@ export const fileWriter=async (ctx:ProtoContext)=>{
 
         const mergers=output.mergeHandler?asArray(output.mergeHandler):null;
 
-        if((output.autoMerge || mergers) && await pathExistsAsync(name)){
+        const exists=await pathExistsAsync(name);
+
+        if(exists && output.overwrite===false){
+            continue;
+        }else if((output.autoMerge || mergers) && exists){
             const existing=(await readFile(name)).toString();
 
             const contentLines=output.content.split('\n');
@@ -49,7 +53,7 @@ export const fileWriter=async (ctx:ProtoContext)=>{
                 contentLines
             )
 
-            if(mergers){
+            if(mergers?.length){
                 for(const merger of mergers){
                     if(merger){
                         mergedLines=merger({existing:mergedLines,overwriting:contentLines});
@@ -65,9 +69,22 @@ export const fileWriter=async (ctx:ProtoContext)=>{
             }
 
         }else{
-            log(`write - ${name} - ${output.content.length/1000}kb`);
-            if(!dryRun){
-                await writeFile(name,output.content);
+            let content=output.content;
+            if(mergers?.length){
+                const contentLines=content.split('\n');
+                let mergedLines=contentLines;
+
+                for(const merger of mergers){
+                    if(merger){
+                        mergedLines=merger({existing:mergedLines,overwriting:contentLines});
+                    }
+                }
+                content=mergedLines.join('\n');
+            }
+            log(`write - ${name} - ${content.length/1000}kb`);
+            if(!dryRun){;
+
+                await writeFile(name,content);
             }
         }
     }

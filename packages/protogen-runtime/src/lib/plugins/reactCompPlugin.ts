@@ -39,6 +39,7 @@ export const reactCompPlugin:ProtoPipelineConfigurablePlugin<typeof ReactCompPlu
             outputs,
             packagePaths,
             namespace,
+            libStyle,
         }=ctx;
 
         const {
@@ -51,6 +52,7 @@ export const reactCompPlugin:ProtoPipelineConfigurablePlugin<typeof ReactCompPlu
             namespace,
             reactCompPackage,
             reactCompPath,
+            libStyle,
             {packagePaths,indexFilename:reactCompIndexFilename}
             );
 
@@ -69,6 +71,7 @@ export const reactCompPlugin:ProtoPipelineConfigurablePlugin<typeof ReactCompPlu
             outputs.push({
                 path:joinPaths(path,reactCompIndexFilename),
                 content:'',
+                isPackageIndex:true,
                 generator:{
                     root:path,
                     recursive:true,
@@ -84,6 +87,7 @@ const generateComponentAsync=async (node:ProtoNode,{
     importMap,
     outputs,
     namespace,
+    libStyle,
 }:ProtoContext,{
     reactCompPackage='components',
     reactCompPath,
@@ -91,7 +95,7 @@ const generateComponentAsync=async (node:ProtoNode,{
 }:z.infer<typeof ReactCompPluginConfig>):Promise<string>=>{
 
 
-    const {path,packageName}=getProtoPluginPackAndPath(namespace,reactCompPackage,reactCompPath);
+    const {path,packageName}=getProtoPluginPackAndPath(namespace,reactCompPackage,reactCompPath,libStyle);
 
 
     const imports:string[]=[];

@@ -12,12 +12,12 @@ const FunctionPluginConfig=z.object(
     functionPath:z.string().optional(),
 
     /**
-     * @default "functions"
+     * @default "domain-functions"
      */
     functionPackage:z.string().optional(),
 
     /**
-     * @default "functions-index.ts"
+     * @default "domain-functions-index.ts"
      */
     functionIndexFilename:z.string().optional(),
 })
@@ -33,16 +33,18 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
         nodes,
         namespace,
         packagePaths,
+        libStyle,
     },{
-        functionPackage='functions',
+        functionPackage='domain-functions',
         functionPath=functionPackage,
-        functionIndexFilename='functions-index.ts',
+        functionIndexFilename='domain-functions-index.ts',
     })=>{
 
         const {path,packageName}=getProtoPluginPackAndPath(
             namespace,
             functionPackage,
             functionPath,
+            libStyle,
             {packagePaths,indexFilename:functionIndexFilename}
         );
 
@@ -110,6 +112,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
         outputs.push({
             path:joinPaths(path,functionIndexFilename),
             content:'',
+            isPackageIndex:true,
             generator:{
                 root:path,
                 generator:protoGenerateTsIndex

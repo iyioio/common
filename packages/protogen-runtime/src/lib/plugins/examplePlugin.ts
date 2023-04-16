@@ -33,6 +33,7 @@ export const examplePlugin:ProtoPipelineConfigurablePlugin<typeof ExamplePluginC
         nodes,
         namespace,
         packagePaths,
+        libStyle,
     },{
         examplePackage='examples',
         examplePath=examplePackage,
@@ -43,6 +44,7 @@ export const examplePlugin:ProtoPipelineConfigurablePlugin<typeof ExamplePluginC
             namespace,
             examplePackage,
             examplePath,
+            libStyle,
             {packagePaths,indexFilename:exampleIndexFilename}
         );
 
@@ -91,6 +93,7 @@ export const examplePlugin:ProtoPipelineConfigurablePlugin<typeof ExamplePluginC
         outputs.push({
             path:joinPaths(path,exampleIndexFilename),
             content:'',
+            isPackageIndex:true,
             generator:{
                 root:path,
                 generator:protoGenerateTsIndex

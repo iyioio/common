@@ -1,5 +1,5 @@
 import { HashMap, uuid } from "@iyio/common";
-import { executeTGenPipelineAsync, protoGetStageFromName, ProtoPipeline, ProtoPipelineConfig } from "@iyio/protogen";
+import { defaultProtoLibStyle, executeTGenPipelineAsync, protoGetStageFromName, ProtoPipeline, ProtoPipelineConfig } from "@iyio/protogen";
 import { getDefaultProtoPipelinePlugins } from "./default-plugins";
 
 export interface RunProtogenCliAsyncOptions
@@ -55,6 +55,8 @@ export const runProtogenCliAsync=async ({
                 stage:'init',
                 importMap:{},
                 dryRun:config.dryRun??false,
+                libStyle:config.libStyle??defaultProtoLibStyle,
+                autoIndexPackages:config.libStyle==='nx',
                 log,
             },
             plugins:[],
