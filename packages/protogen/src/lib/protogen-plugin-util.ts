@@ -78,11 +78,13 @@ export const protoAddContextParam=(
     baseName:string,
     paramPackage:string,
     paramMap:Record<string,ProtoParamType>,
-    importMap:Record<string,string>
-)=>{
+    importMap:Record<string,string>,
+    type:ProtoParamType='string'
+):string=>{
     const paramName=protoGetParamName(baseName);
-    paramMap[paramName]='string';
+    paramMap[paramName]=type;
     importMap[paramName]=paramPackage;
+    return paramName;
 }
 
 export const protoGetParamName=(baseName:string)=>strFirstToLower(baseName)+'Param';

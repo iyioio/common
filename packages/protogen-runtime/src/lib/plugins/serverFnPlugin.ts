@@ -1,5 +1,5 @@
-import { getFileNameNoExt, getSubstringCount, joinPaths, strFirstToLower } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { getSubstringCount, joinPaths } from "@iyio/common";
+import { getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -26,11 +26,6 @@ const ServerFnPluginConfig=z.object(
      * @default "fn-clients"
      */
     serverFnClientPackage:z.string().optional(),
-
-    /**
-     * @default "fn-params.ts"
-     */
-    serverFnParamsFilename:z.string().optional(),
 
     /**
      * @default "fn-clients-index.ts"
@@ -88,13 +83,14 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         namespace,
         packagePaths,
         libStyle,
+        paramMap,
+        paramPackage,
     },{
         serverFnPackage='fns',
         serverFnPath=serverFnPackage,
         serverFnClientPackage='fn-clients',
         serverFnIndexFilename='fn-index.ts',
         serverFnClientPath=serverFnClientPackage,
-        serverFnParamsFilename='fn-params.ts',
         serverFnHandlerName='handler',
         serverFnLibPackage='@iyio/common',
         serverFnClientFilename='fn-clients.ts',
@@ -132,10 +128,6 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             return;
         }
 
-        const paramsOut:string[]=[];
-        paramsOut.push('import { defineStringParam } from "@iyio/common";');
-        paramsOut.push('');
-
         const clientOut:string[]=[];
         const clientInputs:string[]=[];
         const clientParamImports:string[]=[];
@@ -158,10 +150,8 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const inputPackage=importMap[inputType+'Scheme'];
             const outputPackage=importMap[outputType+'Scheme'];
 
-            const paramName=strFirstToLower(name)+'ArnParam';
-            importMap[paramName]=clientPackageName;
+            const paramName=protoAddContextParam(name+'Arn',paramPackage,paramMap,importMap);
             clientParamImports.push(paramName);
-            paramsOut.push(`export const ${paramName}=defineStringParam('${strFirstToLower(name)}Arn');`);
 
             const fnInfo:FnInfoTemplate={
                 name,
@@ -264,15 +254,11 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             }
         })
 
-        clientOut.unshift(`import { ${clientParamImports.join(', ')} } from './${getFileNameNoExt(serverFnParamsFilename)}';`)
+        clientOut.unshift(`import { ${clientParamImports.join(', ')} } from '${paramPackage}';`)
         protoPrependTsImports(clientInputs,importMap,clientOut);
         outputs.push({
             path:joinPaths(clientPath,serverFnClientFilename),
             content:clientOut.join('\n'),
-        })
-        outputs.push({
-            path:joinPaths(clientPath,serverFnParamsFilename),
-            content:paramsOut.join('\n'),
         })
         outputs.push({
             path:joinPaths(clientPath,serverFnClientIndexFilename),
