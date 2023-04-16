@@ -5,7 +5,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { addPolicyToGrantee } from './cdk-lib';
-import { Grantee } from './common-cdk-types';
+import { Grantee } from './cdk-types';
 
 export interface WebsocketApiProps {
     readonly name: string;

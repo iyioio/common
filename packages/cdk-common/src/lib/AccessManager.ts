@@ -1,5 +1,5 @@
 import { addPolicyToGrantee } from './cdk-lib';
-import { AccessGranter, AccessRequest, IAccessGrantGroup, IAccessRequestGroup } from "./common-cdk-types";
+import { AccessGranter, AccessRequest, IAccessGrantGroup, IAccessRequestGroup } from "./cdk-types";
 
 
 export const grantAccessRequest=(request:AccessRequest,granter:AccessGranter)=>{
