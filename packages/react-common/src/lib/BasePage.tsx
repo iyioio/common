@@ -1,7 +1,7 @@
 import { BaseLayoutProps, bcn, cn, css, isServerSide } from "@iyio/common";
-import { useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useState } from "react";
 import Style from "styled-jsx/style";
-import { commonPagePropsSubject, PageContext, PageCtx, pageScrollPositionSubject } from "./page-lib";
+import { PageContext, PageCtx, commonPagePropsSubject, pageScrollPositionSubject } from "./page-lib";
 
 export interface BasePageProps<T=any> extends BaseLayoutProps
 {
@@ -13,6 +13,7 @@ export interface BasePageProps<T=any> extends BaseLayoutProps
     columnWidth?:number;
     fullWidthColumn?:boolean;
     disableScroll?:boolean;
+    style?:CSSProperties;
 }
 
 export function BasePage({
@@ -24,6 +25,7 @@ export function BasePage({
     columnWidth,
     fullWidthColumn,
     disableScroll,
+    style,
     ...props
 }:BasePageProps){
 
@@ -65,7 +67,7 @@ export function BasePage({
 
     return (
         <PageContext.Provider value={ctx}>
-            <div ref={setElem} className={cn("BasePage",{disableScroll})}>
+            <div ref={setElem} className={cn("BasePage",{disableScroll})} style={style}>
                 <main className={bcn(props,"BasePage-content",{fullWidthColumn},{
                     'BasePage-content-column':columnWidth
                 })} style={{
