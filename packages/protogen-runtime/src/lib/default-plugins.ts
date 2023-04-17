@@ -5,6 +5,7 @@ import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
 import { markdownParser } from "./plugins/markdownParser";
+import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
@@ -38,6 +39,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
         },
 
         //// Generate
+        {
+            name:'packagePlugin',
+            source:'@',
+            paths:[],
+            plugin:packagePlugin
+        },
         {
             name:'tsProtoNodePlugin',
             source:'@',
