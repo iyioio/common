@@ -1,7 +1,7 @@
 import { isServerSide } from "./common-lib";
 import { HashMap } from "./common-types";
 import { ClassNameValue, cn } from "./css";
-import { allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases, DirectionalBreakpoint, DirectionalBreakpointAlias } from "./window-size-lib";
+import { DirectionalBreakpoint, DirectionalBreakpointAlias, allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases } from "./window-size-lib";
 
 
 export type BaseLayoutFlagValue=boolean|DirectionalBreakpoint|DirectionalBreakpointAlias;
@@ -49,6 +49,7 @@ export type BaseLayoutColumnProps = {
 
 export const baseLayoutFontProps={
     faceDefault:'ioFaceDefault',
+    face0:'ioFace0',
     face1:'ioFace1',
     face2:'ioFace2',
     face3:'ioFace3',
@@ -59,6 +60,16 @@ export const baseLayoutFontProps={
     face8:'ioFace8',
     face9:'ioFace9',
     face10:'ioFace10',
+    face11:'ioFace11',
+    face12:'ioFace12',
+    face13:'ioFace13',
+    face14:'ioFace14',
+    face15:'ioFace15',
+    face16:'ioFace16',
+    face17:'ioFace17',
+    face18:'ioFace18',
+    face19:'ioFace19',
+    face20:'ioFace20',
     xxxs:'ioXxxs',
     xxs:'ioXxs',
     xs:'ioXs',

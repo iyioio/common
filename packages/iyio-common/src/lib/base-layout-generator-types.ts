@@ -59,6 +59,7 @@ export interface FontFace extends FontFaceSize
 export interface FontFaces
 {
     faceDefault?:FontFace;
+    face0?:FontFace,
     face1?:FontFace,
     face2?:FontFace,
     face3?:FontFace,
@@ -69,6 +70,16 @@ export interface FontFaces
     face8?:FontFace,
     face9?:FontFace,
     face10?:FontFace,
+    face11?:FontFace,
+    face12?:FontFace,
+    face13?:FontFace,
+    face14?:FontFace,
+    face15?:FontFace,
+    face16?:FontFace,
+    face17?:FontFace,
+    face18?:FontFace,
+    face19?:FontFace,
+    face20?:FontFace,
 }
 
 export interface FontFaceConfig extends FontFaces
