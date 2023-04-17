@@ -378,6 +378,9 @@ export const protoAddAutoLinks=(node:ProtoNode)=>{
             if(!type.type || type.less || !type.isRefType){
                 continue;
             }
+            if(type.equals){
+                break;
+            }
             const pri=type.important;
                 const address=type.path.join('.');
                 protoAddLink(node,{

@@ -22,6 +22,7 @@ export interface ProtoTypeInfo
     hash?:boolean;
     ex?:boolean;
     less?:boolean;
+    equals?:boolean;
 }
 
 export type ProtoChildren={[name:string]:ProtoNode}

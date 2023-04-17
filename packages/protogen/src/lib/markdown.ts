@@ -103,7 +103,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                     address:name,
                     type:types[0].type,
                     types,
-                    value,
+                    value:getNodeValue(value),
                     renderData:{
                         input:line,
                         depth,
@@ -188,12 +188,21 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
 
 }
 
+const getNodeValue=(content:string)=>{
+    const ei=content.indexOf('=');
+    if(ei!==-1){
+        return content.substring(ei+1).trim();
+    }else{
+        return content;
+    }
+}
+
 const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
     types:ProtoTypeInfo[],
     tags?:string[],
 }=>{
 
-    const matches=value.matchAll(/([@>#~*?! \t]+)?(\(?)[ \t]*([\w.\-[\]]+)(\)?)/g);
+    const matches=value.matchAll(/([@>#~*?!= \t]+)?(\(?)[ \t]*([\w.\-[\]]+)(\)?)/g);
     const flagsI=1;
     const tagOpenI=2;
     const nameI=3;
@@ -265,6 +274,9 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
             }
             if(flags.includes('~')){
                 type.less=true;
+            }
+            if(flags.includes('=')){
+                type.equals=true;
             }
         }
     }
