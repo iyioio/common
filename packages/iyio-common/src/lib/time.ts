@@ -46,3 +46,13 @@ export const getTimeZoneOffsetHours=():number=>
 {
     return new Date().getTimezoneOffset()/-60;
 }
+
+export const defaultTimeZone='America/New_York';
+
+export const getTimeZone=():string=>{
+    try{
+        return globalThis.Intl?.DateTimeFormat?.()?.resolvedOptions?.()?.timeZone??defaultTimeZone;
+    }catch{
+        return defaultTimeZone;
+    }
+}

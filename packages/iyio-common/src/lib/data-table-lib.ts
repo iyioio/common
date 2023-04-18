@@ -10,3 +10,7 @@ export const getDataTableShape=(table:DataTableDescription):ZodRawShape|undefine
     return table.scheme.shape;
 
 }
+
+export const getDataTableId=(table:DataTableDescription):string=>{
+    return table.tableId??table.getTableId?.()??table.tableIdParam?.()??table.name;
+}
