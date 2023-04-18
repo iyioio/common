@@ -1,8 +1,8 @@
 import { HashMap, joinPaths } from "@iyio/common";
-import { addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoMergeTsImports, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoMergeTsImports, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
-import { getTsSchemeName, SharedTsPluginConfigScheme } from "../sharedTsConfig";
-import { tableCdkTemplate, TableNameParamNamePair } from "./tableCdkTemplate";
+import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
+import { TableNameParamNamePair, tableCdkTemplate } from "./tableCdkTemplate";
 
 
 
@@ -155,16 +155,8 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                 out.push(`${tab}scheme:${configValue},`)
             }
 
-            if(configValue=config['mousePath']?.value){
-                out.push(`${tab}mousePath:${JSON.stringify(configValue)},`)
-            }
-
-            if(configValue=config['mousePath']?.value){
-                out.push(`${tab}mousePath:${JSON.stringify(configValue)},`)
-            }
-
-            if(configValue=config['mousePath']?.value){
-                out.push(`${tab}mousePath:${JSON.stringify(configValue)},`)
+            if(configValue=config['mountPath']?.value){
+                out.push(`${tab}mountPath:${JSON.stringify(configValue)},`)
             }
 
             if(configValue=config['isReadonly']?.value){
