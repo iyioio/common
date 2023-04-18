@@ -1,5 +1,5 @@
 import { getSubstringCount, joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -69,6 +69,15 @@ const ServerFnPluginConfig=z.object(
      * Path where
      */
     serverFnDistPath:z.string().optional(),
+
+
+    /**
+     * If true function stub files will include a call to an init function
+     * @default true
+     */
+    serverFnInit:z.boolean().optional(),
+    serverFnInitFunction:z.string().optional(),
+    serverFnInitFunctionPackage:z.string().optional(),
 })
 
 export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPluginConfig>=
@@ -98,6 +107,9 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         serverFnClientIndexFilename='fn-clients-index.ts',
         serverFnCdkConstructClassName='Fns',
         serverFnCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${serverFnCdkConstructClassName}.ts`:undefined,
+        serverFnInit=true,
+        serverFnInitFunction='initBackend',
+        serverFnInitFunctionPackage=`backend`
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
@@ -204,8 +216,15 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                 clientInputs.push(outputType);
             }
 
-            out.push(`import { createFnHandler, FnEvent } from '${serverFnLibPackage}';`)
+            out.push(`import { createFnHandler, FnEvent } from '${serverFnLibPackage}';`);
+            if(serverFnInit){
+                out.push(`import { ${serverFnInitFunction} } from "@${namespace}/${serverFnInitFunctionPackage}";`)
+            }
             out.push('');
+            if(serverFnInit){
+                out.push(`${serverFnInitFunction}();`);
+                out.push('');
+            }
             if(node.comment){
                 out.push(...protoFormatTsComment(node.comment,'').split('\n'))
             }
@@ -218,6 +237,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
 
             out.push(`${tab}// do cool stuff`)
+            out.push(`${tab}throw new Error('${name} not implemented');`)
             out.push('}')
             out.push('');
             out.push(isDefault?`export default ${name};`:`export const ${handlerName}=createFnHandler(${name},{`);
