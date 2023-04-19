@@ -1,8 +1,8 @@
 import { ParamTypeDef } from "@iyio/common";
 import { Construct } from "constructs";
-import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./cdk-types";
 import { ManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
+import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./cdk-types";
 
 export interface FnInfoAndNodeFn
 {
@@ -55,7 +55,12 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             }
 
             if(info.arnParam && params){
-                params.setParam(info.arnParam,fn.fn.func.functionArn);
+                params.setParam(info.arnParam,fn.fn.func.functionArn,'fn');
+                params.addVarContainer({
+                    varContainer:fn.fn.func,
+                    excludeParams:[info.arnParam],
+                    requiredParams:[],
+                })
             }
 
             if(info.grantAccess){

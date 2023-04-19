@@ -84,7 +84,7 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
                         throw new Error(`No shape prop found in scheme of ${index.primary}`);
                     }
                     table.addGlobalSecondaryIndex({
-                        indexName:`${index.name}-index`,
+                        indexName:index.name,
                         partitionKey:{
                             name:index.primary,
                             type:getDynamoType(shapeProp),
