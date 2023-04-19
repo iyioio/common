@@ -1,4 +1,4 @@
-import { HashMap, joinPaths } from "@iyio/common";
+import { HashMap, joinPaths, notWordRegex } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoMergeTsImports, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
@@ -105,6 +105,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
 
         if(supported.length){
             addImport('DataTableDescription',dataTableDescriptionPackage);
+            addImport('DataTableIndex',dataTableDescriptionPackage);
         }
 
         log(`${supported.length} supported node(s)`);
@@ -119,6 +120,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             const name=node.name;
             const paramName=protoGetParamName(name+'Table');
             importMap[name+'Table']=packageName;
+            importMap[name+'TableIndexMap']=packageName;
 
             tableNames.push(name+'Table');
             tableInfos.push({name:name+'Table',paramName})
@@ -163,19 +165,19 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                 out.push(`${tab}isReadonly:${JSON.stringify(Boolean(configValue))},`)
             }
 
-            if(configValue=config['watchable']?.value){
+            if(configValue=config['watchable']?.value?.replace(notWordRegex,'')){
                 out.push(`${tab}watchable:${JSON.stringify(Boolean(configValue))},`)
             }
 
-            if(configValue=config['defaultOrderProp']?.value){
+            if(configValue=config['defaultOrderProp']?.value?.replace(notWordRegex,'')){
                 out.push(`${tab}defaultOrderProp:${JSON.stringify(configValue)},`)
             }
 
-            if(configValue=config['defaultOrderDesc']?.value){
+            if(configValue=config['defaultOrderDesc']?.value?.replace(notWordRegex,'')){
                 out.push(`${tab}defaultOrderDesc:${JSON.stringify(Boolean(configValue))},`)
             }
 
-            if(configValue=config['ttlProp']?.value??props.find(p=>p.name==='ttl')?.name){
+            if(configValue=config['ttlProp']?.value?.replace(notWordRegex,'')??props.find(p=>p.name==='ttl')?.name){
                 out.push(`${tab}ttlProp:${JSON.stringify(configValue)},`)
             }
 
@@ -184,16 +186,18 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             }
 
             const indexes=protoGetChildrenByName(node.children?.['$table'],'index',false);
+            const indexOut:string[]=[];
             if(indexes.length){
                 out.push(`${tab}indexes:[`)
                 for(let i=0;i<indexes.length;i++){
                     const index=indexes[i];
                     const indexName=index.value||'index'+i;
+                    indexOut.push(`${tab}${JSON.stringify(indexName)}:${name}Table.indexes?.[${i}] as DataTableIndex,`)
                     out.push(`${tab}${tab}{`);
                     out.push(`${tab}${tab}${tab}name:${JSON.stringify(indexName)},`);
-                    const primaryProp=index.children?.['primary']?.value;
+                    const primaryProp=index.children?.['primary']?.value?.replace(notWordRegex,'');
                     out.push(`${tab}${tab}${tab}primary:${JSON.stringify(primaryProp??indexName)},`);
-                    const sortProp=index.children?.['sort']?.value;
+                    const sortProp=index.children?.['sort']?.value?.replace(notWordRegex,'');
                     if(sortProp){
                         out.push(`${tab}${tab}${tab}sort:${JSON.stringify(sortProp)},`);
                     }
@@ -212,7 +216,10 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                 }
                 out.push(`${tab}],`)
             }
+            out.push('}')
 
+            out.push(`export const ${name}TableIndexMap={`)
+            out.push(...indexOut);
             out.push('}')
         }
 
