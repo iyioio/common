@@ -38,6 +38,7 @@ export * from './lib/client-download';
 export * from './lib/clipboard';
 export * from './lib/common-lib';
 export * from './lib/common-params';
+export * from './lib/common-regex';
 export * from './lib/common-types';
 export * from './lib/css';
 export * from './lib/csv-lib';
