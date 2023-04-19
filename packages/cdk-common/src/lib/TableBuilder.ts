@@ -147,7 +147,8 @@ const getDynamoType=(zodType:ZodTypeAny|undefined):db.AttributeType=>{
     const tsType=zodTypeToPrimitiveType(zodType);
 
     if(!tsType){
-        throw new Error(`No dynamo type maps to zodType`);
+
+        throw new Error(`No dynamo type maps to zodType - ${zodType._def?.typeName}`);
     }
 
     switch(tsType){
