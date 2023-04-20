@@ -20,6 +20,7 @@ export interface SvgChartCtrlOptions
     viewBox?:string|null;
     showValueLabels?:boolean;
     showLabelLabels?:boolean;
+    showIntersectionValues?:boolean;
     labelHAlignment?:'left'|'right';
     labelVAlignment?:'top'|'bottom';
     autoResize?:boolean;
@@ -78,4 +79,15 @@ export interface ChartRenderOptions
     canvasRight:number;
     canvasTop:number;
     canvasBottom:number;
+}
+
+
+export interface ChartIntersection
+{
+    x:number;
+    y:number;
+    clientX:number;
+    clientY:number;
+    value:number;
+    valueClass:string;
 }

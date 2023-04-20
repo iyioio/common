@@ -1,12 +1,15 @@
-import { aryRemoveItem, cn } from "@iyio/common";
-import { classNamePrefix } from "./svg-charts-lib";
-import { SvgChartCtrlOptions } from "./svg-charts-types";
+import { aryRemoveItem, cn, formatNumberWithBases } from "@iyio/common";
 import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl";
+import { findPathIntersections } from "./path-intersection";
+import { classNamePrefix } from "./svg-charts-lib";
+import { ChartIntersection, SvgChartCtrlOptions } from "./svg-charts-types";
 
 interface Line
 {
     group:SVGGElement;
     path:SVGPathElement;
+    dot:SVGCircleElement;
+    text:SVGTextElement;
     fillPath:SVGPathElement;
     data:number[];
     index:number;
@@ -15,13 +18,81 @@ interface Line
 export class SvgLineChartCtrl extends SvgBaseChartCtrl
 {
 
+    private hoverPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+
     public constructor(options?:SvgChartCtrlOptions|null, svg?:SVGSVGElement, skipRender?:boolean)
     {
         super(options,svg,true);
 
+        this.svg.addEventListener('mousemove',this.mouseListener);
+
+        this.hoverPath.classList.add('svg-charts-value-line');
+        this.hoverPath.style.visibility='hidden';
+        this.svg.insertBefore(this.hoverPath,this.svg.childNodes[0]);
+
         if(!skipRender){
             this.render();
         }
+    }
+
+    protected override _dispose(): void {
+        super._dispose();
+        this.hoverPath.remove();
+        this.svg.removeEventListener('mousemove',this.mouseListener);
+    }
+
+    private readonly mouseListener=(e:MouseEvent)=>{
+
+        const ro=this.renderOptions;
+
+        const rect=this.svg.getBoundingClientRect();
+        const left=rect.left+ro.left;
+        const transform=`translate(${ro.left},${ro.top})`;
+        this.hoverPath.setAttribute('transform',transform);
+
+        const x=e.clientX-left;
+        const path=`M${x} 0 L${x} ${ro.canvasHeight}`
+        this.hoverPath.setAttribute('d',path);
+
+        const intersections:ChartIntersection[]=[];
+
+        for(const line of this.lines){
+
+
+            //console.log(line.path.getAttribute('d'),this.debugPath.getAttribute('d'))
+            const inter=findPathIntersections(line.path.getAttribute('d')??'',this.hoverPath.getAttribute('d')??'',false);
+            if(inter?.length){
+                const {x,y}=inter[0];
+                const offset=10;
+                line.dot.setAttribute('cx',x.toString());
+                line.dot.setAttribute('cy',y.toString());
+                if(this.options.showIntersectionValues){
+                    line.text.setAttribute('x',(x+offset).toString());
+                    line.text.setAttribute('y',(y+offset).toString());
+                    line.text.style.visibility='visible';
+                }else{
+                    line.text.style.visibility='hidden';
+                }
+                line.dot.style.visibility='visible';
+                this.hoverPath.style.visibility='visible';
+                const value=(1-y/ro.canvasHeight)*(ro.max-ro.min)+ro.min;
+                line.text.innerHTML=formatNumberWithBases(value,100);
+                intersections.push({
+                    x,
+                    y,
+                    clientX:rect.x+ro.left+x,
+                    clientY:rect.y+ro.top+y,
+                    value,
+                    valueClass:line.dot.getAttribute('class')??''
+                })
+            }else{
+                line.text.style.visibility='hidden';
+                line.dot.style.visibility='hidden';
+                this.hoverPath.style.visibility='hidden';
+            }
+        }
+
+        this.setIntersections(intersections);
     }
 
     private readonly lines:Line[]=[];
@@ -37,6 +108,8 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 const group=document.createElementNS('http://www.w3.org/2000/svg','g');
                 const path=document.createElementNS('http://www.w3.org/2000/svg','path');
                 const fillPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+                const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+                const text=document.createElementNS('http://www.w3.org/2000/svg','text');
                 const classes={
                     [`${classNamePrefix}odd`]:i%2?false:true,
                     [`${classNamePrefix}even`]:i%2?true:false,
@@ -45,13 +118,22 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 group.setAttribute('class',cn(`${classNamePrefix}line`,classes));
                 path.setAttribute('class',cn(`${classNamePrefix}path`,classes));
                 fillPath.setAttribute('class',cn(`${classNamePrefix}fill`,classes));
+                dot.setAttribute('class',cn(`${classNamePrefix}dot`,classes));
+                text.setAttribute('class',cn(`${classNamePrefix}text svg-charts-text`,classes));
+                text.style.visibility='hidden';
+                dot.style.visibility='hidden';
+                dot.setAttribute('r','6');
                 group.appendChild(fillPath);
                 group.appendChild(path);
+                group.appendChild(dot);
+                group.appendChild(text);
                 const line:Line={
                     group,
                     path,
                     fillPath,
                     data,
+                    dot,
+                    text,
                     index:i
                 }
                 this.canvas.appendChild(group);

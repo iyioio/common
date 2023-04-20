@@ -1,6 +1,7 @@
-import { deepCompare, escapeHtml, formatNumberWithBases, Sides, Size } from "@iyio/common";
+import { deepCompare, escapeHtml, formatNumberWithBases, ReadonlySubject, Sides, Size } from "@iyio/common";
+import { BehaviorSubject } from "rxjs";
 import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect, toSafeSvgAttValue } from "./svg-charts-lib";
-import { ChartData, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
+import { ChartData, ChartIntersection, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
 
 export abstract class SvgBaseChartCtrl
 {
@@ -103,6 +104,7 @@ export abstract class SvgBaseChartCtrl
             vLinePadding:0,
             css:'',
             className:options?.className??null,
+            showIntersectionValues:options?.showIntersectionValues??false,
             autoResize:true,
             removeElementsOnDispose:true,
             min,
@@ -150,6 +152,7 @@ export abstract class SvgBaseChartCtrl
             return;
         }
         this._isDisposed=true;
+        this._dispose();
         window.removeEventListener('resize',this.onResize);
         this.resizeObserver?.unobserve(this.svg);
         this.resizeObserver?.disconnect();
@@ -157,6 +160,11 @@ export abstract class SvgBaseChartCtrl
             this.root.remove();
             this.styleElem.remove();
         }
+    }
+
+    protected _dispose()
+    {
+        // do nothing
     }
 
     private readonly onResize=()=>{
@@ -668,5 +676,15 @@ export abstract class SvgBaseChartCtrl
     protected getRenderPadding(preCanvasWidth:number,preCanvasHeight:number):Sides
     {
         return {left:0,right:0,top:0,bottom:0}
+    }
+
+    private readonly _intersections:BehaviorSubject<ChartIntersection[]>=new BehaviorSubject<ChartIntersection[]>([]);
+    public get intersectionsSubject():ReadonlySubject<ChartIntersection[]>{return this._intersections}
+    public get intersections(){return this._intersections.value}
+
+    protected setIntersections(intersections:ChartIntersection[]){
+
+        this._intersections.next(intersections);
+
     }
 }

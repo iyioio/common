@@ -2,9 +2,11 @@ import { BaseLayoutOuterProps, bcn } from "@iyio/common";
 import { useAlphaId } from "@iyio/react-common";
 import { SvgBaseChartCtrl, SvgChartCtrlOptions } from "@iyio/svg-charts";
 import { CSSProperties, useEffect, useRef, useState } from "react";
+import { SvgChartOverlay } from "./SvgChartOverlay";
 
 export interface BaseSvgChartViewProps extends BaseLayoutOuterProps
 {
+    overlayTitle?:string;
     options?:SvgChartCtrlOptions;
     style?:CSSProperties;
 }
@@ -14,6 +16,7 @@ export function BaseSvgChartView({
     createChart,
     options,
     style,
+    overlayTitle,
     ...props
 }:BaseSvgChartViewProps & {
     chartType:string;
@@ -53,6 +56,7 @@ export function BaseSvgChartView({
     return (
         <>
             <svg viewBox="0 0 200 100" className={bcn(props,"BaseSvgChartView",chartType)} ref={setSvg} style={style}/>
+            <SvgChartOverlay title={overlayTitle} ctrl={ctrl} />
         </>
     )
 
