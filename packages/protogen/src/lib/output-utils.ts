@@ -1,4 +1,4 @@
-import { HashMap } from "@iyio/common";
+import { HashMap, getObjKeyCount } from "@iyio/common";
 
 export const protoLabelOutputLines=(
     lines:string[],
@@ -62,7 +62,7 @@ export const protoMergeSourceCode=({
         }
         const match=oSections.find(s=>s.name===section.name);
         if(match){
-            existingSections[i]=mergeSections?mergeSections(match,section):match;
+            existingSections[i]=mergeSections?mergeSections(section,match):match;
         }
     }
 
@@ -216,13 +216,62 @@ const defaultMergeTsImportsSectionConfig:ProtoCreateCodeSectionsOptions={
 const defaultMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCodeSection):ProtoCodeSection=>{
 
     const map:HashMap<string[]>={};
+    const map2:HashMap<string[]>={};
 
     addImportsToMap(existing.lines,map);
-    addImportsToMap(overwriting.lines,map);
+    addImportsToMap(overwriting.lines,map2);
+
+
+    if(compareImportMaps(map,map2)){
+        return {
+            name:existing.name,
+            lines:[...existing.lines],
+        };
+    }
+
+    mergeImportMaps(map,map2);
 
     return {
         name:existing.name,
         lines:Object.keys(map).map(k=>`import { ${map[k].join(', ')} } from '${k}';`),
+    }
+}
+
+const compareImportMaps=(a:Record<string,string[]>, b:Record<string,string[]>):boolean=>{
+
+    let n=0;
+
+    for(const e in a){
+        n++;
+        const aAry=a[e];
+        const bAry=b[e];
+        if(!bAry || aAry.length!==bAry.length){
+            return false;
+        }
+
+        for(const s of aAry){
+            if(!bAry.includes(s)){
+                return false;
+            }
+        }
+    }
+
+    return n===getObjKeyCount(b);
+}
+
+const mergeImportMaps=(a:Record<string,string[]>, b:Record<string,string[]>):void=>{
+    for(const e in b){
+        const bAry=b[e];
+        const aAry=a[e];
+        if(!aAry){
+            a[e]=bAry;
+        }else{
+            for(const s of bAry){
+                if(!aAry.includes(s)){
+                    aAry.push(s)
+                }
+            }
+        }
     }
 }
 

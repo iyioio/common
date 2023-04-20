@@ -46,12 +46,16 @@ export const fileWriter=async (ctx:ProtoContext)=>{
 
             const contentLines=output.content.split('\n');
 
-            protoMergeTsImports({existing,overwriting:contentLines})
+            let mergedLines=existing.split('\n');
 
-            let mergedLines=(output.autoMerge?
-                protoMergeSourceCode({existing,overwriting:contentLines}):
-                contentLines
-            )
+            const lp=output.path.toLowerCase();
+            if(lp.endsWith('.ts') || lp.endsWith('.tsx')){
+                mergedLines=protoMergeTsImports({existing:mergedLines,overwriting:contentLines});
+            }
+
+            if(output.autoMerge){
+                mergedLines=protoMergeSourceCode({existing:mergedLines,overwriting:contentLines});
+            }
 
             if(mergers?.length){
                 for(const merger of mergers){
