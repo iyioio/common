@@ -28,7 +28,7 @@ export interface DynamoStoreAdapterOptions extends StoreKeyScope
     secondaryIndexes?:string[];
 }
 
-export class DynamoStoreAdapter<T=any> extends BaseStore<T>
+export class DynamoStoreAdapter<T extends Record<string,any> = any> extends BaseStore<T>
 {
 
     private readonly client:DynamoClient;
