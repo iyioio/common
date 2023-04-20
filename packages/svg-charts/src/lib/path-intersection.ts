@@ -547,10 +547,11 @@ function pathToAbsolute(pathArray:any) {
       case 'H':
         r[1] = +pa[1] + x;
         break;
-      case 'M':
-        mx = +pa[1] + x;
-        my = +pa[2] + y;
       default:
+        if(r[0]==='M'){
+            mx = +pa[1] + x;
+            my = +pa[2] + y;
+        }
         for (let j = 1, jj = pa.length; j < jj; j++) {
           r[j] = +pa[j] + ((j % 2) ? x : y);
         }
@@ -573,10 +574,11 @@ function pathToAbsolute(pathArray:any) {
     case 'V':
       y = r[1];
       break;
-    case 'M':
-      mx = r[r.length - 2];
-      my = r[r.length - 1];
     default:
+      if(r[0]==='M'){
+        mx = r[r.length - 2];
+        my = r[r.length - 1];
+      }
       x = r[r.length - 2];
       y = r[r.length - 1];
     }
