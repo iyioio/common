@@ -1,5 +1,6 @@
 import { AttributeValue, UpdateItemInput } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
+import { deleteUndefined } from "@iyio/common";
 
 export interface ExtendedItemUpdateOptions<T=any>
 {
@@ -50,7 +51,7 @@ export function createItemUpdateInputOrNull<T>(
     }
 
     return {
-        TableName:tableName,
+        TableName:formatDynamoTableName(tableName),
         Key:marshall(key),
         ExpressionAttributeValues:values,
         ExpressionAttributeNames:names,
@@ -73,4 +74,18 @@ export function createItemUpdateInput<T>(
 
     return update;
 
+}
+
+export const formatDynamoTableName=(name:string):string=>
+{
+    const i=name.lastIndexOf('/');
+    if(i===-1){
+        return name;
+    }
+
+    return name.substring(i+1);
+}
+
+export const convertObjectToDynamoAttributes=(obj:Record<string,any>):Record<string,AttributeValue>=>{
+    return marshall(deleteUndefined({...obj}));
 }

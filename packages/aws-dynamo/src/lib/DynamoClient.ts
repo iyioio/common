@@ -1,9 +1,9 @@
 import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { IWithStoreAdapter, Scope } from "@iyio/common";
-import { createItemUpdateInputOrNull, ExtendedItemUpdateOptions } from "./dynamo-lib";
+import { DataTableDescription, IWithStoreAdapter, Scope, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
+import { ExtendedItemUpdateOptions, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
 
 interface PageResult<T>
 {
@@ -57,7 +57,7 @@ export class DynamoClient implements IWithStoreAdapter
     {
 
         const params:ScanCommandInput={
-            TableName:tableName,
+            TableName:formatDynamoTableName(tableName),
             ...commandInput
         }
 
@@ -80,7 +80,7 @@ export class DynamoClient implements IWithStoreAdapter
     {
 
         const params:ScanCommandInput={
-            TableName:tableName,
+            TableName:formatDynamoTableName(tableName),
             ...commandInput
         }
 
@@ -103,7 +103,7 @@ export class DynamoClient implements IWithStoreAdapter
     {
 
         const params:QueryCommandInput={
-            TableName:tableName,
+            TableName:formatDynamoTableName(tableName),
             ...commandInput
         }
 
@@ -121,12 +121,17 @@ export class DynamoClient implements IWithStoreAdapter
         return results;
     }
 
+    public queryTableAsync<T>(table:DataTableDescription<T>,commandInput:Partial<QueryCommandInput>):Promise<PageResult<T>>
+    {
+        return this.getQueryAsync(getDataTableId(table),commandInput);
+    }
+
 
     public async getQueryAsync<T>(tableName:string,commandInput:Partial<QueryCommandInput>={}):Promise<PageResult<T>>
     {
 
         const params:QueryCommandInput={
-            TableName:tableName,
+            TableName:formatDynamoTableName(tableName),
             ...commandInput
         }
 
@@ -147,31 +152,44 @@ export class DynamoClient implements IWithStoreAdapter
     public async getAsync<T>(tableName:string,key:Partial<T>):Promise<T|undefined>
     {
         const r=await this.getClient().send(new GetItemCommand({
-            TableName:tableName,
-            Key:marshall(key),
+            TableName:formatDynamoTableName(tableName),
+            Key:convertObjectToDynamoAttributes(key),
         }));
 
         return r.Item?unmarshall(r.Item) as T:undefined;
     }
 
+    public async getFromTableAsync<T>(table:DataTableDescription<T>,key:string|Partial<T>):Promise<T|undefined>
+    {
+        return this.getAsync<T>(
+            getDataTableId(table),
+            typeof key === 'string'?{[table.primaryKey]:key} as Partial<T>:key
+        );
+    }
+
     public async deleteAsync<T>(tableName:string,key:Partial<T>):Promise<void>
     {
         await this.getClient().send(new DeleteItemCommand({
-            TableName:tableName,
-            Key:marshall(key),
+            TableName:formatDynamoTableName(tableName),
+            Key:convertObjectToDynamoAttributes(key),
         }));
     }
 
-    public async putAsync<T>(tableName:string, checkKey:(keyof T)|null, item:T):Promise<void>
+    public async putAsync<T extends Record<string,any>>(tableName:string, checkKey:(keyof T)|null, item:T):Promise<void>
     {
         await this.getClient().send(new PutItemCommand({
-            TableName:tableName,
-            Item:marshall(item),
+            TableName:formatDynamoTableName(tableName),
+            Item:convertObjectToDynamoAttributes(item),
             ExpressionAttributeNames:checkKey?{
                 '#key':(checkKey as string)
             }:undefined,
             ConditionExpression:checkKey?"attribute_not_exists(#key)":undefined,
         }));
+    }
+
+    public putIntoTable<T extends Record<string,any>>(table:DataTableDescription<T>,checkKey:(keyof T)|null,item:T):Promise<void>
+    {
+        return this.putAsync(getDataTableId(table),checkKey,item);
     }
 
     public async patchAsync<T>(tableName:string, key:Partial<T>, item:Partial<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
@@ -187,3 +205,4 @@ export class DynamoClient implements IWithStoreAdapter
 
 
 }
+
