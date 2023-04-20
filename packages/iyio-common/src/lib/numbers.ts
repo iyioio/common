@@ -6,9 +6,8 @@ const formatNumberWithBasesSteps=[
     {v:100000,div:1000,desc:10,unit:'K'},
     {v:10000,div:1000,desc:10,unit:'K'},
 ]
-export const formatNumberWithBases=(n:number):string=>{
+export const formatNumberWithBases=(n:number,desc=10):string=>{
     let unit:string='';
-    let desc=10;
 
     for(const f of formatNumberWithBasesSteps){
         if(n>=f.v){
