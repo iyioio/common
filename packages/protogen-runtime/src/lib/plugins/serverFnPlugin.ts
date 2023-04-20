@@ -157,8 +157,16 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const name=node.name;
             const filepath=joinPaths(path,name+'.ts');
 
-            const inputType=node.children?.['input']?.type??'void';
-            const outputType=node.children?.['output']?.type??'void';
+            const inputNode=node.children?.['input'];
+            const outputNode=node.children?.['output'];
+            const inputIsArray=inputNode?.types[0]?.isArray??false;
+            const outputIsArray=outputNode?.types[0]?.isArray??false;
+            const inputType=inputNode?.type??'void';
+            const outputType=outputNode?.type??'void';
+            const tsInputType=inputType+(inputIsArray?'[]':'');
+            const tsOutputType=outputType+(outputIsArray?'[]':'');
+            const inputScheme=inputType+'Scheme'+(inputIsArray?'.array()':'');
+            const outputScheme=outputType+'Scheme'+(outputIsArray?'.array()':'');
             const inputPackage=importMap[inputType+'Scheme'];
             const outputPackage=importMap[outputType+'Scheme'];
 
@@ -186,17 +194,17 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             if(node.comment){
                 clientOut.push(...protoFormatTsComment(node.comment,'').split('\n'))
             }
-            clientOut.push(`export const ${clientName}=(input:${inputType}):Promise<${outputType}>=>(`)
-            clientOut.push(`${tab}lambdaClient().invokeAsync<${inputType},${outputType}>({`);
+            clientOut.push(`export const ${clientName}=(input:${tsInputType}):Promise<${tsOutputType}>=>(`)
+            clientOut.push(`${tab}lambdaClient().invokeAsync<${tsInputType},${tsOutputType}>({`);
             clientOut.push(`${tab}${tab}fn:${paramName}(),`)
             clientOut.push(`${tab}${tab}input,`)
             if(inputPackage){
                 clientInputs.push(inputType+'Scheme');
-                clientOut.push(`${tab}${tab}inputScheme:${inputType}Scheme,`)
+                clientOut.push(`${tab}${tab}inputScheme:${inputScheme},`)
             }
             if(outputPackage){
                 clientInputs.push(outputType+'Scheme');
-                clientOut.push(`${tab}${tab}outputScheme:${outputType}Scheme,`)
+                clientOut.push(`${tab}${tab}outputScheme:${outputScheme},`)
             }
             clientOut.push(`${tab}})`);
             clientOut.push(')');
@@ -228,11 +236,11 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             if(node.comment){
                 out.push(...protoFormatTsComment(node.comment,'').split('\n'))
             }
-            const startI=out.length;
+            let startI=out.length;
             out.push(`const ${name}=async (`);
             out.push(`${tab}fnEvt:FnEvent${inputType==='void'?'':','}`);
-            out.push(`${inputType==='void'?'':`${tab}input:${inputType}`}`);
-            out.push(`):Promise<${outputType}>=>{`);
+            out.push(`${inputType==='void'?'':`${tab}input:${tsInputType}`}`);
+            out.push(`):Promise<${tsOutputType}>=>{`);
             protoLabelOutputLines(out,'head',startI);
 
 
@@ -240,16 +248,19 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             out.push(`${tab}throw new Error('${name} not implemented');`)
             out.push('}')
             out.push('');
+
+            startI=out.length
             out.push(isDefault?`export default ${name};`:`export const ${handlerName}=createFnHandler(${name},{`);
             if(inputPackage){
                 imports.push(inputType+'Scheme');
-                out.push(`${tab}inputScheme:${inputType}Scheme,`)
+                out.push(`${tab}inputScheme:${inputScheme},`)
             }
             if(outputPackage){
                 imports.push(outputType+'Scheme');
-                out.push(`${tab}outputScheme:${outputType}Scheme,`)
+                out.push(`${tab}outputScheme:${outputScheme},`)
             }
             out.push('});');
+            protoLabelOutputLines(out,'handlerExport',startI);
 
             protoPrependTsImports(imports,importMap,out);
 
