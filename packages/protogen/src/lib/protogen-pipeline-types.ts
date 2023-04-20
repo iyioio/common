@@ -1,5 +1,5 @@
 import { CliArgsAliasMap, CliArgsConverter, HashMap } from "@iyio/common";
-import { z, ZodSchema } from "zod";
+import { ZodSchema, z } from "zod";
 import { ProtoSourceCodeMerger } from "./output-utils";
 import { ProtoNode } from "./protogen-types";
 
@@ -37,6 +37,11 @@ export interface ProtoOutput
     autoMerge?:boolean;
     mergeHandler?:ProtoSourceCodeMerger|((ProtoSourceCodeMerger|null|undefined)[]);
     generator?:ProtoIndexGenerator;
+    /**
+     * If true the output should not be modified in anyway. Right now this only disables end of
+     * file newlines.
+     */
+    raw?:boolean;
 }
 
 export interface ProtoSource

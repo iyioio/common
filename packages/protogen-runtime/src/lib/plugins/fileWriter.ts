@@ -66,7 +66,10 @@ export const fileWriter=async (ctx:ProtoContext)=>{
             }
 
 
-            const content=mergedLines.join('\n');
+            let content=mergedLines.join('\n');
+            if(!output.raw){
+                content=content.trim()+'\n';
+            }
             log(`write merged - ${name} - ${content.length/1000}kb`);
             if(!dryRun){
                 await writeFile(name,content);
@@ -84,6 +87,9 @@ export const fileWriter=async (ctx:ProtoContext)=>{
                     }
                 }
                 content=mergedLines.join('\n');
+            }
+            if(!output.raw){
+                content=content.trim()+'\n';
             }
             log(`write - ${name} - ${content.length/1000}kb`);
             if(!dryRun){;
