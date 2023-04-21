@@ -27,6 +27,9 @@ export class SiteBuilder extends Construct
 
     public constructor(scope:Construct, name:string, {
         sites,
+        managed:{
+            params,
+        }={}
     }:SiteBuilderProps)
     {
 
@@ -40,6 +43,9 @@ export class SiteBuilder extends Construct
            info.modify?.(info);
 
             const staticSite=info.staticSite?new StaticWebSite(this,info.name,info.staticSite):undefined;
+            if(staticSite && params){
+                params.addConsumer(staticSite);
+            }
 
             results.push({
                 info,

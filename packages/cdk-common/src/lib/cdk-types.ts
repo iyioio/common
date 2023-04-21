@@ -3,6 +3,11 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { ParamOutput } from "./ParamOutput";
 
+export interface IParamOutputConsumer
+{
+    consumeParams(paramOutput:ParamOutput):void;
+}
+
 export type ParamType='default'|'fn';
 
 export interface EnvVarTarget

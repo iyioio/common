@@ -1,7 +1,7 @@
 import { HashMap, ParamTypeDef } from "@iyio/common";
 import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { EnvVarTarget, ParamType } from "./cdk-types";
+import { EnvVarTarget, IParamOutputConsumer, ParamType } from "./cdk-types";
 
 
 
@@ -15,6 +15,14 @@ export class ParamOutput
     public readonly paramTypes:HashMap<ParamType>={}
 
     private readonly targets:EnvVarTarget[]=[];
+
+    private readonly consumers:IParamOutputConsumer[]=[];
+
+    public addConsumer(consumer:IParamOutputConsumer){
+        if(!this.consumers.includes(consumer)){
+            this.consumers.push(consumer);
+        }
+    }
 
     /**
      * Var names in this list will not be added to evn targets.
@@ -36,8 +44,16 @@ export class ParamOutput
 
     }
 
+    private outputsGenerated=false;
+
     public generateOutputs(scope:Construct)
     {
+
+        if(this.outputsGenerated){
+            throw new Error('ParamOutputs can only generate outputs once');
+        }
+        this.outputsGenerated=true;
+
         for(const e in this.params){
             new CfnOutput(scope,e+'Param',{value:this.params[e]??''});
 
@@ -66,11 +82,14 @@ export class ParamOutput
                         return ep.typeName===e
                     }
                 })){
-                    target.varContainer.addEnvironment(name,this.params[e]??'');
+                    target.varContainer?.addEnvironment(name,this.params[e]??'');
                 }
             }
         }
 
+        for(const c of this.consumers){
+            c.consumeParams(this);
+        }
 
     }
 }

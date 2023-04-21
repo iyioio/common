@@ -6,6 +6,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
+import { ParamOutput } from "./ParamOutput";
 import { getRegexRedirectMapAsString } from "./getRedirectMap";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
@@ -21,6 +22,7 @@ export interface StaticWebSiteProps
     domainName?:string;
     envVars?:HashMap<string>;
     fallbackBucket?:s3.Bucket;
+    createOutputs?:boolean;
 }
 
 export class StaticWebSite extends Construct {
@@ -31,6 +33,8 @@ export class StaticWebSite extends Construct {
     public readonly domainUrl:string|null;
     public readonly url:string;
 
+    public readonly bucketDeployment:s3Deployment.BucketDeployment;
+
     constructor(scope: Construct, name: string, {
         path,
         nxExportedPackage,
@@ -38,6 +42,7 @@ export class StaticWebSite extends Construct {
         domainName,
         envVars,
         fallbackBucket,
+        createOutputs,
     }:StaticWebSiteProps){
 
         super(scope, name);
@@ -190,9 +195,10 @@ export class StaticWebSite extends Construct {
 
         if(envVars && Object.keys(envVars).length){
             sources.push(s3Deployment.Source.jsonData("__DOT_ENV__.json",envVars));
+            this.dotEnvSet=true;
         }
 
-        new s3Deployment.BucketDeployment(this,'BucketDeployment',{
+        this.bucketDeployment=new s3Deployment.BucketDeployment(this,'BucketDeployment',{
             destinationBucket:bucket,
             sources,
 
@@ -203,5 +209,28 @@ export class StaticWebSite extends Construct {
 
         this.url=this.domainUrl??this.distributionUrl??this.bucketUrl;
 
+
+
+        if(createOutputs){
+            new cdk.CfnOutput(this,name+'BucketUrl',{value:this.bucketUrl});
+            if(this.distributionUrl){
+                new cdk.CfnOutput(this,name+'DistributionUrl',{value:this.distributionUrl});
+            }
+            if(this.domainUrl){
+                new cdk.CfnOutput(this,name+'DomainUrl',{value:this.domainUrl});
+            }
+        }
+
+    }
+
+    private dotEnvSet=false;
+
+    public consumeParams(paramOutput:ParamOutput):void
+    {
+        if(this.dotEnvSet){
+            return;
+        }
+        this.dotEnvSet=true;
+        this.bucketDeployment.addSource(s3Deployment.Source.jsonData("__DOT_ENV__.json",paramOutput.params));
     }
 }
