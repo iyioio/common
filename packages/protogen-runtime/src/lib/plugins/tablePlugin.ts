@@ -1,5 +1,5 @@
 import { HashMap, joinPaths, notWordRegex } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoMergeTsImports, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
 import { TableNameParamNamePair, tableCdkTemplate } from "./tableCdkTemplate";
@@ -253,8 +253,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
         if(tableCdkConstructFile){
             outputs.push({
                 path:tableCdkConstructFile,
-                content:tableCdkTemplate(tableCdkConstructClassName,tableInfos,importMap),
-                mergeHandler:protoMergeTsImports,
+                content:tableCdkTemplate(tableCdkConstructClassName,tableInfos,importMap)
             })
         }
     }

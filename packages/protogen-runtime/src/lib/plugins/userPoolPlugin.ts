@@ -1,4 +1,4 @@
-import { protoMergeTsImports, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
 import { userPoolCdkTemplate } from "./userPoolCdkTemplate";
 
@@ -67,8 +67,7 @@ export const userPoolPlugin:ProtoPipelineConfigurablePlugin<typeof UserPoolPlugi
                 content:userPoolCdkTemplate(userPoolCdkConstructClassName,{
                     authorizedAccessRequests:access?protoNodeChildrenToAccessRequests(access):undefined,
                     unauthorizedAccessRequests:anon?protoNodeChildrenToAccessRequests(anon):undefined,
-                }),
-                mergeHandler:protoMergeTsImports,
+                })
             })
         }
 

@@ -32,6 +32,7 @@ export interface ProtoMergeSourceCodeOptions
     existing:string|string[];
     mergeSections?:(existing:ProtoCodeSection,overwriting:ProtoCodeSection)=>ProtoCodeSection;
     createSectionsConfig?:ProtoCreateCodeSectionsOptions;
+    force?:boolean;
 
 }
 export const protoMergeSourceCode=({
@@ -196,8 +197,9 @@ export interface ProtoCodeSection
 }
 
 export const protoMergeTsImports=({
+    force,
     createSectionsConfig=defaultMergeTsImportsSectionConfig,
-    mergeSections=defaultMergeTsImportsMerger,
+    mergeSections=force?forceMergeTsImportsMerger:defaultMergeTsImportsMerger,
     ...props
 }:ProtoMergeSourceCodeOptions):string[]=>{
 
@@ -231,6 +233,18 @@ const defaultMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCo
     }
 
     mergeImportMaps(map,map2);
+
+    return {
+        name:existing.name,
+        lines:Object.keys(map).map(k=>`import { ${map[k].join(', ')} } from '${k}';`),
+    }
+}
+const forceMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCodeSection):ProtoCodeSection=>{
+
+    const map:HashMap<string[]>={};
+
+    addImportsToMap(existing.lines,map);
+    addImportsToMap(overwriting.lines,map);
 
     return {
         name:existing.name,

@@ -1,5 +1,5 @@
 import { getSubstringCount, joinPaths } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoMergeTsImports, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -269,8 +269,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                 content:out.join('\n'),
                 mainExport:isDefault?undefined:handlerName,
                 mainExportAs:name,
-                autoMerge:true,
-                mergeHandler:protoMergeTsImports
+                autoMerge:true
             })
 
         }
@@ -305,7 +304,6 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             outputs.push({
                 path:serverFnCdkConstructFile,
                 content:serverFnCdkTemplate(serverFnCdkConstructClassName,infos,importMap),
-                mergeHandler:protoMergeTsImports,
             })
         }
 

@@ -1,5 +1,5 @@
 import { joinPaths, objHasValues } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoGenerateTsIndex, protoMergeTsImports, ProtoParamType, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { ProtoParamType, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoGenerateTsIndex } from "@iyio/protogen";
 import { z } from "zod";
 
 const ParamPluginConfig=z.object(
@@ -72,7 +72,6 @@ export const paramPlugin:ProtoPipelineConfigurablePlugin<typeof ParamPluginConfi
         outputs.push({
             path:joinPaths(path,paramsFilename),
             content:out.join('\n'),
-            mergeHandler:protoMergeTsImports
         })
 
         // add index file

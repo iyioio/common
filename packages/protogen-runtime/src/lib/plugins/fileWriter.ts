@@ -39,17 +39,19 @@ export const fileWriter=async (ctx:ProtoContext)=>{
 
         const mergers=output.mergeHandler?asArray(output.mergeHandler):null;
 
+        const lp=output.path.toLowerCase();
+        const isTs=lp.endsWith('.ts') || lp.endsWith('.tsx');
 
         if(exists && output.overwrite===false){
             continue;
-        }else if((output.autoMerge || mergers) && exists){
+        }else if((output.autoMerge || mergers) && exists && output.overwrite!==true){
 
             const contentLines=output.content.split('\n');
 
             let mergedLines=existing.split('\n');
 
-            const lp=output.path.toLowerCase();
-            if(lp.endsWith('.ts') || lp.endsWith('.tsx')){
+
+            if(isTs && !output.raw){
                 mergedLines=protoMergeTsImports({existing:mergedLines,overwriting:contentLines});
             }
 
@@ -76,18 +78,24 @@ export const fileWriter=async (ctx:ProtoContext)=>{
             }
 
         }else{
-            let content=output.content;
+            const contentLines=output.content.split('\n');
+            let mergedLines=contentLines;
+
+            if(isTs && !output.raw){
+                mergedLines=protoMergeTsImports({existing:mergedLines,overwriting:contentLines,force:true});
+            }
+
             if(mergers?.length){
-                const contentLines=content.split('\n');
-                let mergedLines=contentLines;
 
                 for(const merger of mergers){
                     if(merger){
                         mergedLines=merger({existing:mergedLines,overwriting:contentLines});
                     }
                 }
-                content=mergedLines.join('\n');
             }
+
+            let content=mergedLines.join('\n');
+
             if(!output.raw){
                 content=content.trim()+'\n';
             }

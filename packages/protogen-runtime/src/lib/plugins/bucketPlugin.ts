@@ -1,4 +1,4 @@
-import { protoAddContextParam, protoGetParamName, protoMergeTsImports, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { protoAddContextParam, protoGetParamName, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
 import { bucketCdkTemplate, BucketInfoTemplate } from "./bucketCdkTemplate";
 
@@ -70,8 +70,7 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                     public:b.children?.['public']?true:false,
                     enableCors:b.children?.['cors']?true:false,
                     arnParam:protoGetParamName(b.name),
-                })),importMap),
-                mergeHandler:protoMergeTsImports,
+                })),importMap)
             })
         }
 
