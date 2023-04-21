@@ -16,7 +16,9 @@
         "baseUrl": ".",
         "paths": {
             "@iyio/aws": ["packages/aws/src/index.ts"],
-            "@iyio/aws-credential-providers": ["packages/aws-credential-providers/src/index.ts"],
+            "@iyio/aws-credential-providers": [
+                "packages/aws-credential-providers/src/index.ts"
+            ],
             "@iyio/aws-dynamo": ["packages/aws-dynamo/src/index.ts"],
             "@iyio/aws-lambda": ["packages/aws-lambda/src/index.ts"],
             "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
@@ -29,11 +31,16 @@
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
             "@iyio/nx-common": ["packages/nx-common/src/index.ts"],
             "@iyio/protogen": ["packages/protogen/src/index.ts"],
-            "@iyio/protogen-runtime": ["packages/protogen-runtime/src/index.ts"],
+            "@iyio/protogen-runtime": [
+                "packages/protogen-runtime/src/index.ts"
+            ],
             "@iyio/react-common": ["packages/react-common/src/index.ts"],
             "@iyio/svg-charts": ["packages/svg-charts/src/index.ts"],
-            "@iyio/svg-charts-react": ["packages/svg-charts-react/src/index.ts"]
+            "@iyio/svg-charts-react": [
+                "packages/svg-charts-react/src/index.ts"
+            ],
+            "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"]
         }
     },
-    "exclude": ["node_modules", "tmp"]
+    "exclude": ["node_modules", "tmp","tmpl"]
 }

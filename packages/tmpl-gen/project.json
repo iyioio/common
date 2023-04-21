@@ -1,0 +1,45 @@
+{
+    "name": "tmpl-gen",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/tmpl-gen/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/tmpl-gen",
+                "main": "packages/tmpl-gen/src/index.ts",
+                "tsConfig": "packages/tmpl-gen/tsconfig.lib.json",
+                "assets": ["packages/tmpl-gen/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs tmpl-gen {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "generate": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/tmpl-gen/tsconfig.lib.json packages/tmpl-gen/src/bin/generate-command.ts --copy-to-clipboard"
+            }
+        },
+        "process": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/tmpl-gen/tsconfig.lib.json packages/tmpl-gen/src/bin/process-tmpl-dir.ts --template-dir tmpl"
+            }
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/tmpl-gen/**/*.ts"]
+            }
+        }
+    },
+    "tags": []
+}

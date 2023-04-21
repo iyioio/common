@@ -1,0 +1,6 @@
+{
+    "name":"nextJsAppTemplate",
+    "out":"packages/protogen-runtime/src/lib/plugins/nextJsAppTemplate.ts",
+    "transformer":"@iyio/protogen/protoFileMapToOutput",
+    "transformerParam":"mapOptions"
+}

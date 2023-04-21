@@ -1,4 +1,5 @@
-import { HashMap, getObjKeyCount } from "@iyio/common";
+import { HashMap, getObjKeyCount, joinPaths } from "@iyio/common";
+import { ProtoOutput } from "./protogen-pipeline-types";
 
 export const protoLabelOutputLines=(
     lines:string[],
@@ -295,4 +296,25 @@ const addImportsToMap=(code:string[],map:HashMap<string[]>)=>{
             }
         }
     }
+}
+
+export interface ProtoFileMapToOutputOptions
+{
+    targetDir:string;
+    outputDefaults?:Partial<ProtoOutput>
+}
+export const protoFileMapToOutput=(map:Record<string,string>,{
+    targetDir,
+    outputDefaults={}
+}:ProtoFileMapToOutputOptions):ProtoOutput[]=>{
+
+    const outputs:ProtoOutput[]=[];
+    for(const name in map){
+        outputs.push({
+            ...outputDefaults,
+            path:joinPaths(targetDir,name),
+            content:map[name],
+        })
+    }
+    return outputs;
 }

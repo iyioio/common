@@ -99,6 +99,14 @@ export const deepClone=<T>(obj:T, maxDepth=20):T=>
 
 }
 
+/**
+ * Duplicates the passed in object then deletes all undefined members then returns the new object
+ */
+export const dupDeleteUndefined=<T>(obj:T):T=>
+{
+    return deleteUndefined({...obj});
+}
+
 export const deleteUndefined=<T>(obj:T):T=>
 {
     if(!obj){
