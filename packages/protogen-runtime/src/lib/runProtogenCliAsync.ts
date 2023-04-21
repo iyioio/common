@@ -1,5 +1,5 @@
 import { HashMap, uuid } from "@iyio/common";
-import { defaultProtoLibStyle, executeTGenPipelineAsync, protoGetStageFromName, ProtoPipeline, ProtoPipelineConfig } from "@iyio/protogen";
+import { ProtoPipeline, ProtoPipelineConfig, defaultProtoLibStyle, executeTGenPipelineAsync, protoGetStageFromName } from "@iyio/protogen";
 import { getDefaultProtoPipelinePlugins } from "./default-plugins";
 
 export interface RunProtogenCliAsyncOptions
@@ -63,6 +63,7 @@ export const runProtogenCliAsync=async ({
                 paramMap:{},
                 paramPackage:`@${namespace}/${paramPackageName}`,
                 paramPackageName:paramPackageName,
+                cdkProjectDir:config.cdkProjectDir??'packages/cdk',
                 log,
             },
             plugins:[],

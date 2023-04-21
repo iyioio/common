@@ -1,4 +1,4 @@
-import { HashMap, getObjKeyCount, joinPaths } from "@iyio/common";
+import { HashMap, getObjKeyCount, joinPaths, mergeObjs } from "@iyio/common";
 import { ProtoOutput } from "./protogen-pipeline-types";
 
 export const protoLabelOutputLines=(
@@ -331,4 +331,22 @@ export const protoFileMapToOutput=(map:Record<string,string>,{
         })
     }
     return outputs;
+}
+
+export const protoMergeJson=({
+    overwriting,
+    existing
+}:ProtoMergeSourceCodeOptions):string[]=>{
+
+    if(Array.isArray(overwriting)){
+        overwriting=overwriting.join('\n');
+    }
+
+    if(Array.isArray(existing)){
+        existing=existing.join('\n');
+    }
+
+    const obj=mergeObjs(JSON.parse(existing),JSON.parse(overwriting),'unique');
+
+    return JSON.stringify(obj,null,4).split('\n');
 }

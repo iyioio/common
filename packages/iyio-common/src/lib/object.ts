@@ -230,8 +230,9 @@ export const objHasValues=(obj:any)=>
     return false;
 }
 
+export type MergeObjsTest=(a:any,b:any,depth:number,key:string|number|undefined)=>boolean;
 
-export type MergeObjsTest=(a:any,b:any,depth:number,key:string|number|undefined)=>boolean
+export type MergeArrayOptions=MergeObjsTest|'unique';
 
 const _mergeObjs=(
     a:any,
@@ -239,7 +240,7 @@ const _mergeObjs=(
     maxDepth:number,
     depth:number,
     key:string|number|undefined,
-    aryMerge:MergeObjsTest|undefined
+    aryMerge:MergeArrayOptions|undefined
 ):any=>{
     const aType=typeof a;
     const bType=typeof b;
@@ -249,8 +250,18 @@ const _mergeObjs=(
     }
 
     if(Array.isArray(a)){
-        const ary=[...a,...b];
-        if(aryMerge){
+        if(!aryMerge){
+            return [...a,...b];
+        }else if(aryMerge==='unique' && Array.isArray(b)){
+             const ary=[...a];
+             for(const item of b){
+                if(!ary.includes(item)){
+                    ary.push(item)
+                }
+             }
+             return ary;
+        }else if(typeof aryMerge === 'function'){
+            const ary=[...a,...b];
             for(let ai=0;ai<ary.length;ai++){
                 for(let bi=ai+1;bi<ary.length;bi++){
                     const itemA=ary[ai];
@@ -262,8 +273,11 @@ const _mergeObjs=(
                     }
                 }
             }
+            return ary;
+        }else{
+            return [...a,...b];
         }
-        return ary;
+
     }else{
         const m={...a}
         for(const e in b){
@@ -279,13 +293,13 @@ const _mergeObjs=(
 
 }
 
-export const mergeObjs=(a:any,b:any, aryMerge?:MergeObjsTest, maxDepth:number=1000):any=>
+export const mergeObjs=(a:any,b:any, aryMerge?:MergeArrayOptions, maxDepth:number=1000):any=>
 {
     return _mergeObjs(a,b,maxDepth,0,undefined,aryMerge)
 }
 
 
-export const mergeObjAry=(ary:any[], aryMerge?:MergeObjsTest, maxDepth:number=1000):any=>
+export const mergeObjAry=(ary:any[], aryMerge?:MergeArrayOptions, maxDepth:number=1000):any=>
 {
 
     let m:any={};

@@ -1,6 +1,6 @@
 import { SiteInfo } from "@iyio/cdk-common";
-import { strFirstToUpper } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { joinPaths, strFirstToUpper } from "@iyio/common";
+import { ProtoPipelineConfigurablePlugin, protoMergeJson } from "@iyio/protogen";
 import { z } from "zod";
 import { nextJsAppTemplate } from "./nextJsAppTemplate";
 import { siteCdkTemplate } from "./siteCdkTemplate";
@@ -34,7 +34,8 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
         log,
         nodes,
         namespace,
-        libStyle
+        libStyle,
+        cdkProjectDir
     },{
         nextJsAppOverrideTemplateFiles=false,
         nextJsAppCdkConstructClassName='Apps',
@@ -76,6 +77,16 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                 siteDescription:node.children?.['siteDescription']?.value?.trim()??name,
                 devPort:node.children?.['devPort']?.value?.trim()??'4200',
             }));
+
+            if(nextJsAppCdkConstructFile){
+                outputs.push({
+                    path:joinPaths(cdkProjectDir,'project.json'),
+                    content:JSON.stringify({
+                        implicitDependencies:[name]
+                    }),
+                    mergeHandler:protoMergeJson
+                })
+            }
 
             const deploymentType=node.children?.['deploy']?.value?.trim();
             if(deploymentType){

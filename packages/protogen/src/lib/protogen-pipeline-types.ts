@@ -78,6 +78,7 @@ export interface ProtoContext
     paramMap:Record<string,ProtoParamType>;
     paramPackage:string;
     paramPackageName:string;
+    cdkProjectDir:string;
     log:(...values:any[])=>void;
 
 }
@@ -134,6 +135,7 @@ export interface ProtoPipelineConfig
     disablePlugins?:string[];
     libStyle?:ProtoLibStyle;
     paramPackageName?:string;
+    cdkProjectDir?:string;
 }
 
 export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
@@ -150,6 +152,7 @@ export const ProtoCliAliases:CliArgsAliasMap<ProtoPipelineConfig>={
 export const ProtoPipelineConfigCliConverter:CliArgsConverter<ProtoPipelineConfig>={
     inputs:(args:string[])=>args,
     plugins:(args:string[])=>args,
+    cdkProjectDir:(args:string[])=>args[0],
     workingDirectory:(args:string[])=>args[0],
     namespace:(args:string[])=>args[0],
     paramPackageName:(args:string[])=>args[0],
