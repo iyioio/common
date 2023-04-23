@@ -137,8 +137,11 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             out.push(`export const ${name}Table:DataTableDescription<${name}>={`);
             out.push(`${tab}name:${JSON.stringify(name)},`);
 
-            const primary=props.find(n=>n.children?.['primaryKey']);
-            out.push(`${tab}primaryKey:${primary?JSON.stringify(primary.name):'"id"'},`);
+            const config=node.children?.['$table']?.children??{};
+            let configValue:string|undefined;
+
+            configValue=config['primaryKey']?.value?.replace(notWordRegex,'')||'id';
+            out.push(`${tab}primaryKey:${JSON.stringify(configValue)},`);
 
 
             if(tableUseParamIds){
@@ -147,8 +150,6 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                 out.push(`${tab}tableIdParam:${paramName},`)
             }
 
-            const config=node.children?.['$table']?.children??{};
-            let configValue:string|undefined;
 
             configValue=config['scheme']?.value??getTsSchemeName(name,tsConfig);
 
