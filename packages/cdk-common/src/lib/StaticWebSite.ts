@@ -1,4 +1,5 @@
 import { HashMap } from "@iyio/common";
+import { pathExistsSync } from "@iyio/node-common";
 import * as cdk from "aws-cdk-lib";
 import * as cm from "aws-cdk-lib/aws-certificatemanager";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
@@ -7,6 +8,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
 import { ParamOutput } from "./ParamOutput";
+import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
 import { getRegexRedirectMapAsString } from "./getRedirectMap";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
@@ -51,7 +53,17 @@ export class StaticWebSite extends Construct {
         if(path){
             dir=path;
         }else if(nxExportedPackage){
-            dir=`../../dist/packages/${nxExportedPackage.replace(/\/\\/g,'')}/exported`
+            const packageDir=nxExportedPackage.replace(/\/\\/g,'')
+            const cachedDir=`../../${cdkOutputCache}/dist/packages/${packageDir}/exported`;
+            const useCache=cdkUseCachedOutputs && pathExistsSync(cachedDir);
+
+            dir=useCache?
+                cachedDir:
+                `../../dist/packages/${packageDir}/exported`;
+
+            if(useCache){
+                console.info(`Using cached output for static website. name:${name}, outputPath:${dir}`);
+            }
         }else{
             throw new Error('StaticWebSite requires path or nxExportedPackage')
         }

@@ -1,4 +1,4 @@
-import { asArray } from "@iyio/common";
+import { asArray, parseConfigBool } from "@iyio/common";
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -6,6 +6,10 @@ import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as Path from "path";
 import { Grantee } from "./cdk-types";
+
+export const cdkUseCachedOutputs=parseConfigBool(process.env['NX_CDK_USE_CACHED_OUTPUTS']);
+
+export const cdkOutputCache='output-cache';
 
 export const getCommonFnProps=(handlerFileName?:string):lambdaNodeJs.NodejsFunctionProps=>{
 
