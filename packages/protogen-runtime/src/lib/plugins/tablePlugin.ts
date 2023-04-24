@@ -205,11 +205,11 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                     if(index.children?.['includeAll']){
                         out.push(`${tab}${tab}${tab}includeAll:true,`);
                     }
-                    const includeProps=protoGetChildren(index.children?.['include'],false);
+                    const includeProps=protoGetChildrenByName(index.children?.['include'],'prop',false);
                     if(includeProps.length){
                         out.push(`${tab}${tab}${tab}include:[`);
                         for(const incProp of includeProps){
-                            out.push(`${tab}${tab}${tab}${tab}${JSON.stringify(incProp.name)},`);
+                            out.push(`${tab}${tab}${tab}${tab}${JSON.stringify(incProp.value?.replace(notWordRegex,''))},`);
                         }
                         out.push(`${tab}${tab}${tab}],`);
                     }
