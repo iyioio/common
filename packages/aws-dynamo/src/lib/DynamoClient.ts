@@ -175,6 +175,10 @@ export class DynamoClient implements IWithStoreAdapter
         }));
     }
 
+    public deleteFromTableAsync<T>(table:DataTableDescription<T>,key:Partial<T>|string):Promise<void>{
+        return this.deleteAsync(getDataTableId(table),typeof(key)==='string'?{[table.primaryKey]:key} as Partial<T>:key);
+    }
+
     public async putAsync<T extends Record<string,any>>(tableName:string, checkKey:(keyof T)|null, item:T):Promise<void>
     {
         await this.getClient().send(new PutItemCommand({
@@ -187,9 +191,9 @@ export class DynamoClient implements IWithStoreAdapter
         }));
     }
 
-    public putIntoTable<T extends Record<string,any>>(table:DataTableDescription<T>,checkKey:(keyof T)|null,item:T):Promise<void>
+    public putIntoTable<T extends Record<string,any>>(table:DataTableDescription<T>,item:T):Promise<void>
     {
-        return this.putAsync(getDataTableId(table),checkKey,item);
+        return this.putAsync(getDataTableId(table),table.primaryKey,item);
     }
 
     public async patchAsync<T>(tableName:string, key:Partial<T>, item:Partial<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
