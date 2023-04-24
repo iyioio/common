@@ -189,7 +189,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                 fnInfo.accessRequests=protoNodeChildrenToAccessRequests(accessProp);
             }
 
-            const clientName=name.endsWith('Fn')?name.substring(0,name.length-2):name;
+            const clientName='invoke'+name;
             importMap[clientName]=clientPackageName;
             if(node.comment){
                 clientOut.push(...protoFormatTsComment(node.comment,'').split('\n'))
