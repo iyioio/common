@@ -1,7 +1,7 @@
 import { asArray, getObjKeyCount, joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, ProtoNode, ProtoPipelineConfigurablePlugin, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
+import { ProtoNode, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
-import { getTsSchemeName, SharedTsPluginConfigScheme } from "../sharedTsConfig";
+import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
 
 
 
@@ -276,10 +276,11 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
     }
 }
 
-const customBuiltIns=['stringMap','numberMap','booleanMap','dateMap','bigIntMap'] as const;
+const customBuiltIns=['map','stringMap','numberMap','booleanMap','dateMap','bigIntMap'] as const;
 type CustomBuiltInsType=typeof customBuiltIns[number];
 const getRealCustomType=(type:CustomBuiltInsType)=>{
     switch(type){
+        case 'map': return 'z.record(z.any())';
         case 'stringMap': return 'z.record(z.string())';
         case 'numberMap': return 'z.record(z.number())';
         case 'booleanMap': return 'z.record(z.boolean())';
