@@ -1,3 +1,4 @@
+import { BehaviorSubject } from "rxjs";
 import { HashMap } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 import { getUriHost, getUriProtocol } from "./uri";
@@ -8,6 +9,7 @@ export interface UiActionItem
     title?:string;
     icon?:string;
     to?:string;
+    type?:string;
     action?:(item:UiActionItem)=>void;
     linkTarget?:string;
     data?:any;
@@ -42,7 +44,18 @@ export interface UiRouterOpenOptions
 export interface IUiRouter
 {
 
+    readonly routeId:string;
+
+    readonly navItemsSubject:BehaviorSubject<UiActionRecursiveSubItem[]>;
+    readonly navItems:UiActionRecursiveSubItem[];
+
+    readonly activeNavItemSubject:ReadonlySubject<MatchedUiActionItem|null>;
+    readonly activeNavItem:MatchedUiActionItem|null;
+
     readonly isLoadingSubject:ReadonlySubject<boolean>;
+    readonly isLoading:boolean;
+
+    dispose?():void;
 
     push(path:string,query?:RouteQuery):void|Promise<void>;
 
@@ -89,3 +102,38 @@ export const shouldUseNativeNavigation=(path:string)=>(
     )
     ?true:false
 )
+
+export interface MatchedUiActionItem
+{
+    match:UiActionRecursiveSubItem;
+    matches:UiActionRecursiveSubItem[];
+}
+export const findMatchingUiActionItem=(matchItem:Partial<UiActionItem>,items:UiActionRecursiveSubItem[],maxDepth=100):MatchedUiActionItem|undefined=>{
+
+    if(maxDepth<0){
+        return undefined;
+    }
+
+    for(const item of items){
+        let matched=true;
+        for(const e in matchItem){
+            if((matchItem as any)[e]!==(item as any)[e]){
+                matched=false;
+                break;
+            }
+        }
+        if(matched){
+            return {match:item,matches:[item]}
+        }
+
+        if(item.sub){
+            const subMatch=findMatchingUiActionItem(matchItem,item.sub,maxDepth-1);
+            if(subMatch){
+                return {match:item,matches:[item,...subMatch.matches]}
+            }
+
+        }
+    }
+
+    return undefined;
+}
