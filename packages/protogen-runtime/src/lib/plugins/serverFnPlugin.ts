@@ -177,7 +177,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const fnInfo:FnInfoTemplate={
                 name,
                 createProps:{
-                    createPublicUrl:node.children?.['$publicUrl']?.value==='true',
+                    createPublicUrl:node.children?.['publicUrl']?.value==='true',
                     handlerFileName:joinPaths(cdkRelPath,filepath),
                     handler:'handler'
                 },
