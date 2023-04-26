@@ -161,12 +161,13 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const outputNode=node.children?.['output'];
             const inputIsArray=inputNode?.types[0]?.isArray??false;
             const outputIsArray=outputNode?.types[0]?.isArray??false;
+            const outputIsOptional=outputNode?.optional??false;
             const inputType=inputNode?.type??'void';
             const outputType=outputNode?.type??'void';
             const tsInputType=inputType+(inputIsArray?'[]':'');
-            const tsOutputType=outputType+(outputIsArray?'[]':'');
+            const tsOutputType=outputType+(outputIsArray?'[]':'')+(outputIsOptional?'|undefined':'');
             const inputScheme=inputType+'Scheme'+(inputIsArray?'.array()':'');
-            const outputScheme=outputType+'Scheme'+(outputIsArray?'.array()':'');
+            const outputScheme=outputType+'Scheme'+(outputIsArray?'.array()':'')+(outputIsOptional?'.optional()':'');
             const inputPackage=importMap[inputType+'Scheme'];
             const outputPackage=importMap[outputType+'Scheme'];
 
