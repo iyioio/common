@@ -59,9 +59,9 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
                     name:tbl.primaryKey,
                     type:db.AttributeType.STRING,
                 },
-                sortKey:tbl.secondaryKey?{
-                    name:tbl.secondaryKey,
-                    type:db.AttributeType.STRING
+                sortKey:tbl.sortKey?{
+                    name:tbl.sortKey,
+                    type:tbl.sortKeyType==='number'?db.AttributeType.NUMBER:db.AttributeType.STRING
                 }:undefined,
                 stream:tbl.watchable?db.StreamViewType.NEW_IMAGE:undefined,
                 removalPolicy:cdk.RemovalPolicy.DESTROY,

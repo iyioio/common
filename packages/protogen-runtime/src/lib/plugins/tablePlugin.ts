@@ -143,6 +143,12 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
             configValue=config['primaryKey']?.value?.replace(notWordRegex,'')||'id';
             out.push(`${tab}primaryKey:${JSON.stringify(configValue)},`);
 
+            if(configValue=config['sortKey']?.value?.replace(notWordRegex,'')){
+                out.push(`${tab}sortKey:${JSON.stringify(configValue)},`)
+                const sortProp=node.children?.[configValue]?.type??'string';
+                out.push(`${tab}sortKeyType:'${sortProp==='string'?'string':'number'}',`)
+            }
+
 
             if(tableUseParamIds){
                 protoAddContextParam(name+'Table',paramPackage,paramMap,importMap);
@@ -182,7 +188,7 @@ export const tablePlugin:ProtoPipelineConfigurablePlugin<typeof TablePluginConfi
                 out.push(`${tab}ttlProp:${JSON.stringify(configValue)},`)
             }
 
-            if(configValue=config['updateVersionProp']?.value??props.find(p=>p.name==='uv')?.name){
+            if(configValue=config['updateVersionProp']?.value?.replace(notWordRegex,'')??props.find(p=>p.name==='uv')?.name){
                 out.push(`${tab}updateVersionProp:${JSON.stringify(configValue)},`)
             }
 

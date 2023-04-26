@@ -1,12 +1,15 @@
 import { ZodSchema } from "zod";
 import { ParamTypeDef } from "./scope-types";
 
+export type DataTableKeyType='string'|'number';
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface DataTableDescription<T=any>
 {
     name:string;
     primaryKey:string;
-    secondaryKey?:string;
+    sortKey?:string;
+    sortKeyType?:DataTableKeyType;
     tableId?:string;
     tableIdParam?:ParamTypeDef<string>;
     getTableId?:()=>string;
