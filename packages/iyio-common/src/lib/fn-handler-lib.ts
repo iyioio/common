@@ -1,6 +1,7 @@
-import { createFnError, FnBaseHandlerOptions, FnHandler, FnHandlerOptions } from './fn-handler-types';
+import { createFnError, FnBaseHandlerOptions, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult } from './fn-handler-types';
 import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse } from './http-server-lib';
 import { HttpMethod } from './http-types';
+import { queryParamsToObject } from './object';
 
 export const fnHandler=async ({
     evt,
@@ -18,6 +19,9 @@ export const fnHandler=async ({
     const requestContextHttpMethod=evt?.requestContext?.http?.method;
     const requestContextPath=evt?.requestContext?.path;
     const requestContextMethod=evt?.requestContext?.httpMethod;
+
+    const queryString=evt?.rawQueryString;
+    const query=queryString?queryParamsToObject(queryString):{}
 
     let path=(
         (requestContextHttpPath)??
@@ -74,7 +78,12 @@ export const fnHandler=async ({
             path,
             method,
             routePath,
+            query,
         },input);
+
+        if(isRawFnResult(result)){
+            return result.result;
+        }
 
         if(outputScheme){
             const parsed=outputScheme.safeParse(result);
@@ -120,4 +129,18 @@ export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={})
         evt,
         context,
     });
+}
+
+export const isRawFnResult=(value:any): value is RawFnResult=>{
+    if(!value){
+        return false;
+    }
+    return (value as RawFnResult).rawFlag===RawFnFlag;
+}
+
+export const createRawFnResult=(result:any):RawFnResult=>{
+    return {
+        result,
+        rawFlag:RawFnFlag
+    }
 }

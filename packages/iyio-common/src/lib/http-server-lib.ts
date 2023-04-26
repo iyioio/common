@@ -50,6 +50,15 @@ export const createHttpNoContentResponse=(options:HttpResponseOptions=emptyObjec
     statusCode:204,
 })
 
+export const createHttpRedirectResponse=(location:string,options:HttpResponseOptions=emptyObject)=>createHttpResponse({
+    ...options,
+    headers:{
+        ...(options.headers??{}),
+        location,
+    },
+    statusCode:301,
+})
+
 export const createHttpNotFoundResponse=(message:string,options:HttpResponseOptions=emptyObject)=>createHttpResponse({
     ...options,
     statusCode:404,

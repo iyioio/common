@@ -1,6 +1,14 @@
 import { ZodError, ZodSchema } from "zod";
 import { HttpMethod } from "./http-types";
 
+export const RawFnFlag=Symbol('RawFnFlag');
+
+export interface RawFnResult
+{
+    result:any;
+    rawFlag:typeof RawFnFlag;
+}
+
 export type FnHandler=(eventSource:FnEvent,input:any)=>any|Promise<any>;
 
 export interface FnBaseHandlerOptions
@@ -25,6 +33,7 @@ export interface FnEvent
     path:string;
     method:HttpMethod;
     routePath:string;
+    query:Record<string,string>;
 }
 
 export interface FnError
