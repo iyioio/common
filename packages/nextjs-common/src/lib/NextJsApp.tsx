@@ -1,8 +1,9 @@
+import { Scope } from "@iyio/common";
 import { AppProps } from "next/app";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useCallback, useState } from "react";
 import { DefaultLayout, DefaultLayoutProps } from "./DefaultLayout";
-import { getRouteInfo } from "./next-route-helper";
 import { NextJsAppContainer, NextJsAppContainerProps } from "./NextJsAppContainer";
+import { getRouteInfo } from "./next-route-helper";
 
 
 export interface NextJsAppProps<TLayoutProps=DefaultLayoutProps> extends NextJsAppContainerProps
@@ -12,6 +13,7 @@ export interface NextJsAppProps<TLayoutProps=DefaultLayoutProps> extends NextJsA
     appProps:AppProps;
     afterLayout?:any;
     GlobalStyle?:FunctionComponent;
+    initBeforeRenderLayout?:boolean;
 }
 
 export function NextJsApp({
@@ -26,11 +28,25 @@ export function NextJsApp({
     afterLayout,
     GlobalStyle,
     afterAll,
+    initBeforeRenderLayout,
+    onScopeInited,
     ...props
 }:NextJsAppProps){
 
+    const [inited,setInited]=useState(false);
+    const renderLayout=initBeforeRenderLayout?inited:true;
+
+    const _onScopeInited=useCallback((scope:Scope)=>{
+
+        setInited(true);
+
+        onScopeInited?.(scope)
+    },[onScopeInited])
+
+
     return (
         <NextJsAppContainer
+            onScopeInited={_onScopeInited}
             {...props}
             afterAll={<>
                 {GlobalStyle && <GlobalStyle/>}
@@ -40,9 +56,11 @@ export function NextJsApp({
 
             {children}
 
-            <LayoutComponent routeInfo={getRouteInfo(router)} {...layoutProps}>
-                <Component {...pageProps}/>
-            </LayoutComponent>
+            {renderLayout &&
+                <LayoutComponent routeInfo={getRouteInfo(router)} {...layoutProps}>
+                    <Component {...pageProps}/>
+                </LayoutComponent>
+            }
 
             {afterLayout}
 
