@@ -1,6 +1,7 @@
 import { HashMap, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
+import { LockScreenRenderer } from "./LockScreenRenderer";
 import { PortalRenderer } from "./PortalRenderer";
 
 export interface BaseAppContainerProps
@@ -79,7 +80,10 @@ export function BaseAppContainer({
 
     return (<>
         {children}
-        {!noPortalRenderer && <PortalRenderer/>}
+        {!noPortalRenderer && <>
+            <PortalRenderer/>
+            <LockScreenRenderer/>
+        </>}
         {!noBaseLayoutStyleSheet && <BaseLayoutStyleSheet {...style}/>}
         {afterAll}
     </>)
