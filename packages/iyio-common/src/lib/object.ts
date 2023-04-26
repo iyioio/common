@@ -350,7 +350,7 @@ export const queryParamsToObject=(query:string):HashMap<string>=>
 
     const obj:HashMap<string>={};
 
-    const parts=query.split('?');
+    const parts=query.split('&');
     for(const p of parts){
         const [name,value]=p.split('=',2);
         const n=decodeURIComponent(name).trim();
