@@ -1,8 +1,10 @@
 import { ParamTypeDef } from "@iyio/common";
+import * as cdk from "aws-cdk-lib";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 import { ManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
-import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup } from "./cdk-types";
+import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup, SiteContentSourceDescription } from "./cdk-types";
 
 export interface FnInfoAndNodeFn
 {
@@ -15,8 +17,13 @@ export interface FnInfo
     name:string;
     createProps:NodeFnProps;
     arnParam?:ParamTypeDef<string>;
+    urlParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
-    accessRequests?:AccessRequestDescription[],
+    accessRequests?:AccessRequestDescription[];
+    /**
+     * createProps.createPublicUrl must be true in-order for siteSources to be applied
+     */
+    siteSources?:SiteContentSourceDescription[];
 }
 
 export interface FnsBuilderProps
@@ -39,7 +46,8 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
         fnsInfo,
         managed:{
             params,
-            accessManager
+            accessManager,
+            siteContentSources
         }={},
     }:FnsBuilderProps){
 
@@ -49,16 +57,26 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
 
         for(const info of fnsInfo){
 
+            const nodeFn=new NodeFn(this,info.name,info.createProps);
+
             const fn:FnInfoAndNodeFn={
                 info,
-                fn:new NodeFn(this,info.name,info.createProps),
+                fn:nodeFn
             }
 
-            if(info.arnParam && params){
-                params.setParam(info.arnParam,fn.fn.func.functionArn,'fn');
+            if(params){
+                const excludeParams:ParamTypeDef<string>[]=[];
+                if(info.arnParam){
+                    params.setParam(info.arnParam,nodeFn.func.functionArn,'fn');
+                    excludeParams.push(info.arnParam);
+                }
+                if(info.urlParam && nodeFn.url){
+                    params.setParam(info.urlParam,nodeFn.url.url,'fn');
+                    excludeParams.push(info.urlParam);
+                }
                 params.addVarContainer({
-                    varContainer:fn.fn.func,
-                    excludeParams:[info.arnParam],
+                    varContainer:nodeFn.func,
+                    excludeParams,
                     requiredParams:[],
                 })
             }
@@ -68,9 +86,9 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                     grantName:info.name,
                     grant:request=>{
                         if(request.types?.includes('invoke')){
-                            fn.fn.func.grantInvoke(request.grantee);
-                            if(fn.fn.url){
-                                fn.fn.func.grantInvokeUrl(request.grantee);
+                            nodeFn.func.grantInvoke(request.grantee);
+                            if(nodeFn.url){
+                                nodeFn.func.grantInvokeUrl(request.grantee);
                             }
                         }
                     }
@@ -78,7 +96,32 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             }
 
             if(info.accessRequests){
-                this.accessRequests.push(...info.accessRequests.map(i=>({...i,grantee:fn.fn.func})));
+                this.accessRequests.push(...info.accessRequests.map(i=>({...i,grantee:nodeFn.func})));
+            }
+
+            const fnUrl=nodeFn.url;
+            if(info.siteSources && siteContentSources && fnUrl){
+                for(const ss of info.siteSources){
+                    const sourceDomain=cdk.Fn.select(2,cdk.Fn.split('/',nodeFn.url.url));
+                    siteContentSources.push({
+                        ...ss,
+                        sourceDomain,
+                        fn:nodeFn.func,
+                        source:{
+                            customOriginSource:{
+                                domainName:sourceDomain,
+                                originProtocolPolicy:cf.OriginProtocolPolicy.HTTPS_ONLY,
+                            },
+                            behaviors:[{
+                                viewerProtocolPolicy:cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                compress:true,
+                                allowedMethods:cf.CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
+                                pathPattern:ss.prefix?ss.prefix+'*':'*',
+
+                            }],
+                        },
+                    })
+                }
             }
 
             fns.push(fn);

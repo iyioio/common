@@ -1,5 +1,7 @@
 import { ParamTypeDef } from "@iyio/common";
+import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { ParamOutput } from "./ParamOutput";
 
@@ -76,4 +78,19 @@ export interface AccessRequest extends AccessRequestDescription
 export interface IAccessRequestGroup
 {
     accessRequests:AccessRequest[];
+}
+
+export interface SiteContentSource extends SiteContentSourceDescription
+{
+    source:cf.SourceConfiguration;
+    sourceDomain:string;
+    fn?:lambda.IFunction;
+}
+
+export interface SiteContentSourceDescription
+{
+    targetSiteName:string;
+    prefix?:string;
+    accessSiteOrigin?:boolean;
+    handleRedirects?:boolean;
 }

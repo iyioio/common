@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3Client as AwsS3Client, S3ClientConfig } from "@aws-sdk/client-s3";
+import { S3Client as AwsS3Client, DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope } from "@iyio/common";
 import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
@@ -55,7 +55,7 @@ export class S3Client implements IWithStoreAdapter
         try{
             r=await this.getClient().send(new GetObjectCommand({
                 Key:key,
-                Bucket:bucket,
+                Bucket:formatBucketName(bucket),
             }));
         }catch(ex){
             if((ex as any)?.Code==='NoSuchKey'){
@@ -91,20 +91,47 @@ export class S3Client implements IWithStoreAdapter
         }
     }
 
+    public async getStringAsync(bucket:string,key:string,cancel?:CancelToken):Promise<string|undefined>
+    {
+        let r:GetObjectCommandOutput;
+
+        try{
+            r=await this.getClient().send(new GetObjectCommand({
+                Key:key,
+                Bucket:formatBucketName(bucket),
+            }));
+        }catch(ex){
+            if((ex as any)?.Code==='NoSuchKey'){
+                return undefined;
+            }
+            throw ex;
+        }
+
+        if(cancel?.isCanceled){
+            return;
+        }
+
+        if(r.Body){
+            return await r.Body.transformToString();
+        }else{
+            return undefined;
+        }
+    }
+
 
     public async putAsync<T>(bucket:string,key:string,value:T):Promise<void>
     {
         await this.getClient().send((value instanceof BinaryStoreValue)?
             new PutObjectCommand({
                 Key:key,
-                Bucket:bucket,
+                Bucket:formatBucketName(bucket),
                 Body:value.content,
                 ContentType:value.contentType,
             })
         :
             new PutObjectCommand({
                 Key:key,
-                Bucket:bucket,
+                Bucket:formatBucketName(bucket),
                 Body:JSON.stringify(value),
                 ContentType:'application/json',
             })
@@ -115,9 +142,14 @@ export class S3Client implements IWithStoreAdapter
     {
         await this.getClient().send(new DeleteObjectCommand({
             Key:key,
-            Bucket:bucket,
+            Bucket:formatBucketName(bucket),
         }));
 
         return true;
     }
+}
+
+const formatBucketName=(name:string)=>{
+    const i=name.lastIndexOf(':');
+    return i===-1?name:name.substring(i+1);
 }

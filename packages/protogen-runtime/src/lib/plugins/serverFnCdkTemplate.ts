@@ -1,7 +1,8 @@
 import type { FnInfo } from "@iyio/cdk-common";
 
-export type FnInfoTemplate=Omit<FnInfo,'arnParam'> & {
+export type FnInfoTemplate=Omit<FnInfo,'arnParam'|'urlParam'> & {
     arnParam:string;
+    urlParam?:string;
 }
 
 export const serverFnCdkTemplate=(constructName:string,infos:FnInfoTemplate[],importMap:Record<string,string>)=>{
@@ -10,6 +11,9 @@ export const serverFnCdkTemplate=(constructName:string,infos:FnInfoTemplate[],im
     for(let i=0;i<infos.length;i++){
         const t=infos[i];
         imports.push(`import { ${t.arnParam} as _fnParam${i}} from '${importMap[t.arnParam]}';`);
+        if(t.urlParam){
+            imports.push(`import { ${t.urlParam} as _fnUrlParam${i}} from '${importMap[t.urlParam]}';`);
+        }
     }
 
 
@@ -41,10 +45,12 @@ const getFnsInfo=():FnInfo[]=>[
 ${
     infos.map((info,i)=>`    {
         name:${JSON.stringify(info.name)},
-        arnParam:_fnParam${i},
+        arnParam:_fnParam${i},${info.urlParam?`
+        urlParam:_fnUrlParam${i},`:''}
         grantAccess:true,
         accessRequests:${JSON.stringify(info.accessRequests??[])},
-        createProps:${JSON.stringify(info.createProps)},
+        createProps:${JSON.stringify(info.createProps)},${info.siteSources?`
+        siteSources:${JSON.stringify(info.siteSources)},`:''}
     }`)
     .join(',\n')
 }

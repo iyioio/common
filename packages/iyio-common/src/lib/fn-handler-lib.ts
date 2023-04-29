@@ -1,4 +1,4 @@
-import { createFnError, FnBaseHandlerOptions, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult } from './fn-handler-types';
+import { createFnError, FnBaseHandlerOptions, FnHandler, FnHandlerOptions, isFnInvokeEvent, RawFnFlag, RawFnResult } from './fn-handler-types';
 import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse } from './http-server-lib';
 import { HttpMethod } from './http-types';
 import { queryParamsToObject } from './object';
@@ -15,6 +15,9 @@ export const fnHandler=async ({
     if(logRequest){
         console.info('serverlessHandler',evt);
     }
+
+    const fnInvokeEvent=isFnInvokeEvent(evt)?evt:undefined;
+
     const requestContextHttpPath=evt?.requestContext?.http?.path;
     const requestContextHttpMethod=evt?.requestContext?.http?.method;
     const requestContextPath=evt?.requestContext?.path;
@@ -47,9 +50,14 @@ export const fnHandler=async ({
     const cors=isApiGateway;
     const responseDefaults={cors};
 
-    let input=isHttp?
-        (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:undefined):
-        evt;
+    let input=(
+        fnInvokeEvent?
+            fnInvokeEvent.input:
+        isHttp?
+            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:undefined)
+        :
+            evt
+    );
 
     if(inputScheme){
         const parsed=inputScheme.safeParse(input);
@@ -79,6 +87,7 @@ export const fnHandler=async ({
             method,
             routePath,
             query,
+            headers:evt.headers??{},
         },input);
 
         if(isRawFnResult(result)){

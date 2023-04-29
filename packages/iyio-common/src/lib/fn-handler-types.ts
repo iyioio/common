@@ -34,6 +34,7 @@ export interface FnEvent
     method:HttpMethod;
     routePath:string;
     query:Record<string,string>;
+    headers:Record<string,string>;
 }
 
 export interface FnError
@@ -60,4 +61,15 @@ export const createFnError=(code:number,message:string,zodError?:ZodError,metada
         errorZod:zodError,
         errorMetadata:metadata,
     }
+}
+
+export interface FnInvokeEvent<TInput=any>
+{
+    ______isFnInvokeEvent:true;
+    input?:TInput;
+    jwt?:string;
+}
+
+export const isFnInvokeEvent=(value:any):value is FnInvokeEvent=>{
+    return value?.______isFnInvokeEvent===true;
 }

@@ -1,5 +1,6 @@
+import { SiteContentSourceDescription } from "@iyio/cdk-common";
 import { getSubstringCount, joinPaths } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -184,6 +185,38 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                 arnParam:paramName
             };
             infos.push(fnInfo);
+
+            if(fnInfo.createProps.createPublicUrl){
+                const urlParamName=protoAddContextParam(name+'Url',paramPackage,paramMap,importMap);
+                fnInfo.urlParam=urlParamName;
+            }
+
+            const siteSources=protoGetChildrenByName(node,'siteSource',false);
+            if(siteSources.length){
+                const sources:SiteContentSourceDescription[]=[];
+                fnInfo.siteSources=sources;
+                for(const ss of siteSources){
+                    const target=nodes.find(n=>n.name===ss.type);
+                    if(!target){
+                        throw new Error(`No matching site source found for ${ss.type}. Fn=${node.name}`);
+                    }
+                    let prefix=ss.children?.['prefix']?.value;
+                    if(prefix){
+                        if(!prefix.startsWith('/')){
+                            prefix='/'+prefix;
+                        }
+                        if(!prefix.endsWith('/')){
+                            prefix+='/';
+                        }
+                    }
+                    sources.push({
+                        targetSiteName:ss.type,
+                        prefix,
+                        accessSiteOrigin:ss.children?.['accessSiteOrigin']?true:false,
+                        handleRedirects:ss.children?.['handleRedirects']?true:false,
+                    })
+                }
+            }
 
             const accessProp=node.children?.['$access'];
             if(accessProp?.children){

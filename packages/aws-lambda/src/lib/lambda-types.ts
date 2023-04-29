@@ -1,3 +1,4 @@
+import { Scope } from "@iyio/common";
 import type { ZodSchema } from "zod";
 
 export interface LambdaInvokeOptions<TInput=any>
@@ -16,4 +17,17 @@ export interface LambdaInvokeOptions<TInput=any>
 
     outputScheme?:ZodSchema;
 
+    /**
+     * By default input passed into a FnInvokeEvent to allow metadata to be passed to the
+     * target function. If passRawInput is true then the input is passed directly to the
+     * target function.
+     */
+    passRawInput?:boolean;
+
+    /**
+     * A scope to invoke the lambda in. Can be used to support multiple user identities.
+     */
+    scope?:Scope;
+
 }
+

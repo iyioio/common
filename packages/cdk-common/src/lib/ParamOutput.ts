@@ -18,6 +18,14 @@ export class ParamOutput
 
     private readonly consumers:IParamOutputConsumer[]=[];
 
+    public readonly envVars:Record<string,string>={};
+
+    public copyEnvVars(names:string[]){
+        for(const n of names){
+            this.envVars[n]=process.env[n]??'';
+        }
+    }
+
     public addConsumer(consumer:IParamOutputConsumer){
         if(!this.consumers.includes(consumer)){
             this.consumers.push(consumer);
@@ -53,6 +61,14 @@ export class ParamOutput
             throw new Error('ParamOutputs can only generate outputs once');
         }
         this.outputsGenerated=true;
+
+        for(const name in this.envVars){
+            for(const target of this.targets){
+                if(target.varContainer){
+                    target.varContainer.addEnvironment(name,this.envVars[name]??'');
+                }
+            }
+        }
 
         for(const e in this.params){
             new CfnOutput(scope,e+'Param',{value:this.params[e]??''});

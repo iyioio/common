@@ -29,6 +29,7 @@ export class SiteBuilder extends Construct
         sites,
         managed:{
             params,
+            siteContentSources
         }={}
     }:SiteBuilderProps)
     {
@@ -39,6 +40,17 @@ export class SiteBuilder extends Construct
 
 
         for(const info of sites){
+
+            const sources=siteContentSources?.filter(s=>s.targetSiteName===info.name);
+            if(sources?.length && info.staticSite){
+                info.staticSite={
+                    ...info.staticSite,
+                    additionalSources:[
+                        ...(info.staticSite.additionalSources??[]),
+                        ...sources
+                    ]
+                }
+            }
 
            info.modify?.(info);
 

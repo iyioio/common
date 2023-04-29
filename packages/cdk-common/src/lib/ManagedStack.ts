@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 import { AccessManager } from "./AccessManager";
 import { ManagedProps } from './ManagedProps';
 import { ParamOutput } from "./ParamOutput";
+import { SiteContentSource } from './cdk-types';
 
 export class ManagedStack extends cdk.Stack
 {
@@ -11,6 +12,8 @@ export class ManagedStack extends cdk.Stack
     protected readonly params=new ParamOutput();
 
     protected readonly accessManager=new AccessManager();
+
+    protected readonly siteContentSources:SiteContentSource[]=[];
 
     public readonly managed:ManagedProps;
 
@@ -20,7 +23,11 @@ export class ManagedStack extends cdk.Stack
 
         this.params.setParam(awsRegionParam,this.region);
 
-        this.managed={params:this.params,accessManager:this.accessManager};
+        this.managed={
+            params:this.params,
+            accessManager:this.accessManager,
+            siteContentSources:this.siteContentSources
+        };
     }
 
     protected generateOutputs()

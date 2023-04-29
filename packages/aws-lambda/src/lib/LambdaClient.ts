@@ -1,6 +1,6 @@
-import { InvokeCommand, LambdaClient as AwsLambdaClient, LambdaClientConfig } from "@aws-sdk/client-lambda";
+import { LambdaClient as AwsLambdaClient, InvokeCommand, LambdaClientConfig } from "@aws-sdk/client-lambda";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { getZodErrorMessage, Scope } from "@iyio/common";
+import { FnInvokeEvent, Scope, authService, currentBaseUser, getZodErrorMessage } from "@iyio/common";
 import { LambdaInvokeOptions } from "./lambda-types";
 
 
@@ -54,6 +54,8 @@ export class LambdaClient
         input,
         inputScheme,
         outputScheme,
+        passRawInput,
+        scope
     }:LambdaInvokeOptions<TInput>):Promise<TOutput|undefined>
     {
 
@@ -68,9 +70,19 @@ export class LambdaClient
             }
         }
 
+        const user=currentBaseUser(scope);
+
+        const eventInput:FnInvokeEvent={
+            ______isFnInvokeEvent:true,
+            input,
+            jwt:user?(await authService(scope).getJwtAsync(user))??undefined:undefined
+        }
+
         const cmd=new InvokeCommand({
             FunctionName:fn,
-            Payload:input===undefined?undefined:encoder.encode(JSON.stringify(input))
+            Payload:passRawInput?
+                input===undefined?undefined:encoder.encode(JSON.stringify(input)):
+                encoder.encode(JSON.stringify(eventInput))
         });
 
         const result=await client.send(cmd);
