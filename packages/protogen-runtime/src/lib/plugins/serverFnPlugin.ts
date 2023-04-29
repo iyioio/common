@@ -213,7 +213,6 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                         targetSiteName:ss.type,
                         prefix,
                         accessSiteOrigin:ss.children?.['accessSiteOrigin']?true:false,
-                        handleRedirects:ss.children?.['handleRedirects']?true:false,
                     })
                 }
             }

@@ -10,7 +10,7 @@ import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
 import { ParamOutput } from "./ParamOutput";
 import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
-import { SiteContentSource } from "./cdk-types";
+import { NamedFn, SiteContentSource } from "./cdk-types";
 import { getRegexRedirectMapAsString } from "./getRedirectMap";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
@@ -28,6 +28,7 @@ export interface StaticWebSiteProps
     fallbackBucket?:s3.Bucket;
     createOutputs?:boolean;
     additionalSources?:SiteContentSource[];
+    redirectHandler?:NamedFn;
 }
 
 export class StaticWebSite extends Construct {
@@ -49,6 +50,7 @@ export class StaticWebSite extends Construct {
         fallbackBucket,
         createOutputs,
         additionalSources=[],
+        redirectHandler,
     }:StaticWebSiteProps){
 
         super(scope, name);
@@ -87,6 +89,10 @@ export class StaticWebSite extends Construct {
         this.bucketIndexUrl=this.bucketUrl+'/index.html';
 
         this.domainUrl=null;
+
+        if(redirectHandler){
+            bucket.grantRead(redirectHandler.fn);
+        }
 
 
         for(const s of additionalSources){
@@ -127,17 +133,6 @@ export class StaticWebSite extends Construct {
                 addBucketResourcePolicy(fallbackBucket);
             }
 
-            const handler=additionalSources.find(s=>s.handleRedirects);
-            let handlerPrefix=handler?.prefix;
-            if(handlerPrefix){
-                if(!handlerPrefix.startsWith('/')){
-                    handlerPrefix='/'+handlerPrefix;
-                }
-                if(handlerPrefix.endsWith('/')){
-                    handlerPrefix=handlerPrefix.substring(0,handlerPrefix.length-1);
-                }
-            }
-
             const redirectMap=getRegexRedirectMapAsString(dir);
 
             const redirectBody=(isEdgeLambda:boolean,matchHandler:string)=>{
@@ -169,7 +164,7 @@ export class StaticWebSite extends Construct {
                 `
             }
 
-            const redirectFunc = handler?undefined:new cf.Function(
+            const redirectFunc = redirectHandler?undefined:new cf.Function(
                 this,
                 'RedirectFn',
                 {
@@ -177,8 +172,8 @@ export class StaticWebSite extends Construct {
                     // to get mixed up - https://github.com/aws/aws-cdk/issues/15765
                     functionName:getStackItemName(this,'RedirectFn'),
 
-                    code:cf.FunctionCode.fromInline(redirectBody(false,`
-                        request.uri=${handlerPrefix?JSON.stringify(handlerPrefix)+'+':''}+r.path;
+                    code:cf.FunctionCode.fromInline(redirectBody(false,/*ts*/`
+                        request.uri=+r.path;
                     `))
                 }
             );
@@ -214,11 +209,11 @@ export class StaticWebSite extends Construct {
                                 function:redirectFunc,
                                 eventType:cf.FunctionEventType.VIEWER_REQUEST,
                             }]:undefined,
-                            lambdaFunctionAssociations:handler?[{
+                            lambdaFunctionAssociations:redirectHandler?[{
                                 lambdaFunction:new lambda.Function(this,'EdgeFn',{
                                     code:new lambda.InlineCode(redirectBody(true,/*ts*/`
                                         request.origin={custom:{
-                                            domainName:'${handler.sourceDomain}',
+                                            domainName:'${redirectHandler.domain}',
                                             port:443,
                                             protocol:'https',
                                             path:'',
@@ -227,7 +222,7 @@ export class StaticWebSite extends Construct {
                                             keepaliveTimeout:5,
                                             customHeaders:{}
                                         }}
-                                        request.headers['host']=[{key:'host',value:'${handler.sourceDomain}'}];
+                                        request.headers['host']=[{key:'host',value:'${redirectHandler.domain}'}];
                                         request.headers['x-site-original-origin-uri']=[{key:'x-site-original-origin-uri',value:request.uri}];
                                         request.headers['x-site-bucket-arn']=[{key:'x-site-bucket-arn',value:'${bucket.bucketArn}'}];
                                         request.uri=encodeURI(r.path);

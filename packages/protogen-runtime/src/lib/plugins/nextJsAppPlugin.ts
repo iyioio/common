@@ -92,9 +92,14 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
             if(deploymentType){
                 switch(deploymentType){
 
-                    case 'static':
+                    case 'static':{
+                        const redirectHandler=node.children?.['redirectHandler']?.type;
+                        if(redirectHandler && !nodes.find(n=>n.name===redirectHandler)){
+                            throw new Error(`redirectHandler type not found. type:${redirectHandler}, appName:${node.name}`);
+                        }
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
+                            redirectHandler,
                             staticSite:{
                                 nxExportedPackage:name,
                                 cdn:true,
@@ -104,6 +109,7 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                         })
 
                         break;
+                    }
 
                     default:
                         throw new Error(`deployment type ${deploymentType} is not supported by nextJsAppPlugin`);

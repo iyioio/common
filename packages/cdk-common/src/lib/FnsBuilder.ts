@@ -47,7 +47,8 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
         managed:{
             params,
             accessManager,
-            siteContentSources
+            siteContentSources,
+            fns:managedFns
         }={},
     }:FnsBuilderProps){
 
@@ -125,6 +126,13 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             }
 
             fns.push(fn);
+
+            managedFns?.push({
+                name:info.name,
+                fn:fn.fn.func,
+                url:nodeFn.url,
+                domain:nodeFn.url?cdk.Fn.select(2,cdk.Fn.split('/',nodeFn.url.url)):undefined,
+            })
         }
 
         this.fns=fns;

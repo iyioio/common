@@ -11,6 +11,7 @@ export interface SiteBuilderProps
 export interface SiteInfo
 {
     name:string;
+    redirectHandler?:string;
     staticSite?:StaticWebSiteProps;
     modify?:(info:SiteInfo)=>void;
 }
@@ -29,7 +30,8 @@ export class SiteBuilder extends Construct
         sites,
         managed:{
             params,
-            siteContentSources
+            siteContentSources,
+            fns
         }={}
     }:SiteBuilderProps)
     {
@@ -38,12 +40,17 @@ export class SiteBuilder extends Construct
 
         const results:SiteResult[]=[];
 
-
         for(const info of sites){
 
-            const sources=siteContentSources?.filter(s=>s.targetSiteName===info.name);
-            if(sources?.length && info.staticSite){
+            const sources=siteContentSources?.filter(s=>s.targetSiteName===info.name)??[];
+            if((sources.length || info.redirectHandler) && info.staticSite){
+                const useHandler=(info.redirectHandler && fns)?true:false;
+                const redirectHandler=useHandler?fns?.find(f=>f.name===info.redirectHandler):undefined;
+                if(useHandler && !redirectHandler){
+                    throw new Error(`No redirect handler function found for site. site:${info.name}, handler:${info.redirectHandler}`)
+                }
                 info.staticSite={
+                    redirectHandler,
                     ...info.staticSite,
                     additionalSources:[
                         ...(info.staticSite.additionalSources??[]),

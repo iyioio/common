@@ -4,7 +4,7 @@ import { Construct } from 'constructs';
 import { AccessManager } from "./AccessManager";
 import { ManagedProps } from './ManagedProps';
 import { ParamOutput } from "./ParamOutput";
-import { SiteContentSource } from './cdk-types';
+import { NamedFn, SiteContentSource } from './cdk-types';
 
 export class ManagedStack extends cdk.Stack
 {
@@ -14,6 +14,8 @@ export class ManagedStack extends cdk.Stack
     protected readonly accessManager=new AccessManager();
 
     protected readonly siteContentSources:SiteContentSource[]=[];
+
+    protected readonly fns:NamedFn[]=[];
 
     public readonly managed:ManagedProps;
 
@@ -26,7 +28,8 @@ export class ManagedStack extends cdk.Stack
         this.managed={
             params:this.params,
             accessManager:this.accessManager,
-            siteContentSources:this.siteContentSources
+            siteContentSources:this.siteContentSources,
+            fns:this.fns,
         };
     }
 

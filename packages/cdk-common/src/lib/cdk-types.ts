@@ -92,5 +92,12 @@ export interface SiteContentSourceDescription
     targetSiteName:string;
     prefix?:string;
     accessSiteOrigin?:boolean;
-    handleRedirects?:boolean;
+}
+
+export interface NamedFn
+{
+    name:string;
+    fn:lambda.Function;
+    domain?:string;
+    url?:lambda.FunctionUrl;
 }
