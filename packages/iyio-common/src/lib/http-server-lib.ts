@@ -77,6 +77,12 @@ export const createHttpErrorResponse=(message:string,options:HttpResponseOptions
     body:JSON.stringify(message)
 })
 
+export const createHttpStringResponse=(statusCode:number,message:string,options:HttpResponseOptions=emptyObject)=>createHttpResponse({
+    ...options,
+    statusCode,
+    body:JSON.stringify(message)
+})
+
 export const httpEventRouter=async (
     evt:HttpRequestEventVariations,
     routes:RouteMap,

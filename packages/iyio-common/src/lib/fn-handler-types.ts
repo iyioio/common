@@ -35,6 +35,11 @@ export interface FnEvent
     routePath:string;
     query:Record<string,string>;
     headers:Record<string,string>;
+    claims:Record<string,any>;
+    /**
+     * Typically a user id
+     */
+    sub?:string;
 }
 
 export interface FnError

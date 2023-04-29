@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { DisposeContainer } from "./DisposeContainer";
 import { UserAuthProviderData } from "./auth-types";
 import { IDisposable, IInit, SymStrHashMap } from "./common-types";
-import { DisposeContainer } from "./DisposeContainer";
 import { ReadonlySubject } from "./rxjs-types";
 
 export interface BaseUserOptions
@@ -46,13 +46,16 @@ export class BaseUser implements IDisposable, IInit
     public get isDisposed(){return this._isDisposed}
     protected readonly disposables:DisposeContainer=new DisposeContainer();
 
+    private _isInited=false;
+    public get isInited(){return this._isInited}
+
     public constructor({
         id,
         name,
         email,
         phoneNumber,
         providerData,
-        data,
+        data
     }:BaseUserOptions)
     {
         this.id=id;
@@ -63,9 +66,18 @@ export class BaseUser implements IDisposable, IInit
         this.data=data??{};
     }
 
-    public init():void|Promise<void>
+    public async init():Promise<void>
     {
-        // do nothing for now
+        if(this._isInited){
+            return;
+        }
+        this._isInited=true;
+        await this._init();
+    }
+
+    protected _init():void|Promise<void>
+    {
+        // do nothing
     }
 
     public dispose()

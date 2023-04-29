@@ -93,6 +93,11 @@ export interface AuthProvider extends IOpInit, IOpDisposable
     getUserAsync(data:UserAuthProviderData):Promise<BaseUser|null>;
 
     /**
+     * Returns a JWT for the given user data
+     */
+    getJwtAsync?(data:UserAuthProviderData):Promise<string|null>;
+
+    /**
      * Deletes the user
      */
     deleteAsync(user:BaseUser):Promise<AuthDeleteResult|undefined>;

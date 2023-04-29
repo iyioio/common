@@ -10,6 +10,49 @@ export enum ErrorType{
     scopeInited=9,
     httpBaseUrlPrefixNotFoundError=10,
     invalidStoreKeyError=11,
+
+    // Http 400 Errors
+    badRequest=400,
+    unauthorized=401,
+    paymentRequired=402,
+    forbidden=403,
+    notFound=404,
+    methodNotAllowed=405,
+    notAcceptable=406,
+    proxyAuthenticationRequired=407,
+    requestTimeout=408,
+    conflict=409,
+    gone=410,
+    lengthRequired=411,
+    preconditionFailed=412,
+    contentTooLarge=413,
+    uRITooLong=414,
+    unsupportedMediaType=415,
+    rangeNotSatisfiable=416,
+    expectationFailed=417,
+    misdirectedRequest=421,
+    unprocessableContent=422,
+    locked=423,
+    failedDependency=424,
+    tooEarly=425,
+    upgradeRequired=426,
+    preconditionRequired=428,
+    tooManyRequests=429,
+    requestHeaderFieldsTooLarge=431,
+    unavailableForLegalReasons=451,
+
+    // Http 500 Errors
+    internalServerError=500,
+    notImplemented=501,
+    badGateway=502,
+    serviceUnavailable=503,
+    gatewayTimeout=504,
+    hTTPVersionNotSupported=505,
+    variantAlsoNegotiates=506,
+    insufficientStorage=507,
+    loopDetected=508,
+    networkAuthenticationRequired=511
+
 }
 
 export abstract class BaseError extends Error
@@ -101,5 +144,29 @@ export class InvalidStoreKeyError extends BaseError
     public constructor(message?:string)
     {
         super(ErrorType.invalidStoreKeyError,message);
+    }
+}
+
+export class BadRequestError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.badRequest,message);
+    }
+}
+
+export class NotFoundError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.notFound,message);
+    }
+}
+
+export class UnauthorizedError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.unauthorized,message);
     }
 }

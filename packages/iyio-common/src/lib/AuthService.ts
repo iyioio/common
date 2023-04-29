@@ -1,16 +1,16 @@
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
-import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { BaseUser, BaseUserUpdate } from "./BaseUser";
-import { breakFunction, continueFunction } from "./common-lib";
-import { HashMap, IDisposable, IInit } from "./common-types";
 import { DisposeContainer } from "./DisposeContainer";
 import { RouterStore } from "./RouterStore";
+import { ScopedSetter } from "./Setter";
+import { _setUser } from "./_internal.common";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
+import { AuthProviders, currentBaseUser } from "./auth.deps";
+import { breakFunction, continueFunction } from "./common-lib";
+import { HashMap, IDisposable, IInit } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 import { ProviderTypeDef, Scope, TypeDef } from "./scope-types";
-import { ScopedSetter } from "./Setter";
 import { storeRoot } from "./store.deps";
 import { isValidEmail } from "./validation";
-import { _setUser } from "./_internal.common";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 
@@ -68,7 +68,7 @@ export class AuthService implements IDisposable, IInit
 
         if(userData){
             const provider=await this.getProviderAsync(userData.type);
-            const user=await provider?.getUserAsync(userData);
+            const user=await this.getInitUser(provider,userData);
             if(user){
                 await this.setUserAsync(user,false);
             }
@@ -94,10 +94,16 @@ export class AuthService implements IDisposable, IInit
         this.disposables.dispose();
     }
 
+    private async getInitUser(provider:AuthProvider|null|undefined,userData:UserAuthProviderData):Promise<BaseUser|null>{
+        const user=await provider?.getUserAsync(userData);
+        //await user?.init();
+        return user??null;
+    }
+
     public async getUserAsync(providerData:UserAuthProviderData):Promise<BaseUser|undefined>
     {
         return await this.authProviders.getFirstAsync(null,async provider=>{
-            return await provider.getUserAsync?.(providerData);
+            return await this.getInitUser(provider,providerData)
         }) ?? undefined;
     }
 
@@ -240,6 +246,7 @@ export class AuthService implements IDisposable, IInit
             }
         }
         this.setUser(user);
+        await user?.init();
     }
 
 
@@ -254,7 +261,7 @@ export class AuthService implements IDisposable, IInit
             return false;
         }
 
-        const updatedUser=await provider.getUserAsync(user.providerData);
+        const updatedUser=await this.getInitUser(provider,user.providerData);
         if( updatedUser &&
             this.currentUser.value &&
             updatedUser.id===this.currentUser.value.id &&
@@ -284,5 +291,16 @@ export class AuthService implements IDisposable, IInit
         })
 
         return result??false;
+    }
+
+
+    public async getJwtAsync(user:BaseUser):Promise<string|null>
+    {
+        const provider=await this.getProviderAsync(user.providerData.type);
+        if(!provider){
+            return null;
+        }
+
+        return await provider.getJwtAsync?.(user.providerData)??null;
     }
 }

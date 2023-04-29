@@ -59,6 +59,7 @@ export * from './lib/http.deps';
 export * from './lib/httpParamsModule';
 export * from './lib/json';
 export * from './lib/jwt';
+export * from './lib/jwt-lib';
 export * from './lib/jwt.deps';
 export * from './lib/macros';
 export * from './lib/math';

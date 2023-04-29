@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, currentBaseUser, FactoryTypeDef, HashMap, parseConfigBool, PasswordResetResult, promiseFromErrorResultCallback, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, currentBaseUser, parseConfigBool, promiseFromErrorResultCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
@@ -236,6 +236,12 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
             cUser.signOut(()=>resolve())
         });
     }
+
+    public async getJwtAsync(data:UserAuthProviderData):Promise<string|null>
+    {
+        return (data.providerData?.[sessionKey] as CognitoUserSession|undefined)?.getAccessToken()?.getJwtToken()??null
+    }
+
     public async signInEmailPasswordAsync(email: string, password: string, newPassword?:string): Promise<AuthSignInResult> {
 
         return new Promise<AuthSignInResult>((resolve)=>{

@@ -1,6 +1,9 @@
-import { createFnError, FnBaseHandlerOptions, FnHandler, FnHandlerOptions, isFnInvokeEvent, RawFnFlag, RawFnResult } from './fn-handler-types';
-import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse } from './http-server-lib';
+import { BaseError } from './errors';
+import { FnBaseHandlerOptions, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
+import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse, createHttpStringResponse } from './http-server-lib';
 import { HttpMethod } from './http-types';
+import { parseJwt } from './jwt';
+import { validateJwt } from './jwt-lib';
 import { queryParamsToObject } from './object';
 
 export const fnHandler=async ({
@@ -74,6 +77,22 @@ export const fnHandler=async ({
 
     const routePath=`${method}:${path}`;
 
+    let sub:string|undefined=undefined;
+    let claims:Record<string,any>={};
+
+    if(fnInvokeEvent?.jwt){
+        if(!validateJwt(fnInvokeEvent.jwt)){
+            console.error('RouteHandler received an invalid JWT or the the JWT was unable to be validated.');
+            if(isHttp){
+                return createHttpBadRequestResponse('Invalid JWT',responseDefaults);
+            }else{
+                return createFnError(400,'Invalid JWT');
+            }
+        }
+        claims=parseJwt(fnInvokeEvent.jwt);
+        sub=claims['sub'];
+    }
+
     try{
         if(method==='OPTIONS'){
             if(isHttp){
@@ -88,6 +107,8 @@ export const fnHandler=async ({
             routePath,
             query,
             headers:evt.headers??{},
+            claims,
+            sub
         },input);
 
         if(isRawFnResult(result)){
@@ -122,11 +143,21 @@ export const fnHandler=async ({
             return result;
         }
     }catch(ex){
-        console.error(`RouteHandler failed. path=${routePath}`,ex);
+        let logError=true;
+        let code=500;
+        let message='Internal server error';
+        if(ex instanceof BaseError){
+            logError=ex.cErrT<400 || ex.cErrT>499;
+            code=ex.cErrT;
+            message=ex.message;
+        }
+        if(logError){
+            console.error(`RouteHandler failed. path=${routePath}`,ex);
+        }
         if(isHttp){
-            return createHttpErrorResponse('Internal server error',responseDefaults);
+            return createHttpStringResponse(code,message,responseDefaults);
         }else{
-            return createFnError(500,'Internal server error');
+            return createFnError(code,message);
         }
     }
 }
