@@ -127,7 +127,8 @@ export class MemoryAuthProvider implements AuthProvider
                 type:this.type,
                 userId:id,
             },
-            data:userData
+            data:userData,
+            provider:this,
         }
 
         const baseUser=this.options.userFactory.generate(options);

@@ -1,6 +1,6 @@
 import { LambdaClient as AwsLambdaClient, InvokeCommand, LambdaClientConfig } from "@aws-sdk/client-lambda";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { FnInvokeEvent, Scope, authService, currentBaseUser, getZodErrorMessage } from "@iyio/common";
+import { FnInvokeEvent, Scope, currentBaseUser, getZodErrorMessage } from "@iyio/common";
 import { LambdaInvokeOptions } from "./lambda-types";
 
 
@@ -75,7 +75,7 @@ export class LambdaClient
         const eventInput:FnInvokeEvent={
             ______isFnInvokeEvent:true,
             input,
-            jwt:user?(await authService(scope).getJwtAsync(user))??undefined:undefined
+            jwt:user?(await user.getJwtAsync())??undefined:undefined
         }
 
         const cmd=new InvokeCommand({

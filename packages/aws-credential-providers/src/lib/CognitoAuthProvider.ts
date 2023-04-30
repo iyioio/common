@@ -1,7 +1,7 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, currentBaseUser, parseConfigBool, promiseFromErrorResultCallback } from '@iyio/common';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, currentBaseUser, parseConfigBool, parseJwt, promiseFromErrorResultCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
@@ -181,7 +181,8 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
                         [sessionKey]:session,
                         [userKey]:user
                     }
-                }
+                },
+                provider:this
             }
 
             const baseUser=this.config.userFactory.generate(options);
@@ -239,7 +240,15 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
 
     public async getJwtAsync(data:UserAuthProviderData):Promise<string|null>
     {
-        return (data.providerData?.[sessionKey] as CognitoUserSession|undefined)?.getAccessToken()?.getJwtToken()??null
+        return (data.providerData?.[sessionKey] as CognitoUserSession|undefined)?.getIdToken()?.getJwtToken()??null
+    }
+
+    public async getClaimsAsync(data:UserAuthProviderData):Promise<Record<string,any>|null>{
+        const jwt=await this.getJwtAsync(data);
+        if(!jwt){
+            return null;
+        }
+        return parseJwt(jwt);
     }
 
     public async signInEmailPasswordAsync(email: string, password: string, newPassword?:string): Promise<AuthSignInResult> {

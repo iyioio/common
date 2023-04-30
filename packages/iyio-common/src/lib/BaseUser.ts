@@ -1,7 +1,8 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { DisposeContainer } from "./DisposeContainer";
-import { UserAuthProviderData } from "./auth-types";
+import { AuthProvider, PasswordResetResult, UserAuthProviderData } from "./auth-types";
 import { IDisposable, IInit, SymStrHashMap } from "./common-types";
+import { deepCompare } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
 
 export interface BaseUserOptions
@@ -12,6 +13,7 @@ export interface BaseUserOptions
     phoneNumber?:string;
     providerData:UserAuthProviderData;
     data?:SymStrHashMap;
+    provider:AuthProvider;
 }
 
 export interface BaseUserUpdate
@@ -39,6 +41,10 @@ export class BaseUser implements IDisposable, IInit
     public get phoneNumberSubject():ReadonlySubject<string|null>{return this._phoneNumber}
     public get phoneNumber(){return this._phoneNumber.value}
 
+    private readonly _claims:BehaviorSubject<Record<string,any>>=new BehaviorSubject<Record<string,any>>({});
+    public get claimsSubject():ReadonlySubject<Record<string,any>>{return this._claims}
+    public get claims(){return this._claims.value}
+
     public readonly data:SymStrHashMap;
     public readonly providerData:UserAuthProviderData;
 
@@ -46,8 +52,11 @@ export class BaseUser implements IDisposable, IInit
     public get isDisposed(){return this._isDisposed}
     protected readonly disposables:DisposeContainer=new DisposeContainer();
 
-    private _isInited=false;
-    public get isInited(){return this._isInited}
+    private readonly _isInited:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
+    public get isInitedSubject():ReadonlySubject<boolean>{return this._isInited}
+    public get isInited(){return this._isInited.value}
+
+    public readonly provider:AuthProvider;
 
     public constructor({
         id,
@@ -55,9 +64,11 @@ export class BaseUser implements IDisposable, IInit
         email,
         phoneNumber,
         providerData,
-        data
+        data,
+        provider
     }:BaseUserOptions)
     {
+        this.provider=provider;
         this.id=id;
         this._name=new BehaviorSubject<string>(name);
         this._email=new BehaviorSubject<string|null>(email||null);
@@ -68,10 +79,11 @@ export class BaseUser implements IDisposable, IInit
 
     public async init():Promise<void>
     {
-        if(this._isInited){
+        if(this._isInited.value){
             return;
         }
-        this._isInited=true;
+        this.updateClaims();
+        this._isInited.next(true);
         await this._init();
     }
 
@@ -87,5 +99,46 @@ export class BaseUser implements IDisposable, IInit
         }
         this._isDisposed=true;
         this.disposables.dispose();
+    }
+
+    public async updateAsync(update:BaseUserUpdate):Promise<boolean>
+    {
+        let updated=await this.provider.updateAsync?.(this,update)??false;
+
+        if(update.name && update.name!==this._name.value){
+            updated=true;
+            this._name.next(update.name);
+        }
+
+        return updated;
+    }
+
+    public async updateClaims()
+    {
+        const claims=await this.provider.getClaimsAsync?.(this.providerData)??{};
+        if(!deepCompare(claims,this._claims.value)){
+            this._claims.next(claims);
+        }
+    }
+
+    public async getJwtAsync():Promise<string|null>
+    {
+        return await this.provider.getJwtAsync?.(this.providerData)??null
+    }
+
+    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
+    {
+        const result=await this.provider.resetPasswordAsync?.(identity);
+
+        return result??{
+            codeSent:false
+        };
+    }
+
+    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
+    {
+        const result=await this.provider.setNewPasswordAsync?.(identity,code,newPassword);
+
+        return result??false;
     }
 }

@@ -76,6 +76,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                     excludeParams.push(info.urlParam);
                 }
                 params.addVarContainer({
+                    name:info.name,
                     varContainer:nodeFn.func,
                     excludeParams,
                     requiredParams:[],

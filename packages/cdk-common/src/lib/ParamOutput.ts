@@ -43,6 +43,18 @@ export class ParamOutput
         }
     }
 
+    public excludeParamFrom(targetName:string,...params:(string|ParamTypeDef<string>)[]){
+        const target=this.targets.find(t=>t.name===targetName);
+        if(target){
+            if(!target.excludeParams){
+                target.excludeParams=[];
+            }
+            for(const param of params){
+                target.excludeParams.push(param);
+            }
+        }
+    }
+
     public setParam(param:ParamTypeDef<string>,value:string,type:ParamType='default'){
         if(this.log){
             console.log(`ParamOutput - ${param.typeName} = ${value}`);

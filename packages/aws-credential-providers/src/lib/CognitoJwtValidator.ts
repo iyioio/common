@@ -42,7 +42,7 @@ export class CognitoJwtValidator implements JwtValidator
             this.verifier=CognitoJwtVerifier.create({
                 userPoolId:this.config.userPoolId,
                 clientId:this.config.clientId,
-                tokenUse:"access"
+                tokenUse:"id",
             })
         }
         try{

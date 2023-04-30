@@ -2,14 +2,20 @@ import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPo
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
-import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
 import { ManagedProps } from './ManagedProps';
+import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
+
+export type TriggerMap={
+    [prop in keyof cognito.UserPoolTriggers]:string|lambda.IFunction;
+};
 
 export interface UserPoolBuilderProps{
     managed?:ManagedProps;
     authorizedAccessRequests?:AccessRequestDescription[];
     unauthorizedAccessRequests?:AccessRequestDescription[];
+    triggers?:TriggerMap;
 }
 
 export class UserPoolBuilder extends Construct implements IAccessRequestGroup
@@ -28,12 +34,35 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         managed:{
             params,
             accessManager,
+            fns,
         }={},
+        triggers,
         authorizedAccessRequests,
         unauthorizedAccessRequests,
     }:UserPoolBuilderProps){
 
         super(scope_,id);
+
+        const lambdaTriggers:cognito.UserPoolTriggers={};
+
+        if(triggers){
+            for(const e in triggers){
+                const t=triggers[e];
+                if(typeof t === 'string'){
+                    const fn=fns?.find(f=>f.name===t);
+                    if(!fn){
+                        throw new Error(
+                            `Unable to find lambda trigger for UserPoolBuilder. id:${id}, lambdaName:${t}`);
+                    }
+                    lambdaTriggers[e]=fn.fn;
+                    params?.excludeParamFrom(fn.name,
+                        cognitoIdentityPoolIdParam,cognitoUserPoolClientIdParam,cognitoUserPoolIdParam
+                    );
+                }else if(t){
+                    lambdaTriggers[e]=t;
+                }
+            }
+        }
 
 
         // User Pool
@@ -56,6 +85,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             },
             accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
+            lambdaTriggers
         });
 
         const standardCognitoAttributes:cognito.StandardAttributesMask = {

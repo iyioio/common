@@ -89,7 +89,7 @@ export const fnHandler=async ({
                 return createFnError(400,'Invalid JWT');
             }
         }
-        claims=parseJwt(fnInvokeEvent.jwt);
+        claims=parseJwt(fnInvokeEvent.jwt)??{};
         sub=claims['sub'];
     }
 

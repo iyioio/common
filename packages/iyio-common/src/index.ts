@@ -74,6 +74,7 @@ export * from './lib/query-ctrl-lib';
 export * from './lib/query-lib';
 export * from './lib/query-static-operators';
 export * from './lib/query-types';
+export * from './lib/roles-helper';
 export * from './lib/rxjs-helpers';
 export * from './lib/rxjs-types';
 export * from './lib/scope-lib';

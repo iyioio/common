@@ -1,9 +1,9 @@
-import { BaseUser, BaseUserUpdate } from "./BaseUser";
+import { BaseUser } from "./BaseUser";
 import { DisposeContainer } from "./DisposeContainer";
 import { RouterStore } from "./RouterStore";
 import { ScopedSetter } from "./Setter";
 import { _setUser } from "./_internal.common";
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { breakFunction, continueFunction } from "./common-lib";
 import { HashMap, IDisposable, IInit } from "./common-types";
@@ -68,7 +68,7 @@ export class AuthService implements IDisposable, IInit
 
         if(userData){
             const provider=await this.getProviderAsync(userData.type);
-            const user=await this.getInitUser(provider,userData);
+            const user=await provider?.getUserAsync(userData);
             if(user){
                 await this.setUserAsync(user,false);
             }
@@ -94,16 +94,10 @@ export class AuthService implements IDisposable, IInit
         this.disposables.dispose();
     }
 
-    private async getInitUser(provider:AuthProvider|null|undefined,userData:UserAuthProviderData):Promise<BaseUser|null>{
-        const user=await provider?.getUserAsync(userData);
-        //await user?.init();
-        return user??null;
-    }
-
     public async getUserAsync(providerData:UserAuthProviderData):Promise<BaseUser|undefined>
     {
         return await this.authProviders.getFirstAsync(null,async provider=>{
-            return await this.getInitUser(provider,providerData)
+            return await provider.getUserAsync(providerData)
         }) ?? undefined;
     }
 
@@ -186,9 +180,7 @@ export class AuthService implements IDisposable, IInit
         if(!user){
             return;
         }
-
-        const provider=await this.getProviderAsync(user.providerData.type);
-        await provider?.signOutAsync(user);
+        await user.provider.signOutAsync(user);
         await this.setUserAsync(null,true);
     }
 
@@ -247,60 +239,5 @@ export class AuthService implements IDisposable, IInit
         }
         this.setUser(user);
         await user?.init();
-    }
-
-
-    public async updateAsync(user:BaseUser,update:BaseUserUpdate):Promise<boolean>
-    {
-        const provider=await this.getProviderAsync(user.providerData.type);
-        if(!provider?.updateAsync){
-            return false;
-        }
-        const updated=await provider.updateAsync(user,update);
-        if(!updated){
-            return false;
-        }
-
-        const updatedUser=await this.getInitUser(provider,user.providerData);
-        if( updatedUser &&
-            this.currentUser.value &&
-            updatedUser.id===this.currentUser.value.id &&
-            updatedUser!==this.currentUser.value)
-        {
-            await this.setUserAsync(updatedUser,true);
-        }
-
-        return updatedUser?true:false;
-    }
-
-    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
-    {
-        const result=await this.authProviders.getFirstAsync(null,async provider=>{
-            return await provider.resetPasswordAsync?.(identity);
-        })
-
-        return result??{
-            codeSent:false
-        };
-    }
-
-    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
-    {
-        const result=await this.authProviders.getFirstAsync(null,async provider=>{
-            return await provider.setNewPasswordAsync?.(identity,code,newPassword);
-        })
-
-        return result??false;
-    }
-
-
-    public async getJwtAsync(user:BaseUser):Promise<string|null>
-    {
-        const provider=await this.getProviderAsync(user.providerData.type);
-        if(!provider){
-            return null;
-        }
-
-        return await provider.getJwtAsync?.(user.providerData)??null;
     }
 }

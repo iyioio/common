@@ -14,6 +14,8 @@ export type ParamType='default'|'fn';
 
 export interface EnvVarTarget
 {
+    name:string;
+
     /**
      * Names of params to exclude from the target. This is needed to preview circular resource
      * dependencies.
