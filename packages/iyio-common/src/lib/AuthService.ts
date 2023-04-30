@@ -3,7 +3,7 @@ import { DisposeContainer } from "./DisposeContainer";
 import { RouterStore } from "./RouterStore";
 import { ScopedSetter } from "./Setter";
 import { _setUser } from "./_internal.common";
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, UserAuthProviderData } from "./auth-types";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
 import { breakFunction, continueFunction } from "./common-lib";
 import { HashMap, IDisposable, IInit } from "./common-types";
@@ -239,5 +239,25 @@ export class AuthService implements IDisposable, IInit
         }
         this.setUser(user);
         await user?.init();
+    }
+
+    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
+    {
+        const result=await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.resetPasswordAsync?.(identity);
+        })
+
+        return result??{
+            codeSent:false
+        };
+    }
+
+    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
+    {
+        const result=await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.setNewPasswordAsync?.(identity,code,newPassword);
+        })
+
+        return result??false;
     }
 }

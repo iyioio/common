@@ -1,6 +1,6 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { DisposeContainer } from "./DisposeContainer";
-import { AuthProvider, PasswordResetResult, UserAuthProviderData } from "./auth-types";
+import { AuthProvider, UserAuthProviderData } from "./auth-types";
 import { IDisposable, IInit, SymStrHashMap } from "./common-types";
 import { deepCompare } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
@@ -124,21 +124,5 @@ export class BaseUser implements IDisposable, IInit
     public async getJwtAsync():Promise<string|null>
     {
         return await this.provider.getJwtAsync?.(this.providerData)??null
-    }
-
-    public async resetPasswordAsync(identity:string):Promise<PasswordResetResult>
-    {
-        const result=await this.provider.resetPasswordAsync?.(identity);
-
-        return result??{
-            codeSent:false
-        };
-    }
-
-    public async setNewPasswordAsync(identity:string,code:string,newPassword:string):Promise<boolean>
-    {
-        const result=await this.provider.setNewPasswordAsync?.(identity,code,newPassword);
-
-        return result??false;
     }
 }
