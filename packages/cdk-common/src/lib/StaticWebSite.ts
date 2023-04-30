@@ -68,7 +68,9 @@ export class StaticWebSite extends Construct {
                 `../../dist/packages/${packageDir}/exported`;
 
             if(useCache){
+                console.info(`\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
                 console.info(`Using cached output for static website. name:${name}, outputPath:${dir}`);
+                console.info(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
             }
         }else{
             throw new Error('StaticWebSite requires path or nxExportedPackage')
