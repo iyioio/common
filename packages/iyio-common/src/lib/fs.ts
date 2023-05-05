@@ -5,7 +5,7 @@ export const joinPaths=(... paths:string[]):string=>
     if(!paths){
         return '';
     }
-    let path=paths[0];
+    let path=paths[0] as string;
     if(path.endsWith('/')){
         path=path.substring(0,path.length-1);
     }
@@ -115,7 +115,7 @@ export const decodePathParts=<TPath extends string|null|undefined>(path:TPath):T
 
     let p:string=path;
 
-    const [filePath,query]=p.split('?',2);
+    const [filePath,query]=p.split('?',2) as [string,string];
     p=filePath.split('/').map(p=>decodeURIComponent(p)).join('/');
     if(query){
         p+='?'+query;

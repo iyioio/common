@@ -2,7 +2,7 @@ import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { HttpBaseUrlPrefixNotFoundError } from "./errors";
 import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
-import { apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, HttpFetchers, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, HttpRequestSigners, httpRetryDelayMsParam } from "./http.deps";
+import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps";
 import { JwtProvider } from "./jwt";
 import { JwtProviders } from "./jwt.deps";
 import { deleteUndefined } from "./object";
@@ -90,7 +90,7 @@ export class HttpClient
         for(const basePrefix in this.options.baseUrlMap){
 
             if(prefix===basePrefix){
-                let base=this.options.baseUrlMap[basePrefix];
+                let base=this.options.baseUrlMap[basePrefix] as string;
                 if(i===-1){
                     return base;
                 }

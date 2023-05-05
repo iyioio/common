@@ -55,7 +55,7 @@ export const addSpacesToCamelCase=(value:string):string=>{
     let i=0;
     let wasUpper=true;
     while(i<value.length){
-        const ch=value[i];
+        const ch=value[i] as string;
         const upper=ch.toUpperCase()===ch;
         if(!wasUpper && upper){
             value=value.substr(0,i)+' '+value.substr(i);

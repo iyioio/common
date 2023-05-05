@@ -8,7 +8,7 @@ export const stringToHashMap=(str:string):HashMap<string>=>{
     const lines=str.split(/,;\n/);
     for(const line of lines){
         const parts=line.split(/:=/,2);
-        const key=parts[0].trim();
+        const key=parts[0]?.trim()??'';
         if(key.startsWith('#')){
             continue;
         }

@@ -2,8 +2,8 @@ import { Sha256 } from '@aws-crypto/sha256-browser';
 import { HttpRequest } from '@aws-sdk/protocol-http';
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { BaseHttpRequest, HttpRequestSigner, Scope, TypeDef } from '@iyio/common';
-import { AwsAuthProvider } from './aws-auth';
 import { AwsAuthProviders, awsHttpSignerServiceParam, awsRegionParam } from './_types.aws';
+import { AwsAuthProvider } from './aws-auth';
 
 
 
@@ -72,7 +72,7 @@ export class AwsHttpRequestSigner implements HttpRequestSigner
             throw new Error('url contains no host');
         }
 
-        request.headers['host']=parts[1];
+        request.headers['host']=parts[1] as string;
 
         const signed=await this.signingPair.signer.sign(new HttpRequest({
             ...request,
@@ -81,7 +81,7 @@ export class AwsHttpRequestSigner implements HttpRequestSigner
         if(signed.headers){
             request.headers={}
             for(const e in signed.headers){
-                request.headers[e]=signed.headers[e];
+                request.headers[e]=signed.headers[e] as string;
             }
         }
     }

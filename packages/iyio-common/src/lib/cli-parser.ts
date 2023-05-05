@@ -61,13 +61,13 @@ export const parseCliArgs=({
 
     for(let i=startIndex;i<args.length;i++){
 
-        const arg=args[i];
+        const arg=args[i] as string;
         if(arg===stopArg){
             break;
         }else if(arg===restSeparator){
             const rest:string[]=[];
             for(let r=i+1;r<args.length;r++){
-                rest.push(args[r])
+                rest.push(args[r] as string)
             }
             obj[restKey]=rest;
             break;
@@ -102,7 +102,7 @@ export const parseCliArgs=({
 
 
     for(const e in obj){
-        const ary=obj[e];
+        const ary=obj[e] as string[];
         if(ary.length===0){
             ary.push('true');
         }
@@ -138,7 +138,7 @@ export const parseCliArgsT=<T>({
         }
 
         for(const e in map){
-            props.argMapping[e]=map[e];
+            props.argMapping[e]=map[e] as string;
         }
     }
 

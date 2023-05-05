@@ -24,7 +24,7 @@ export const isStoreScopeMatch=(key:string,scope:StoreScope,op?:StoreOp):string|
             return false;
         }
         if(scope.keyRegIndex!==undefined){
-            key=match[scope.keyRegIndex];
+            key=match[scope.keyRegIndex] as string;
         }
     }
 

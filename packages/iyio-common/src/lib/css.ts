@@ -46,11 +46,11 @@ export const css=(strings:TemplateStringsArray,...values:any[])=>{
         return strings[0];
     }
 
-    const strAry:string[]=[strings[0]];
+    const strAry:string[]=[strings[0] as string];
 
     for(let i=1;i<strings.length;i++){
         strAry.push(values[i-1]);
-        strAry.push(strings[i]);
+        strAry.push(strings[i] as string);
     }
 
     return strAry.join('');

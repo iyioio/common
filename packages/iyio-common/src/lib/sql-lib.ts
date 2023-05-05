@@ -30,10 +30,10 @@ export const sqlName=(name:string):EscapedSqlValue=>{
 export const sql=(strings:TemplateStringsArray,...values:any[])=>{
 
     if(strings.length===1){
-        return strings[0].trim();
+        return (strings[0] as string).trim();
     }
 
-    const strAry:string[]=[strings[0]];
+    const strAry:string[]=[(strings[0] as string)];
 
     for(let i=1;i<strings.length;i++){
 
@@ -45,7 +45,7 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
         }
 
 
-        strAry.push(strings[i]);
+        strAry.push(strings[i] as string);
     }
 
     return strAry.join('').trim();

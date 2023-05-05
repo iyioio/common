@@ -124,7 +124,7 @@ export const getValueByPath=(value:any,path:string,defaultValue:any=undefined,ro
 
     const parts=path.split('.');
     for(let i=0;i<parts.length;i++){
-        const p=parts[i].trim();
+        const p=(parts[i] as string).trim();
         if(!p){
             continue;
         }
@@ -213,7 +213,7 @@ export const mapObj=<T,R>(obj:{[key:string]:T},select:(key:string,value:T)=>R):R
         return ary;
 
     for(const e in obj){
-        ary.push(select(e,obj[e]));
+        ary.push(select(e,obj[e] as T));
     }
 
     return ary;
@@ -352,7 +352,7 @@ export const queryParamsToObject=(query:string):HashMap<string>=>
 
     const parts=query.split('&');
     for(const p of parts){
-        const [name,value]=p.split('=',2);
+        const [name,value]=p.split('=',2) as [string,string];
         const n=decodeURIComponent(name).trim();
         if(!n){
             continue;

@@ -18,7 +18,7 @@ export const aryRemoveFirst=<T>(ary:T[],condition:(item:T)=>boolean):boolean=>
         return false;
     }
     for(let i=0;i<ary.length;i++){
-        if(condition(ary[i])){
+        if(condition(ary[i] as T)){
             ary.splice(i,1);
             return true;
         }
@@ -91,7 +91,7 @@ export const aryCount=<T>(ary:T[]|null|undefined,check:((item:T)=>boolean|null|u
 
     let count=0;
     for(let i=0;i<ary.length;i++){
-        if(check(ary[i])){
+        if(check(ary[i] as T)){
             count++
         }
     }
@@ -143,10 +143,10 @@ export const aryRandomize=<T>(ary:T[]):T[]=>
     if(!ary || !ary.length){
         return newAry;
     }
-    newAry.push(ary[0]);
+    newAry.push(ary[0] as T);
     for(let i=1;i<ary.length;i++){
         const index=Math.round(Math.random()*i);
-        newAry.splice(index,0,ary[i]);
+        newAry.splice(index,0,ary[i] as T);
     }
     return newAry;
 }

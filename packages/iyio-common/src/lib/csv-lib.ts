@@ -7,7 +7,7 @@ export const parseCsv=(content:string):Csv=>{
 
     const header=splitCsvLine(lines[0]??'').map(h=>h.trim())??[];
     for(let i=1;i<lines.length;i++){
-        const line=splitCsvLine(lines[i]);
+        const line=splitCsvLine(lines[i] as string);
         if(!line[0]){
             continue;
         }
@@ -15,7 +15,7 @@ export const parseCsv=(content:string):Csv=>{
         rows.push(row);
         for(let c=0;c<line.length;c++){
             const col=header[c]??'_'+i;
-            row[col]=line[c];
+            row[col]=line[c] as string;
         }
         for(const h of header){
             if(!row[h]){

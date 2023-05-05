@@ -9,6 +9,7 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "preserveSymlinks": true,
+        "noUncheckedIndexedAccess": true
     },
     "files": [],
     "include": [],

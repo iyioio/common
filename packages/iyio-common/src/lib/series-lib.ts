@@ -24,8 +24,8 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
         seriesColNames.push(names);
 
         for(let rangeIndex=0;rangeIndex<ranges.length;rangeIndex++){
-            const range=ranges[rangeIndex];
-            const sub:Query=deepClone(seriesQueries[queryIndex]);
+            const range=ranges[rangeIndex] as SeriesRange<any>;
+            const sub:Query=deepClone(seriesQueries[queryIndex] as Query);
 
             const condition:QueryGroupCondition={
                 op:'and',
@@ -69,7 +69,7 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
             const series:number[][]=[];
 
             for(let rowI=0;rowI<seriesColNames.length;rowI++){
-                const nameRow=seriesColNames[rowI];
+                const nameRow=seriesColNames[rowI] as string[];
                 const s:number[]=[];
                 series.push(s);
                 const data=rows[0];
@@ -77,7 +77,7 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                     break;
                 }
                 for(let colI=0;colI<nameRow.length;colI++){
-                    s.push(Number(data[nameRow[colI]]));
+                    s.push(Number(data[nameRow[colI] as string]));
                 }
 
             }

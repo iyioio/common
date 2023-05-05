@@ -45,7 +45,7 @@ export class Lock
             throw new Error('Lock out of sync. release has be called too many times.')
         }
         if(this._count<this._maxConcurrent && this._queue.length){
-            const next=this._queue[0];
+            const next=this._queue[0] as (()=>void);
             this._queue.shift();
             next();
         }

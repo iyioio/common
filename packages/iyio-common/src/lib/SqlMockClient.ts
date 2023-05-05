@@ -34,7 +34,7 @@ export class SqlMockClient implements ISqlClient
     {
         if(mockTableData){
             for(const e in mockTableData){
-                this.mockTables[e]=mockTableData[e];
+                this.mockTables[e]=mockTableData[e] as MockTable;
             }
         }
     }
@@ -100,7 +100,7 @@ export class SqlMockClient implements ISqlClient
     {
         let tbl=this.mockTables[table];
         if(!tbl){
-            const d=this.mockTables['_default'];
+            const d=this.mockTables['_default'] as MockTable;
             tbl={
                 ...d,
                 items:[]
@@ -151,7 +151,7 @@ export class SqlMockClient implements ISqlClient
             return [];
         }
 
-        const table=trimValue(match[2]);
+        const table=trimValue(match[2] as string);
 
         if(!table){
             return [];
@@ -163,7 +163,7 @@ export class SqlMockClient implements ISqlClient
 
         let items=tbl.items;
 
-        query=match[3];
+        query=match[3] as string;
 
         while(true){
 
@@ -171,10 +171,10 @@ export class SqlMockClient implements ISqlClient
 
             match=/^where\s+(.*?)\s*(!=|<=|>=|=|<|>)\s*(.*)(limit|where)(.*)/i.exec(query);
             if(match){
-                const whereLeft=match[1];
-                const whereOp=match[2];
-                const whereRight=match[3];
-                query=match[4]+match[5];
+                const whereLeft=match[1] as string;
+                const whereOp=match[2] as string;
+                const whereRight=match[3] as string;
+                query=(match[4] as string)+(match[5] as string);
                 const newItems=[];
                 for(let i=0;i<items.length;i++){
                     const item=items[i];
@@ -189,7 +189,7 @@ export class SqlMockClient implements ISqlClient
             match=/^limit\s+(\d+)(.*)/i.exec(query);
             if(match){
                 const limit=match[1];
-                query=match[2];
+                query=match[2] as string;
                 const l=Number(limit);
                 const newItems=[];
                 for(let i=0;i<l && i<items.length;i++){
@@ -217,7 +217,7 @@ export class SqlMockClient implements ISqlClient
             return [];
         }
 
-        const prop=trimValue(col[1]);
+        const prop=trimValue(col[1] as string);
 
         return items.map(i=>i[prop]);
 
@@ -238,7 +238,7 @@ export class SqlMockClient implements ISqlClient
         await this.delayAsync();
 
         const tbl=this.mockTables[table];
-        if(!table){
+        if(!tbl){
             return null;
         }
 

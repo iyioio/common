@@ -54,9 +54,9 @@ export const base64EncodeAry=(input:number[],keyStr:string=defaultBase64Chars):s
 
     while (i < input.length) {
 
-        chr1 = input[i++];
-        chr2 = input[i++];
-        chr3 = input[i++];
+        chr1 = input[i++] as number;
+        chr2 = input[i++] as number;
+        chr3 = input[i++] as number;
 
         enc1 = chr1 >> 2;
         enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);

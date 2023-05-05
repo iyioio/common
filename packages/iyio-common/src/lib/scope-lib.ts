@@ -1,4 +1,5 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 import { asArray } from "./array";
 import { CancelToken } from "./CancelToken";
 import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
@@ -7,7 +8,6 @@ import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
 import { createPromiseSource } from "./PromiseSource";
 import { CallableTypeDef, ClientTypeDef, FactoryTypeDef, FluentProviderType, FluentTypeProvider, GeneratorTypeDef, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
 import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
-import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 
 const ScopeDefineType=Symbol('ScopeDefineType');
 const ScopeDefineCallableType=Symbol('ScopeDefineCallableType');
@@ -445,7 +445,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         isCallable,
     }:DefineTypeOptions<T>):TypeDef<T>=>{
         if(types[id]){
-            return types[id];
+            return types[id] as TypeDef<T>;
         }
         const typeDef:TypeDef<T>={
             clone:(scope:Scope):TypeDef<T>=>{
@@ -707,7 +707,7 @@ export const createScope=(rootModule?:ScopeModule, cancel:CancelToken=new Cancel
         initPromiseSource=createPromiseSource<void>();
         const typeIds=Object.getOwnPropertySymbols(currentTypes);
         for(const id of typeIds){
-            currentTypes[id].clone(scope);
+            currentTypes[id]?.clone(scope);
         }
         initCalled=false;
         if(!isRoot){
