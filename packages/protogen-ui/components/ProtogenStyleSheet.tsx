@@ -1,7 +1,7 @@
 import { dt } from "../lib/lib-design-tokens";
 
 
-export default function ProtogenStyleSheet()
+export function ProtogenStyleSheet()
 {
     return (
         <style global jsx>{`

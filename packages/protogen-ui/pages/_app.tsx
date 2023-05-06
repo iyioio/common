@@ -1,7 +1,8 @@
 import { NextJsApp } from '@iyio/nextjs-common';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import ProtogenStyleSheet from '../components/ProtogenStyleSheet';
+import { ProtogenStyleSheet } from '../components/ProtogenStyleSheet';
+import { protoFrontendModule } from '../lib/protoFrontendModule';
 
 
 export default function App(props:AppProps){
@@ -9,6 +10,7 @@ export default function App(props:AppProps){
         <NextJsApp
             appProps={props}
             GlobalStyle={ProtogenStyleSheet}
+            scopeInit={protoFrontendModule}
             layoutProps={{
                 pageTransitions:true,
             }}

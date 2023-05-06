@@ -1,11 +1,11 @@
 import { cn } from "@iyio/common";
 import { useSubject } from "@iyio/react-common";
 import { Fragment, useEffect, useState } from "react";
-import { dt } from "../lib/lib-design-tokens";
 import { NodeCtrl } from "../lib/NodeCtrl";
+import { dt } from "../lib/lib-design-tokens";
 import { anchorInset } from "../lib/protogen-ui-lib";
-import { useProtogenCtrl } from "./lib-builder-components";
 import { NodeCode } from "./NodeCode";
+import { useProtogenCtrl } from "./lib-builder-components";
 
 
 interface NodeViewProps
@@ -20,13 +20,14 @@ export default function NodeView({
     const ctrl=useProtogenCtrl();
     const anchors=useSubject(node.layoutNodesSubject);
     const activeAnchor=useSubject(ctrl.activeAnchorSubject);
+    const completing=useSubject(node.completingSubject);
     const [view,setView]=useState<HTMLElement|null>(null);
     useEffect(()=>{
         node.viewElem.next(view);
     },[node,view])
 
     return (
-        <div className="NodeView proto-node-pos node-container" ref={setView}>
+        <div className={cn("NodeView proto-node-pos node-container",{completing})} ref={setView}>
 
             <div className="NodeView-drag"><div/></div>
 
@@ -73,6 +74,10 @@ export default function NodeView({
                     display:flex;
                     flex-direction:column;
                     border-radius:${dt().borderRadius};
+                    transition:opacity 0.3s ease-in-out;
+                }
+                .NodeView.completing{
+                    opacity:0.5;
                 }
                 .NodeView-drag{
                     height:${dt().codeLineHeight}px;
