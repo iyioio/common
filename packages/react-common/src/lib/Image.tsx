@@ -12,6 +12,7 @@ export interface ImageProps extends BaseLayoutProps
     height?:string|number;
     width?:string|number;
     tile?:boolean;
+    elemRef?:(elem:HTMLElement|null)=>void;
 }
 
 export function Image({
@@ -19,6 +20,7 @@ export function Image({
     src,
     contain,
     style={},
+    elemRef,
     children,
     height,
     width,
@@ -29,6 +31,7 @@ export function Image({
     return (
         <div
             title={alt}
+            ref={elemRef}
             role="img"
             aria-label={alt}
             className={cn("Image",{contain,tile},baseLayoutCn(props))}

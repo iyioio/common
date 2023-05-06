@@ -3,6 +3,12 @@ import { HttpMethod } from "./http-types";
 
 export const RawFnFlag=Symbol('RawFnFlag');
 
+/**
+ * Used to transform fn events. A common use for a ClaimsTransformer is to
+ * add claims that can't fit inside a JWT.
+ */
+export type FnEventTransformer=(evt:FnEvent)=>Promise<void>;
+
 export interface RawFnResult
 {
     result:any;

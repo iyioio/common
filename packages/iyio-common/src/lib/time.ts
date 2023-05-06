@@ -6,6 +6,12 @@ export const weekMs=dayMs*7;
 export const avgMonthMs=dayMs*30;
 export const yearMs=dayMs*365;
 
+/**
+ * The last date timestamp that should be used for sorting. endDateSort equals 1,000,000,000,000,000
+ * which allows for dates up to +033658-09-27T01:46:40.000Z to be used for sorting.
+ */
+export const endDateSort=1000000000000000;
+
 
 export const getTimeAny=(date:any,utc?:boolean):number=>
 {

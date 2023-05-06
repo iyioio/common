@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
 import { LockScreenRenderer } from "./LockScreenRenderer";
 import { PortalRenderer } from "./PortalRenderer";
+import { useUiReady } from "./useUiReady";
 
 export interface BaseAppContainerProps
 {
@@ -34,6 +35,7 @@ export function BaseAppContainer({
 
     const stateRef=useRef({scopeInit,staticEnvVars});
     const [inited,setInited]=useState(false);
+    useUiReady();
 
     useEffect(()=>{
 

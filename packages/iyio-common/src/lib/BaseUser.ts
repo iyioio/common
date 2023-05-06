@@ -98,7 +98,13 @@ export class BaseUser implements IDisposable, IInit
             return;
         }
         this._isDisposed=true;
+        this._dispose();
         this.disposables.dispose();
+    }
+
+    protected _dispose()
+    {
+        // do nothing
     }
 
     public async updateAsync(update:BaseUserUpdate):Promise<boolean>

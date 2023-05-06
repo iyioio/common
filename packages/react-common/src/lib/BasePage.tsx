@@ -1,5 +1,5 @@
-import { BaseLayoutProps, bcn, cn, css, isServerSide } from "@iyio/common";
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { BaseLayoutProps, bcn, cn, css, isServerSide, uiReadyDelayedSubject, uiReadySubject } from "@iyio/common";
+import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import Style from "styled-jsx/style";
 import { PageContext, PageCtx, commonPagePropsSubject, pageScrollPositionSubject } from "./page-lib";
 
@@ -14,6 +14,8 @@ export interface BasePageProps<T=any> extends BaseLayoutProps
     fullWidthColumn?:boolean;
     disableScroll?:boolean;
     style?:CSSProperties;
+    ready?:boolean;
+    readyDelay?:number;
 }
 
 export function BasePage({
@@ -26,6 +28,8 @@ export function BasePage({
     fullWidthColumn,
     disableScroll,
     style,
+    ready=true,
+    readyDelay=500,
     ...props
 }:BasePageProps){
 
@@ -62,6 +66,33 @@ export function BasePage({
     useEffect(()=>{
         commonPagePropsSubject.next(common);
     },[common])
+
+    const readDelayRef=useRef(readyDelay);
+    useEffect(()=>{
+        if(!ready){
+            return
+        }
+        let m=true;
+
+        setTimeout(()=>{
+            if(!m){
+                return;
+            }
+            if(!uiReadySubject.value){
+                uiReadySubject.next(true);
+            }
+            setTimeout(()=>{
+                if(!m){
+                    return;
+                }
+                if(!uiReadyDelayedSubject.value){
+                    uiReadyDelayedSubject.next(true);
+                }
+            },3000);
+        },Math.max(1,readDelayRef.current));
+
+        return ()=>{m=false}
+    },[ready])
 
     const customScrollbar=(scrollbarBgColor && scrollbarBgColor)?true:false;
 

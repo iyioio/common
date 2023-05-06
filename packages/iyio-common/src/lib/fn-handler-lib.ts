@@ -1,5 +1,6 @@
 import { BaseError } from './errors';
-import { FnBaseHandlerOptions, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
+import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
+import { FnEventTransformers } from './fn-handler.deps';
 import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse, createHttpStringResponse } from './http-server-lib';
 import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
@@ -93,23 +94,30 @@ export const fnHandler=async ({
         sub=claims['sub'];
     }
 
+
+    const fnEvent:FnEvent={
+        sourceEvent:evt,
+        context,
+        path,
+        method,
+        routePath,
+        query,
+        headers:evt.headers??{},
+        claims,
+        sub
+    }
+    const transformers=FnEventTransformers.all();
+    for(const t of transformers){
+        await t(fnEvent);
+    }
+
     try{
         if(method==='OPTIONS'){
             if(isHttp){
                 return createHttpNoContentResponse(responseDefaults);
             }
         }
-        let result=await handler({
-            sourceEvent:evt,
-            context,
-            path,
-            method,
-            routePath,
-            query,
-            headers:evt.headers??{},
-            claims,
-            sub
-        },input);
+        let result=await handler(fnEvent,input);
 
         if(isRawFnResult(result)){
             return result.result;
