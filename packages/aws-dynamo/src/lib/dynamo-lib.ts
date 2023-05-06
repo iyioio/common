@@ -6,13 +6,18 @@ export interface ExtendedItemUpdateOptions<T=any>
 {
     incrementProp?:keyof T;
     incrementValue?:number;
+    matchCondition?:Partial<T>
 }
 export function createItemUpdateInputOrNull<T>(
     tableName:string,
     key:Partial<T>,
     obj:Partial<T>,
-    doNotUpdateKeys:boolean=true,
-    extendedOptions?:ExtendedItemUpdateOptions
+    doNotUpdateKeys=true,
+    {
+        incrementProp,
+        incrementValue,
+        matchCondition
+    }:ExtendedItemUpdateOptions={}
 ):UpdateItemInput|null
 {
 
@@ -20,16 +25,16 @@ export function createItemUpdateInputOrNull<T>(
     const values:Record<string,AttributeValue>={}
     let expression='SET';
 
-    const incrementProp=typeof extendedOptions?.incrementProp === 'string'?extendedOptions?.incrementProp:undefined;
+    const ip=typeof incrementProp === 'string'?incrementProp:undefined;
 
     let i=0;
     for(const e in obj){
-        if((doNotUpdateKeys && key[e]!==undefined) || obj[e]===undefined || e===incrementProp){
+        if((doNotUpdateKeys && key[e]!==undefined) || obj[e]===undefined || e===ip){
             continue;
         }
 
-        const vk=':'+e;
-        const nk='#N'+i;
+        const vk=':_'+i;
+        const nk='#_'+i;
         values[vk]=convertToAttr(obj[e]);
         names[nk]=e;
         expression=`${expression}${i?',':''} ${nk} = ${vk}`
@@ -37,33 +42,50 @@ export function createItemUpdateInputOrNull<T>(
     }
 
 
-    if(incrementProp){
-        const vk=':__incrementValue';
-        const nk='#N'+i;
-        values[vk]=convertToAttr(extendedOptions?.incrementValue??1);
-        names[nk]=incrementProp;
+    if(ip){
+        const vk=':_iv';
+        const nk='#_iv'+i;
+        values[vk]=convertToAttr(incrementValue??1);
+        names[nk]=ip;
         expression=`${expression}${i?',':''} ${nk} = ${nk} + ${vk}`
         i++;
+    }
+
+    let condition:string|undefined=undefined;
+    if(matchCondition){
+        const keys=Object.keys(matchCondition);
+        for(let i=0;i<keys.length;i++){
+            const key=keys[i] as string;
+            names[`#_cd_${i}`]=key;
+            values[`:_cd_${i}`]=convertToAttr(matchCondition[key]);
+        }
+        condition=keys.map((k,i)=>`#_cd_${i} = :_cd_${i}`).join(' and ')
     }
 
     if(i===0){
         return null;
     }
 
-    return {
+    const input:UpdateItemInput={
         TableName:formatDynamoTableName(tableName),
         Key:marshall(key),
         ExpressionAttributeValues:values,
         ExpressionAttributeNames:names,
-        UpdateExpression:expression
+        UpdateExpression:expression,
     }
+
+    if(condition){
+        input.ConditionExpression=condition;
+    }
+
+    return input;
 }
 
 export function createItemUpdateInput<T>(
     tableName:string,
     key:Partial<T>,
     obj:Partial<T>,
-    doNotUpdateKeys:boolean=true
+    doNotUpdateKeys=true
 ):UpdateItemInput
 {
 

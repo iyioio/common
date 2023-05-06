@@ -1,14 +1,32 @@
-import { DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { DataTableDescription, IWithStoreAdapter, Scope, getDataTableId } from "@iyio/common";
+import { DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, deleteUndefined, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 import { ExtendedItemUpdateOptions, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
 
-interface PageResult<T>
+export interface PageResult<T>
 {
     items:T[];
     lastKey?:any;
+}
+
+export interface QueryMatchTableOptions<T>
+{
+    table:DataTableDescription;
+    index?:DataTableIndex;
+    matchKey:Partial<T>;
+    filter?:Partial<T>;
+    commandInput?:Partial<QueryCommandInput>;
+    pageKey?:any;
+    projectionProps?:(keyof T)[];
+    limit?:number;
+    returnAll?:boolean;
+}
+
+export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
+{
+    skipVersionCheck?:boolean;
 }
 
 export class DynamoClient implements IWithStoreAdapter
@@ -121,6 +139,83 @@ export class DynamoClient implements IWithStoreAdapter
         return results;
     }
 
+    public async queryMatchTableAsync<T>({
+        table,
+        index,
+        matchKey,
+        filter,
+        commandInput={},
+        pageKey,
+        projectionProps,
+        limit,
+        returnAll
+    }:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
+
+        const input:Partial<QueryCommandInput>={
+            IndexName:index?.name,
+            ExpressionAttributeNames:{},
+            ExpressionAttributeValues:{},
+            ExclusiveStartKey:pageKey,
+            ProjectionExpression:projectionProps?.map((p,i)=>`#_projected${i}`).join(','),
+            Limit:limit
+        };
+
+        if(projectionProps){
+            for(let i=0;i<projectionProps.length;i++){
+                (input.ExpressionAttributeNames as any)[`#_projected${i}`]=projectionProps[i]
+            }
+        }
+
+        if(matchKey){
+            const keys=Object.keys(matchKey);
+            input.KeyConditionExpression=keys.map(k=>`#_key${k} = :_key${k}`).join(',');
+            for(let i=0;i<keys.length;i++){
+                const key=keys[i] as keyof T;
+                (input.ExpressionAttributeNames as any)[`#_key${keys[i]}`]=key;
+                (input.ExpressionAttributeValues as any)[`:_key${keys[i]}`]=convertToAttr(matchKey[key]);
+            }
+        }
+
+        if(filter){
+            const keys=Object.keys(filter);
+            input.FilterExpression=keys.map(k=>`#_filter${k} = :_filter${k}`).join(',');
+            for(let i=0;i<keys.length;i++){
+                const key=keys[i] as keyof T;
+                (input.ExpressionAttributeNames as any)[`#_filter${keys[i]}`]=key;
+                (input.ExpressionAttributeValues as any)[`:_filter${keys[i]}`]=convertToAttr(filter[key]);
+            }
+        }
+
+        if(commandInput){
+            for(const e in commandInput){
+                (input as any)[e]=(commandInput as any)[e];
+            }
+        }
+
+        if(returnAll){
+            delete input.Limit;
+        }
+
+        let result=await this.queryTableAsync<T>(table,deleteUndefined(input));
+
+        if(!returnAll || !result.lastKey){
+            return result
+        }
+
+        const allItems=result.items;
+        while(result.lastKey){
+            input.ExclusiveStartKey=result.lastKey;
+            result=await this.queryTableAsync<T>(table,deleteUndefined(input));
+            for(let i=0;i<result.items.length;i++){
+                allItems.push(result.items[i] as T);
+            }
+        }
+
+        return {
+            items:allItems
+        }
+    }
+
     public queryTableAsync<T>(table:DataTableDescription<T>,commandInput:Partial<QueryCommandInput>):Promise<PageResult<T>>
     {
         return this.getQueryAsync(getDataTableId(table),commandInput);
@@ -204,6 +299,71 @@ export class DynamoClient implements IWithStoreAdapter
         }
 
         await this.getClient().send(new UpdateItemCommand(update));
+    }
+
+    public async patchTableItem<T>(
+        table:DataTableDescription<T>,
+        item:Partial<T>,
+        {
+            skipVersionCheck,
+            ...extendedOptions
+        }:PatchTableItemOptions<T>={}
+    ):Promise<boolean>{
+
+        if((item as any)[table.primaryKey]===undefined){
+            throw new Error(`primaryKey(${table.primaryKey}) required`);
+        }
+
+        if(table.sortKey && (item as any)[table.sortKey]===undefined){
+            throw new Error(`sortKey(${table.sortKey}) required`);
+        }
+
+        const updateProp=skipVersionCheck?undefined:table.updateVersionProp;
+
+        const uv=updateProp?(item as any)[updateProp]:undefined;
+        if(!skipVersionCheck && updateProp && (typeof uv)!=='number'){
+            throw new Error(`updateVersionProp(${updateProp}) required as number`);
+        }
+
+        const key:any={[table.primaryKey]:(item as any)[table.primaryKey]}
+        if(table.sortKey){
+            key[table.sortKey]=(item as any)[table.sortKey];
+        }
+
+        const tableName=getDataTableId(table);
+
+
+        if(uv!==undefined && updateProp){
+            (item as any)[updateProp]=uv+1;
+        }
+
+        let success=false;
+        try{
+            const update=createItemUpdateInputOrNull(tableName,key,item,true,{
+                ...extendedOptions,
+                matchCondition:updateProp && uv!==undefined?
+                    {[updateProp]:uv}:undefined,
+            });
+            if(!update){
+                return false;
+            }
+
+            await this.getClient().send(new UpdateItemCommand(update));
+
+            success=true;
+
+            return true;
+
+        }catch(ex){
+            if(ex instanceof ConditionalCheckFailedException){
+                return false;
+            }
+            throw ex;
+        }finally{
+            if(!success && uv!==undefined && updateProp){
+                (item as any)[updateProp]=uv;
+            }
+        }
     }
 
 
