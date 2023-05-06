@@ -90,9 +90,16 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
                 }
                 out.push(`):${returnType}=>{`);
             }
+            for(const a of args){
+                if(!protoIsTsBuiltType(a.type)){
+                    imports.push(a.type);
+                }
+            }
             protoLabelOutputLines(out,'function',startI);
 
-            out.push(`${tab}// ${name}`)
+            out.push('')
+            out.push(`${tab}throw new Error('${name} not implemented')`)
+            out.push('')
 
             out.push('}');
 
