@@ -1,3 +1,4 @@
+import { TimeInterval } from '@iyio/common';
 import { ProtoExpressionEngine } from './ProtoExpressionEngine';
 import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown";
 import { MaxProtoExpressionEvalCountError, parseProtoExpression } from "./protogen-expression-lib";
@@ -819,6 +820,56 @@ describe('markdown',()=>{
         )
 
         expect(result.error).toBeInstanceOf(MaxProtoExpressionEvalCountError);
+    })
+
+    it('should pause',async ()=>{
+
+        const result=await completeWithResultAsync(
+            'paused',
+            undefined,
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - pause: first-pause
+                    - time: 1d
+
+            `)
+        )
+
+        expect(result.context.resumeAfter).toEqual<TimeInterval>({days:1})
+    })
+
+    it('should pause resume',async ()=>{
+
+        const exp=parseExp(`
+            ## Expression: expression
+            - run:
+              - vars:
+                - a:=2
+              - inc: .run.vars.a
+              - pause: first-pause
+                - time: 1d
+              - inc: .run.vars.a
+
+        `)
+
+        const result=await completeWithResultAsync(
+            'paused',
+            undefined,
+            exp
+        )
+
+        expect(result.context.resumeAfter).toEqual<TimeInterval>({days:1});
+
+        const engine=new ProtoExpressionEngine({
+            context:result.context,
+            expression:exp,
+        });
+
+        const result2=await engine.evalAsync();
+        expect(result2.state).toBe<ProtoEvalState>('complete');
+        expect(result2.value).toBe(4)
+
     })
 
 

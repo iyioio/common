@@ -1,7 +1,7 @@
 import { CancelToken, deleteUndefined } from "@iyio/common";
 import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
-import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
-import { ProtoEvalContext, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionCallable, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
+import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
+import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionCallable, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
 
 
 export class ProtoExpressionEngine
@@ -46,8 +46,12 @@ export class ProtoExpressionEngine
         this.context.startTime=Date.now();
 
         try{
-            const result=await this.evalExpression(this.expression,this.context,0);
+            if(this.context.lastResumeId){
+                this.context.frames=getProtoExpressionResumeFrames(this.context.lastResumeId,this.expression);
+            }
             delete this.context.lastResumeId;
+            delete this.context.resumeAfter;
+            const result=await this.evalExpression(this.expression,this.context,0);
             if(isProtoExpressionControlFlowResult(result)){
                 const state:ProtoEvalState=(
                     result.complete?
@@ -63,6 +67,7 @@ export class ProtoExpressionEngine
                 )
                 if(state==='paused'){
                     this.context.lastResumeId=result.resumeId;
+                    this.context.resumeAfter=result.resumeAfter;
                 }
                 return {
                     state,
@@ -266,3 +271,43 @@ export class ProtoExpressionEngine
     }
 }
 
+export const getProtoExpressionResumeFrames=(id:string,expression:ProtoExpression):ProtoEvalFrame[]=>{
+    const frames:ProtoEvalFrame[]=[];
+    if(!_getProtoExpressionResumeFrames(id,expression,frames)){
+        throw new UnableToFindProtoExpressionResumeId(`resumeId:${id}`)
+    }
+    return frames;
+}
+
+const _getProtoExpressionResumeFrames=(id:string,expression:ProtoExpression,frames:ProtoEvalFrame[],parentFrame?:ProtoEvalFrame)=>{
+    const frame:ProtoEvalFrame={}
+    frames.push(frame);
+
+    const ctrl=getProtoExpressionCtrl(expression.ctrl);
+    if(ctrl?.canResume?.(id,expression)){
+        if(parentFrame?.sub!==undefined){
+            parentFrame.sub++;
+        }
+        frames.pop();
+        return true;
+    }
+
+    if(!ctrl?.skipSubs && expression.sub){
+        if(frame.sub===undefined){
+            frame.sub=0;
+        }
+        for(;frame.sub<expression.sub.length;frame.sub++){
+            const sub=expression.sub[frame.sub];
+            if(!sub){
+                continue;
+            }
+            const found=_getProtoExpressionResumeFrames(id,sub,frames,frame);
+            if(found){
+                return true;
+            }
+        }
+    }
+
+    frames.pop();
+    return false;
+}

@@ -1,3 +1,4 @@
+import { parseTimeInterval } from "@iyio/common";
 import { InvalidProtoExpressionSyntaxError, createProtoExpressionControlFlowResult, getDirectExpressionValue } from "./protogen-expression-lib";
 import { ProtoExpressionControlFlowResult, ProtoExpressionCtrl, ProtoExpressionCtrlType, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
 
@@ -36,6 +37,8 @@ export const getProtoExpressionCtrl=(type:ProtoExpressionCtrlType|ProtoExpressio
         case 'bit-shift-left': return bitShiftLeftCtrl;
         case 'bit-shift-right': return bitShiftRightCtrl;
         case 'bit-zero-right': return bitZeroRightCtrl;
+        case 'pause': return pauseCtrl;
+        case 'resume': return resumeCtrl;
 
         default:
             if(typeof type !== 'string'){
@@ -86,7 +89,7 @@ const incCtrl:ProtoExpressionCtrl={
     ignoreCall:true,
     result:(value,ctrlData,expression,context)=>{
         if(expression.path && !isProtoExpressionControlFlowResult(value)){
-            context.vars[expression.path]=((context.vars[expression.path]??0) as any)+((value===undefined?1:value) as any);
+            return context.vars[expression.path]=((context.vars[expression.path]??0) as any)+((value===undefined?1:value) as any);
         }
         return value
     }
@@ -98,7 +101,7 @@ const decCtrl:ProtoExpressionCtrl={
     ignoreCall:true,
     result:(value,ctrlData,expression,context)=>{
         if(expression.path && !isProtoExpressionControlFlowResult(value)){
-            context.vars[expression.path]=((context.vars[expression.path]??0) as any)-((value===undefined?1:value) as any);
+            return context.vars[expression.path]=((context.vars[expression.path]??0) as any)-((value===undefined?1:value) as any);
         }
         return value
     }
@@ -262,3 +265,41 @@ const loopCtrl:ProtoExpressionCtrl={
     }
 }
 
+const pauseCtrl:ProtoExpressionCtrl={
+    ignorePath:true,
+    ignoreValue:true,
+    ignoreCall:true,
+    result:(value,data,exp)=>{
+        if(isProtoExpressionControlFlowResult(value)){
+            return value;
+        }
+        if(typeof exp.value !== 'string'){
+            throw new InvalidProtoExpressionSyntaxError('pause statement requires a label be defined');
+        }
+        const type=typeof value;
+        return createProtoExpressionControlFlowResult({
+            exit:true,
+            resumeId:exp.value,
+            resumeAfter:(value==='' || value===undefined || (type!=='number' && type!=='string'))?
+                undefined:parseTimeInterval(value as number|string),
+
+        })
+    },
+    canResume:(id,exp)=>id===exp.value
+}
+
+const resumeCtrl:ProtoExpressionCtrl={
+    ignorePath:true,
+    ignoreValue:true,
+    ignoreCall:true,
+    result:(value,data,exp)=>{
+        if(isProtoExpressionControlFlowResult(value)){
+            return value;
+        }
+        if(typeof exp.value !== 'string'){
+            throw new InvalidProtoExpressionSyntaxError('resume statement requires a label be defined');
+        }
+        return value;
+    },
+    canResume:(id,exp)=>id===exp.value
+}

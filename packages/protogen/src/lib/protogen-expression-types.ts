@@ -1,4 +1,4 @@
-import { CancelToken } from "@iyio/common";
+import { CancelToken, TimeInterval } from "@iyio/common";
 import { ProtoNode } from "./protogen-types";
 
 /**
@@ -107,7 +107,7 @@ export type ProtoExpressionCtrlAfterOp='continue'|'break'|'reset';
 
 export interface ProtoExpressionCtrl
 {
-    canResume?(resumeId:string,expression:ProtoExpression,context:ProtoEvalContext):boolean;
+    canResume?(resumeId:string,expression:ProtoExpression):boolean;
     beforeSub?(ctrlData:Record<string,ProtoEvalValue>,sub:ProtoExpression,expression:ProtoExpression,context:ProtoEvalContext):ProtoExpressionCtrlBeforeOp;
     afterSub?(subValue:ProtoEvalValue|ProtoExpressionControlFlowResult,ctrlData:Record<string,ProtoEvalValue>,sub:ProtoExpression,expression:ProtoExpression,context:ProtoEvalContext):ProtoExpressionCtrlAfterOp;
     mergeSubValues?(prevSubValue:ProtoEvalValue,subValue:ProtoEvalValue,ctrlData:Record<string,ProtoEvalValue>,sub:ProtoExpression,expression:ProtoExpression,context:ProtoEvalContext):ProtoEvalValue;
@@ -148,6 +148,8 @@ export interface ProtoEvalContext
     lastResume?:number;
 
     lastResumeId?:string;
+
+    resumeAfter?:TimeInterval;
 
     /**
      * Value of all stored variable values. Keys of the vars property are the full dot path
@@ -204,6 +206,11 @@ export interface ProtoExpressionControlFlowResult
      * Id of a pause or resume statement
      */
     resumeId?:string;
+
+    /**
+     * Time interval after which to resume
+     */
+    resumeAfter?:TimeInterval;
 
     canceled?:boolean;
 }

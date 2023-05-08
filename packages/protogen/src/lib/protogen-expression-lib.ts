@@ -97,3 +97,7 @@ export class ProtoExpressionPauseNotAllowedError extends ProtoExpressionError
 {
 
 }
+export class UnableToFindProtoExpressionResumeId extends ProtoExpressionError
+{
+
+}
