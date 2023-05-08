@@ -15,14 +15,42 @@ export interface ProtoTypeInfo
     isArray?:boolean;
     path:string[];
     isRefType?:boolean;
+    /**
+     * modifier character = *
+     */
     important?:boolean;
+    /**
+     * modifier character = >
+     */
     source?:boolean;
+    /**
+     * modifier character = @
+     */
     copySource?:boolean;
+    /**
+     * modifier character = ?
+     */
     question?:boolean;
+    /**
+     * modifier character = #
+     */
     hash?:boolean;
+    /**
+     * modifier character = !
+     */
     ex?:boolean;
+    /**
+     * modifier character = ~
+     */
     less?:boolean;
+    /**
+     * modifier character = =
+     */
     equals?:boolean;
+    /**
+     * modifier character = .
+     */
+    dot?:boolean;
 }
 
 export type ProtoChildren={[name:string]:ProtoNode}
@@ -93,6 +121,11 @@ export interface ProtoNode{
      */
     renderData?:ProtoNodeRenderData;
 
+    /**
+     * If true the node's value was defined directly and is not a direct representation of the
+     * node's type.
+     */
+    valueEq?:boolean;
 
     hidden?:boolean;
 

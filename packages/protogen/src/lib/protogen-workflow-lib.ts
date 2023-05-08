@@ -1,0 +1,63 @@
+import { endDateSort, safeParseDateOrUndefined, safeParseNumber } from "@iyio/common";
+import { parseProtoExpression } from "./protogen-expression-lib";
+import { protoGetChildrenByName } from "./protogen-node";
+import { ProtoNode } from "./protogen-types";
+import { ProtoAction, ProtoTimeWindow, ProtoTrigger } from "./protogen-workflow-types";
+
+/**
+ * The last value that should be used for default ordering. Default ordering is determined using the
+ * timestamp for the current date. pwDefaultOrderEnd equals 1,000,000,000,000,000 which allows for
+ * dates up to +033658-09-27T01:46:40.000Z to be used for default ordering.
+ */
+export const protoWorkflowDefaultOrderEnd=endDateSort;
+
+export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
+    const expression=parseProtoExpression({node,filterPaths:['trigger']});
+
+
+    const addresses:Record<string,string>={}
+    const workerNodes=node.children?.['workers']?.children;
+    if(workerNodes){
+        for(const e in workerNodes){
+            const worker=workerNodes[e];
+            const address=worker.value?.split(',')[0]?.trim();
+            if(address){
+                addresses[worker.name]=address;
+            }
+        }
+    }
+    const triggers=protoGetChildrenByName(node,'trigger',false);
+    const windows=protoGetChildrenByName(node,'window',false);
+    const order=node.children?.['order'];
+    const maxWorkerExeCount=node.children?.['maxWorkerExeCount'];
+    const maxGroupExeCount=node.children?.['maxGroupExeCount'];
+    const condition=node.children?.['condition'];
+    const exe=node.children?.['exe'];
+
+    return {
+        name:expression.name??'Action',
+        addresses,
+        order:order?safeParseNumber(node.children?.['order']?.value,0):protoWorkflowDefaultOrderEnd,
+        maxWorkerExeCount:maxWorkerExeCount?safeParseNumber(node.children?.['maxWorkerExeCount']?.value,0):undefined,
+        maxGroupExeCount:maxGroupExeCount?safeParseNumber(node.children?.['maxGroupExeCount']?.value,0):undefined,
+        triggers:triggers.map(t=>parseProtoTrigger(t)),
+        windows:windows.length?windows.map(t=>parseProtoTimeWindow(t)):undefined,
+        condition:condition?parseProtoExpression({node:condition}):undefined,
+        exe:exe?parseProtoExpression({node:exe}):undefined,
+
+
+    }
+}
+
+export const parseProtoTrigger=(node:ProtoNode):ProtoTrigger=>{
+    return {
+        name:node.name??'trigger',
+        address:node.types?.[0]?.type??'Event',
+    }
+}
+export const parseProtoTimeWindow=(node:ProtoNode):ProtoTimeWindow=>{
+    return {
+        start:safeParseDateOrUndefined(node.children?.['start']?.value)?.getTime(),
+        end:safeParseDateOrUndefined(node.children?.['end']?.value)?.getTime(),
+    }
+}

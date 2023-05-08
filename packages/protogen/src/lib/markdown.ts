@@ -109,6 +109,9 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                         depth,
                     }
                 }
+                if(value.includes('=')){
+                    node.valueEq=true;
+                }
                 allNodes.push(node);
                 if(parent?.contentFocused){
                     node.importantContent=true;
@@ -242,17 +245,21 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
             path[0]=rootNode.name;
         }
         const name=path[0];
+        const flags:string|undefined=match[flagsI];
+        const eqType=flags?.includes('=');
 
         const type:ProtoTypeInfo={
-            type:name,
-            isRefType:/[A-Z]/.test(name.charAt(0)),
+            type:eqType?(types[0]?.type??''):name,
+            isRefType:eqType?false:/[A-Z]/.test(name.charAt(0)),
             path,
+        }
+        if(eqType){
+            type.equals=true;
         }
         types.push(type);
         if(isArray){
             type.isArray=true;
         }
-        const flags=match[flagsI];
         if(flags){
             if(flags.includes('*')){
                 type.important=true;
@@ -275,9 +282,12 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
             if(flags.includes('~')){
                 type.less=true;
             }
-            if(flags.includes('=')){
-                type.equals=true;
-            }
+        }
+        if(nameMatch.startsWith('.')){
+            type.dot=true;
+        }
+        if(eqType){
+            break;
         }
     }
 
@@ -305,4 +315,22 @@ export const protoMarkdownRenderer=(
         ...renderData,
         input
     }
+}
+
+export const removeProtoMarkdownBaseIndent=(md:string):string=>{
+    const lines=md.split('\n');
+    let indent:string|null=null;
+    for(let i=0;i<lines.length;i++){
+        const line=lines[i];
+        if(indent===null){
+            if(!line.trim()){
+                continue;
+            }
+            indent=/^(\s*)/.exec(line)?.[1]??''
+        }
+        if(line.startsWith(indent)){
+            lines[i]=line.substring(indent.length);
+        }
+    }
+    return lines.join('\n').trim();
 }

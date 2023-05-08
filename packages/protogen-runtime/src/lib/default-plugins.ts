@@ -1,4 +1,5 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
+import { actionPlugin } from "./plugins/actionPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { bucketPlugin } from "./plugins/bucketPlugin";
 import { fileReader } from "./plugins/fileReader";
@@ -69,6 +70,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:tablePlugin
+        },
+        {
+            name:'actionPlugin',
+            source:'@',
+            paths:[],
+            plugin:actionPlugin
         },
         {
             name:'reactPlugin',

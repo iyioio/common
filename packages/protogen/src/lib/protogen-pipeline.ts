@@ -73,7 +73,6 @@ export const protoParseConfig=(configScheme:ZodSchema,args:HashMap<any>):any=>{
 
 
                         }
-                        console.log('-----fixed',value)
                         if(fixed){
                             const p=prop.safeParse(value);
                             console.log({p})

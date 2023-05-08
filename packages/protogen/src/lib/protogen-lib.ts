@@ -22,3 +22,32 @@ export const protoGetEmptyLayout=():ProtoLayout=>({
     y:0,
 })
 
+export const parseProtoPrimitiveUndefined=(value:string|null|undefined):string|number|boolean|null|undefined=>{
+    const v=parseProtoPrimitive(value);
+    return v===''?undefined:v;
+}
+
+export const parseProtoPrimitive=(value:string|null|undefined):string|number|boolean|null|undefined=>{
+    if(!value){
+        return '';
+    }
+    if(value.startsWith('!')){
+        value=value.substring(1).trim();
+        if(!value){
+            return value;
+        }
+    }
+    if(/^[0-9-]/.test(value)){
+        const num=Number(value);
+        if(isFinite(num)){
+            return num;
+        }
+    }
+    switch(value){
+        case 'true': return true;
+        case 'false': return false;
+        case 'null': return null;
+        case 'undefined': return undefined;
+        default: return value;
+    }
+}

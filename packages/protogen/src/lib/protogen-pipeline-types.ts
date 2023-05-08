@@ -79,6 +79,7 @@ export interface ProtoContext
     paramPackage:string;
     paramPackageName:string;
     cdkProjectDir:string;
+    dataOutputs:Record<string,any>;
     log:(...values:any[])=>void;
 
 }

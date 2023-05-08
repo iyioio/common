@@ -1036,7 +1036,8 @@ const mdParsed=[
                                     "UserView",
                                     "model",
                                     "likes"
-                                ]
+                                ],
+                                "dot": true
                             }
                         ],
                         "value": ".model.likes",
@@ -1125,7 +1126,8 @@ const mdParsed=[
                                     "UserView",
                                     "notAProp",
                                     "age"
-                                ]
+                                ],
+                                "dot": true
                             }
                         ],
                         "value": ".notAProp.age",
@@ -1355,7 +1357,8 @@ const mdParsed=[
                                     "SettingsView",
                                     "model",
                                     "age"
-                                ]
+                                ],
+                                "dot": true
                             }
                         ],
                         "value": ".model.age",

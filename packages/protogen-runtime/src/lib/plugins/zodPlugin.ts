@@ -90,6 +90,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
                 case 'struct':
                 case 'interface':
                 case 'class':
+                case 'event':
                 case 'type':
                     addInterface(node,out,tab,getFullName,useCustomTypes);
                     break;

@@ -29,3 +29,11 @@ export const safeParseNumber=(value:any,fallback=0):number=>{
     const num=Number(value);
     return isFinite(num)?num:fallback;
 }
+
+export const safeParseNumberOrUndefined=(value:any):number|undefined=>{
+    if(value===undefined || value===null){
+        return undefined;
+    }
+    const num=Number(value);
+    return isFinite(num)?num:undefined;
+}

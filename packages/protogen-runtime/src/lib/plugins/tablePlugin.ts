@@ -1,10 +1,10 @@
-import { HashMap, joinPaths, notWordRegex } from "@iyio/common";
+import { HashMap, joinPaths } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
 import { TableNameParamNamePair, tableCdkTemplate } from "./tableCdkTemplate";
 
-
+const notWordRegex=/\W/g;
 
 const TablePluginConfig=z.object(
 {
