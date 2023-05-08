@@ -1,6 +1,6 @@
 import { CancelToken, deleteUndefined } from "@iyio/common";
 import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
-import { createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
+import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
 import { ProtoEvalContext, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionCallable, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
 
 
@@ -100,7 +100,7 @@ export class ProtoExpressionEngine
 
         context.evalCount++;
         if(context.maxEvalCount!==undefined && context.evalCount>context.maxEvalCount){
-            throw new Error(
+            throw new MaxProtoExpressionEvalCountError(
                 `Max number of expressions evaluated. max:${context.maxEvalCount}`);
         }
 
@@ -138,7 +138,7 @@ export class ProtoExpressionEngine
                     frame.sub=0;
                     context.evalCount++;
                     if(context.maxEvalCount!==undefined && context.evalCount>context.maxEvalCount){
-                        throw new Error(
+                        throw new MaxProtoExpressionEvalCountError(
                             `Max number of expressions evaluated. max:${context.maxEvalCount}`);
                     }
                 }
@@ -216,7 +216,7 @@ export class ProtoExpressionEngine
                     if(exCallable){
                         result=await this.evalExpression(exCallable,context,depth+1);
                         if(isProtoExpressionControlFlowResult(result) && result.resumeId){
-                            throw new Error('Callable expressions are not allowed to pause evaluation');
+                            throw new ProtoExpressionPauseNotAllowedError('Callable expressions are not allowed to pause evaluation');
                         }
                     }else{
                         const varValue=context.vars[expression.address];

@@ -1,4 +1,4 @@
-import { createProtoExpressionControlFlowResult, getDirectExpressionValue } from "./protogen-expression-lib";
+import { InvalidProtoExpressionSyntaxError, createProtoExpressionControlFlowResult, getDirectExpressionValue } from "./protogen-expression-lib";
 import { ProtoExpressionControlFlowResult, ProtoExpressionCtrl, ProtoExpressionCtrlType, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
 
 export const getProtoExpressionCtrl=(type:ProtoExpressionCtrlType|ProtoExpressionCtrl|null|undefined):ProtoExpressionCtrl|undefined=>{
@@ -187,7 +187,7 @@ const ifCtrl:ProtoExpressionCtrl={
         switch(data['step']){
             case undefined:
                 if(sub.name!=='condition'){
-                    throw new Error(
+                    throw new InvalidProtoExpressionSyntaxError(
                         'ProtoExpression syntax error. Fist sub of if statement must be an '+
                         'expression named condition')
                 }

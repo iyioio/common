@@ -77,3 +77,23 @@ export const getDirectExpressionValue=(expression:ProtoExpression,context:ProtoE
     }
     return value;
 }
+
+export class ProtoExpressionError extends Error
+{
+
+}
+
+export class InvalidProtoExpressionSyntaxError extends ProtoExpressionError
+{
+
+}
+
+export class MaxProtoExpressionEvalCountError extends ProtoExpressionError
+{
+
+}
+
+export class ProtoExpressionPauseNotAllowedError extends ProtoExpressionError
+{
+
+}

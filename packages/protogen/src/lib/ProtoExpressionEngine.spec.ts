@@ -1,6 +1,6 @@
 import { ProtoExpressionEngine } from './ProtoExpressionEngine';
 import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown";
-import { parseProtoExpression } from "./protogen-expression-lib";
+import { MaxProtoExpressionEvalCountError, parseProtoExpression } from "./protogen-expression-lib";
 import { ProtoEvalResult, ProtoEvalState, ProtoExpression } from "./protogen-expression-types";
 import { protoGetChildren } from './protogen-node';
 
@@ -802,6 +802,23 @@ describe('markdown',()=>{
 
             `)
         )
+    })
+
+    it('should catch infinite loop',async ()=>{
+
+        const result=await completeWithResultAsync(
+            'failed',
+            undefined,
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - loop: true
+                    - noop:
+
+            `)
+        )
+
+        expect(result.error).toBeInstanceOf(MaxProtoExpressionEvalCountError);
     })
 
 
