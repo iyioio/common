@@ -1,3 +1,6 @@
+import { addDays, addHours, addMinutes, addMonths, addSeconds, addWeeks, addYears } from "date-fns";
+import { TimeInterval } from "./time-types";
+
 export const secondMs=1000;
 export const minuteMs=secondMs*60;
 export const hourMs=minuteMs*60;
@@ -61,4 +64,138 @@ export const getTimeZone=():string=>{
     }catch{
         return defaultTimeZone;
     }
+}
+
+export const parseTimeInterval=(value:string|number):TimeInterval=>{
+
+    if(typeof value === 'number'){
+        return {
+            ms:value
+        }
+    }
+
+    const interval:TimeInterval={}
+    const matches=value.replace(/and/gi,' ').matchAll(/(-?[.\d,]+)\s*(\w+)/g);
+    for(const match of matches){
+        const v=Number(match[1]?.replace(/,/g,'')??'0');
+        if(!isFinite(v)){
+            continue;
+        }
+        switch(match[2]?.toLowerCase()){
+
+            case 'm':
+            case 'min':
+            case 'mins':
+            case 'minute':
+            case 'minutes':
+                if(!interval.minutes){
+                    interval.minutes=0;
+                }
+                interval.minutes+=v;
+                break;
+
+            case 'h':
+            case 'hr':
+            case 'hrs':
+            case 'hour':
+            case 'hours':
+                if(!interval.hours){
+                    interval.hours=0;
+                }
+                interval.hours+=v;
+                break;
+
+            case 'd':
+            case 'day':
+            case 'days':
+                if(!interval.days){
+                    interval.days=0;
+                }
+                interval.days+=v;
+                break;
+
+            case 'w':
+            case 'wk':
+            case 'wks':
+            case 'week':
+            case 'weeks':
+                if(!interval.weeks){
+                    interval.weeks=0;
+                }
+                interval.weeks+=v;
+                break;
+
+            case 'mon':
+            case 'mons':
+            case 'month':
+            case 'months':
+                if(!interval.months){
+                    interval.months=0;
+                }
+                interval.months+=v;
+                break;
+
+            case 'y':
+            case 'yr':
+            case 'yrs':
+            case 'year':
+            case 'years':
+                if(!interval.years){
+                    interval.years=0;
+                }
+                interval.years+=v;
+                break;
+
+            case 'ms':
+            case 'millisecond':
+            case 'milliseconds':
+                if(!interval.ms){
+                    interval.ms=0;
+                }
+                interval.ms+=v;
+                break;
+        }
+    }
+
+    return interval;
+}
+
+export const addTimeIntervalToDate=(interval:TimeInterval,date:Date|number):Date=>{
+    if(interval.ms){
+        date=new Date(typeof date==='number'?date:date.getTime()+interval.ms);
+    }
+
+    if(interval.seconds){
+        date=addSeconds(date,interval.seconds);
+    }
+
+    if(interval.minutes){
+        date=addMinutes(date,interval.minutes);
+    }
+
+    if(interval.hours){
+        date=addHours(date,interval.hours);
+    }
+
+    if(interval.days){
+        date=addDays(date,interval.days);
+    }
+
+    if(interval.weeks){
+        date=addWeeks(date,interval.weeks);
+    }
+
+    if(interval.months){
+        date=addMonths(date,interval.months);
+    }
+
+    if(interval.years){
+        date=addYears(date,interval.years);
+    }
+
+    if(typeof date === 'number'){
+        date=new Date(date);
+    }
+
+    return date;
 }

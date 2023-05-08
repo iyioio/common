@@ -95,6 +95,7 @@ export * from './lib/string';
 export * from './lib/string-converters';
 export * from './lib/style-builder';
 export * from './lib/time';
+export * from './lib/time-types';
 export * from './lib/tmp-helpers';
 export * from './lib/type-conversion';
 export * from './lib/ui-lib';
