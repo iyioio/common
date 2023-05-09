@@ -4,13 +4,6 @@ import { protoGetChildrenByName } from "./protogen-node";
 import { ProtoNode } from "./protogen-types";
 import { ProtoAction, ProtoTimeWindow, ProtoTrigger } from "./protogen-workflow-types";
 
-/**
- * The last value that should be used for default ordering. Default ordering is determined using the
- * timestamp for the current date. pwDefaultOrderEnd equals 1,000,000,000,000,000 which allows for
- * dates up to +033658-09-27T01:46:40.000Z to be used for default ordering.
- */
-export const protoWorkflowDefaultOrderEnd=endDateSort;
-
 export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
     const expression=parseProtoExpression({node,filterPaths:['trigger']});
 
@@ -37,7 +30,7 @@ export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
     return {
         name:expression.name??'Action',
         addresses,
-        order:order?safeParseNumber(node.children?.['order']?.value,0):protoWorkflowDefaultOrderEnd,
+        order:order?safeParseNumber(node.children?.['order']?.value,0):endDateSort,
         maxWorkerExeCount:maxWorkerExeCount?safeParseNumber(node.children?.['maxWorkerExeCount']?.value,0):undefined,
         maxGroupExeCount:maxGroupExeCount?safeParseNumber(node.children?.['maxGroupExeCount']?.value,0):undefined,
         triggers:triggers.map(t=>parseProtoTrigger(t)),

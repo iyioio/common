@@ -2,31 +2,31 @@ import { joinPaths } from "@iyio/common";
 import { ProtoAction, ProtoExpression, ProtoPipelineConfigurablePlugin, ProtoWorkflow, commonProtoFeatures, getProtoPluginPackAndPath, parseProtoAction, parseProtoExpression, protoGenerateTsIndex } from "@iyio/protogen";
 import { z } from "zod";
 
-export const pwActionDataOutputKey='PwWorkflow'
+export const actionDataOutputKey='actionWorkflow'
 
 const supportedTypes=['action','expression'];
 
 const ActionPluginConfig=z.object(
 {
     /**
-     * @default .pwActionPackage
+     * @default .actionPackage
      */
-    pwActionPath:z.string().optional(),
+    actionPath:z.string().optional(),
 
     /**
-     * @default "pwActions"
+     * @default "domain-actions"
      */
-    pwActionPackage:z.string().optional(),
+    actionPackage:z.string().optional(),
 
     /**
-     * @default "pwActions"
+     * @default "actions"
      */
-    pwActionExportName:z.string().optional(),
+    actionExportName:z.string().optional(),
 
     /**
-     * @default "pwActions-index.ts"
+     * @default "actions-index.ts"
      */
-    pwActionIndexFilename:z.string().optional(),
+    actionIndexFilename:z.string().optional(),
 })
 
 export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginConfig>=
@@ -44,10 +44,10 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
         libStyle,
         requiredFeatures,
     },{
-        pwActionPackage='pwActions',
-        pwActionPath=pwActionPackage,
-        pwActionExportName='pwActions',
-        pwActionIndexFilename='pwActions-index.ts',
+        actionPackage='domain-actions',
+        actionPath=actionPackage,
+        actionExportName='actions',
+        actionIndexFilename='actions-index.ts',
     })=>{
 
         const supported=nodes.filter(n=>supportedTypes.some(t=>n.types.some(nt=>nt.type===t)));
@@ -61,16 +61,16 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
 
         const {path,packageName}=getProtoPluginPackAndPath(
             namespace,
-            pwActionPackage,
-            pwActionPath,
+            actionPackage,
+            actionPath,
             libStyle,
-            {packagePaths,indexFilename:pwActionIndexFilename}
+            {packagePaths,indexFilename:actionIndexFilename}
         );
 
 
 
         const out:string[]=[];
-        importMap[pwActionExportName]=packageName;
+        importMap[actionExportName]=packageName;
 
         out.push('import { ProtoWorkflow } from "@iyio/protogen";');
         out.push('');
@@ -99,9 +99,9 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
 
         }
 
-        dataOutputs[pwActionDataOutputKey]=workflow;
+        dataOutputs[actionDataOutputKey]=workflow;
 
-        out.push(`export const ${pwActionExportName}:ProtoWorkflow=`+JSON.stringify(workflow,null,tab.length));
+        out.push(`export const ${actionExportName}:ProtoWorkflow=`+JSON.stringify(workflow,null,tab.length));
 
         outputs.push({
             path:joinPaths(path,'actions.ts'),
@@ -110,7 +110,7 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
 
         // add index file
         outputs.push({
-            path:joinPaths(path,pwActionIndexFilename),
+            path:joinPaths(path,actionIndexFilename),
             content:'',
             isPackageIndex:true,
             generator:{

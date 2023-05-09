@@ -15,7 +15,7 @@ export interface ProtoAction
      * timestamp as their order so that newer actions will be executed after older ones. If you
      * want an action to be executed before default order actions use a negative number and if
      * you want an action to be executed after default order actions use a number that is more than
-     * pwDefaultOrderEnd. pwDefaultOrderEnd is a constant with a value of 1,000,000,000,000,000
+     * endDateSort. endDateSort is a constant with a value of 1,000,000,000,000,000
      * which when converted to a date equals 1000000000000000
      */
     order:number;
