@@ -1,4 +1,5 @@
 import { HashMap, Point } from "@iyio/common";
+import { ZodError, ZodSchema } from "zod";
 import { ProtoPipelineConfig } from "./protogen-pipeline-types";
 
 export interface ProtoConfig
@@ -51,6 +52,21 @@ export interface ProtoTypeInfo
      * modifier character = .
      */
     dot?:boolean;
+
+    /**
+     * The package where the type is defined
+     */
+    package?:string;
+
+    /**
+     * The name used to export the type from its package
+     */
+    exportName?:string;
+
+    /**
+     * Set when the type is being used as a variable, arg, param etc.
+     */
+    varName?:string;
 }
 
 export type ProtoChildren={[name:string]:ProtoNode}
@@ -192,4 +208,45 @@ export interface ProtoParsingResult
     rootNodes:ProtoNode[];
     allNodes:ProtoNode[];
     addressMap:ProtoAddressMap;
+}
+
+
+export interface ProtoCallable
+{
+    name:string;
+    /**
+     * Name of the function used to invoke the callable. In some cases this will be the same as the
+     * name property. In other cases there may be a separate client function with a different name
+     * used to call the callable
+     */
+    exportName:string;
+    package:string;
+
+    args:ProtoTypeInfo[];
+    argsExportName?:string;
+    argsPackage?:string;
+
+    returnType?:ProtoTypeInfo;
+
+    isAsync?:boolean;
+
+    /**
+     * An implementation for the callable. This will typically be defined by generated code.
+     */
+    implementation?:(...args:any)=>any;
+
+    argsScheme?:ZodSchema;
+}
+
+export class ProtoCallableNotImplementedError extends Error{}
+
+export class InvalidProtoCallableArgsError extends Error
+{
+    public readonly zodError:ZodError;
+
+    public constructor(message:string,zodError:ZodError)
+    {
+        super(message);
+        this.zodError=zodError;
+    }
 }

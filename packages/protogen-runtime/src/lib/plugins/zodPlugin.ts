@@ -75,6 +75,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         for(const node of nodes){
 
             let added=true;
+            let nodeName=node.name;
 
             switch(node.type){
 
@@ -84,6 +85,21 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
 
                 case 'enum':
                     addEnum(node,out,tab,getFullName);
+                    break;
+
+                case 'function':
+                    nodeName=node.name+'FunctionArgs';
+                    addInterface({...node.children?.['args']??{
+                        name:'args',
+                        type:'',
+                        address:'',
+                        types:[]
+                    },name:nodeName},out,tab,getFullName,useCustomTypes);
+                    break;
+
+                case 'serverFn':
+                    nodeName='invoke'+node.name+'FunctionArgs';
+                    addInterface({...node,name:nodeName},out,tab,getFullName,useCustomTypes,prop=>prop.name==='input');
                     break;
 
                 case 'entity':
@@ -101,9 +117,9 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
             }
 
             if(added){
-                importMap[node.name]=packageName;
-                const fullName=getFullName(node.name);
-                if(fullName!==node.name){
+                importMap[nodeName]=packageName;
+                const fullName=getFullName(nodeName);
+                if(fullName!==nodeName){
                     importMap[fullName]=packageName;
                 }
             }
@@ -176,7 +192,7 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
     out.push(`export type ${node.name}=z.infer<typeof ${fullName}>;`);
 }
 
-const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[])=>{
+const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[],propFilter?:(prop:ProtoNode)=>boolean)=>{
     const fullName=getFullName(node.name);
 
     const children=protoChildrenToArray(node.children)
@@ -193,7 +209,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
 
     if(node.children){
         for(const prop of children){
-            if(prop.special || prop.isContent){
+            if(prop.special || prop.isContent || (propFilter && !propFilter(prop))){
                 continue;
             }
 

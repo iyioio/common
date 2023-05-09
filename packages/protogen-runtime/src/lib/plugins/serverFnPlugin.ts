@@ -1,6 +1,6 @@
 import { SiteContentSourceDescription } from "@iyio/cdk-common";
 import { getSubstringCount, joinPaths } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, addPackageInfoToProtoType, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -95,6 +95,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         libStyle,
         paramMap,
         paramPackage,
+        callables,
     },{
         serverFnPackage='fns',
         serverFnPath=serverFnPackage,
@@ -160,8 +161,10 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
             const inputNode=node.children?.['input'];
             const outputNode=node.children?.['output'];
-            const inputIsArray=inputNode?.types[0]?.isArray??false;
-            const outputIsArray=outputNode?.types[0]?.isArray??false;
+            const inputTypeInfo=inputNode?.types[0];
+            const outputTypeInfo=outputNode?.types[0];
+            const inputIsArray=inputTypeInfo?.isArray??false;
+            const outputIsArray=outputTypeInfo?.isArray??false;
             const outputIsOptional=outputNode?.optional??false;
             const inputType=inputNode?.type??'void';
             const outputType=outputNode?.type??'void';
@@ -224,6 +227,24 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
             const clientName='invoke'+name;
             importMap[clientName]=clientPackageName;
+
+            const argsExportName='invoke'+name+'FunctionArgsScheme';
+            const argsPackage=importMap[argsExportName];
+
+            callables.push({
+                name,
+                exportName:clientName,
+                package:clientPackageName,
+                args:inputType==='void' || !inputTypeInfo?[]:[
+                    addPackageInfoToProtoType(inputTypeInfo,importMap,'input')
+                ],
+                argsExportName:argsPackage?argsExportName:undefined,
+                argsPackage,
+                returnType:outputType==='void' || !outputTypeInfo?
+                    undefined:addPackageInfoToProtoType(outputTypeInfo,importMap,'output'),
+                isAsync:true,
+            })
+
             if(node.comment){
                 clientOut.push(...protoFormatTsComment(node.comment,'').split('\n'))
             }

@@ -1,7 +1,9 @@
 import { CancelToken, deleteUndefined } from "@iyio/common";
 import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
 import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
-import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionCallable, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
+import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
+import { invokeProtoCallable } from "./protogen-lib";
+import { ProtoCallable } from "./protogen-types";
 
 
 export class ProtoExpressionEngine
@@ -12,7 +14,7 @@ export class ProtoExpressionEngine
 
     private readonly expression:ProtoExpression;
     private readonly callableExpressions:Record<string,ProtoExpression>;
-    private readonly callables:Record<string,ProtoExpressionCallable>;
+    private readonly callables:Record<string,ProtoCallable>;
 
     public constructor({
         context,
@@ -215,7 +217,7 @@ export class ProtoExpressionEngine
                     if(!frame.subResults){
                         frame.subResults={}
                     }
-                    result=await callable(expression.address,frame.subResults)
+                    result=await invokeProtoCallable(callable,frame.subResults)
                 }else{
                     const exCallable=this.callableExpressions[expression.address];
                     if(exCallable){

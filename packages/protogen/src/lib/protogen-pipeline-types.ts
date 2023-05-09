@@ -1,7 +1,7 @@
 import { CliArgsAliasMap, CliArgsConverter, HashMap } from "@iyio/common";
 import { ZodSchema, z } from "zod";
 import { ProtoSourceCodeMerger } from "./output-utils";
-import { ProtoNode } from "./protogen-types";
+import { ProtoCallable, ProtoNode } from "./protogen-types";
 
 export type ProtoStage='init'|'input'|'preprocess'|'parse'|'generate'|'output';
 
@@ -80,6 +80,8 @@ export interface ProtoContext
     paramPackageName:string;
     cdkProjectDir:string;
     dataOutputs:Record<string,any>;
+    callables:ProtoCallable[];
+    requiredFeatures:Set<string>;
     log:(...values:any[])=>void;
 
 }

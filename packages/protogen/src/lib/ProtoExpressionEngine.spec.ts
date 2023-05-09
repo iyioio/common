@@ -1,9 +1,11 @@
 import { TimeInterval } from '@iyio/common';
+import { z } from 'zod';
 import { ProtoExpressionEngine } from './ProtoExpressionEngine';
 import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown";
 import { MaxProtoExpressionEvalCountError, parseProtoExpression } from "./protogen-expression-lib";
-import { ProtoEvalResult, ProtoEvalState, ProtoExpression } from "./protogen-expression-types";
+import { ProtoEvalResult, ProtoEvalState, ProtoExpression, ProtoExpressionEngineOptions } from "./protogen-expression-types";
 import { protoGetChildren } from './protogen-node';
+import { InvalidProtoCallableArgsError, ProtoCallable } from './protogen-types';
 
 const parseExp=(md:string,log?:string):ProtoExpression=>{
     const {rootNodes}=protoMarkdownParseNodes(removeProtoMarkdownBaseIndent(md));
@@ -19,12 +21,14 @@ const parseExp=(md:string,log?:string):ProtoExpression=>{
     return exp;
 }
 
-const createEngine=(exp:ProtoExpression):{exp:ProtoExpression,engine:ProtoExpressionEngine}=>{
+const createEngine=(exp:ProtoExpression,engineOptions?:Partial<ProtoExpressionEngineOptions>):{exp:ProtoExpression,engine:ProtoExpressionEngine}=>{
     const engine=new ProtoExpressionEngine({
-        context:{
-            maxEvalCount:1000
-        },
         expression:exp,
+        ...(engineOptions??{}),
+        context:{
+            maxEvalCount:1000,
+            ...(engineOptions?.context??{})
+        },
     })
     return {
         exp,
@@ -32,12 +36,12 @@ const createEngine=(exp:ProtoExpression):{exp:ProtoExpression,engine:ProtoExpres
     }
 }
 
-const evalAsync=async (exp:ProtoExpression):Promise<ProtoEvalResult>=>{
-    const {engine}=createEngine(exp);
+const evalAsync=async (exp:ProtoExpression,engineOptions?:Partial<ProtoExpressionEngineOptions>):Promise<ProtoEvalResult>=>{
+    const {engine}=createEngine(exp,engineOptions);
     return await engine.evalAsync();
 }
-const completeWithResultAsync=async (state:ProtoEvalState,value:any,exp:ProtoExpression):Promise<ProtoEvalResult>=>{
-    const result=await evalAsync(exp);
+const completeWithResultAsync=async (state:ProtoEvalState,value:any,exp:ProtoExpression,engineOptions?:Partial<ProtoExpressionEngineOptions>):Promise<ProtoEvalResult>=>{
+    const result=await evalAsync(exp,engineOptions);
 
     if(result.state!==state || result.value!==value){
         console.warn('states do not match',JSON.stringify(result,null,4));
@@ -872,6 +876,131 @@ describe('markdown',()=>{
 
     })
 
+    it('should invoke concat',async ()=>{
 
+        await completeWithResultAsync(
+            'complete',
+            'ricky_bobby',
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - call: Concat
+                    - a: ricky
+                    - b: _
+                    - c: bobby
+
+
+            `),
+            {
+                callables:{
+                    Concat:concatCallable
+                }
+            }
+        )
+    })
+
+    it('should invoke add',async ()=>{
+
+
+
+        await completeWithResultAsync(
+            'complete',
+            10,
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - call: Add
+                    - a: 3
+                    - b: 7
+
+
+            `),
+            {
+                callables:{
+                    Add:addCallable
+                }
+            }
+        )
+    })
+
+    it('should gard against invoke with invalid args',async ()=>{
+
+        const r=await completeWithResultAsync(
+            'failed',
+            undefined,
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - call: Add
+                    - a: oh-no
+                    - b: cats
+
+
+            `),
+            {
+                callables:{
+                    Add:addCallable
+                }
+            }
+        )
+
+        expect(r.error).toBeInstanceOf(InvalidProtoCallableArgsError);
+    })
 
 })
+
+const concatCallable:ProtoCallable={
+    name:'Concat',
+    exportName:'Concat',
+    package:'',
+    args:[
+        {
+            varName:'a',
+            type:'string',
+            path:[]
+        },
+        {
+            varName:'b',
+            type:'string',
+            path:[]
+        },
+        {
+            varName:'c',
+            type:'string',
+            path:[]
+        },
+    ],
+    argsScheme:z.object({
+        a:z.string(),
+        b:z.string(),
+        c:z.string(),
+    }),
+    implementation:(a:string,b:string,c:string)=>{
+        return a+b+c;
+    }
+}
+
+const addCallable:ProtoCallable={
+    name:'Add',
+    exportName:'Add',
+    package:'',
+    args:[
+        {
+            varName:'a',
+            type:'number',
+            path:[]
+        },
+        {
+            varName:'b',
+            type:'number',
+            path:[]
+        }
+    ],
+    argsScheme:z.object({
+        a:z.number(),
+        b:z.number(),
+    }),
+    implementation:(a:number,b:number)=>{
+        return a+b;
+    }
+}

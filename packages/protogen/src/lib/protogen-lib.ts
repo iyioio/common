@@ -1,6 +1,10 @@
-import { ProtoLayout, ProtoNode } from "./protogen-types";
+import { InvalidProtoCallableArgsError, ProtoCallable, ProtoCallableNotImplementedError, ProtoLayout, ProtoNode, ProtoTypeInfo } from "./protogen-types";
 
 const layoutKey=Symbol('protoLayout');
+
+export const commonProtoFeatures={
+    callables:'callables'
+} as const;
 
 export const protoGetLayout=(node:ProtoNode):ProtoLayout|null=>(node as any)[layoutKey]??null;
 
@@ -50,4 +54,48 @@ export const parseProtoPrimitive=(value:string|null|undefined):string|number|boo
         case 'undefined': return undefined;
         default: return value;
     }
+}
+
+/**
+ * Returns a copy of the passed in type with package info populated. If the type is not found
+ * in the import map a copy without package info is returned.
+ */
+export const addPackageInfoToProtoType=(type:ProtoTypeInfo,importMap:Record<string,string>,varName?:string):ProtoTypeInfo=>{
+    const pkg=importMap[type.type];
+    if(!pkg){
+        return {varName,...type}
+    }
+    return {
+        varName,
+        ...type,
+        package:pkg,
+        exportName:type.type
+    }
+}
+
+/**
+ * Invokes a callable. If the callable defines an argScheme the provided namedArgs are validated
+ * before invoking the callables implementation. If the callable does not define an implementation
+ * a ProtoCallableNotImplementedError is thrown.
+ */
+export const invokeProtoCallable=(callable:ProtoCallable,namedArgs:Record<string,any>):any=>{
+    if(!callable.implementation){
+        throw new ProtoCallableNotImplementedError(`Callable ${callable.name} does not define an implementation`);
+    }
+    if(callable.argsScheme){
+        const r=callable.argsScheme.safeParse(namedArgs);
+        if(!r.success){
+            throw new InvalidProtoCallableArgsError(`Provided args for callable ${callable.name} are invalid`,r.error);
+        }
+        namedArgs=r.data;
+    }
+
+    const args:any[]=[];
+    for(const arg of callable.args){
+        if(arg.varName){
+            args.push(namedArgs[arg.varName]);
+        }
+    }
+
+    return callable.implementation(...args);
 }

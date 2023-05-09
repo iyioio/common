@@ -1,5 +1,5 @@
 import { CancelToken, TimeInterval } from "@iyio/common";
-import { ProtoNode } from "./protogen-types";
+import { ProtoCallable, ProtoNode } from "./protogen-types";
 
 /**
  * A ProtoExpression is a representation of a ProtoNode that returns a value when evaluated.
@@ -223,13 +223,11 @@ export const isProtoExpressionControlFlowResult=(value:any):value is ProtoExpres
     return (value as ProtoExpressionControlFlowResult|undefined)?.typeFlag===ProtoExpressionControlFlowFlag;
 }
 
-export type ProtoExpressionCallable=(address:string,props:Record<string,ProtoEvalValue>)=>Promise<ProtoEvalValue|ProtoExpressionControlFlowResult>|ProtoEvalValue|ProtoExpressionControlFlowResult;
-
 export interface ProtoExpressionEngineOptions
 {
     context:Partial<ProtoEvalContext>;
     expression:ProtoExpression;
     callableExpressions?:Record<string,ProtoExpression>;
-    callables?:Record<string,ProtoExpressionCallable>;
+    callables?:Record<string,ProtoCallable>;
     cancel?:CancelToken;
 }

@@ -1,5 +1,5 @@
 import { joinPaths } from "@iyio/common";
-import { ProtoAction, ProtoExpression, ProtoPipelineConfigurablePlugin, ProtoWorkflow, getProtoPluginPackAndPath, parseProtoAction, parseProtoExpression, protoGenerateTsIndex } from "@iyio/protogen";
+import { ProtoAction, ProtoExpression, ProtoPipelineConfigurablePlugin, ProtoWorkflow, commonProtoFeatures, getProtoPluginPackAndPath, parseProtoAction, parseProtoExpression, protoGenerateTsIndex } from "@iyio/protogen";
 import { z } from "zod";
 
 export const pwActionDataOutputKey='PwWorkflow'
@@ -42,6 +42,7 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
         namespace,
         packagePaths,
         libStyle,
+        requiredFeatures,
     },{
         pwActionPackage='pwActions',
         pwActionPath=pwActionPackage,
@@ -55,6 +56,8 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
         if(!supported.length){
             return;
         }
+
+        requiredFeatures.add(commonProtoFeatures.callables);
 
         const {path,packageName}=getProtoPluginPackAndPath(
             namespace,

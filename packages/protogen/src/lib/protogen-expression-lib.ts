@@ -101,3 +101,18 @@ export class UnableToFindProtoExpressionResumeId extends ProtoExpressionError
 {
 
 }
+
+export const getCallableProtoExpressions=(expression:ProtoExpression, append:ProtoExpression[]=[]):ProtoExpression[]=>
+{
+    if(expression.address){
+        append.push(expression);
+    }
+
+    if(expression.sub){
+        for(const sub of expression.sub){
+            getCallableProtoExpressions(sub,append);
+        }
+    }
+
+    return append;
+}

@@ -2,6 +2,7 @@ import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { actionPlugin } from "./plugins/actionPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { bucketPlugin } from "./plugins/bucketPlugin";
+import { callablePlugin } from "./plugins/callablePlugin";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
@@ -100,6 +101,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:bucketPlugin
+        },
+        {
+            name:'callablePlugin',
+            source:'@',
+            paths:[],
+            plugin:callablePlugin
         },
         {
             name:'nextJsAppPlugin',

@@ -61,6 +61,8 @@ export const runProtogenCliAsync=async ({
                 dryRun:config.dryRun??false,
                 libStyle:config.libStyle??defaultProtoLibStyle,
                 autoIndexPackages:config.libStyle==='nx',
+                callables:[],
+                requiredFeatures:new Set<string>(),
                 paramMap:{},
                 paramPackage:`@${namespace}/${paramPackageName}`,
                 paramPackageName:paramPackageName,

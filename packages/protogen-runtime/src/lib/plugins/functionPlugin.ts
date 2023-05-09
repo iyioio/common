@@ -1,5 +1,5 @@
 import { joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, protoLabelOutputLines, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
+import { addPackageInfoToProtoType, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoIsTsBuiltType, protoLabelOutputLines, ProtoPipelineConfigurablePlugin, protoPrependTsImports, ProtoTypeInfo } from "@iyio/protogen";
 import { z } from "zod";
 
 const supportedTypes=['function'];
@@ -34,6 +34,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
         namespace,
         packagePaths,
         libStyle,
+        callables,
     },{
         functionPackage='domain-functions',
         functionPath=functionPackage,
@@ -69,8 +70,23 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
 
             const isAsync=name.toLowerCase().endsWith('async') || node.children?.['async']!==undefined;
             const args=protoGetChildren(node.children?.['args'],false);
-            const returnTypeBase=node.children?.['return']?.type||'void';
+            const returnNode=node.children?.['return']
+            const returnTypeBase=returnNode?.type||'void';
             const returnType=isAsync?`Promise<${returnTypeBase}>`:returnTypeBase;
+
+            const argsExportName=name+'FunctionArgsScheme';
+            const argsPackage=importMap[argsExportName];
+
+            callables.push({
+                name,
+                exportName:name,
+                package:packageName,
+                args:args.map(a=>addPackageInfoToProtoType(a.types[0] as ProtoTypeInfo,importMap,a.name)),
+                argsExportName:argsPackage?argsExportName:undefined,
+                argsPackage,
+                returnType:returnNode?.types[0]?addPackageInfoToProtoType(returnNode.types[0],importMap):undefined,
+                isAsync:isAsync?true:undefined,
+            })
 
             if(!protoIsTsBuiltType(returnTypeBase)){
                 imports.push(returnTypeBase);
