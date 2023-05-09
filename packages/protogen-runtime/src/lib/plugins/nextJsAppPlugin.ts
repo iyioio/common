@@ -35,7 +35,8 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
         nodes,
         namespace,
         libStyle,
-        cdkProjectDir
+        cdkProjectDir,
+        metadata
     },{
         nextJsAppOverrideTemplateFiles=false,
         nextJsAppCdkConstructClassName='Apps',
@@ -60,6 +61,8 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
             if(!name){
                 continue;
             }
+
+            metadata['screens-path-'+name]=`packages/${name}/pages`
 
             outputs.push(...nextJsAppTemplate({
                 mapOptions:{

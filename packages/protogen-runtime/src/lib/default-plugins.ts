@@ -8,6 +8,7 @@ import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
 import { markdownParser } from "./plugins/markdownParser";
 import { nextJsAppPlugin } from "./plugins/nextJsAppPlugin";
+import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin";
 import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
@@ -113,6 +114,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:nextJsAppPlugin
+        },
+        {
+            name:'nextJsPagePlugin',
+            source:'@',
+            paths:[],
+            plugin:nextJsPagePlugin
         },
         {
             name:'paramPlugin',

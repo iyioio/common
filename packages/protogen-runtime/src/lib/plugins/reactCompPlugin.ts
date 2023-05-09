@@ -2,7 +2,7 @@ import { joinPaths, requireUnrootPath } from "@iyio/common";
 import { ProtoContext, ProtoNode, ProtoPipelineConfigurablePlugin, addTsImport, getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoGetTsType, protoIsTsBuiltType, protoLabelOutputLines, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
-const supportedTypes=['comp','view','screen'];
+const supportedTypes=['comp','view'];
 
 const ReactCompPluginConfig=z.object(
 {
