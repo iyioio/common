@@ -1,10 +1,10 @@
 import { joinPaths } from "@iyio/common";
-import { ProtoAction, ProtoExpression, ProtoPipelineConfigurablePlugin, ProtoWorkflow, commonProtoFeatures, getProtoPluginPackAndPath, parseProtoAction, parseProtoExpression, protoGenerateTsIndex } from "@iyio/protogen";
+import { ProtoAction, ProtoExpression, ProtoPipelineConfigurablePlugin, ProtoWorkerGroup, ProtoWorkflow, commonProtoFeatures, getProtoPluginPackAndPath, parseProtoAction, parseProtoExpression, protoGenerateTsIndex, protoGetChildren } from "@iyio/protogen";
 import { z } from "zod";
 
 export const actionDataOutputKey='actionWorkflow'
 
-const supportedTypes=['action','expression'];
+const supportedTypes=['action','expression','workerGroup'];
 
 const ActionPluginConfig=z.object(
 {
@@ -27,6 +27,12 @@ const ActionPluginConfig=z.object(
      * @default "actions-index.ts"
      */
     actionIndexFilename:z.string().optional(),
+
+    /**
+     * Name of the types used as workers.
+     * @default ["Worker"]
+     */
+    actionWorkerTypes:z.string().array().optional(),
 })
 
 export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginConfig>=
@@ -48,6 +54,7 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
         actionPath=actionPackage,
         actionExportName='actions',
         actionIndexFilename='actions-index.ts',
+        actionWorkerTypes=['Worker']
     })=>{
 
         const supported=nodes.filter(n=>supportedTypes.some(t=>n.types.some(nt=>nt.type===t)));
@@ -77,11 +84,12 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
 
         const actions:ProtoAction[]=[];
         const expressions:ProtoExpression[]=[];
+        const workerGroups:Record<string,ProtoWorkerGroup>={};
+        const workerNames:string[]=[];
         const workflow:ProtoWorkflow={
-            events:[],
-            workers:[],
             actions,
             expressions,
+            workerGroups
         }
 
 
@@ -96,6 +104,23 @@ export const actionPlugin:ProtoPipelineConfigurablePlugin<typeof ActionPluginCon
                 const expression=parseProtoExpression({node});
                 expressions.push(expression);
             }
+
+            if(node.types.some(t=>t.type==='workerGroup')){
+                const children=protoGetChildren(node,false);
+                for(const child of children){
+                    if(!child.types[0]?.isArray || !actionWorkerTypes.includes(child.type)){
+                        continue;
+                    }
+                    const name=workerNames.includes(node.name)?child.address:node.name;
+                    workerGroups[child.address]={
+                        name,
+                        address:child.address,
+                        type:child.types[0],
+                    }
+                    workerNames.push(name);
+                }
+            }
+
 
         }
 

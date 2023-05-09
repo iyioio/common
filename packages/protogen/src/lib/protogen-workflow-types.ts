@@ -1,4 +1,5 @@
 import { ProtoExpression } from "./protogen-expression-types";
+import { ProtoTypeInfo } from "./protogen-types";
 
 export interface ProtoAction
 {
@@ -8,7 +9,7 @@ export interface ProtoAction
      * Determines the workers the action is executed against. When actions are stored using
      * ActionRecords one ActionRecord is created for every nodeAddress.
      */
-    addresses:Record<string,string>;
+    workerAddresses:Record<string,string>;
 
     /**
      * The order in-which actions are executed. By default actions will use the current date's
@@ -104,16 +105,19 @@ export interface ProtoWorker
  */
 export interface ProtoWorkerGroup
 {
-    workers:ProtoWorker[];
+    name:string;
+    address:string;
+    type?:ProtoTypeInfo;
+    workers?:ProtoWorker[];
 }
 
 export interface ProtoWorkflow
 {
-    workers:ProtoWorker[];
-    events:any[];
     actions:ProtoAction[];
     /**
      * Additional expressions that actions can call
      */
     expressions:ProtoExpression[];
+
+    workerGroups:Record<string,ProtoWorkerGroup>;
 }

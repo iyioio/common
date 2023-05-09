@@ -8,14 +8,14 @@ export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
     const expression=parseProtoExpression({node,filterPaths:['trigger']});
 
 
-    const addresses:Record<string,string>={}
+    const workerAddresses:Record<string,string>={}
     const workerNodes=node.children?.['workers']?.children;
     if(workerNodes){
         for(const e in workerNodes){
             const worker=workerNodes[e];
-            const address=worker.value?.split(',')[0]?.trim();
+            const address=worker.types[0]?.path
             if(address){
-                addresses[worker.name]=address;
+                workerAddresses[worker.name]=address.join('.');
             }
         }
     }
@@ -29,7 +29,7 @@ export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
 
     return {
         name:expression.name??'Action',
-        addresses,
+        workerAddresses: workerAddresses,
         order:order?safeParseNumber(node.children?.['order']?.value,0):endDateSort,
         maxWorkerExeCount:maxWorkerExeCount?safeParseNumber(node.children?.['maxWorkerExeCount']?.value,0):undefined,
         maxGroupExeCount:maxGroupExeCount?safeParseNumber(node.children?.['maxGroupExeCount']?.value,0):undefined,
