@@ -65,7 +65,25 @@ export const getTimeZone=():string=>{
         return defaultTimeZone;
     }
 }
+/**
+ * Adds time interval b to time interval a. Time interval a is mutated.
+ */
+export const addTimeIntervals=(a:TimeInterval,b:TimeInterval)=>{
+    a.ms=(a.ms??0)+(b.ms??0);
+    a.seconds=(a.seconds??0)+(b.seconds??0);
+    a.minutes=(a.minutes??0)+(b.minutes??0);
+    a.hours=(a.hours??0)+(b.hours??0);
+    a.days=(a.days??0)+(b.days??0);
+    a.weeks=(a.weeks??0)+(b.weeks??0);
+    a.months=(a.months??0)+(b.months??0);
+    a.years=(a.years??0)+(b.years??0);
 
+    for(const e in a){
+        if(!(a as any)[e]){
+            delete (a as any)[e];
+        }
+    }
+}
 export const parseTimeInterval=(value:string|number):TimeInterval=>{
 
     if(typeof value === 'number'){
