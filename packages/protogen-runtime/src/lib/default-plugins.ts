@@ -1,5 +1,6 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { actionPlugin } from "./plugins/actionPlugin";
+import { assignPlugin } from "./plugins/assignPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { bucketPlugin } from "./plugins/bucketPlugin";
 import { callablePlugin } from "./plugins/callablePlugin";
@@ -126,6 +127,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:paramPlugin
+        },
+        {
+            name:'assignPlugin',
+            source:'@',
+            paths:[],
+            plugin:assignPlugin
         },
         {// should always be the last generator
             name:'autoPackageIndexPlugin',
