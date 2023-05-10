@@ -5,6 +5,7 @@ import Style from "styled-jsx/style";
 export interface ImageProps extends BaseLayoutProps
 {
     alt:string;
+    title?:string;
     src:string;
     contain?:boolean;
     style?:CSSProperties;
@@ -18,6 +19,7 @@ export interface ImageProps extends BaseLayoutProps
 export function Image({
     alt,
     src,
+    title,
     contain,
     style={},
     elemRef,
@@ -30,7 +32,7 @@ export function Image({
 
     return (
         <div
-            title={alt}
+            title={title}
             ref={elemRef}
             role="img"
             aria-label={alt}
