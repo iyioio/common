@@ -260,4 +260,28 @@ export class AuthService implements IDisposable, IInit
 
         return result??false;
     }
+
+    /**
+     * Refreshes the current user
+     */
+    public async refreshAsync():Promise<boolean>
+    {
+        const userData=this.currentUser.value?.providerData;
+        if(!userData){
+            return false;
+        }
+        const provider=await this.getProviderAsync(userData.type);
+        let user=await provider?.getUserAsync(userData);
+        if(user){
+            if(provider?.refreshTokenAsync){
+                await provider?.refreshTokenAsync?.(user);
+                user=await provider?.getUserAsync(userData)??user;
+            }
+
+            await this.setUserAsync(user,false);
+            return true;
+        }else{
+            return false;
+        }
+    }
 }

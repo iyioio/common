@@ -93,6 +93,12 @@ export interface AuthProvider extends IOpInit, IOpDisposable
     getUserAsync(data:UserAuthProviderData):Promise<BaseUser|null>;
 
     /**
+     * Causes the users token to be refreshed. The user may need to be freshed after calling as the
+     * provided user object may not be effected.
+     */
+    refreshTokenAsync?(user:BaseUser):Promise<boolean>;
+
+    /**
      * Returns a JWT for the given user data
      */
     getJwtAsync?(data:UserAuthProviderData):Promise<string|null>;

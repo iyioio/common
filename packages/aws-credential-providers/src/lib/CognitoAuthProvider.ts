@@ -461,5 +461,23 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         }));
     }
 
+    public async refreshTokenAsync(user:BaseUser):Promise<boolean>
+    {
+        const cUser:CognitoUser|undefined=user.providerData.providerData?.[userKey];
+        if(!cUser){
+            return false;
+        }
+
+        const session=await promiseFromErrorResultCallback<CognitoUserSession|null>(cb=>cUser.getSession(cb));
+
+        if(!session){
+            return false;
+        }
+
+        await promiseFromErrorResultCallback(cb=>cUser.refreshSession(session.getRefreshToken(),cb));
+
+        return true;
+    }
+
 }
 
