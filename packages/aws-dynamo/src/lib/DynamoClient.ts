@@ -22,6 +22,7 @@ export interface QueryMatchTableOptions<T>
     projectionProps?:(keyof T)[];
     limit?:number;
     returnAll?:boolean;
+    reverseOrder?:boolean;
 }
 
 export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
@@ -148,7 +149,8 @@ export class DynamoClient implements IWithStoreAdapter
         pageKey,
         projectionProps,
         limit,
-        returnAll
+        returnAll,
+        reverseOrder,
     }:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
 
         const input:Partial<QueryCommandInput>={
@@ -157,7 +159,8 @@ export class DynamoClient implements IWithStoreAdapter
             ExpressionAttributeValues:{},
             ExclusiveStartKey:pageKey,
             ProjectionExpression:projectionProps?.map((p,i)=>`#_projected${i}`).join(','),
-            Limit:limit
+            Limit:limit,
+            ScanIndexForward:reverseOrder,
         };
 
         if(projectionProps){
