@@ -29,6 +29,11 @@ const ZodPluginConfig=z.object(
      */
     zodPackage:z.string().optional(),
 
+    /**
+     * A comma separated list of properties that should be converted as long strings.
+     */
+    zodLongStringProps:z.string().optional(),
+
 }).merge(SharedTsPluginConfigScheme);
 
 export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
@@ -49,6 +54,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         zodPackage='types',
         zodIndexFilename='types-index.ts',
         zodPath,
+        zodLongStringProps,
         ...tsConfig
     })=>{
 
@@ -59,6 +65,8 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
             libStyle,
             {packagePaths,indexFilename:zodIndexFilename}
         );
+
+        const autoLong=zodLongStringProps?zodLongStringProps.split(',').map(s=>s.trim()):[];
 
         log(`zodPlugin. node count = ${nodes.length}`)
 
@@ -94,12 +102,12 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
                         type:'',
                         address:'',
                         types:[]
-                    },name:nodeName},out,tab,getFullName,useCustomTypes);
+                    },name:nodeName},out,tab,autoLong,getFullName,useCustomTypes);
                     break;
 
                 case 'serverFn':
                     nodeName='invoke'+node.name+'FunctionArgs';
-                    addInterface({...node,name:nodeName},out,tab,getFullName,useCustomTypes,prop=>prop.name==='input');
+                    addInterface({...node,name:nodeName},out,tab,autoLong,getFullName,useCustomTypes,prop=>prop.name==='input');
                     break;
 
                 case 'entity':
@@ -108,7 +116,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
                 case 'class':
                 case 'event':
                 case 'type':
-                    addInterface(node,out,tab,getFullName,useCustomTypes);
+                    addInterface(node,out,tab,autoLong,getFullName,useCustomTypes);
                     break;
 
                 default:
@@ -192,7 +200,7 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
     out.push(`export type ${node.name}=z.infer<typeof ${fullName}>;`);
 }
 
-const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[],propFilter?:(prop:ProtoNode)=>boolean)=>{
+const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[],propFilter?:(prop:ProtoNode)=>boolean)=>{
     const fullName=getFullName(node.name);
 
     const children=protoChildrenToArray(node.children)
@@ -239,7 +247,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                         getFullName(propType)
                     })${
                         prop.types[0]?.isArray?'.array()':''
-                    }${getFormatCalls(prop,propType)}${
+                    }${getFormatCalls(prop,propType,autoLong)}${
                         prop.optional?'.optional()':''
                     },`
                 );
@@ -258,7 +266,7 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,getFullName:(name:str
                 }${
                     prop.name
                 }:${
-                    customType||`z.${propType}()${getFormatCalls(prop,propType)}`
+                    customType||`z.${propType}()${getFormatCalls(prop,propType,autoLong)}`
                 }${
                     prop.types[0]?.isArray?'.array()':''
                 }${
@@ -317,7 +325,7 @@ interface AddCallOptions
     rawValue?:boolean;
     option?:(att:ProtoNode)=>string|null;
 }
-const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
+const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>{
     let call='';
 
     const add=(type:string|string[],name:string,att:ProtoNode|undefined,getValue?:((att:ProtoNode)=>string|number|null|undefined)|null,{
@@ -361,6 +369,7 @@ const getFormatCalls=(prop:ProtoNode,propType:string):string=>{
     if( !noAutoLength &&
         propType==='string' &&
         !attChildren['max'] &&
+        !autoLong.includes(prop.name) &&
         !parseBool(attChildren['long']?.value,false)
     ){
         call+='.max(255)';
