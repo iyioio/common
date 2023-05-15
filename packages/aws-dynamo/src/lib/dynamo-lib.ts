@@ -2,6 +2,35 @@ import { AttributeValue, UpdateItemInput } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 import { deleteUndefined } from "@iyio/common";
 
+const UpdateExpressionFlag=Symbol('UpdateExpressionFlag');
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface BaseUpdateExpression<T>
+{
+    /**
+     * If not undefined add will be added to the current value of the target object.
+     */
+    add?:any;
+}
+
+export interface UpdateExpression<T> extends BaseUpdateExpression<T>
+{
+    typeFlag:typeof UpdateExpressionFlag;
+}
+
+export const createUpdateExpression=<T=any>(update:BaseUpdateExpression<T>):UpdateExpression<T>=>({
+    typeFlag:UpdateExpressionFlag,
+    ...update
+})
+export const isUpdateExpression=<T=any>(value:any):value is UpdateExpression<T>=>(
+    value?(value as Partial<UpdateExpression<T>>).typeFlag===UpdateExpressionFlag:false
+)
+
+export type ItemPatch<TEntity>=
+{
+    [prop in keyof TEntity]?:TEntity[prop]|UpdateExpression<TEntity[prop]>;
+}
+
 export interface ExtendedItemUpdateOptions<T=any>
 {
     incrementProp?:keyof T;
@@ -11,7 +40,7 @@ export interface ExtendedItemUpdateOptions<T=any>
 export function createItemUpdateInputOrNull<T>(
     tableName:string,
     key:Partial<T>,
-    obj:Partial<T>,
+    obj:ItemPatch<T>,
     doNotUpdateKeys=true,
     {
         incrementProp,
@@ -23,7 +52,8 @@ export function createItemUpdateInputOrNull<T>(
 
     const names:Record<string,string>={}
     const values:Record<string,AttributeValue>={}
-    let expression='SET';
+    const sets:string[]=[];
+    const adds:string[]=[];
 
     const ip=typeof incrementProp === 'string'?incrementProp:undefined;
 
@@ -35,9 +65,20 @@ export function createItemUpdateInputOrNull<T>(
 
         const vk=':_'+i;
         const nk='#_'+i;
-        values[vk]=convertToAttr(obj[e]);
-        names[nk]=e;
-        expression=`${expression}${i?',':''} ${nk} = ${vk}`
+        const patchValue=obj[e];
+        if(isUpdateExpression(patchValue)){
+            if(patchValue.add!==undefined){
+                values[vk]=convertToAttr(patchValue.add);
+                names[nk]=e;
+                adds.push(`${nk} ${vk}`);
+            }else{
+                continue;
+            }
+        }else{
+            values[vk]=convertToAttr(patchValue);
+            names[nk]=e;
+            sets.push(`${nk} = ${vk}`)
+        }
         i++;
     }
 
@@ -47,7 +88,7 @@ export function createItemUpdateInputOrNull<T>(
         const nk='#_iv'+i;
         values[vk]=convertToAttr(incrementValue??1);
         names[nk]=ip;
-        expression=`${expression}${i?',':''} ${nk} = ${nk} + ${vk}`
+        adds.push(`${nk} ${vk}`)
         i++;
     }
 
@@ -71,7 +112,10 @@ export function createItemUpdateInputOrNull<T>(
         Key:marshall(key),
         ExpressionAttributeValues:values,
         ExpressionAttributeNames:names,
-        UpdateExpression:expression,
+        UpdateExpression:[
+            (sets.length?'SET '+(sets.join(', ')):''),
+            (adds.length?'Add '+(adds.join(', ')):'')
+        ].join(' ')
     }
 
     if(condition){

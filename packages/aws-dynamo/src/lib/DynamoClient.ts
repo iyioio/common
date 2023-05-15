@@ -3,7 +3,7 @@ import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, deleteUndefined, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
-import { ExtendedItemUpdateOptions, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
+import { ExtendedItemUpdateOptions, ItemPatch, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
 
 export interface PageResult<T>
 {
@@ -160,7 +160,7 @@ export class DynamoClient implements IWithStoreAdapter
             ExclusiveStartKey:pageKey,
             ProjectionExpression:projectionProps?.map((p,i)=>`#_projected${i}`).join(','),
             Limit:limit,
-            ScanIndexForward:reverseOrder,
+            ScanIndexForward:!reverseOrder,
         };
 
         if(projectionProps){
@@ -294,7 +294,7 @@ export class DynamoClient implements IWithStoreAdapter
         return this.putAsync(getDataTableId(table),table.primaryKey,item);
     }
 
-    public async patchAsync<T>(tableName:string, key:Partial<T>, item:Partial<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
+    public async patchAsync<T>(tableName:string, key:Partial<T>, item:ItemPatch<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
     {
         const update=createItemUpdateInputOrNull(tableName,key,item,true,extendedOptions);
         if(!update){
@@ -306,7 +306,7 @@ export class DynamoClient implements IWithStoreAdapter
 
     public async patchTableItem<T>(
         table:DataTableDescription<T>,
-        item:Partial<T>,
+        item:ItemPatch<T>,
         {
             skipVersionCheck,
             ...extendedOptions
