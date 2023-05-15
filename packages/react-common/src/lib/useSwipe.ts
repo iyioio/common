@@ -1,3 +1,4 @@
+import { Point } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
 export type SwipeDirection='up'|'down'|'left'|'right';
@@ -21,13 +22,38 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
 
         let posDown={x:0,y:0}
         let time=0;
+        let useTouch:boolean|null=null;
 
-        const down=(e:TouchEvent)=>{
-            time=Date.now();
-            posDown={x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
+        const touchDown=(e:TouchEvent)=>{
+            useTouch=true;
+            down({x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY})
         }
 
-        const up=(e:TouchEvent)=>{
+        const touchUp=(e:TouchEvent)=>{
+            useTouch=true;
+            up({x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY},e)
+        }
+
+        const mouseDown=(e:MouseEvent)=>{
+            if(useTouch){
+                return;
+            }
+            down({x:e.clientX,y:e.clientY})
+        }
+
+        const mouseUp=(e:MouseEvent)=>{
+            if(useTouch){
+                return;
+            }
+            up({x:e.clientX,y:e.clientY},e)
+        }
+
+        const down=(pt:Point)=>{
+            time=Date.now();
+            posDown={...pt};;
+        }
+
+        const up=(pt:Point,e:Event)=>{
             const {
                 listener,
                 swipeTimeout,
@@ -38,7 +64,7 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
                 return;
             }
 
-            const posUp={x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
+            const posUp={...pt}
 
             const xDiff=posUp.x-posDown.x;
             const yDiff=posUp.y-posDown.y;
@@ -57,15 +83,19 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
                 :
                     yDiff>0?'down':'up'
             )
-            
+
         }
 
-        listenTo.addEventListener('touchstart',down);
-        listenTo.addEventListener('touchend',up);
+        listenTo.addEventListener('touchstart',touchDown);
+        listenTo.addEventListener('touchend',touchUp);
+        listenTo.addEventListener('mousedown',mouseDown);
+        listenTo.addEventListener('mouseup',mouseUp);
 
         return ()=>{
-            listenTo.removeEventListener('touchstart',down);
-            listenTo.removeEventListener('touchend',up);
+            listenTo.removeEventListener('touchstart',touchDown);
+            listenTo.removeEventListener('touchend',touchUp);
+            listenTo.removeEventListener('mousedown',mouseDown);
+            listenTo.removeEventListener('mouseup',mouseUp);
         }
 
     },[listenTo])

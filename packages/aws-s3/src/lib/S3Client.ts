@@ -149,7 +149,7 @@ export class S3Client implements IWithStoreAdapter
     }
 }
 
-const formatBucketName=(name:string)=>{
+export const formatBucketName=(name:string)=>{
     const i=name.lastIndexOf(':');
     return i===-1?name:name.substring(i+1);
 }

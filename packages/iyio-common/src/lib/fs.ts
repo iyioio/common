@@ -23,7 +23,7 @@ export const joinPaths=(... paths:string[]):string=>
 }
 
 
-export const addDefaultProtocol=<T extends StringOrEmpty>(path:T, protocol:string='file://'):T=>
+export const addDefaultProtocol=<T extends StringOrEmpty>(path:T, protocol='file://'):T=>
 {
     if(path===null || path===undefined){
         return path;
@@ -31,7 +31,7 @@ export const addDefaultProtocol=<T extends StringOrEmpty>(path:T, protocol:strin
     return (path.indexOf('://')===-1?protocol+path:path) as T;
 }
 
-export const getFileExt=(path:string|null|undefined,includeDot:boolean=false,toLower:boolean=true):string=>
+export const getFileExt=(path:string|null|undefined,includeDot=false,toLower=true):string=>
 {
     if(!path){
         return '';

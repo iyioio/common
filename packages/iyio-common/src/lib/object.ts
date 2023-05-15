@@ -362,3 +362,15 @@ export const queryParamsToObject=(query:string):HashMap<string>=>
 
     return obj;
 }
+
+export const isValueInObj=(value:any,obj:Record<string,any>):boolean=>{
+    if(!obj || !(typeof obj === 'object')){
+        return false;
+    }
+    for(const e in obj){
+        if(obj[e]===value){
+            return true;
+        }
+    }
+    return false;
+}

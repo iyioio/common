@@ -13,12 +13,14 @@ export interface ImageProps extends BaseLayoutProps
     height?:string|number;
     width?:string|number;
     tile?:boolean;
+    bgSrc?:string|null;
     elemRef?:(elem:HTMLElement|null)=>void;
 }
 
 export function Image({
     alt,
     src,
+    bgSrc,
     title,
     contain,
     style={},
@@ -37,7 +39,7 @@ export function Image({
             role="img"
             aria-label={alt}
             className={cn("Image",{contain,tile},baseLayoutCn(props))}
-            style={{backgroundImage:`url(${src})`,height,width,...style}}>
+            style={{backgroundImage:`url(${src})${bgSrc?`,url(${bgSrc})`:''}`,height,width,...style}}>
             {children}
             <Style id="iyio-Image-wg03Hn64WGoy0TyWlQJ7" global jsx>{css`
                 .Image{

@@ -11,13 +11,21 @@ export interface UseLazyRenderOptions
     intersectionOptions?:IntersectionObserverInit;
 }
 
+export interface LazyRenderState
+{
+    show:boolean;
+    minWidth:number|undefined;
+    minHeight:number|undefined;
+    hasBeenVisible:boolean;
+}
+
 export function useLazyRender(elem:HTMLElement|null,{
     hold,
     holdSize,
     holdHeight=holdSize,
     holdWidth=holdSize,
     intersectionOptions,
-}:UseLazyRenderOptions):{show:boolean,minWidth:number|undefined,minHeight:number|undefined}{
+}:UseLazyRenderOptions):LazyRenderState{
 
     const [lastSize,setLastSize]=useState<Size|null>(null);
 
@@ -38,12 +46,13 @@ export function useLazyRender(elem:HTMLElement|null,{
         if(visible){
             setHasBeenVisible(true);
         }
-    },[visible])
+    },[visible]);
 
     return {
         show,
         minWidth:show?undefined:holdWidth?lastSize?.width:undefined,
         minHeight:show?undefined:holdHeight?lastSize?.height:undefined,
+        hasBeenVisible,
     }
 
 }

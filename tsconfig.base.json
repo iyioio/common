@@ -41,7 +41,8 @@
             ],
             "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"],
             "@iyio/ai-complete": ["packages/ai-complete/src/index.ts"],
-            "@iyio/ai-complete-openai": ["packages/ai-complete-openai/src/index.ts"]
+            "@iyio/ai-complete-openai": ["packages/ai-complete-openai/src/index.ts"],
+            "@iyio/media-common": ["packages/media-common/src/index.ts"]
         }
     },
     "exclude": ["node_modules", "tmp","tmpl"]
