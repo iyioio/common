@@ -153,8 +153,6 @@ ${this.parent.nodes.value.map((e,i)=>e===this || i>20?'':e.getFullCode()).join('
                 ]
             })));
 
-            console.log(results);
-
             let i=0;
             //const newCode=results[i++]?.options?.[0]?.message?.content??'_';
             this._parse(code.replace(completeReg,(a)=>results[i++]?.options?.[0]?.message?.content??'_').replace('??',''));

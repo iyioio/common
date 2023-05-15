@@ -33,7 +33,7 @@ export function ProtogenToolbar({
             setSaveState('success');
             await delayAsync(300);
         }catch(ex){
-            console.log(ex);
+            console.error(ex);
             setSaveState('danger')
         }
         await delayAsync(1000);
@@ -50,7 +50,7 @@ export function ProtogenToolbar({
             setExecuteState('success');
             await delayAsync(300);
         }catch(ex){
-            console.log(ex);
+            console.error(ex);
             setExecuteState('danger')
         }
         await delayAsync(1000);

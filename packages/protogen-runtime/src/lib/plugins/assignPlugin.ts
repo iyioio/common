@@ -57,8 +57,6 @@ export const assignPlugin:ProtoPipelineConfigurablePlugin<typeof AssignPluginCon
 
         }
 
-        console.log(users)
-
         if(!users.length){
             return;
         }
