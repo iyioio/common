@@ -26,6 +26,22 @@ export interface Sides
     bottom:number;
 }
 
+export interface OptionalSides
+{
+    left?:number;
+    right?:number;
+    top?:number;
+    bottom?:number;
+}
+
+export interface OptionalBooleanSides
+{
+    left?:boolean;
+    right?:boolean;
+    top?:boolean;
+    bottom?:boolean;
+}
+
 export interface Size
 {
     width:number;
