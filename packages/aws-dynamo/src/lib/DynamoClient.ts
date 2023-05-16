@@ -1,4 +1,4 @@
-import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, GetItemCommandInput, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, deleteUndefined, getDataTableId } from "@iyio/common";
@@ -23,6 +23,16 @@ export interface QueryMatchTableOptions<T>
     limit?:number;
     returnAll?:boolean;
     reverseOrder?:boolean;
+}
+
+export interface DynamoGetOptions<T>
+{
+    input?:GetItemCommandInput;
+
+    /**
+     * If defined only the props in the array will be returned.
+     */
+    includeProps?:(keyof T)[];
 }
 
 export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
@@ -247,21 +257,27 @@ export class DynamoClient implements IWithStoreAdapter
         };
     }
 
-    public async getAsync<T>(tableName:string,key:Partial<T>):Promise<T|undefined>
+    public async getAsync<T>(tableName:string,key:Partial<T>,options?:DynamoGetOptions<T>):Promise<T|undefined>
     {
+
+        const projection=options?.includeProps?.join(', ');
+
         const r=await this.getClient().send(new GetItemCommand({
             TableName:formatDynamoTableName(tableName),
             Key:convertObjectToDynamoAttributes(key),
+            ProjectionExpression:projection,
+            ...(options?.input??{}),
         }));
 
         return r.Item?unmarshall(r.Item) as T:undefined;
     }
 
-    public async getFromTableAsync<T>(table:DataTableDescription<T>,key:string|Partial<T>):Promise<T|undefined>
+    public async getFromTableAsync<T>(table:DataTableDescription<T>,key:string|Partial<T>,options?:DynamoGetOptions<T>):Promise<T|undefined>
     {
         return this.getAsync<T>(
             getDataTableId(table),
-            typeof key === 'string'?{[table.primaryKey]:key} as Partial<T>:key
+            typeof key === 'string'?{[table.primaryKey]:key} as Partial<T>:key,
+            options
         );
     }
 
