@@ -6,6 +6,7 @@ import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
 import { queryParamsToObject } from './object';
+import { zodCoerceObject } from './zod-helpers';
 
 export const fnHandler=async ({
     evt,
@@ -58,7 +59,7 @@ export const fnHandler=async ({
         fnInvokeEvent?
             fnInvokeEvent.input:
         isHttp?
-            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:undefined)
+            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:(method==='GET' && inputScheme)?zodCoerceObject(inputScheme,query):undefined)
         :
             evt
     );

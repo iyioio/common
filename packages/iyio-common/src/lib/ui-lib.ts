@@ -82,6 +82,9 @@ export const addQueryToPath=(path:string,query:RouteQuery|null|undefined)=>{
 
     for(const e in query){
         const q=query[e] as string|string[]
+        if(q===undefined){
+            continue;
+        }
         if(Array.isArray(q)){
             for(const v of q){
                 path+=encodeURIComponent(e)+'[]='+encodeURIComponent(v)+'&';

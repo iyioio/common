@@ -1,4 +1,4 @@
-import { ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodNull, ZodNumber, ZodOptional, ZodString, ZodTypeAny, ZodUndefined } from "zod";
+import { ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined } from "zod";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
 export const getZodErrorMessage=(zodError:ZodError):string=>{
@@ -58,4 +58,50 @@ export const getZodEnumPrimitiveType=(type:ZodEnum<any>):TsPrimitiveType|undefin
 
     return tsType as TsPrimitiveType;
 
+}
+
+export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{result?:T,error?:ZodError}=>{
+    if(!(scheme instanceof ZodObject)){
+        const fallback=scheme.safeParse(obj);
+        return fallback.success?{result:fallback.data}:{error:fallback.error}
+    }
+    const output:Record<string,any>={};
+    for(const e in scheme.shape){
+        const prop:ZodType<any>=scheme.shape[e];
+        const value=obj[e];
+        if(!prop || value===undefined){
+            continue;
+        }
+        const parsed=prop.safeParse(value);
+        if(parsed.success){
+            output[e]=parsed.data;
+        }else{
+            const strValue=value===null?'null':(typeof value === 'string')?value:value.toString() as string;
+            switch(zodTypeToPrimitiveType(prop)){
+
+                case "boolean":
+                    output[e]=Boolean(strValue);
+                    break;
+
+                case "number":
+                    output[e]=Number(strValue);
+                    break;
+
+                case "string":
+                    output[e]=strValue;
+                    break;
+
+                case "null":
+                    output[e]=null;
+                    break;
+            }
+        }
+    }
+
+    const parsedResult=scheme.safeParse(output);
+    if(parsedResult.success){
+        return parsedResult.data;
+    }else{
+        return {error:parsedResult.error}
+    }
 }
