@@ -55,7 +55,7 @@ export const useInvoke=<TInput,TOutput>(
 
     useEffect(()=>{
 
-        if(!tInput || !invoke || disabled){
+        if(tInput===undefined || !invoke || disabled){
             return;
         }
 
@@ -63,7 +63,7 @@ export const useInvoke=<TInput,TOutput>(
 
         (async ()=>{
             try{
-                const result=await invoke(tInput);
+                const result=await invoke((tInput===null?undefined:tInput) as any);
                 if(!m){return;}
                 setOutput(result);
             }catch(ex){
