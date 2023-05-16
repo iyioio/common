@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
-import { grantTableQueryPerms } from "./cdk-lib";
+import { grantTableQueryPerms, grantTableScanPerms } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { ManagedProps } from "./ManagedProps";
 
@@ -114,6 +114,9 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
                         if(request.types?.includes('read')){
                             table.grantReadData(request.grantee);
                             grantTableQueryPerms(request.grantee,table);
+                        }
+                        if(request.types?.includes('scan')){
+                            grantTableScanPerms(request.grantee,table);
                         }
                         if(request.types?.includes('write')){
                             table.grantWriteData(request.grantee);

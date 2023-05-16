@@ -36,6 +36,15 @@ export const grantTableQueryPerms=(grantee:Grantee, table:db.Table)=>{
     grantee.addToPolicy?.(getPolicy());
 }
 
+export const grantTableScanPerms=(grantee:Grantee, table:db.Table)=>{
+    const getPolicy=()=>new iam.PolicyStatement({
+        actions: ["dynamodb:Scan"],
+        resources: [`${table.tableArn}`],
+    })
+    grantee.addToRolePolicy?.(getPolicy());
+    grantee.addToPolicy?.(getPolicy());
+}
+
 export const addPolicyToGrantee=(
     grantee:Grantee,
     getPolicy:()=>iam.PolicyStatement|null|undefined|(iam.PolicyStatement|null|undefined)[]
