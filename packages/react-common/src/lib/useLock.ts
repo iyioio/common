@@ -1,5 +1,13 @@
-import { DisposeCallback, IProgress, Scope, UiLock, UiLockHandle, getNextUiLockId, rootScope, uiLockContainerService } from "@iyio/common";
+import { DisposeCallback, IProgress, Scope, UiLock, UiLockError, UiLockHandle, getNextUiLockId, rootScope, uiLockContainerService } from "@iyio/common";
 import { useEffect, useMemo } from "react";
+import { BehaviorSubject } from "rxjs";
+
+interface _Handle
+{
+    dispose:()=>void;
+    lock?:UiLock;
+    error?:BehaviorSubject<UiLockError|null>;
+}
 
 export function useLock(scope:Scope=rootScope):UiLockHandle
 {
@@ -11,9 +19,11 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
         let m=true;
         const locks:UiLock[]=[];
         const disposeList:((()=>void)|null)[]=[];
-        const add=(message:string,progress:IProgress|null|undefined)=>{
+        const add=(message:string,progress:IProgress|null|undefined):_Handle=>{
             if(!m){
-                return ()=>{/* */}
+                return {
+                    dispose:()=>{/* */}
+                }
             }
 
             const eventListener=(e:Event)=>{
@@ -51,11 +61,13 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
             }
 
             const id=getNextUiLockId();
+            const error=new BehaviorSubject<UiLockError|null>(null);
             const lock:UiLock={
                 id,
                 message,
                 active:true,
                 progress:progress||null,
+                error
             }
 
             locks.push(lock);
@@ -78,7 +90,11 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
                 },300);
             }
             disposeList.push(dispose);
-            return dispose;
+            return {
+                dispose,
+                error,
+                lock
+            }
         }
         const dispose=()=>{
             m=false;
@@ -88,7 +104,7 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
         }
 
         const get=async <T>(message:string,progress:IProgress|null|undefined,asyncWork:()=>Promise<T>)=>{
-            const d=add(message,progress);
+            const handle=add(message,progress);
             try{
 
                 const result=await asyncWork();
@@ -99,19 +115,34 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
                 }
 
             }catch(ex){
-                console.error('LockHandle error - '+message,ex)
+                console.error('LockHandle error - '+message,ex);
+                handle.error?.next({
+                    errorMessage:'An error occurred',
+                    error:ex
+                })
                 return {
                     result:null,
                     success:false,
                     error:ex
                 }
             }finally{
-                d();
+                if(handle.lock?.errorHandler?.handled.value===false){
+                    const sub=handle.lock.errorHandler.handled.subscribe(v=>{
+                        if(v){
+                            setTimeout(()=>{
+                                sub.unsubscribe();
+                                handle.dispose();
+                            },1)
+                        }
+                    })
+                }else{
+                    handle.dispose();
+                }
             }
         }
 
         const handle:UiLockHandle={
-            lock:add,
+            lock:(message:string,progress:IProgress|null|undefined)=>add(message,progress).dispose,
             get:(message,asyncWork)=>get(message,undefined,asyncWork),
             getWithProgress:get,
             runWithProgress:<T>(message:string,progress:IProgress|null|undefined,asyncWork:()=>Promise<T>)=>{

@@ -1,9 +1,21 @@
 import { BehaviorSubject } from "rxjs";
 import { IProgress } from "./progress-types";
+import { ReadonlySubject } from "./rxjs-types";
 
 export interface UiLockContainer
 {
     readonly locksSubject:BehaviorSubject<UiLock[]>;
+}
+
+export interface UiLockError
+{
+    errorMessage:string;
+    error:any;
+}
+
+export interface UiLockErrorHandler
+{
+    handled:ReadonlySubject<boolean>;
 }
 
 export interface UiLock
@@ -12,6 +24,9 @@ export interface UiLock
     active:boolean;
     message:string;
     progress:IProgress|null;
+    error:ReadonlySubject<UiLockError|null>;
+    errorHandler?:UiLockErrorHandler;
+
 }
 
 export interface UiLockHandle

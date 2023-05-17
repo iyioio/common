@@ -1,10 +1,15 @@
 import { UiLock, cn, css } from '@iyio/common';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { BehaviorSubject } from 'rxjs';
 import Style from 'styled-jsx/style';
+import JsonView from './JsonView';
 import { LoadingIndicator } from './LoadingIndicator';
 import { Portal } from './Portal';
+import { SlimButton } from './SlimButton';
 import { Text } from './Text';
 import { View } from './View';
+import { BasicIcon } from './icon/BasicIcon';
+import { useSubject } from './rxjs-hooks';
 
 interface LockScreenViewProps
 {
@@ -16,6 +21,19 @@ export function LockScreenView({
     lock,
     active,
 }:LockScreenViewProps){
+
+    const errorComplete=useMemo(()=>new BehaviorSubject<boolean>(false),[]);
+    const error=useSubject(lock.error);
+    const [errorShowMore,setErrorShowMore]=useState(false);
+
+    useEffect(()=>{
+        lock.errorHandler={
+            handled:errorComplete
+        }
+        return ()=>{
+            errorComplete.next(true);
+        }
+    },[lock,errorComplete])
 
     const [delayFinished,setDelayFinished]=useState(false);
     useEffect(()=>{
@@ -57,6 +75,23 @@ export function LockScreenView({
                         <View col g1 alignCenter>
                             <LoadingIndicator />
                             <Text face2 className="LockScreenView-message" text={lock.message} />
+                            {error && <>
+                                <View row g050>
+                                    <SlimButton onClick={()=>setErrorShowMore(!errorShowMore)}>
+                                        <Text colorWarn justifyCenter>
+                                            {error.errorMessage} <BasicIcon ml050 icon="circle-info"/>
+                                        </Text>
+                                    </SlimButton>
+                                </View>
+
+                                {errorShowMore && <JsonView mv1 value={{
+                                    message:error.error?.message,
+                                    error:error.error
+                                }} />}
+
+                                <SlimButton className="LockScreenView-errorContinue" onClick={()=>errorComplete.next(true)}>Continue</SlimButton>
+
+                            </>}
                         </View>
                         {lock.progress && /*<LockProgress progress={lock.progress}/>*/null}
                     </View>
@@ -81,6 +116,10 @@ export function LockScreenView({
                     .LockScreenView.show{
                         opacity:1;
                         pointer-events:auto;
+                    }
+                    .LockScreenView-errorContinue{
+                        font-size:24px;
+                        font-weight:bold;
                     }
                 `}</Style>
             </div>
