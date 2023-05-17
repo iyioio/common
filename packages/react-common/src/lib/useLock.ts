@@ -126,7 +126,7 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
                     error:ex
                 }
             }finally{
-                if(handle.lock?.errorHandler?.handled.value===false){
+                if(handle.error?.value && handle.lock?.errorHandler?.handled.value===false){
                     const sub=handle.lock.errorHandler.handled.subscribe(v=>{
                         if(v){
                             setTimeout(()=>{
