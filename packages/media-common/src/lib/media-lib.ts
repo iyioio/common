@@ -1,4 +1,4 @@
-import { Size } from "@iyio/common";
+import { Size, addQueryToPath, uuid } from "@iyio/common";
 import { GetImageDataStatsOptions, ImageStats, SnapShotResult, VideoSnapShotOptions as SnapshotOptions } from "./media-types";
 
 
@@ -209,3 +209,80 @@ export const imageSourceToImageDataAsync=async (src:string|Blob|MediaSource,widt
 }
 
 
+export const fetchBlobAsync=async (url:string,bustCache=false):Promise<Blob>=>{
+    if(bustCache){
+        url=addQueryToPath(url,{_:uuid()})
+    }
+    const r=await fetch(url);
+    return await r.blob();
+}
+
+export interface VideoInfo
+{
+    width:number;
+    height:number;
+    durationSeconds:number;
+}
+
+export const getVideoInfoAsync=(src:string|Blob):Promise<VideoInfo>=>{
+    return new Promise<VideoInfo>((resolve,reject)=>{
+        const video=globalThis.window?.document?.createElement('video');
+
+        if(!video){
+            resolve({width:0,height:0,durationSeconds:0})
+            return
+        }
+
+        const blobUrl=typeof src === 'string'?undefined:URL.createObjectURL(src);
+
+        const cleanUp=()=>{
+            video.removeEventListener('loadedmetadata',onMeta)
+            video.removeEventListener('error',onError)
+            if(blobUrl){
+                URL.revokeObjectURL(blobUrl);
+            }
+            video.src='';
+        }
+
+        const onMeta=()=>{
+            resolve({width:video.videoWidth,height:video.videoHeight,durationSeconds:video.duration})
+            cleanUp();
+        }
+
+        const onError=(e:any)=>{
+            cleanUp();
+            reject(e);
+        }
+
+        video.addEventListener('loadedmetadata',onMeta)
+        video.addEventListener('error',onError)
+
+        video.src=blobUrl??(src as string);
+    })
+}
+
+export const getVideoAsync=(src:string|Blob):Promise<{video:HTMLVideoElement,url:string,revokeRequired:boolean}>=>{
+    return new Promise<{video:HTMLVideoElement,url:string,revokeRequired:boolean}>((resolve,reject)=>{
+        const video=globalThis.window?.document?.createElement('video');
+
+        if(!video){
+            reject()
+            return
+        }
+
+        const blobUrl=typeof src === 'string'?undefined:URL.createObjectURL(src);
+
+        const onMeta=()=>{
+            resolve({video,url:video.src,revokeRequired:blobUrl?true:false})
+        }
+
+        const onError=(e:any)=>{
+            reject(e);
+        }
+
+        video.addEventListener('loadedmetadata',onMeta)
+        video.addEventListener('error',onError)
+
+        video.src=blobUrl??(src as string);
+    })
+}
