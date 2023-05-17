@@ -25,6 +25,7 @@ export * from './lib/SqlMockClient';
 export * from './lib/SqlStoreAdapter';
 export * from './lib/TaskPool';
 export * from './lib/UiRouterBase';
+export * from './lib/ValueCache';
 export * from './lib/array';
 export * from './lib/auth-types';
 export * from './lib/auth.deps';
