@@ -9,6 +9,7 @@ export * from "./lib/GradientView";
 export * from "./lib/HashBlurImage";
 export * from "./lib/Image";
 export * from "./lib/ImageContainer";
+export * from "./lib/JsonView";
 export * from "./lib/LazyImage";
 export * from "./lib/LazyView";
 export * from "./lib/LoadingIndicator";
