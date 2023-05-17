@@ -2,6 +2,7 @@ import { BaseUser } from "./BaseUser";
 import { DisposeContainer } from "./DisposeContainer";
 import { RouterStore } from "./RouterStore";
 import { ScopedSetter } from "./Setter";
+import { ValueCache } from "./ValueCache";
 import { _setUser } from "./_internal.common";
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
 import { AuthProviders, currentBaseUser } from "./auth.deps";
@@ -47,6 +48,11 @@ export class AuthService implements IDisposable, IInit
     private readonly store:RouterStore;
 
     private readonly authProviders:TypeDef<AuthProvider>;
+
+    /**
+     * Used to store data related to the current user. When the user changes userData is cleared.
+     */
+    public readonly userDataCache:ValueCache=new ValueCache();
 
     public constructor({
         currentUser,
@@ -237,6 +243,7 @@ export class AuthService implements IDisposable, IInit
                 await this.store.deleteAsync(providerDataKey);
             }
         }
+        this.userDataCache.clear();
         this.setUser(user);
         await user?.init();
     }
