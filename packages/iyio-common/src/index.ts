@@ -1,3 +1,4 @@
+export * from './lib/AuthDependentClient';
 export * from './lib/AuthService';
 export * from './lib/BaseStore';
 export * from './lib/BaseUser';

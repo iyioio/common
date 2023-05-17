@@ -1,6 +1,6 @@
 import { LambdaClient as AwsLambdaClient, InvokeCommand, LambdaClientConfig } from "@aws-sdk/client-lambda";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { FnInvokeEvent, Scope, ValueCache, authService, currentBaseUser, getZodErrorMessage } from "@iyio/common";
+import { AuthDependentClient, FnInvokeEvent, Scope, ValueCache, authService, currentBaseUser, getZodErrorMessage } from "@iyio/common";
 import { LambdaInvokeOptions } from "./lambda-types";
 
 
@@ -8,7 +8,7 @@ import { LambdaInvokeOptions } from "./lambda-types";
 const encoder=new TextEncoder();
 const decoder=new TextDecoder();
 
-export class LambdaClient
+export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
 {
 
     public static fromScope(scope:Scope)
@@ -21,17 +21,14 @@ export class LambdaClient
 
     public readonly clientConfig:Readonly<LambdaClientConfig>;
 
-    private readonly clientCache:ValueCache<AwsLambdaClient>;
-    private readonly cacheKey=Symbol();
-
     public constructor(clientConfig:LambdaClientConfig,userDataCache:ValueCache){
 
+        super(userDataCache);
         this.clientConfig=clientConfig;
-        this.clientCache=userDataCache;
     }
 
-    public getClient():AwsLambdaClient{
-        return this.clientCache.getOrCreate(this.cacheKey,()=>new AwsLambdaClient(this.clientConfig));
+    protected override createAuthenticatedClient(): AwsLambdaClient {
+        return new AwsLambdaClient(this.clientConfig);
     }
 
     public async invokeAsync<TInput,TOutput>(options:LambdaInvokeOptions<TInput>):Promise<TOutput>
