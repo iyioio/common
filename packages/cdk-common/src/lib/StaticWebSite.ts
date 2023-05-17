@@ -24,6 +24,7 @@ export interface StaticWebSiteProps
     path?:string;
     cdn?:boolean;
     domainName?:string;
+    additionalDomainNames?:string[];
     envVars?:HashMap<string>;
     fallbackBucket?:s3.Bucket;
     createOutputs?:boolean;
@@ -46,6 +47,7 @@ export class StaticWebSite extends Construct {
         nxExportedPackage,
         cdn=false,
         domainName,
+        additionalDomainNames,
         envVars,
         fallbackBucket,
         createOutputs,
@@ -110,7 +112,8 @@ export class StaticWebSite extends Construct {
             if(domainName){
                 certificate = new cm.Certificate(this, `Cert`, {
                     domainName:domainName,
-                    validation:cm.CertificateValidation.fromDns()
+                    validation:cm.CertificateValidation.fromDns(),
+                    subjectAlternativeNames:additionalDomainNames,
                 });
                 this.domainUrl=`https://${domainName}`
             }
@@ -183,7 +186,7 @@ export class StaticWebSite extends Construct {
             dist=new cf.CloudFrontWebDistribution(this,'Dist',{
                 defaultRootObject:'index.html',
                 viewerCertificate:certificate?{
-                    aliases:domainName?[domainName]:[],
+                    aliases:domainName?[domainName,...(additionalDomainNames??[])]:[],
                     props:{
                         acmCertificateArn:certificate.certificateArn,
                         sslSupportMethod:'sni-only'
@@ -288,6 +291,11 @@ export class StaticWebSite extends Construct {
             }
             if(this.domainUrl){
                 new cdk.CfnOutput(this,name+'DomainUrl',{value:this.domainUrl});
+                if(additionalDomainNames){
+                    for(let i=0;i<additionalDomainNames.length;i++){
+                        new cdk.CfnOutput(this,name+'DomainUrl'+(i+1),{value:additionalDomainNames[i]??''})
+                    }
+                }
             }
         }
 

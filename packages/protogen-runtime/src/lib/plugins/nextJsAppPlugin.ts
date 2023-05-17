@@ -1,6 +1,6 @@
 import { SiteInfo } from "@iyio/cdk-common";
 import { joinPaths, strFirstToUpper } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, protoMergeJson } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, protoGetChildrenByName, protoMergeJson } from "@iyio/protogen";
 import { z } from "zod";
 import { nextJsAppTemplate } from "./nextJsAppTemplate";
 import { siteCdkTemplate } from "./siteCdkTemplate";
@@ -100,13 +100,15 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                         if(redirectHandler && !nodes.find(n=>n.name===redirectHandler)){
                             throw new Error(`redirectHandler type not found. type:${redirectHandler}, appName:${node.name}`);
                         }
+                        const domains=protoGetChildrenByName(node,'domain',false);
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
                             redirectHandler,
                             staticSite:{
                                 nxExportedPackage:name,
                                 cdn:true,
-                                domainName:node.children?.['domain']?.value,
+                                domainName:domains[0]?.value?.trim(),
+                                additionalDomainNames:domains.length>1?domains.map(d=>d.value?.trim()).filter((d,i)=>d && i>0) as string[]:undefined,
                                 createOutputs:true,
                             }
                         })
