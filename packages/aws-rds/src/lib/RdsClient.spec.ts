@@ -1,8 +1,9 @@
 import { awsModule } from "@iyio/aws";
-import { createScope, EnvParams, generateRandomTestStoreItem, parseConfigBool, shortUuid, sql, sqlClient, sqlName, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
-
+import { createScope, EnvParams, generateRandomTestStoreItem, minuteMs, parseConfigBool, shortUuid, sql, sqlClient, sqlName, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
 import { RdsClient } from "./RdsClient";
 
+
+const testTimeout=minuteMs*10;
 
 const keepTable=parseConfigBool(process.env['NX_KEEP_RDS_TEST_TABLES']);
 const skipTest=parseConfigBool(process.env['NX_SKIP_RDS_TEST']);
@@ -37,16 +38,13 @@ describe('RdsStore',()=>{
 
     }
 
-    const timeout=1000*60*3;
-
     const clearTableAsync=async ()=>{
-
         const {client}=getScope();
         console.log(`---- Clear ${tableName} ----`)
         await client.execAsync(sql`DELETE FROM ${sqlName(tableName)}`)
     }
 
-    afterEach(clearTableAsync);
+    afterEach(clearTableAsync,testTimeout);
 
     beforeAll(async ()=>{
 
@@ -65,7 +63,7 @@ describe('RdsStore',()=>{
 
             );
         `)
-    },timeout);
+    },testTimeout);
 
     afterAll(async ()=>{
         if(keepTable){
@@ -78,7 +76,7 @@ describe('RdsStore',()=>{
             `)
         }
 
-    },timeout)
+    },testTimeout)
 
     const insertReturnAsync=async (client:RdsClient)=>{
         const sourceItem=generateRandomTestStoreItem();
