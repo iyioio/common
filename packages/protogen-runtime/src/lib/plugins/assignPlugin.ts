@@ -22,6 +22,7 @@ export const assignPlugin:ProtoPipelineConfigurablePlugin<typeof AssignPluginCon
         outputs,
         nodes,
     },{
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         assignMarkdown='_assign.md',
         assignCsv='_assign.csv',
     })=>{
