@@ -1,7 +1,7 @@
 import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, GetItemCommandInput, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, deleteUndefined, getDataTableId } from "@iyio/common";
+import { AuthDependentClient, DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, ValueCache, authService, deleteUndefined, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 import { ExtendedItemUpdateOptions, ItemPatch, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
 
@@ -40,7 +40,7 @@ export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions
     skipVersionCheck?:boolean;
 }
 
-export class DynamoClient implements IWithStoreAdapter
+export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements IWithStoreAdapter
 {
 
     public static fromScope(scope:Scope,storeAdapterOptions?:DynamoStoreAdapterOptions)
@@ -48,25 +48,20 @@ export class DynamoClient implements IWithStoreAdapter
         return new DynamoClient({
             region:awsRegionParam(scope),
             credentials:scope.get(AwsAuthProviders)?.getAuthProvider()
-        },storeAdapterOptions)
+        },authService(scope).userDataCache,storeAdapterOptions)
     }
 
 
     public readonly clientConfig:Readonly<DynamoDBClientConfig>;
 
-    public constructor(clientConfig:DynamoDBClientConfig,storeAdapterOptions:DynamoStoreAdapterOptions={}){
-
+    public constructor(clientConfig:DynamoDBClientConfig,userDataCache:ValueCache<any>,storeAdapterOptions:DynamoStoreAdapterOptions={}){
+        super(userDataCache);
         this.clientConfig=clientConfig;
         this.storeAdapterOptions=storeAdapterOptions
     }
 
-    private client:DynamoDBClient|null=null;
-    public getClient():DynamoDBClient{
-        if(this.client){
-            return this.client;
-        }
-        this.client=new DynamoDBClient(this.clientConfig);
-        return this.client;
+    protected override createAuthenticatedClient():DynamoDBClient{
+        return new DynamoDBClient(this.clientConfig);
     }
 
 

@@ -1,11 +1,11 @@
 import { S3Client as AwsS3Client, DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope } from "@iyio/common";
+import { AuthDependentClient, BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope, ValueCache, authService } from "@iyio/common";
 import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
 
 
 
-export class S3Client implements IWithStoreAdapter
+export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithStoreAdapter
 {
 
     public static fromScope(scope:Scope,storeAdapterOptions?:S3StoreAdapterOptions)
@@ -13,27 +13,24 @@ export class S3Client implements IWithStoreAdapter
         return new S3Client({
             region:awsRegionParam(scope),
             credentials:scope.get(AwsAuthProviders)?.getAuthProvider()
-        },storeAdapterOptions)
+        },authService(scope).userDataCache,storeAdapterOptions)
     }
 
     public readonly clientConfig:Readonly<S3ClientConfig>;
 
     public constructor(
         clientConfig:S3ClientConfig,
+        userDataCache:ValueCache<any>,
         storeAdapterOptions:S3StoreAdapterOptions={}
     ){
+        super(userDataCache);
         this.storeAdapterOptions=storeAdapterOptions;
 
         this.clientConfig=clientConfig;
     }
 
-    private client:AwsS3Client|null=null;
-    public getClient():AwsS3Client{
-        if(this.client){
-            return this.client;
-        }
-        this.client=new AwsS3Client(this.clientConfig);
-        return this.client;
+    protected override createAuthenticatedClient():AwsS3Client{
+        return new AwsS3Client(this.clientConfig);
     }
 
 

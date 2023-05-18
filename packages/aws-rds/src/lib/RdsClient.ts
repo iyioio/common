@@ -1,6 +1,6 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { defineStringParam, IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef } from '@iyio/common';
+import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
@@ -30,32 +30,32 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
     }
 
     public static fromScope(scope:Scope,storeAdapterOptions?:SqlStoreAdapterOptions){
-        return new RdsClient(RdsClient.optionsFromScope(scope),storeAdapterOptions);
+        return new RdsClient(RdsClient.optionsFromScope(scope),authService(scope).userDataCache,storeAdapterOptions);
     }
 
     private readonly options:RdsClientOptions;
 
     private readonly storeAdapterOptions:SqlStoreAdapterOptions;
 
+    private readonly authServerUserDataCache:ValueCache<any>;
+
     public constructor(
         options:RdsClientOptions,
+        authServerUserDataCache:ValueCache<any>,
         storeAdapterOptions:SqlStoreAdapterOptions={})
     {
         super();
         this.options={...options};
         this.storeAdapterOptions={...storeAdapterOptions};
+        this.authServerUserDataCache=authServerUserDataCache;
     }
 
-    private client:RDSDataClient|null=null;
+    protected readonly clientCacheKey=Symbol();
     public getClient():RDSDataClient{
-        if(this.client){
-            return this.client;
-        }
-        this.client=new RDSDataClient({
+        return this.authServerUserDataCache.getOrCreate(this.clientCacheKey,()=>new RDSDataClient({
             region:this.options.region,
             credentials:this.options.awsAuth.get()?.getAuthProvider()
-        })
-        return this.client;
+        }))
     }
 
     private storeAdapter:SqlStoreAdapter|null=null;
@@ -95,7 +95,6 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
         })
 
         const result=await this.getClient().send(cmd);
-
 
         if(this.log){
             console.info(`${Date.now()-t}ms`);
