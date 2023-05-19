@@ -6,7 +6,7 @@ import { RdsClient } from "./RdsClient";
 const testTimeout=minuteMs*10;
 
 const keepTable=parseConfigBool(process.env['NX_KEEP_RDS_TEST_TABLES']);
-const skipTest=parseConfigBool(process.env['NX_SKIP_RDS_TEST']);
+const skipTest=!parseConfigBool(process.env['NX_RUN_LONG_RUNNING_TEST'])
 const logQueries=parseConfigBool(process.env['NX_LOG_RDS_TEST_QUERIES']);
 
 if(skipTest){

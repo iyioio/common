@@ -1,44 +1,11 @@
-import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, GetItemCommandInput, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
+import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, DynamoDBClientConfig, GetItemCommand, PutItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
-import { AuthDependentClient, DataTableDescription, DataTableIndex, IWithStoreAdapter, Scope, ValueCache, authService, deleteUndefined, getDataTableId } from "@iyio/common";
+import { AuthDependentClient, DataTableDescription, IWithStoreAdapter, Scope, ValueCache, authService, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
-import { ExtendedItemUpdateOptions, ItemPatch, convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName } from "./dynamo-lib";
+import { convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName, getQueryCommandInput, getScanCommandInput } from "./dynamo-lib";
+import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions } from "./dynamo-types";
 
-export interface PageResult<T>
-{
-    items:T[];
-    lastKey?:any;
-}
-
-export interface QueryMatchTableOptions<T>
-{
-    table:DataTableDescription;
-    index?:DataTableIndex;
-    matchKey:Partial<T>;
-    filter?:Partial<T>;
-    commandInput?:Partial<QueryCommandInput>;
-    pageKey?:any;
-    projectionProps?:(keyof T)[];
-    limit?:number;
-    returnAll?:boolean;
-    reverseOrder?:boolean;
-}
-
-export interface DynamoGetOptions<T>
-{
-    input?:GetItemCommandInput;
-
-    /**
-     * If defined only the props in the array will be returned.
-     */
-    includeProps?:(keyof T)[];
-}
-
-export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
-{
-    skipVersionCheck?:boolean;
-}
 
 export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements IWithStoreAdapter
 {
@@ -53,6 +20,8 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
 
 
     public readonly clientConfig:Readonly<DynamoDBClientConfig>;
+
+    public logCommandInput=false;
 
     public constructor(clientConfig:DynamoDBClientConfig,userDataCache:ValueCache<any>,storeAdapterOptions:DynamoStoreAdapterOptions={}){
         super(userDataCache);
@@ -108,6 +77,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             ...commandInput
         }
 
+        if(this.logCommandInput){
+            console.info('getScanAsync',params);
+        }
+
         const results:T[]=[];
         const items=await this.getClient().send(new ScanCommand(params));
         if(items.Items){
@@ -145,66 +118,17 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         return results;
     }
 
-    public async queryMatchTableAsync<T>({
-        table,
-        index,
-        matchKey,
-        filter,
-        commandInput={},
-        pageKey,
-        projectionProps,
-        limit,
-        returnAll,
-        reverseOrder,
-    }:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
 
-        const input:Partial<QueryCommandInput>={
-            IndexName:index?.name,
-            ExpressionAttributeNames:{},
-            ExpressionAttributeValues:{},
-            ExclusiveStartKey:pageKey,
-            ProjectionExpression:projectionProps?.map((p,i)=>`#_projected${i}`).join(','),
-            Limit:limit,
-            ScanIndexForward:!reverseOrder,
-        };
+    public async queryMatchTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
 
-        if(projectionProps){
-            for(let i=0;i<projectionProps.length;i++){
-                (input.ExpressionAttributeNames as any)[`#_projected${i}`]=projectionProps[i]
-            }
-        }
+        const input=getQueryCommandInput(options);
 
-        if(matchKey){
-            const keys=Object.keys(matchKey);
-            input.KeyConditionExpression=keys.map(k=>`#_key${k} = :_key${k}`).join(',');
-            for(let i=0;i<keys.length;i++){
-                const key=keys[i] as keyof T;
-                (input.ExpressionAttributeNames as any)[`#_key${keys[i]}`]=key;
-                (input.ExpressionAttributeValues as any)[`:_key${keys[i]}`]=convertToAttr(matchKey[key]);
-            }
-        }
+        const {
+            table,
+            returnAll,
+        }=options;
 
-        if(filter){
-            const keys=Object.keys(filter);
-            input.FilterExpression=keys.map(k=>`#_filter${k} = :_filter${k}`).join(',');
-            for(let i=0;i<keys.length;i++){
-                const key=keys[i] as keyof T;
-                (input.ExpressionAttributeNames as any)[`#_filter${keys[i]}`]=key;
-                (input.ExpressionAttributeValues as any)[`:_filter${keys[i]}`]=convertToAttr(filter[key]);
-            }
-        }
-
-        if(commandInput){
-            for(const e in commandInput){
-                (input as any)[e]=(commandInput as any)[e];
-            }
-        }
-
-        if(returnAll){
-            delete input.Limit;
-        }
-
-        let result=await this.queryTableAsync<T>(table,deleteUndefined(input));
+        let result=await this.queryTableAsync<T>(table,input);
 
         if(!returnAll || !result.lastKey){
             return result
@@ -213,7 +137,36 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         const allItems=result.items;
         while(result.lastKey){
             input.ExclusiveStartKey=result.lastKey;
-            result=await this.queryTableAsync<T>(table,deleteUndefined(input));
+            result=await this.queryTableAsync<T>(table,input);
+            for(let i=0;i<result.items.length;i++){
+                allItems.push(result.items[i] as T);
+            }
+        }
+
+        return {
+            items:allItems
+        }
+    }
+
+    public async scanMatchTableAsync<T>(options:ScanMatchTableOptions<T>):Promise<PageResult<T>>{
+
+        const input=getScanCommandInput(options);
+
+        const {
+            table,
+            returnAll,
+        }=options;
+
+        let result=await this.scanTableAsync<T>(table,input);
+
+        if(!returnAll || !result.lastKey){
+            return result
+        }
+
+        const allItems=result.items;
+        while(result.lastKey){
+            input.ExclusiveStartKey=result.lastKey;
+            result=await this.scanTableAsync<T>(table,input);
             for(let i=0;i<result.items.length;i++){
                 allItems.push(result.items[i] as T);
             }
@@ -229,6 +182,11 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         return this.getQueryAsync(getDataTableId(table),commandInput);
     }
 
+    public scanTableAsync<T>(table:DataTableDescription<T>,commandInput:Partial<QueryCommandInput>):Promise<PageResult<T>>
+    {
+        return this.getScanAsync(getDataTableId(table),commandInput);
+    }
+
 
     public async getQueryAsync<T>(tableName:string,commandInput:Partial<QueryCommandInput>={}):Promise<PageResult<T>>
     {
@@ -236,6 +194,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         const params:QueryCommandInput={
             TableName:formatDynamoTableName(tableName),
             ...commandInput
+        }
+
+        if(this.logCommandInput){
+            console.info('getQueryAsync',params);
         }
 
         const results:T[]=[];

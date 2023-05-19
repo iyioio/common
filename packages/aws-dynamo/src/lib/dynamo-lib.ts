@@ -1,42 +1,9 @@
-import { AttributeValue, UpdateItemInput } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, QueryCommandInput, ScanCommandInput, UpdateItemInput } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
-import { deleteUndefined } from "@iyio/common";
+import { deleteUndefined, getObjKeyCount } from "@iyio/common";
+import { ExtendedItemUpdateOptions, ItemPatch, QueryMatchTableOptions, ScanMatchTableOptions, isFilterExpression, isUpdateExpression } from "./dynamo-types";
 
-const UpdateExpressionFlag=Symbol('UpdateExpressionFlag');
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface BaseUpdateExpression<T>
-{
-    /**
-     * If not undefined add will be added to the current value of the target object.
-     */
-    add?:any;
-}
-
-export interface UpdateExpression<T> extends BaseUpdateExpression<T>
-{
-    typeFlag:typeof UpdateExpressionFlag;
-}
-
-export const createUpdateExpression=<T=any>(update:BaseUpdateExpression<T>):UpdateExpression<T>=>({
-    typeFlag:UpdateExpressionFlag,
-    ...update
-})
-export const isUpdateExpression=<T=any>(value:any):value is UpdateExpression<T>=>(
-    value?(value as Partial<UpdateExpression<T>>).typeFlag===UpdateExpressionFlag:false
-)
-
-export type ItemPatch<TEntity>=
-{
-    [prop in keyof TEntity]?:TEntity[prop]|UpdateExpression<TEntity[prop]>;
-}
-
-export interface ExtendedItemUpdateOptions<T=any>
-{
-    incrementProp?:keyof T;
-    incrementValue?:number;
-    matchCondition?:Partial<T>
-}
 export function createItemUpdateInputOrNull<T>(
     tableName:string,
     key:Partial<T>,
@@ -154,4 +121,234 @@ export const formatDynamoTableName=(name:string):string=>
 
 export const convertObjectToDynamoAttributes=(obj:Record<string,any>):Record<string,AttributeValue>=>{
     return marshall(deleteUndefined({...obj}));
+}
+
+
+
+export const getScanCommandInput=<T>({
+    index,
+    filter,
+    commandInput={},
+    pageKey,
+    projectionProps,
+    limit,
+    returnAll,
+}:ScanMatchTableOptions<T>):Partial<ScanCommandInput>=>{
+
+    const input:Partial<ScanCommandInput>={
+        IndexName:index?.name,
+        ExpressionAttributeNames:{},
+        ExpressionAttributeValues:{},
+        ExclusiveStartKey:pageKey,
+        ProjectionExpression:projectionProps?.map((p,i)=>`#_projected${i}`).join(','),
+        Limit:limit,
+    };
+
+    if(projectionProps){
+        for(let i=0;i<projectionProps.length;i++){
+            (input.ExpressionAttributeNames as any)[`#_projected${i}`]=projectionProps[i]
+        }
+    }
+
+    if(filter){
+        const keys=Object.keys(filter);
+        const exp:string[]=[];
+        let expI=0;
+        for(let i=0;i<keys.length;i++){
+            const key=keys[i] as keyof T;
+            const value=filter[key];
+            if(isFilterExpression(value)){
+
+                if(value.isIn!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    const vKeys:string[]=[];
+                    for(const inValue of value.isIn){
+                        const vKey=`:_${xi}_${vKeys.length}_filter${keys[i]}`;
+                        (input.ExpressionAttributeValues as any)[vKey]=convertToAttr(inValue);
+                        vKeys.push(vKey);
+                    }
+                    exp.push(`#_${xi}_filter${key as string} in ( ${vKeys.join(',')} )`)
+                }
+
+                if(value.type!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.type);
+                    exp.push(`attribute_type(#_${xi}_filter${key as string}, :_${xi}_filter${key as string})`)
+                }
+
+                if(value.startsWith!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.startsWith);
+                    exp.push(`begins_with(#_${xi}_filter${key as string}, :_${xi}_filter${key as string})`)
+                }
+
+                if(value.contains!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.contains);
+                    exp.push(`contains(#_${xi}_filter${key as string}, :_${xi}_filter${key as string})`)
+                }
+
+                if(value.valueContainsProperty!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.valueContainsProperty);
+                    exp.push(`contains(:_${xi}_filter${key as string}, #_${xi}_filter${key as string})`)
+                }
+
+                if(value.exists!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    exp.push(`${value.exists?'attribute_exists':'attribute_not_exists'}(#_${xi}_filter${key as string})`)
+                }
+
+                if(value.eq!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.eq);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) = :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} = :_${xi}_filter${key as string}`)
+                    }
+                }
+
+                if(value.neq!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.neq);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) <> :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} <> :_${xi}_filter${key as string}`)
+                    }
+                }
+
+                if(value.lt!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.lt);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) < :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} < :_${xi}_filter${key as string}`)
+                    }
+                }
+
+                if(value.lte!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.lte);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) <= :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} <= :_${xi}_filter${key as string}`)
+                    }
+                }
+
+                if(value.mt!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.mt);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) > :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} > :_${xi}_filter${key as string}`)
+                    }
+                }
+
+                if(value.mte!==undefined){
+                    const xi=expI++;
+                    (input.ExpressionAttributeNames as any)[`#_${xi}_filter${keys[i]}`]=key;
+                    (input.ExpressionAttributeValues as any)[`:_${xi}_filter${keys[i]}`]=convertToAttr(value.mte);
+                    if(value.size){
+                        exp.push(`size(#_${xi}_filter${key as string}) >= :_${xi}_filter${key as string}`);
+                    }else{
+                        exp.push(`#_${xi}_filter${key as string} >= :_${xi}_filter${key as string}`)
+                    }
+                }
+
+            }else{
+                (input.ExpressionAttributeNames as any)[`#_filter${keys[i]}`]=key;
+                (input.ExpressionAttributeValues as any)[`:_filter${keys[i]}`]=convertToAttr(filter[key]);
+                exp.push(`#_filter${key as string} = :_filter${key as string}`)
+
+            }
+        }
+        input.FilterExpression=exp.join(' and ')
+    }
+
+    if(commandInput){
+        for(const e in commandInput){
+            (input as any)[e]=(commandInput as any)[e];
+        }
+    }
+
+    if(returnAll){
+        delete input.Limit;
+    }
+
+    if(input.ExpressionAttributeNames && getObjKeyCount(input.ExpressionAttributeNames)===0){
+        delete input.ExpressionAttributeNames;
+    }
+
+    if(input.ExpressionAttributeValues && getObjKeyCount(input.ExpressionAttributeValues)===0){
+        delete input.ExpressionAttributeValues;
+    }
+
+    deleteUndefined(input);
+
+    return input;
+}
+
+export const getQueryCommandInput=<T>({
+    matchKey,
+    reverseOrder,
+    commandInput,
+    ...scanOptions
+}:QueryMatchTableOptions<T>):Partial<QueryCommandInput>=>{
+
+    const input:Partial<QueryCommandInput>={
+        ...getScanCommandInput(scanOptions),
+        ScanIndexForward:!reverseOrder,
+    }
+
+    if(!input.ExpressionAttributeNames){
+        input.ExpressionAttributeNames={};
+    }
+
+    if(!input.ExpressionAttributeValues){
+        input.ExpressionAttributeValues={};
+    }
+
+    if(matchKey){
+        const keys=Object.keys(matchKey);
+        input.KeyConditionExpression=keys.map(k=>`#_key${k} = :_key${k}`).join(',');
+        for(let i=0;i<keys.length;i++){
+            const key=keys[i] as keyof T;
+            (input.ExpressionAttributeNames as any)[`#_key${keys[i]}`]=key;
+            (input.ExpressionAttributeValues as any)[`:_key${keys[i]}`]=convertToAttr(matchKey[key]);
+        }
+    }
+
+    if(commandInput){
+        for(const e in commandInput){
+            (input as any)[e]=(commandInput as any)[e];
+        }
+    }
+
+    deleteUndefined(input);
+
+    if(input.ExpressionAttributeNames && getObjKeyCount(input.ExpressionAttributeNames)===0){
+        delete input.ExpressionAttributeNames;
+    }
+
+    if(input.ExpressionAttributeValues && getObjKeyCount(input.ExpressionAttributeValues)===0){
+        delete input.ExpressionAttributeValues;
+    }
+
+    return input;
 }
