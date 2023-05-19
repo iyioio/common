@@ -5,7 +5,10 @@
 *
 **/
 
+import { uint32ArrayToNumberArray } from "./array";
+
 export const defaultBase64Chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+// the ending (=) is not required since it is only used for padding
 export const fsBase64Chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 /**
@@ -74,6 +77,14 @@ export const base64EncodeAry=(input:number[],keyStr:string=defaultBase64Chars):s
         keyStr.charAt(enc3) + keyStr.charAt(enc4);
     }
     return output;
+}
+
+/**
+ * Encodes an array of numbers into a base 64 string
+ */
+export const base64EncodeUint32Array=(input:Uint32Array,keyStr:string=defaultBase64Chars):string=>
+{
+    return base64EncodeAry(uint32ArrayToNumberArray(input),keyStr);
 }
 
 /**
