@@ -1,14 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useShallowRef } from "./common-hooks";
 
-export const useIntersectionObserver=(elem:HTMLElement|null,options?:IntersectionObserverInit):boolean=>
+export interface UseIntersectionObserverOptions
 {
+    onChange?:(visible:boolean)=>void;
+}
+
+export const useIntersectionObserver=(
+    elem:HTMLElement|null,
+    observerOptions?:IntersectionObserverInit,
+    {
+        onChange
+    }:UseIntersectionObserverOptions={}
+):boolean=>{
 
     const [visible,setVisible]=useState(false);
 
     const [observer,setObserver]=useState<IntersectionObserver|null>(null);
 
-    const opts=useShallowRef(options);
+    const opts=useShallowRef(observerOptions);
+
+    const onChangeRef=useRef(onChange);
+    onChangeRef.current=onChange;
 
     useEffect(()=>{
         let visible:boolean|null=null;
@@ -17,6 +30,7 @@ export const useIntersectionObserver=(elem:HTMLElement|null,options?:Intersectio
                 if(e.isIntersecting!==visible){
                     visible=e.isIntersecting;
                     setVisible(e.isIntersecting);
+                    onChangeRef.current?.(e.isIntersecting);
                 }
                 break;
             }
