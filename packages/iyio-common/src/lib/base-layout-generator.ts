@@ -472,6 +472,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('weightBold',`font-weight:${fc.weightBold}`)
     add('weightThin',`font-weight:${fc.weightThin}`)
     add('centerText','text-align:center')
+    add('leftText','text-align:left')
+    add('rightText','text-align:right')
     add('preSpace','white-space:pre')
     add('singleLine','text-overflow: ellipsis;overflow: hidden;white-space: nowrap')
     add('lineHeight100','line-height:2em')

@@ -82,6 +82,8 @@ export const baseLayoutFontProps={
     weightBold:'ioWeightBold',
     weightThin:'ioWeightThin',
     centerText:'ioCenterText',
+    leftText:'ioLeftText',
+    rightText:'ioRightText',
     preSpace:'ioPreSpace',
     singleLine:'ioSingleLine',
     lineHeight100:'ioLineHeight100',
