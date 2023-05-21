@@ -4,10 +4,14 @@ import Style from 'styled-jsx/style';
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
 
-export interface ModalBaseProps extends PortalProps, BaseLayoutInnerProps
+export interface ModalOpenCloseProps
 {
     open:boolean;
     closeRequested?:(open:false)=>void;
+}
+
+export interface ModalBaseProps extends ModalOpenCloseProps, PortalProps, BaseLayoutInnerProps
+{
     background?:string;
     /**
      * The number of milliseconds before the modal stops rending after open is set to false. This
