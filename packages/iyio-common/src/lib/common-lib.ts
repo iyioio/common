@@ -47,6 +47,22 @@ export const emptyFunction:EmptyFunction=()=>{
 
 export const nameToEnvName=(name:string)=>name?name.replace(/[A-Z]+/g,m=>'_'+m).replace(/__+/g,'_').toUpperCase():'';
 
+export const envNameToName=(envName:string,removePrefix?:string|null):string=>{
+    if(removePrefix && envName.startsWith(removePrefix)){
+        envName=envName.substring(removePrefix.length);
+    }
+    const parts=envName.split('_');
+    for(let i=0;i<parts.length;i++){
+        const str=parts[i] as string;
+        if(i){
+            parts[i]=str.substring(0,1).toUpperCase()+str.substring(1).toLowerCase();
+        }else{
+            parts[i]=str.toLowerCase();
+        }
+    }
+    return parts.join('');
+}
+
 export const isPromise=<T=any>(value:any):value is Promise<T>=>(
     (typeof (value as Partial<Promise<T>>)?.then === 'function') &&
     (typeof (value as Partial<Promise<T>>)?.catch === 'function') &&
