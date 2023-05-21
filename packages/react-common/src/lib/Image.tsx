@@ -10,6 +10,7 @@ export interface ImageProps extends BaseLayoutProps
     contain?:boolean;
     style?:CSSProperties;
     children?:any;
+    size?:string|number;
     height?:string|number;
     width?:string|number;
     tile?:boolean;
@@ -26,8 +27,9 @@ export function Image({
     style={},
     elemRef,
     children,
-    height,
-    width,
+    size,
+    height=size,
+    width=size,
     tile,
     ...props
 }:ImageProps){
