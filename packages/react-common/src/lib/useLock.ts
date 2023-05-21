@@ -1,5 +1,5 @@
 import { DisposeCallback, IProgress, Scope, UiLock, UiLockError, UiLockHandle, getNextUiLockId, rootScope, uiLockContainerService } from "@iyio/common";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BehaviorSubject } from "rxjs";
 
 interface _Handle
@@ -165,4 +165,20 @@ export function useLock(scope:Scope=rootScope):UiLockHandle
     },[ctx]);
 
     return ctx.handle;
+}
+
+/**
+ * useRunLock is similar to useLock but is intended to be used outside of useCallbacks
+ */
+export const useRunLock=(locked:boolean,message:string,progress?:IProgress)=>{
+    const lock=useLock();
+    const info=useRef({message,progress});
+    info.current.message=message;
+    info.current.progress=progress;
+    useEffect(()=>{
+        if(!locked){
+            return;
+        }
+        return lock.lock(info.current.message,info.current.progress);
+    },[lock,locked])
 }
