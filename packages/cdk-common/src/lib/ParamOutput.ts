@@ -1,4 +1,4 @@
-import { HashMap, ParamTypeDef } from "@iyio/common";
+import { HashMap, ParamTypeDef, envNameToName } from "@iyio/common";
 import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { EnvVarTarget, IParamOutputConsumer, ParamType } from "./cdk-types";
@@ -19,6 +19,8 @@ export class ParamOutput
     private readonly consumers:IParamOutputConsumer[]=[];
 
     public readonly envVars:Record<string,string>={};
+
+    public envVarPrefix:string|null=null;
 
     public copyEnvVars(names:string[]){
         for(const n of names){
@@ -119,5 +121,13 @@ export class ParamOutput
             c.consumeParams(this);
         }
 
+    }
+
+    public getVarMap(){
+        const output={...this.params}
+        for(const e in this.envVars){
+            output[envNameToName(e,this.envVarPrefix)]=this.envVars[e] as string;
+        }
+        return output;
     }
 }

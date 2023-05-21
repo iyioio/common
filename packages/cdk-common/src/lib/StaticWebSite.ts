@@ -309,6 +309,6 @@ export class StaticWebSite extends Construct {
             return;
         }
         this.dotEnvSet=true;
-        this.bucketDeployment.addSource(s3Deployment.Source.jsonData("__DOT_ENV__.json",paramOutput.params));
+        this.bucketDeployment.addSource(s3Deployment.Source.jsonData("__DOT_ENV__.json",paramOutput.getVarMap()));
     }
 }
