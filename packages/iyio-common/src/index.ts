@@ -43,6 +43,8 @@ export * from './lib/common-names.deps';
 export * from './lib/common-params';
 export * from './lib/common-types';
 export * from './lib/crypto-bytes';
+export * from './lib/crypto-bytes-types';
+export * from './lib/crypto-bytes.deps';
 export * from './lib/css';
 export * from './lib/csv-lib';
 export * from './lib/csv-types';

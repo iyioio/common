@@ -1,4 +1,10 @@
 import { generateCryptoBytes, generateCryptoString, generateCryptoUuidString, generateCryptoValues } from "./crypto-bytes";
+import { CryptoMethodsProvider } from "./crypto-bytes.deps";
+import { initRootScope } from "./scope-lib";
+
+initRootScope(reg=>{
+    reg.addProvider(CryptoMethodsProvider,()=>require('node:crypto'));
+});
 
 describe('crypto-bytes',()=>{
 

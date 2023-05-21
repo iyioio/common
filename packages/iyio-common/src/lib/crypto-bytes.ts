@@ -1,18 +1,18 @@
 import { uint32ArrayToNumberArray } from "./array";
 import { base64EncodeAry, fsBase64Chars } from "./base64";
+import { CryptoMethods } from "./crypto-bytes-types";
+import { CryptoMethodsProvider } from "./crypto-bytes.deps";
 import { shortUuid } from "./uuid";
 
-
 let triedNode=false;
-let nodeCy:any=undefined;
+let nodeCy:CryptoMethods|undefined=undefined;
 const loadNodeCrypto=()=>{
     if(triedNode){
         return nodeCy;
     }
     triedNode=true;
     try{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        nodeCy=require('node:crypto');
+        nodeCy=CryptoMethodsProvider.get();
         return nodeCy;
     }catch{
         return undefined;
