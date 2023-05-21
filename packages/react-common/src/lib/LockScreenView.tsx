@@ -2,7 +2,7 @@ import { UiLock, cn, css } from '@iyio/common';
 import { useEffect, useMemo, useState } from 'react';
 import { BehaviorSubject } from 'rxjs';
 import Style from 'styled-jsx/style';
-import JsonView from './JsonView';
+import { JsonView } from './JsonView';
 import { LoadingIndicator } from './LoadingIndicator';
 import { Portal } from './Portal';
 import { SlimButton } from './SlimButton';

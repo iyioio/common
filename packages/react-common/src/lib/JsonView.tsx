@@ -9,7 +9,7 @@ interface JsonViewProps
     replacer?:(this:any,key:string,value:any)=>any
 }
 
-export default function JsonView({
+export function JsonView({
     value,
     whitespace=4,
     replacer,
