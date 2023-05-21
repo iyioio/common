@@ -119,56 +119,78 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
     }
 
 
-    public async queryMatchTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
+    public async queryMatchFirstTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<T|undefined>{
+
+        const result=await this.queryMatchTableAsync({...options,limit:1});
+        return result.items[0];
+    }
+
+
+    public queryMatchTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<PageResult<T>>{
 
         const input=getQueryCommandInput(options);
 
-        const {
-            table,
-            returnAll,
-        }=options;
-
-        let result=await this.queryTableAsync<T>(table,input);
-
-        if(!returnAll || !result.lastKey){
-            return result
-        }
-
-        const allItems=result.items;
-        while(result.lastKey){
-            input.ExclusiveStartKey=result.lastKey;
-            result=await this.queryTableAsync<T>(table,input);
-            for(let i=0;i<result.items.length;i++){
-                allItems.push(result.items[i] as T);
-            }
-        }
-
-        return {
-            items:allItems
-        }
+        return this.processQueryAsync(input,options,(table,input)=>this.queryTableAsync<T>(table,input));
     }
 
-    public async scanMatchTableAsync<T>(options:ScanMatchTableOptions<T>):Promise<PageResult<T>>{
+    public scanMatchTableAsync<T>(options:ScanMatchTableOptions<T>):Promise<PageResult<T>>{
 
         const input=getScanCommandInput(options);
 
+        return this.processQueryAsync(input,options,(table,input)=>this.scanTableAsync<T>(table,input));
+    }
+
+    private async  processQueryAsync<
+        T,
+        TOptions extends ScanMatchTableOptions<T>,
+        TInput extends Partial<ScanCommandInput>
+    >(
+        input:TInput,
+        options:TOptions,
+        queryAsync:(table:DataTableDescription<T>,input:TInput)=>Promise<PageResult<T>>
+    ):Promise<PageResult<T>>{
         const {
             table,
-            returnAll,
+            forEachPage,
+            returnAll=forEachPage?true:undefined,
+            discardItems=forEachPage?true:undefined,
         }=options;
 
-        let result=await this.scanTableAsync<T>(table,input);
+        let result=await queryAsync(table,input);
 
-        if(!returnAll || !result.lastKey){
+        if(forEachPage && result.items.length){
+            const _break=await forEachPage(result.items,result.lastKey);
+            if(_break){
+                if(discardItems){
+                    result.items=[];
+                }
+                return result;
+            }
+        }
+
+
+        if(!returnAll || !result.lastKey || !result.items.length){
+            if(discardItems){
+                result.items=[];
+            }
             return result
         }
 
-        const allItems=result.items;
-        while(result.lastKey){
+        const allItems=discardItems?[]:result.items;
+        let _continue=true;
+        while(result.lastKey && _continue){
             input.ExclusiveStartKey=result.lastKey;
-            result=await this.scanTableAsync<T>(table,input);
-            for(let i=0;i<result.items.length;i++){
-                allItems.push(result.items[i] as T);
+            result=await queryAsync(table,input);
+            if(forEachPage && result.items.length){
+                const _break=await forEachPage(result.items,result.lastKey);
+                if(_break){
+                    _continue=false;
+                }
+            }
+            if(!discardItems){
+                for(let i=0;i<result.items.length;i++){
+                    allItems.push(result.items[i] as T);
+                }
             }
         }
 

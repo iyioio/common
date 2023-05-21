@@ -9,7 +9,7 @@ export interface PageResult<T>
 
 export interface ScanMatchTableOptions<T>
 {
-    table:DataTableDescription;
+    table:DataTableDescription<T>;
     index?:DataTableIndex;
     filter?:FilterEntity<T>;
     commandInput?:Partial<ScanCommandInput>;
@@ -17,6 +17,20 @@ export interface ScanMatchTableOptions<T>
     projectionProps?:(keyof T)[];
     limit?:number;
     returnAll?:boolean;
+
+    /**
+     * If true items received from the database are not returned. This can be used to same
+     * memory when using forEach and forEachPage if you don't need to further process the items.
+     */
+    discardItems?:boolean;
+
+    /**
+     * A function that is called for each page of items that is received from the database.
+     * forEachPage can be used to process all items in a large table in small batches. Set limit to
+     * control  how many items are passed to forEachPage at a time. returnAll discardItems
+     * default to true and limit defaults to 100 when forEachPage is defined.
+     */
+    forEachPage?:(items:T[],lastKey:any)=>void|boolean|Promise<void|boolean>;
 }
 
 export interface QueryMatchTableOptions<T> extends Omit<ScanMatchTableOptions<T>,'commandInput'>

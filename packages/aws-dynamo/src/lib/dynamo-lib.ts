@@ -126,13 +126,14 @@ export const convertObjectToDynamoAttributes=(obj:Record<string,any>):Record<str
 
 
 export const getScanCommandInput=<T>({
+    forEachPage,
     index,
     filter,
     commandInput={},
     pageKey,
     projectionProps,
-    limit,
-    returnAll,
+    limit=forEachPage?100:undefined,
+    returnAll=forEachPage?true:undefined,
 }:ScanMatchTableOptions<T>):Partial<ScanCommandInput>=>{
 
     const input:Partial<ScanCommandInput>={
@@ -287,7 +288,7 @@ export const getScanCommandInput=<T>({
         }
     }
 
-    if(returnAll){
+    if(returnAll && !forEachPage){
         delete input.Limit;
     }
 

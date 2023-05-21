@@ -105,8 +105,7 @@ describe('DynamoStore', () => {
         })
     })
 
-    const runScan=async (count:number,filter:FilterEntity<Et>,items:Et[])=>{
-
+    const getTablePropsAsync=async (items?:Et[])=>{
         const scope=createScope(reg=>{
             reg.addParams(new EnvParams());
         });
@@ -118,10 +117,26 @@ describe('DynamoStore', () => {
             scheme:EtScheme,
         }
 
-         const client=DynamoClient.fromScope(scope);
-         client.logCommandInput=true;
+        const client=DynamoClient.fromScope(scope);
+        client.logCommandInput=true;
 
-         await Promise.all(items.map(item=>client.putIntoTable(TestTable,item)));
+        if(items){
+            await Promise.all(items.map(item=>client.putIntoTable(TestTable,item)));
+        }
+
+         return {
+            scope,
+            TestTable,
+            client
+         }
+    }
+
+    const runScan=async (count:number,filter:FilterEntity<Et>,items:Et[])=>{
+
+        const {
+            client,
+            TestTable,
+        }=await getTablePropsAsync(items);
 
          const result=await client.scanMatchTableAsync({
             table:TestTable,
@@ -625,6 +640,53 @@ describe('DynamoStore', () => {
                 str:'abcdefghijklmnop'
             },
         ])
+    })
+
+    it('should scan pages',async ()=>{
+
+        const count=105;
+        const pageSize=10;
+        const items:Et[]=[];
+        const idPre=uuid()+'_';
+        for(let i=0;i<count;i++){
+            items.push({
+                id:idPre+i,
+                str:i.toString(4),
+                num:i
+            })
+        }
+
+        const nextPageKeys:any[]=[];
+        const ids:string[]=[];
+        const lengths:number[]=[];
+        let callCount=0;
+
+        const {
+            client,
+            TestTable,
+        }=await getTablePropsAsync(items);
+
+        await client.scanMatchTableAsync({
+            table:TestTable,
+            limit:pageSize,
+            forEachPage:(items,lastKey)=>{
+                callCount++;
+                lengths.push(items.length);
+                if(lastKey){
+                    nextPageKeys.push(lastKey);
+                }
+                for(const item of items){
+                    if(!ids.includes(item.id)){
+                        ids.push(item.id)
+                    }
+                }
+            }
+        })
+
+        expect(callCount).toBe(11);
+        expect(nextPageKeys.length).toBe(10);
+        expect(ids.length).toBe(count);
+        expect(lengths.every((l,i)=>i===10?l===5:l===10)).toBe(true);
     })
 });
 
