@@ -1,15 +1,29 @@
 import { ParamTypeDef } from "@iyio/common";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from "constructs";
+import { ManagedProps } from "./ManagedProps";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { createBucket } from "./createBucket";
-import { ManagedProps } from "./ManagedProps";
 
 export interface BucketBuilderProps
 {
     buckets:BucketInfo[];
     managed?:ManagedProps;
+}
+
+export interface BucketMountPath
+{
+    /**
+     * The path where source content is located.
+     */
+    sourcePath:string;
+
+    /**
+     * The path where the content will be mounted in the bucket
+     */
+    mountPath:string
 }
 
 export interface BucketInfo
@@ -20,6 +34,7 @@ export interface BucketInfo
     arnParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
     modify?:(bucket:s3.Bucket)=>void;
+    mountPaths?:BucketMountPath[];
 }
 
 export interface BucketResult
@@ -45,7 +60,7 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
 
         super(scope,name);
 
-        const tableInfo:BucketResult[]=[];
+        const bucketInfos:BucketResult[]=[];
 
 
         for(const info of buckets){
@@ -88,15 +103,29 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 })
             }
 
+            if(info.mountPaths){
+                for(let i=0;i<info.mountPaths.length;i++){
+                    const path=info.mountPaths[i];
+                    if(!path){
+                        continue;
+                    }
+                    new s3Deployment.BucketDeployment(this,info.name+"BukDeploy"+i,{
+                        sources:[s3Deployment.Source.asset(path.sourcePath)],
+                        destinationBucket:bucket,
+                        destinationKeyPrefix:path.mountPath
+                    });
+                }
+            }
 
-            tableInfo.push({
+
+            bucketInfos.push({
                 info,
                 bucket,
             })
 
         }
 
-        this.buckets=tableInfo;
+        this.buckets=bucketInfos;
 
         accessManager?.addGroup(this);
     }

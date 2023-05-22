@@ -1,4 +1,4 @@
-import { protoAddContextParam, protoGetParamName, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { protoAddContextParam, protoGetChildrenByName, protoGetParamName, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
 import { bucketCdkTemplate, BucketInfoTemplate } from "./bucketCdkTemplate";
 
@@ -65,12 +65,24 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
         if(bucketCdkConstructFile){
             outputs.push({
                 path:bucketCdkConstructFile,
-                content:bucketCdkTemplate(bucketCdkConstructClassName,supported.map<BucketInfoTemplate>(b=>({
-                    name:b.name,
-                    public:b.children?.['public']?true:false,
-                    enableCors:b.children?.['cors']?true:false,
-                    arnParam:protoGetParamName(b.name),
-                })),importMap)
+                content:bucketCdkTemplate(bucketCdkConstructClassName,supported.map<BucketInfoTemplate>(b=>{
+                    const pathsChildren=protoGetChildrenByName(b,'path',false);
+                    const info:BucketInfoTemplate={
+                        name:b.name,
+                        public:b.children?.['public']?true:false,
+                        enableCors:b.children?.['cors']?true:false,
+                        arnParam:protoGetParamName(b.name),
+                        mountPaths:pathsChildren.length?pathsChildren.map(n=>{
+                            const source=n.children?.['source']?.value||'_';
+                            const mount=n.children?.['mount']?.value||source;
+                            return {
+                                sourcePath:(libStyle==='nx'?'../../':'')+source,
+                                mountPath:mount,
+                            }
+                        }):undefined
+                    }
+                    return info;
+                }),importMap)
             })
         }
 
