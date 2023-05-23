@@ -21,6 +21,7 @@ export function createItemUpdateInputOrNull<T>(
     const values:Record<string,AttributeValue>={}
     const sets:string[]=[];
     const adds:string[]=[];
+    const removeProperties:string[]=[];
 
     const ip=typeof incrementProp === 'string'?incrementProp:undefined;
 
@@ -38,8 +39,11 @@ export function createItemUpdateInputOrNull<T>(
                 values[vk]=convertToAttr(patchValue.add);
                 names[nk]=e;
                 adds.push(`${nk} ${vk}`);
-            }else{
-                continue;
+            }
+
+            if(patchValue.removeProperty===true){
+                names[nk]=e;
+                removeProperties.push(`${nk}`);
             }
         }else{
             values[vk]=convertToAttr(patchValue);
@@ -81,12 +85,21 @@ export function createItemUpdateInputOrNull<T>(
         ExpressionAttributeNames:names,
         UpdateExpression:[
             (sets.length?'SET '+(sets.join(', ')):''),
-            (adds.length?'Add '+(adds.join(', ')):'')
+            (adds.length?'ADD '+(adds.join(', ')):''),
+            (removeProperties.length?'REMOVE '+(removeProperties.join(', ')):''),
         ].join(' ')
     }
 
     if(condition){
         input.ConditionExpression=condition;
+    }
+
+    if(input.ExpressionAttributeNames && getObjKeyCount(input.ExpressionAttributeNames)===0){
+        delete input.ExpressionAttributeNames;
+    }
+
+    if(input.ExpressionAttributeValues && getObjKeyCount(input.ExpressionAttributeValues)===0){
+        delete input.ExpressionAttributeValues;
     }
 
     return input;

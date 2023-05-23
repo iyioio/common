@@ -159,8 +159,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         let result=await queryAsync(table,input);
 
         if(forEachPage && result.items.length){
-            const _break=await forEachPage(result.items,result.lastKey);
-            if(_break){
+            const _forEach=await forEachPage(result.items,result.lastKey);
+            if(Array.isArray(_forEach)){
+                await Promise.all(_forEach);
+            }else if(_forEach){
                 if(discardItems){
                     result.items=[];
                 }
@@ -182,8 +184,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             input.ExclusiveStartKey=result.lastKey;
             result=await queryAsync(table,input);
             if(forEachPage && result.items.length){
-                const _break=await forEachPage(result.items,result.lastKey);
-                if(_break){
+                const _forEach=await forEachPage(result.items,result.lastKey);
+                if(Array.isArray(_forEach)){
+                    await Promise.all(_forEach);
+                }else if(_forEach){
                     _continue=false;
                 }
             }
@@ -299,6 +303,11 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         await this.getClient().send(new UpdateItemCommand(update));
     }
 
+    /**
+     * Patches the given item. Use the createUpdateExpression function to patch the item using
+     * dynamic expressions. Update expressions can be used to increment values based on the
+     * value in the database.
+     */
     public async patchTableItem<T>(
         table:DataTableDescription<T>,
         item:ItemPatch<T>,
@@ -344,6 +353,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             });
             if(!update){
                 return false;
+            }
+
+            if(this.logCommandInput){
+                console.info('patchTableItem',update);
             }
 
             await this.getClient().send(new UpdateItemCommand(update));

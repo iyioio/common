@@ -28,9 +28,11 @@ export interface ScanMatchTableOptions<T>
      * A function that is called for each page of items that is received from the database.
      * forEachPage can be used to process all items in a large table in small batches. Set limit to
      * control  how many items are passed to forEachPage at a time. returnAll discardItems
-     * default to true and limit defaults to 100 when forEachPage is defined.
+     * default to true and limit defaults to 100 when forEachPage is defined. If forEachPage returns
+     * an array the array is awaited on using Promise.all. This allows forEachPage to map received
+     * items to array of promises with minimum syntax.
      */
-    forEachPage?:(items:T[],lastKey:any)=>void|boolean|Promise<void|boolean>;
+    forEachPage?:(items:T[],lastKey:any)=>void|boolean|Promise<void|boolean>|((Promise<any>|any)[]);
 }
 
 export interface QueryMatchTableOptions<T> extends Omit<ScanMatchTableOptions<T>,'commandInput'>
@@ -185,6 +187,11 @@ export interface BaseUpdateExpression<T>
      * If not undefined add will be added to the current value of the target object.
      */
     add?:any;
+
+    /**
+     * If true the property will be removed from the target object.
+     */
+    removeProperty?:boolean;
 }
 export type FilterEntity<TEntity>=
 {
