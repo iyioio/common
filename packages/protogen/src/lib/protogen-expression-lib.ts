@@ -27,7 +27,7 @@ const _parseProtoExpression=(node:ProtoNode,path:string,filterPaths:string[]|und
             {
                 name:node.name,
                 path:isDotPath?node.value?.startsWith('.')?node.value.substring(1):node.value:undefined,
-                address:isDotPath?undefined:node.links?.[0].address,
+                address:isDotPath?undefined:node.links?.[0]?.address,
                 value:(isRefType || isDotPath)?undefined:parseProtoPrimitiveUndefined(node.value),
                 invert:node.types?.[0]?.ex===true?true:undefined,
                 ctrl:builtInProtoExpressionCtrlTypes.includes(node.name as any)?node.name as any:undefined,
