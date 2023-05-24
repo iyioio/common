@@ -72,7 +72,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
             const args=protoGetChildren(node.children?.['args'],false);
             const returnNode=node.children?.['return']
             const returnTypeBase=returnNode?.type||'void';
-            const returnType=isAsync?`Promise<${returnTypeBase}>`:returnTypeBase;
+            const returnType=(isAsync?`Promise<${returnTypeBase}>`:returnTypeBase)+(returnNode?.types?.[0]?.isArray?'[]':'');
 
             const argsExportName=name+'FunctionArgsScheme';
             const argsPackage=importMap[argsExportName];
@@ -94,7 +94,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
 
             const startI=out.length;
             const oneLiner=`export const ${name}=${isAsync?'async ':''}(${
-                args.map(a=>`${a.name}:${a.type}`).join(', ')}):${returnType}=>`;
+                args.map(a=>`${a.name}${a.optional?'?':''}:${a.type}${a.types?.[0]?.isArray?'[]':''}`).join(', ')}):${returnType}=>`;
             if(oneLiner.length<=90 || args.length===0){
                 out.push(oneLiner);
                 out.push('{');
@@ -102,7 +102,7 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
                 out.push(`export const ${name}=${isAsync?'async ':''}(`);
                 for(let a=0;a<args.length;a++){
                     const arg=args[a];
-                    out.push(`${tab}${arg.name}:${arg.type}${a===args.length-1?'':','}`)
+                    out.push(`${tab}${arg.name}${arg.optional?'?':''}:${arg.type}${arg.types?.[0]?.isArray?'[]':''}${a===args.length-1?'':','}`)
                 }
                 out.push(`):${returnType}=>{`);
             }
