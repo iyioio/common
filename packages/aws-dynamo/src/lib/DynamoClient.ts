@@ -4,7 +4,7 @@ import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { AuthDependentClient, DataTableDescription, IWithStoreAdapter, Scope, ValueCache, authService, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 import { convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName, getQueryCommandInput, getScanCommandInput } from "./dynamo-lib";
-import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions } from "./dynamo-types";
+import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions, isUpdateExpression } from "./dynamo-types";
 
 
 export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements IWithStoreAdapter
@@ -119,7 +119,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
     }
 
 
-    public async queryMatchFirstTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<T|undefined>{
+    public async firstQueryMatchTableAsync<T>(options:QueryMatchTableOptions<T>):Promise<T|undefined>{
 
         const result=await this.queryMatchTableAsync({...options,limit:1});
         return result.items[0];
@@ -328,7 +328,8 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         const updateProp=skipVersionCheck?undefined:table.updateVersionProp;
 
         const uv=updateProp?(item as any)[updateProp]:undefined;
-        if(!skipVersionCheck && updateProp && (typeof uv)!=='number'){
+        const uvIsUpdateExpression=isUpdateExpression(uv);
+        if(!skipVersionCheck && !uvIsUpdateExpression && updateProp && (typeof uv)!=='number'){
             throw new Error(`updateVersionProp(${updateProp}) required as number`);
         }
 
@@ -340,7 +341,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         const tableName=getDataTableId(table);
 
 
-        if(uv!==undefined && updateProp){
+        if(!uvIsUpdateExpression && uv!==undefined && updateProp){
             (item as any)[updateProp]=uv+1;
         }
 
@@ -348,7 +349,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         try{
             const update=createItemUpdateInputOrNull(tableName,key,item,true,{
                 ...extendedOptions,
-                matchCondition:updateProp && uv!==undefined?
+                matchCondition:!uvIsUpdateExpression && updateProp && uv!==undefined?
                     {[updateProp]:uv}:undefined,
             });
             if(!update){
@@ -371,7 +372,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             }
             throw ex;
         }finally{
-            if(!success && uv!==undefined && updateProp){
+            if(!success && !uvIsUpdateExpression && uv!==undefined && updateProp){
                 (item as any)[updateProp]=uv;
             }
         }
