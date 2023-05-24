@@ -178,11 +178,13 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const paramName=protoAddContextParam(name+'Arn',paramPackage,paramMap,importMap);
             clientParamImports.push(paramName);
 
+            const sourcePath=node.children?.['sourcePath']?.value;
+
             const fnInfo:FnInfoTemplate={
                 name,
                 createProps:{
                     createPublicUrl:node.children?.['publicUrl']?.value==='true',
-                    handlerFileName:joinPaths(cdkRelPath,filepath),
+                    handlerFileName:sourcePath?(libStyle==='nx'?joinPaths('../..',sourcePath):sourcePath):joinPaths(cdkRelPath,filepath),
                     handler:'handler'
                 },
                 arnParam:paramName
@@ -318,13 +320,15 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
             protoPrependTsImports(imports,importMap,out);
 
-            outputs.push({
-                path:filepath,
-                content:out.join('\n'),
-                mainExport:isDefault?undefined:handlerName,
-                mainExportAs:name,
-                autoMerge:true
-            })
+            if(!sourcePath){
+                outputs.push({
+                    path:filepath,
+                    content:out.join('\n'),
+                    mainExport:isDefault?undefined:handlerName,
+                    mainExportAs:name,
+                    autoMerge:true
+                })
+            }
 
         }
 
