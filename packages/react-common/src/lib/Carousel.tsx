@@ -26,8 +26,14 @@ interface CarouselProps extends BaseLayoutOuterProps
      */
     children?:any;
 
+    /**
+     * The current index of the carousel
+     */
     index?:number;
 
+    /**
+     * Called when the index of the carousel changes.
+     */
     onIndexChange?:(index:number)=>void;
 
     /**
@@ -45,6 +51,10 @@ interface CarouselProps extends BaseLayoutOuterProps
      */
     vertical?:boolean;
 
+    /**
+     * If true the carousel will flex to fill the available size.
+     */
+    fill?:boolean;
 
     /**
      * If true or a render function indicators will be rendered. By default the indicators are
@@ -55,13 +65,34 @@ interface CarouselProps extends BaseLayoutOuterProps
     /**
      * If true or a render function is supplied directional arrows will be rendered
      */
-    arrows?:boolean|((vertical:boolean,start:boolean,disabled:boolean)=>any);
+    arrows?:boolean|((vertical:boolean,start:boolean,disabled:boolean,size:number)=>any);
+
+    /**
+     * Controls the size of the arrow icons
+     */
+    arrowSize?:number;
+
+    /**
+     * Controls how much padding it added to the arrow buttons
+     */
+    arrowPadding?:number|string;
+
+    /**
+     * A class name given to the arrow buttons
+     */
+    arrowClassName?:string;
+
 
     /**
      * Size used when rendering the default indicator dots.
      */
     indicatorSize?:number;
 
+    /**
+     * Controls where the indicators are rendered. When horizontal start positions the indicators
+     * at the top and end at the bottom of the carousel, when vertical start positions the
+     * indicators on the left and end on the right of the carousel.
+     */
     indicatorsPosition?:'start'|'end';
 
     /**
@@ -98,10 +129,14 @@ export function Carousel({
     indicators:_indicators,
     hideSingleIndicator,
     arrows,
+    arrowSize=18,
+    arrowClassName,
+    arrowPadding=0,
     indicatorsPosition='end',
     indicatorSize=8,
     indicatorMargin,
     overlay,
+    fill,
     getItemClass,
     ...props
 }:CarouselProps){
@@ -159,7 +194,7 @@ export function Carousel({
         (indicatorsPosition==='start'?'top':'bottom');
 
     return (
-        <div ref={setSwipeRoot} className={bcn(props,"Carousel",{vertical,horizontal:!vertical},indicatorsPosition)}>
+        <div ref={setSwipeRoot} className={bcn(props,"Carousel",{vertical,horizontal:!vertical,fill},indicatorsPosition)}>
 
             <div ref={setPlane} className="Carousel-plane" style={{
                 [vertical?'height':'width']:100*items.length+'%',
@@ -200,11 +235,20 @@ export function Carousel({
             </div>}
 
             {arrows && <>
-                <button className="Carousel-arrow start" disabled={activeIndex<=0} onClick={()=>setActiveIndex(activeIndex-1)}>
-                    {(arrowRenderer??defaultArrowRenderer)(vertical,true,activeIndex<=0)}
+                <button
+                    className={cn("Carousel-arrow start",arrowClassName)}
+                    disabled={activeIndex<=0}
+                    onClick={()=>setActiveIndex(activeIndex-1)}
+                    style={{padding:arrowPadding}}
+                >
+                    {(arrowRenderer??defaultArrowRenderer)(vertical,true,activeIndex<=0,arrowSize)}
                 </button>
-                <button className="Carousel-arrow end" disabled={activeIndex>=items.length-1} onClick={()=>setActiveIndex(activeIndex+1)}>
-                    {(arrowRenderer??defaultArrowRenderer)(vertical,false,activeIndex>=items.length-1)}
+                <button
+                    className={cn("Carousel-arrow end",arrowClassName)}
+                    disabled={activeIndex>=items.length-1}
+                    onClick={()=>setActiveIndex(activeIndex+1)} style={{padding:arrowPadding}}
+                >
+                    {(arrowRenderer??defaultArrowRenderer)(vertical,false,activeIndex>=items.length-1,arrowSize)}
                 </button>
             </>}
 
@@ -220,12 +264,21 @@ export function Carousel({
                     overflow-x:hidden;
                     overflow-x:clip;
                 }
+                .Carousel.fill{
+                    flex:1;
+                }
                 .Carousel.vertical{
                     overflow-y:hidden;
                     overflow-y:clip;
                 }
                 .Carousel-plane{
                     transition:transform 0.2s ease-in-out;
+                }
+                .Carousel.horizontal.fill .Carousel-plane{
+                    height:100%;
+                }
+                .Carousel.vertical.fill .Carousel-plane{
+                    width:100%;
                 }
                 .Carousel.horizontal .Carousel-plane{
                     display:flex;
@@ -236,10 +289,11 @@ export function Carousel({
                     flex-direction:column;
                 }
                 .Carousel-itemWrapper{
+                    display:flex;
                     position:relative;
                 }
-                .Carousel-itemWrapper{
-                    scroll-snap-align:start;
+                .Carousel.horizontal .Carousel-itemWrapper{
+                    flex-direction:column;
                 }
                 .Carousel-indicators{
                     gap:0.5rem;
@@ -331,9 +385,9 @@ export function Carousel({
 
 }
 
-const defaultArrowRenderer=(vertical:boolean,start:boolean,disabled:boolean)=>(
+const defaultArrowRenderer=(vertical:boolean,start:boolean,disabled:boolean,size:number)=>(
     <>
-        <BasicIcon size={18} className={cn("Carousel-defaultArrows",{disabled})} icon={vertical?
+        <BasicIcon size={size} className={cn("Carousel-defaultArrows",{disabled})} icon={vertical?
             (start?'chevron-up':'chevron-down'):
             (start?'chevron-left':'chevron-right')
         } />
