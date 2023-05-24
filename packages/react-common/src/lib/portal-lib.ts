@@ -1,7 +1,6 @@
 import { aryRemoveItem, HashMap } from "@iyio/common";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { useSubject } from "./rxjs-hooks";
 
 export const allPortals=new BehaviorSubject<HashMap<PortalCtrl>>({});
 
@@ -115,7 +114,24 @@ export const usePortal=({
 }:PortalProps)=>
 {
 
-    const ctrls=useSubject(allPortals);
+    const [ctrls,setCtrls]=useState<Record<string,PortalCtrl>>({});
+    useEffect(()=>{
+        let m=true;
+        let updateId=0;
+        const sub=allPortals.subscribe(v=>{
+            if(!m){return;}
+            const id=++updateId;
+            setTimeout(()=>{
+                if(m && id===updateId){
+                    setCtrls(v);
+                }
+            },0)
+        })
+        return ()=>{
+            m=false;
+            sub.unsubscribe()
+        };
+    },[]);
     const ctrl:PortalCtrl|undefined=ctrls[rendererId];
     const item=useMemo(()=>ctrl?createPortalItem():null,[ctrl]);
 
