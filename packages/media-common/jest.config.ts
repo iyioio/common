@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: 'ai-complete',
+    displayName: 'media-common',
     preset: '../../jest.preset.js',
     testEnvironment: 'node',
     transform: {
