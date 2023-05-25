@@ -1,0 +1,47 @@
+{
+    "name": "obj-sync",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/obj-sync/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@iyio/nx-common:lib-builder",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/obj-sync",
+                "main": "packages/obj-sync/src/index.ts",
+                "tsConfig": "packages/obj-sync/tsconfig.lib.json",
+                "assets": ["packages/obj-sync/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs obj-sync {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/obj-sync/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "packages/obj-sync/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
+        }
+    },
+    "tags": []
+}
