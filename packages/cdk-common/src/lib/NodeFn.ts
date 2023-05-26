@@ -27,6 +27,11 @@ interface AdditionalFuncOptions
     handlerFileName?:string;
 
     minify?:boolean;
+
+    /**
+     * Timeout in milliseconds. If timeout is defined this value will be overrode.
+     */
+    timeoutMs?:number;
 }
 
 export interface CreateNodeFnResult
@@ -48,6 +53,7 @@ export class NodeFn extends Construct{
         handlerFileName,
         minify=true,
         urlCors,
+        timeoutMs,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
         bundling={minify,sourceMap:true,target:'node18'},
@@ -56,6 +62,7 @@ export class NodeFn extends Construct{
         runtime=lambda.Runtime.NODEJS_18_X,
         architecture=lambda.Architecture.ARM_64,
         memorySize=256,
+        timeout=timeoutMs===undefined?undefined:cdk.Duration.millis(timeoutMs),
         ...props
     }:NodeFnProps){
 
@@ -73,6 +80,7 @@ export class NodeFn extends Construct{
             runtime,
             architecture,
             memorySize,
+            timeout,
             ...props
         });
 

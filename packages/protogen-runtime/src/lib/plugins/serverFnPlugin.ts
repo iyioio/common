@@ -1,5 +1,5 @@
 import { SiteContentSourceDescription } from "@iyio/cdk-common";
-import { getSubstringCount, joinPaths } from "@iyio/common";
+import { getSubstringCount, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, addPackageInfoToProtoType, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
@@ -79,6 +79,11 @@ const ServerFnPluginConfig=z.object(
     serverFnInit:z.boolean().optional(),
     serverFnInitFunction:z.string().optional(),
     serverFnInitFunctionPackage:z.string().optional(),
+
+    /**
+     * The default timeout for generated functions in milliseconds
+     */
+    serverFnDefaultTimeoutMs:z.number().optional(),
 })
 
 export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPluginConfig>=
@@ -111,7 +116,8 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
         serverFnCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${serverFnCdkConstructClassName}.ts`:undefined,
         serverFnInit=true,
         serverFnInitFunction='initBackend',
-        serverFnInitFunctionPackage=`backend`
+        serverFnInitFunctionPackage=`backend`,
+        serverFnDefaultTimeoutMs,
     })=>{
 
         const {path}=getProtoPluginPackAndPath(
@@ -179,13 +185,15 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             clientParamImports.push(paramName);
 
             const sourcePath=node.children?.['sourcePath']?.value;
+            const timeoutValue=safeParseNumberOrUndefined(node.children?.['timeout']?.value)
 
             const fnInfo:FnInfoTemplate={
                 name,
                 createProps:{
                     createPublicUrl:node.children?.['publicUrl']?.value==='true',
                     handlerFileName:sourcePath?(libStyle==='nx'?joinPaths('../..',sourcePath):sourcePath):joinPaths(cdkRelPath,filepath),
-                    handler:'handler'
+                    handler:'handler',
+                    timeoutMs:timeoutValue===undefined?serverFnDefaultTimeoutMs:timeoutValue*1000,
                 },
                 arnParam:paramName
             };
