@@ -9,6 +9,11 @@ export interface LambdaInvokeOptions<TInput=any>
     fn:string;
 
     /**
+     * A friendly name for the function
+     */
+    label?:string;
+
+    /**
      * Input / payload
      */
     input?:TInput;

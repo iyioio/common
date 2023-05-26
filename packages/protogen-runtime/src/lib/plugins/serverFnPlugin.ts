@@ -260,6 +260,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             }
             clientOut.push(`export const ${clientName}=(input:${tsInputType}):Promise<${tsOutputType}>=>(`)
             clientOut.push(`${tab}lambdaClient().invokeAsync<${tsInputType},${tsOutputType}>({`);
+            clientOut.push(`${tab}${tab}label:${JSON.stringify(name)},`)
             clientOut.push(`${tab}${tab}fn:${paramName}(),`)
             clientOut.push(`${tab}${tab}input,`)
             if(inputPackage){

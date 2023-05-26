@@ -47,6 +47,7 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
 
     public async invokeOptionalOutAsync<TInput,TOutput>({
         fn,
+        label,
         input,
         inputScheme,
         outputScheme,
@@ -69,6 +70,7 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
         const user=currentBaseUser(scope);
 
         const eventInput:FnInvokeEvent={
+            label,
             ______isFnInvokeEvent:true,
             input,
             jwt:user?(await user.getJwtAsync())??undefined:undefined

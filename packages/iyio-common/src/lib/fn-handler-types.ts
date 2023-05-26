@@ -76,6 +76,7 @@ export const createFnError=(code:number,message:string,zodError?:ZodError,metada
 
 export interface FnInvokeEvent<TInput=any>
 {
+    label?:string;
     ______isFnInvokeEvent:true;
     input?:TInput;
     jwt?:string;
