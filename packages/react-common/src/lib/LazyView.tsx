@@ -15,7 +15,7 @@ export function LazyView({
     elemRef,
     style={},
     ...props
-}:LazyViewProps){
+}:LazyViewProps & {elem?:string}){
 
     const [elem,setElem]=useState<HTMLElement|null>(null);
 
