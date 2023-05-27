@@ -153,7 +153,7 @@ export class LineCtrl
                     line.elem.setAttribute('stroke',lineColor);
                     line.elem.setAttribute('fill','none');
                     line.elem.setAttribute('stroke-width','2');
-                    line.elem2.setAttribute('stroke',dt().bgColor+'cc');
+                    line.elem2.setAttribute('stroke',dt().bgColor);
                     line.elem2.setAttribute('stroke-width','4');
                     line.elem2.setAttribute('fill','none');
                     this.lines.push(line);
@@ -241,10 +241,10 @@ export class LineCtrl
                     30:Math.min(dist/2,Math.min(300,Math.max(60,Math.abs(line.p1.x-line.p2.x)*0.7)))
                 );
                 const d=(
-                    `M ${line.p1.x} ${line.p1.y
-                    } C ${line.p1.x+(dir*dir1)} ${line.p1.y
-                    } ${line.p2.x+(dir*dir2)} ${line.p2.y
-                    }  ${line.p2.x} ${line.p2.y}`
+                    `M ${Math.round(line.p1.x)} ${Math.round(line.p1.y)
+                    } C ${Math.round(line.p1.x+(dir*dir1))} ${Math.round(line.p1.y)
+                    } ${Math.round(line.p2.x+(dir*dir2))} ${Math.round(line.p2.y)
+                    }  ${Math.round(line.p2.x)} ${Math.round(line.p2.y)}`
                 )
                 line.elem.setAttribute('d',d);
                 line.elem2.setAttribute('d',d);

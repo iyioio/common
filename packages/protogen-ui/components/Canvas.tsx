@@ -1,8 +1,8 @@
 import { cn } from "@iyio/common";
 import { usePanZoomCtrl, useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { useProtogenCtrl } from "./lib-builder-components";
 import NodeView from "./NodeView";
+import { useProtogenCtrl } from "./lib-builder-components";
 
 const svgSpan=6000;
 
@@ -72,6 +72,7 @@ export default function Canvas({
                     width:${svgSpan*2}px;
                     pointer-events:none;
                     overflow:visible;
+                    shape-rendering:optimizespeed;
                 }
             `}</style>
         </div>
