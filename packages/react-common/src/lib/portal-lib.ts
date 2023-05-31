@@ -104,15 +104,26 @@ export interface PortalProps
     children?:any;
     active?:boolean;
     state?:any;
+
+    /**
+     * Causes the portal to render inline. This is typically used for debugging or demonstration
+     * purposes.
+     */
+    renderInline?:boolean;
 }
 
 export const usePortal=({
     rendererId=defaultPortalRendererId,
+    renderInline,
     active=true,
     state,
     children
 }:PortalProps)=>
 {
+
+    if(renderInline){
+        active=false;
+    }
 
     const [ctrls,setCtrls]=useState<Record<string,PortalCtrl>>({});
     useEffect(()=>{

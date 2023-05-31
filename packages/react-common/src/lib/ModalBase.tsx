@@ -50,6 +50,7 @@ export function ModalBase({
     hideScrollBarOnOut=true,
     zIndex,
     keepMounted,
+    renderInline,
     ...props
 }:ModalBaseProps){
 
@@ -80,13 +81,13 @@ export function ModalBase({
 
     return (
         <>
-            <Portal rendererId={rendererId}>
+            <Portal rendererId={rendererId} renderInline={renderInline}>
                 <div style={{zIndex}} className={bcn(
                     props,
                     'ModelBase',
                     open?'ModelBase-open':'ModelBase-closed',
                     noDefaultTransition?undefined:(open?'ModelBase-defaultIn':'ModelBase-defaultOut'),
-                    {center,scrollable,hideScrollBarOnOut}
+                    {center,scrollable,hideScrollBarOnOut,renderInline}
                 )}>
 
                     <div className={cn("ModelBase-bg",bgClassName)} style={{background}} onClick={()=>closeRequested?.(false)}/>
