@@ -196,7 +196,7 @@ const getNodeValue=(content:string)=>{
     if(ei!==-1){
         return content.substring(ei+1).trim();
     }else{
-        return content;
+        return content.replace(/\(\w+\)/g,'').trim();
     }
 }
 
