@@ -50,6 +50,8 @@ export interface Size
 
 export type DisposeCallback=()=>void;
 
+export type LogCallback=(...args:any[])=>void;
+
 export type SideEffectCallback=((success:boolean)=>void|Promise<void>)|Promise<void>;
 
 export type HashMap<T=any>={[key:string]:T}
