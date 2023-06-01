@@ -38,6 +38,16 @@ const _parseProtoExpression=(node:ProtoNode,path:string,filterPaths:string[]|und
         }
     )
 
+    if(node.tags){
+        if(node.tags.includes('map')){
+            expression.map=true;
+        }
+        if(node.tags.includes('set')){
+            const i=node.address.indexOf('.');
+            expression.setAs=i===-1?node.address:node.address.substring(i+1);
+        }
+    }
+
     if(node.children){
         for(const n in node.children){
             const child=node.children[n];

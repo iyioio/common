@@ -1,4 +1,4 @@
-import { CancelToken, deleteUndefined } from "@iyio/common";
+import { CancelToken, LogCallback, deleteUndefined, getValueByPath } from "@iyio/common";
 import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
 import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
 import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
@@ -15,6 +15,8 @@ export class ProtoExpressionEngine
     private readonly expression:ProtoExpression;
     private readonly callableExpressions:Record<string,ProtoExpression>;
     private readonly callables:Record<string,ProtoCallable>;
+
+    public log:LogCallback|undefined;
 
     public constructor({
         context,
@@ -46,6 +48,10 @@ export class ProtoExpressionEngine
         }
         this._started=true;
         this.context.startTime=Date.now();
+        if(this.log){
+            this.log('_________________________________________________________________');
+            this.log(`\nStart eval - ${this.context.startTime}`);
+        }
 
         try{
             if(this.context.lastResumeId){
@@ -71,6 +77,10 @@ export class ProtoExpressionEngine
                     this.context.lastResumeId=result.resumeId;
                     this.context.resumeAfter=result.resumeAfter;
                 }
+
+                if(this.log){
+                    this.log(`End eval - ${Date.now()-(this.context.startTime??0)}ms - ${state}`,result);
+                }
                 return {
                     state,
                     context:this.context,
@@ -79,6 +89,9 @@ export class ProtoExpressionEngine
                     errorMessage:result.errorMessage
                 }
             }else{
+                if(this.log){
+                    this.log(`End eval - ${Date.now()-(this.context.startTime??0)}ms - complete`,result);
+                }
                 return {
                     state:'complete',
                     context:this.context,
@@ -86,6 +99,10 @@ export class ProtoExpressionEngine
                 }
             }
         }catch(ex){
+            if(this.log){
+                this.log(`End eval - ${Date.now()-(this.context.startTime??0)}ms - failed`,ex);
+
+            }
             return {
                 state:'failed',
                 context:this.context,
@@ -93,13 +110,27 @@ export class ProtoExpressionEngine
                 errorMessage:typeof (ex as any)?.message === 'string'?
                     (ex as any)?.message:'Expression failed'
             }
+        }finally{
+            if(this.log){
+                this.log('eval context', this.context)
+                this.log('_________________________________________________________________');
+            }
         }
     }
 
     private readonly evalExpression=async (expression:ProtoExpression,context:ProtoEvalContext,depth:number):Promise<ProtoEvalValue|ProtoExpressionControlFlowResult>=>
     {
 
+        const evalIndex=context.evalCount;
+
+        if(this.log){
+            this.log(`eval[${evalIndex}] -`,expression);
+        }
+
         if(this.cancelToken.isCanceled){
+            if(this.log){
+                this.log(`eval[${evalIndex}] - cancled`);
+            }
             return createProtoExpressionControlFlowResult({
                 canceled:true
             });
@@ -107,8 +138,11 @@ export class ProtoExpressionEngine
 
         context.evalCount++;
         if(context.maxEvalCount!==undefined && context.evalCount>context.maxEvalCount){
-            throw new MaxProtoExpressionEvalCountError(
-                `Max number of expressions evaluated. max:${context.maxEvalCount}`);
+            const msg=`Max number of expressions evaluated. max:${context.maxEvalCount}`
+            if(this.log){
+                this.log(`eval[${evalIndex}] - ${msg}`);
+            }
+            throw new MaxProtoExpressionEvalCountError(msg);
         }
 
         let frame=context.frames[depth];
@@ -145,8 +179,11 @@ export class ProtoExpressionEngine
                     frame.sub=0;
                     context.evalCount++;
                     if(context.maxEvalCount!==undefined && context.evalCount>context.maxEvalCount){
-                        throw new MaxProtoExpressionEvalCountError(
-                            `Max number of expressions evaluated. max:${context.maxEvalCount}`);
+                        const msg=`Max number of expressions evaluated. max:${context.maxEvalCount}`;
+                        if(this.log){
+                            this.log(`eval[${evalIndex}] - ${msg}`);
+                        }
+                        throw new MaxProtoExpressionEvalCountError(msg);
                     }
                 }
 
@@ -160,6 +197,9 @@ export class ProtoExpressionEngine
                             frame.ctrlData={}
                         }
                         const op=ctrl.beforeSub(frame.ctrlData,sub,expression,context);
+                        if(this.log){
+                            this.log(`eval[${evalIndex}] - beforeSub: ${op}`);
+                        }
                         if(op==='skip'){
                             continue;
                         }else if(op==='break'){
@@ -184,9 +224,12 @@ export class ProtoExpressionEngine
                     }
                     if(isProtoExpressionControlFlowResult(value)){
                         if(value.exit){
+                            if(this.log){
+                                this.log(`eval[${evalIndex}] - exit`,value);
+                            }
                             return value;
                         }
-                    }else if(calls){
+                    }else if(calls || expression.map){
                         if(!frame.subResults){
                             frame.subResults={}
                         }
@@ -197,6 +240,9 @@ export class ProtoExpressionEngine
                             frame.ctrlData={}
                         }
                         const op=ctrl.afterSub(value,frame.ctrlData,sub,expression,context);
+                        if(this.log){
+                            this.log(`eval[${evalIndex}] - afterSub: ${op}`);
+                        }
                         if(op==='break'){
                             _continue=false;
                             break;
@@ -217,13 +263,27 @@ export class ProtoExpressionEngine
                     if(!frame.subResults){
                         frame.subResults={}
                     }
+                    if(this.log){
+                        this.log(
+                            `eval[${evalIndex}] - invoke: ${expression.address}`,
+                            'args',frame.subResults,
+                            'callable',{args:callable.args,returnType:callable.returnType}
+                        );
+                    }
                     result=await invokeProtoCallable(callable,frame.subResults)
                 }else{
                     const exCallable=this.callableExpressions[expression.address];
+                    if(this.log){
+                        this.log(`eval[${evalIndex}] - invokeExpression: ${expression.address}`,exCallable);
+                    }
                     if(exCallable){
                         result=await this.evalExpression(exCallable,context,depth+1);
                         if(isProtoExpressionControlFlowResult(result) && result.resumeId){
-                            throw new ProtoExpressionPauseNotAllowedError('Callable expressions are not allowed to pause evaluation');
+                            const msg='Callable expressions are not allowed to pause evaluation';
+                            if(this.log){
+                                this.log(`eval[${evalIndex}] - invokeExpression: ${expression.address} - ${msg}`);
+                            }
+                            throw new ProtoExpressionPauseNotAllowedError();
                         }
                     }else{
                         const varValue=context.vars[expression.address];
@@ -236,9 +296,17 @@ export class ProtoExpressionEngine
         }else if(expression.path){
             if(!ctrl?.ignorePath){
                 result=context.vars[expression.path];
+                if(result===undefined){
+                    result=getValueByPath(context.vars,expression.path,undefined);
+                }
+                if(this.log){
+                    this.log(`eval[${evalIndex}] - path: ${expression.path}`,result);
+                }
             }else{
                 result=value;
             }
+        }else if(expression.map){
+            result=frame.subResults??{};
         }else if(expression.value!==undefined){
             if(!ctrl?.ignoreValue){
                 result=expression.value;
@@ -265,8 +333,22 @@ export class ProtoExpressionEngine
                 result=!result;
             }
             if(expression.type && expression.name){
+                if(this.log){
+                    this.log(`eval[${evalIndex}] - set[${expression.name}]`,result);
+                }
                 context.vars[expression.name]=result;
             }
+
+            if(expression.setAs){
+                if(this.log){
+                    this.log(`eval[${evalIndex}] - setAs[${expression.setAs}]`,result);
+                }
+                context.vars[expression.setAs]=result;
+            }
+        }
+
+        if(this.log){
+            this.log(`eval[${evalIndex}] - result:`,result);
         }
 
         return result;
@@ -313,3 +395,4 @@ const _getProtoExpressionResumeFrames=(id:string,expression:ProtoExpression,fram
     frames.pop();
     return false;
 }
+

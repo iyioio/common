@@ -1,4 +1,4 @@
-import { TimeInterval } from '@iyio/common';
+import { TimeInterval, deepCompare } from '@iyio/common';
 import { z } from 'zod';
 import { ProtoExpressionEngine } from './ProtoExpressionEngine';
 import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown";
@@ -40,15 +40,27 @@ const evalAsync=async (exp:ProtoExpression,engineOptions?:Partial<ProtoExpressio
     const {engine}=createEngine(exp,engineOptions);
     return await engine.evalAsync();
 }
-const completeWithResultAsync=async (state:ProtoEvalState,value:any,exp:ProtoExpression,engineOptions?:Partial<ProtoExpressionEngineOptions>):Promise<ProtoEvalResult>=>{
+const completeWithResultAsync=async (
+    state:ProtoEvalState,
+    value:any,
+    exp:ProtoExpression,
+    engineOptions?:Partial<ProtoExpressionEngineOptions>,
+    compareShape=false,
+    handleResult?:(result:ProtoEvalResult)=>void|Promise<void>
+):Promise<ProtoEvalResult>=>{
     const result=await evalAsync(exp,engineOptions);
 
-    if(result.state!==state || result.value!==value){
+    if(result.state!==state || (compareShape?!deepCompare(result.value,value):result.value!==value)){
         console.warn('states do not match',JSON.stringify(result,null,4));
         console.warn('expression',JSON.stringify(exp,null,4))
     }
     expect(result.state).toBe(state);
-    expect(result.value).toBe(value);
+    if(compareShape){
+        expect(result.value).toMatchObject(value);
+    }else{
+        expect(result.value).toBe(value);
+    }
+    await handleResult?.(result);
     return result
 }
 
@@ -945,6 +957,49 @@ describe('markdown',()=>{
         )
 
         expect(r.error).toBeInstanceOf(InvalidProtoCallableArgsError);
+    })
+
+    it('should create a map object',async ()=>{
+
+        await completeWithResultAsync(
+            'complete',
+            {
+                a:1,
+                b:2,
+                c:'c',
+            },
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - obj: (map)
+                    - a: 1
+                    - b: 2
+                    - c: c
+
+            `),
+            undefined,
+            true
+        )
+    })
+
+    it('should set using tag',async ()=>{
+
+        await completeWithResultAsync(
+            'complete',
+            77,
+            parseExp(`
+                ## Expression: expression
+                - run:
+                  - value: (set)
+                    - a: 77
+
+            `),
+            undefined,
+            false,
+            result=>{
+                expect(result.context.vars['run.value']).toBe(77);
+            }
+        )
     })
 
 })

@@ -488,7 +488,7 @@ const mdParsed=[
                         ]
                     }
                 ],
-                "value": "string (key)",
+                "value": "string",
                 "renderData": {
                     "input": "- id: string (key)",
                     "depth": 1,
@@ -665,7 +665,7 @@ const mdParsed=[
                                 "important": true
                             }
                         ],
-                        "value": "string *User (fon)",
+                        "value": "string *User",
                         "renderData": {
                             "input": "  - ownerId: string *User (fon)",
                             "depth": 2,
@@ -783,7 +783,7 @@ const mdParsed=[
                 "path": []
             }
         ],
-        "value": "(dude)",
+        "value": "",
         "renderData": {
             "input": "## User (dude)",
             "depth": 0,
@@ -975,7 +975,7 @@ const mdParsed=[
                 ]
             }
         ],
-        "value": "comp (ui)",
+        "value": "comp",
         "renderData": {
             "input": "## UserView: comp (ui)",
             "depth": 0,

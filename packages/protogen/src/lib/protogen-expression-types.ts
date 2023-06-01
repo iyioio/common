@@ -33,7 +33,20 @@ export interface ProtoExpression
     value?:ProtoEvalValue;
 
     /**
-     * Only used by sub expressions that use subs as definitions
+     * If true the sub values of the expresses will be join together as a object or map where the
+     * names of the subs will be used as keys in the object.
+     */
+    map?:boolean;
+
+    /**
+     * If true the result of the expressions will be set as a variable with a name that matches the
+     * value of setAs
+     */
+    setAs?:string;
+
+    /**
+     * Only used by sub expressions that use subs as definitions. props and vars expressions use
+     * the type property
      */
     type?:string;
 
