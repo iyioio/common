@@ -1,6 +1,6 @@
 import { LambdaClient as AwsLambdaClient, InvokeCommand, LambdaClientConfig } from "@aws-sdk/client-lambda";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { AuthDependentClient, FnInvokeEvent, Scope, ValueCache, authService, currentBaseUser, getZodErrorMessage } from "@iyio/common";
+import { AuthDependentClient, FnInvokeEvent, Scope, ValueCache, authService, currentBaseUser, getZodErrorMessage, isFnError } from "@iyio/common";
 import { LambdaInvokeOptions } from "./lambda-types";
 
 
@@ -90,6 +90,10 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
             output=JSON.parse(decoder.decode(result.Payload));
         }else{
             output=undefined;
+        }
+
+        if(isFnError(output)){
+            throw output;
         }
 
         if(outputScheme){
