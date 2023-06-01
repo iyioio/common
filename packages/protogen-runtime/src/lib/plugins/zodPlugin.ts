@@ -375,7 +375,7 @@ const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>
         call+='.max(255)';
     }
 
-    if(propType==='number' && !attChildren['int']){
+    if(prop.type==='int' && !attChildren['int']){
         call+='.int()';
     }
 
