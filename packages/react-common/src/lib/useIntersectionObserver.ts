@@ -16,40 +16,34 @@ export const useIntersectionObserver=(
 
     const [visible,setVisible]=useState(false);
 
-    const [observer,setObserver]=useState<IntersectionObserver|null>(null);
-
     const opts=useShallowRef(observerOptions);
 
     const onChangeRef=useRef(onChange);
     onChangeRef.current=onChange;
 
     useEffect(()=>{
-        let visible:boolean|null=null;
-        const observer=new IntersectionObserver((entries)=>{
-            for(const e of entries){
-                if(e.isIntersecting!==visible){
-                    visible=e.isIntersecting;
-                    setVisible(e.isIntersecting);
-                    onChangeRef.current?.(e.isIntersecting);
-                }
-                break;
-            }
-        },opts);
-        setObserver(observer);
-        return ()=>{
-            observer.disconnect();
-        }
-    },[opts]);
-
-    useEffect(()=>{
-        if(!elem || !observer){
+        if(!elem){
+            setVisible(false);
             return;
         }
+        let visible:boolean|null=null;
+        const observer=new IntersectionObserver((entries)=>{
+            const e=entries[entries.length-1];
+            if(!e){
+                return;
+            }
+            if(e.isIntersecting!==visible){
+                visible=e.isIntersecting;
+                setVisible(e.isIntersecting);
+                onChangeRef.current?.(e.isIntersecting);
+            }
+        },opts);
         observer.observe(elem);
         return ()=>{
             observer.unobserve(elem);
+            observer.disconnect();
         }
-    },[elem,observer]);
+    },[opts,elem]);
 
     return visible;
 }
