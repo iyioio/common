@@ -1,6 +1,5 @@
-import { baseLayoutCn, BaseLayoutProps, cn, css } from "@iyio/common";
+import { baseLayoutCn, BaseLayoutProps, cn } from "@iyio/common";
 import { CSSProperties } from "react";
-import Style from "styled-jsx/style";
 
 export interface ImageProps extends BaseLayoutProps
 {
@@ -8,6 +7,7 @@ export interface ImageProps extends BaseLayoutProps
     title?:string;
     src:string;
     contain?:boolean;
+    bgContain?:boolean;
     style?:CSSProperties;
     children?:any;
     size?:string|number;
@@ -16,6 +16,7 @@ export interface ImageProps extends BaseLayoutProps
     tile?:boolean;
     bgSrc?:string|null;
     elemRef?:(elem:HTMLElement|null)=>void;
+    unstyled?:boolean,
 }
 
 export function Image({
@@ -24,6 +25,7 @@ export function Image({
     bgSrc,
     title,
     contain,
+    bgContain=contain,
     style={},
     elemRef,
     children,
@@ -31,6 +33,7 @@ export function Image({
     height=size,
     width=size,
     tile,
+    unstyled,
     ...props
 }:ImageProps){
 
@@ -41,22 +44,18 @@ export function Image({
             role="img"
             aria-label={alt}
             className={cn("Image",{contain,tile},baseLayoutCn(props))}
-            style={{backgroundImage:`url(${src})${bgSrc?`,url(${bgSrc})`:''}`,height,width,...style}}>
+            style={{
+                [unstyled?'backgroundImage':'background']:unstyled?(
+                    `url(${src})${bgSrc?` ,url(${bgSrc})`:''}`
+                ):(
+                    `url(${src}) center/${tile?'auto':contain?'contain':'cover'} ${tile?'repeat':'no-repeat'}${bgSrc
+                    ?` ,url(${bgSrc}) center/${bgContain?'contain':'cover'} no-repeat`:''}`
+                ),
+                height,
+                width,
+                ...style
+            }}>
             {children}
-            <Style id="iyio-Image-wg03Hn64WGoy0TyWlQJ7" global jsx>{css`
-                .Image{
-                    background-position:center;
-                    background-repeat:no-repeat;
-                    background-size:cover;
-                }
-                .Image.contain{
-                    background-size:contain;
-                }
-                .Image.tile{
-                    background-repeat:repeat;
-                    background-size:auto;
-                }
-            `}</Style>
         </div>
     )
 
