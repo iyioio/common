@@ -170,19 +170,33 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             }
         }
 
+        const fillRemaining=(options.limit && result.items.length<options.limit && result.lastKey)?true:false;
 
-        if(!returnAll || !result.lastKey || !result.items.length){
+
+        if((!returnAll || !result.lastKey || !result.items.length) && !fillRemaining){
             if(discardItems){
                 result.items=[];
             }
             return result
         }
 
+        const limit=options.limit??result.items.length;
+        const {
+            stepLimitStart=100,
+            stepLimitMax=stepLimitStart*20,
+            stepLimitMultiplier=2,
+        }=options;
+        let total=result.items.length;
+        const firstKey=result.lastKey;
+        if(fillRemaining && options.limit && options.limit<stepLimitStart){
+            input.Limit=stepLimitStart;
+        }
         const allItems=discardItems?[]:result.items;
         let _continue=true;
         while(result.lastKey && _continue){
             input.ExclusiveStartKey=result.lastKey;
             result=await queryAsync(table,input);
+            total+=result.items.length;
             if(forEachPage && result.items.length){
                 const _forEach=await forEachPage(result.items,result.lastKey);
                 if(Array.isArray(_forEach)){
@@ -195,6 +209,37 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
                 for(let i=0;i<result.items.length;i++){
                     allItems.push(result.items[i] as T);
                 }
+            }
+
+            if(fillRemaining){
+
+                if(total>=limit){
+                    if(total>limit){
+                        const lastItem=allItems[limit] as any;
+                        allItems.splice(limit,allItems.length);
+
+                        for(const e in firstKey){
+                            firstKey[e]=lastItem[e];
+                        }
+                        return {
+                            items:allItems,
+                            lastKey:firstKey
+                        }
+                    }else{
+                        return {
+                            items:allItems,
+                            lastKey:result.lastKey
+                        }
+                    }
+                }
+
+                if(input.Limit && input.Limit<stepLimitMax){
+                    input.Limit=Math.round(input.Limit*stepLimitMultiplier);
+                    if(input.Limit>stepLimitMax){
+                        input.Limit=stepLimitMax;
+                    }
+                }
+
             }
         }
 

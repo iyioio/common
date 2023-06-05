@@ -15,7 +15,6 @@ export interface ScanMatchTableOptions<T>
     commandInput?:Partial<ScanCommandInput>;
     pageKey?:any;
     projectionProps?:(keyof T)[];
-    limit?:number;
     returnAll?:boolean;
 
     /**
@@ -33,6 +32,34 @@ export interface ScanMatchTableOptions<T>
      * items to array of promises with minimum syntax.
      */
     forEachPage?:(items:T[],lastKey:any)=>void|boolean|Promise<void|boolean>|((Promise<any>|any)[]);
+
+
+    /**
+     * Limits the number of items returned. This differs from DynamoDb's default limit behavior which
+     * limits the number of items scanned or queried which can result if fewer number of items
+     * returned than the specified by limit.
+     */
+    limit?:number;
+
+    /**
+     * The number of additional items that should be scanned or quired to fill results.
+     * @default 100
+     */
+    stepLimitStart?:number;
+
+    /**
+     * The max number of items that should be scanned or quired at a time when filling results
+     * when using limit
+     * @default stepLimitStart * 20
+     */
+    stepLimitMax?:number;
+
+    /**
+     * Each time limit is not reached the limit will multiplied by stepLimitMultiplier until
+     * is reached stepLimitMax.
+     * @default 2
+     */
+    stepLimitMultiplier?:number;
 }
 
 export interface QueryMatchTableOptions<T> extends Omit<ScanMatchTableOptions<T>,'commandInput'>
