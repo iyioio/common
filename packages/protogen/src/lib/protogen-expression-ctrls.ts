@@ -18,6 +18,7 @@ export const getProtoExpressionCtrl=(type:ProtoExpressionCtrlType|ProtoExpressio
         case 'if': return ifCtrl;
         case 'loop': return loopCtrl;
         case 'throw': return throwCtrl;
+        case 'in': return inCtrl;
         case 'add': return addCtrl;
         case 'sub': return subCtrl;
         case 'mul': return mulCtrl;
@@ -116,6 +117,14 @@ const throwCtrl:ProtoExpressionCtrl={
     }
 }
 
+const inCtrl:ProtoExpressionCtrl={
+    mergeSubValues:(prev:any,value:any)=>{
+        if(!Array.isArray(value)){
+            return false;
+        }
+        return value.includes(prev);
+    }
+}
 const addCtrl:ProtoExpressionCtrl={
     mergeSubValues:(prev:any,value:any)=>prev+value
 }

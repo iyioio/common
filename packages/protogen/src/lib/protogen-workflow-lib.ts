@@ -4,6 +4,9 @@ import { protoGetChildrenByName } from "./protogen-node";
 import { ProtoNode } from "./protogen-types";
 import { ProtoAction, ProtoTimeWindow, ProtoTrigger } from "./protogen-workflow-types";
 
+export const protoWorkerlessNodeAddress='_';
+export const protoWorkerlessGroupName='_';
+
 export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
     const expression=parseProtoExpression({node,filterPaths:['trigger']});
 

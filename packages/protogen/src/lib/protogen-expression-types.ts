@@ -88,6 +88,7 @@ export const builtInProtoExpressionCtrlTypes=[
     'props',
     'throw',
     'if',
+    'in',
     'loop',
     'break',
     'continue',

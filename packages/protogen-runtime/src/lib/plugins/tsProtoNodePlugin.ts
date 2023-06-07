@@ -1,5 +1,5 @@
 import { deepClone, joinPaths } from "@iyio/common";
-import { getProtoPluginPackAndPath, protoCreateNodeAddressMap, protoGenerateTsIndex, ProtoPipelineConfigurablePlugin, protoRemoveDisplayChildren } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoCreateNodeAddressMap, protoGenerateTsIndex, protoRemoveDisplayChildren } from "@iyio/protogen";
 import { z } from "zod";
 
 const TsProtoNodePluginConfig=z.object(
@@ -74,7 +74,7 @@ export const tsProtoNodePlugin:ProtoPipelineConfigurablePlugin<typeof TsProtoNod
 `import { ProtoAddressMap } from '@iyio/protogen';
 
 export const ${tsProtoNodeExportName}=${JSON.stringify(
-    protoCreateNodeAddressMap(protoRemoveDisplayChildren(deepClone(nodes))),
+    protoCreateNodeAddressMap(protoRemoveDisplayChildren(deepClone(nodes,1000))),
 null,tsProtoNodeMinify?0:tab.length)} satisfies ProtoAddressMap;`,
         })
 

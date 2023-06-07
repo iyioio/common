@@ -1,6 +1,6 @@
-import { CancelToken, LogCallback, deleteUndefined, getValueByPath } from "@iyio/common";
+import { CancelToken, LogCallback, deleteUndefined } from "@iyio/common";
 import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
-import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult } from "./protogen-expression-lib";
+import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult, getProtoExpressionValueByPath } from "./protogen-expression-lib";
 import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
 import { invokeProtoCallable } from "./protogen-lib";
 import { ProtoCallable } from "./protogen-types";
@@ -295,10 +295,7 @@ export class ProtoExpressionEngine
             }
         }else if(expression.path){
             if(!ctrl?.ignorePath){
-                result=context.vars[expression.path];
-                if(result===undefined){
-                    result=getValueByPath(context.vars,expression.path,undefined);
-                }
+                result=getProtoExpressionValueByPath(expression.path,context);
                 if(this.log){
                     this.log(`eval[${evalIndex}] - path: ${expression.path}`,result);
                 }
@@ -349,6 +346,16 @@ export class ProtoExpressionEngine
 
         if(this.log){
             this.log(`eval[${evalIndex}] - result:`,result);
+        }
+
+        if((typeof result === 'string') && result.includes('{')){
+            result=result.replace(/\{([\w.]+)\}/g,(_,path:string)=>{
+                const val=getProtoExpressionValueByPath(path,context);
+                if(this.log){
+                    this.log(`eval[${evalIndex}] - embed path: ${path}`,val);
+                }
+                return val?.toString()??'';
+            })
         }
 
         return result;

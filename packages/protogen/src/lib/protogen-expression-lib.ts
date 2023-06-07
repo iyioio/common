@@ -1,3 +1,4 @@
+import { getValueByPath } from "@iyio/common";
 import { ParseProtoExpressOptions, ProtoEvalContext, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowFlag, ProtoExpressionControlFlowResult, ProtoExpressionCtrlType, builtInProtoExpressionCtrlTypes } from "./protogen-expression-types";
 import { parseProtoPrimitiveUndefined } from "./protogen-lib";
 import { ProtoNode } from "./protogen-types";
@@ -17,6 +18,7 @@ const _parseProtoExpression=(node:ProtoNode,path:string,filterPaths:string[]|und
 
     const isDotPath=node.types?.[0]?.dot;
     const isRefType=!isDotPath && node.types?.[0]?.isRefType;
+    const copySource=node.types?.[0]?.copySource;
     const expression:ProtoExpression=(
         definesTypes?{
             name:path,
@@ -27,8 +29,8 @@ const _parseProtoExpression=(node:ProtoNode,path:string,filterPaths:string[]|und
             {
                 name:node.name,
                 path:isDotPath?node.value?.startsWith('.')?node.value.substring(1):node.value:undefined,
-                address:isDotPath?undefined:node.links?.[0]?.address,
-                value:(isRefType || isDotPath)?undefined:parseProtoPrimitiveUndefined(node.value),
+                address:isDotPath || copySource?undefined:node.links?.[0]?.address,
+                value:((isRefType && !copySource) || isDotPath)?undefined:parseProtoPrimitiveUndefined(node.value?.replace(/^@/,'')),
                 invert:node.types?.[0]?.ex===true?true:undefined,
                 ctrl:builtInProtoExpressionCtrlTypes.includes(node.name as any)?node.name as any:undefined,
             }
@@ -125,4 +127,15 @@ export const getCallableProtoExpressions=(expression:ProtoExpression, append:Pro
     }
 
     return append;
+}
+
+export const getProtoExpressionValueByPath=(path:string, context:ProtoEvalContext):ProtoEvalValue=>{
+    if(path.startsWith('.')){
+        path=path.substring(1)
+    }
+    let val=context.vars[path];
+    if(val===undefined){
+        val=getValueByPath(context.vars,path,undefined);
+    }
+    return val;
 }
