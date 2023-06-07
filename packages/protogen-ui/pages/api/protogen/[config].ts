@@ -1,3 +1,4 @@
+import { arySingle } from '@iyio/common';
 import { pathExistsAsync } from '@iyio/node-common';
 import { ProtoConfig } from '@iyio/protogen';
 import { runProtogenCliAsync } from '@iyio/protogen-runtime';
@@ -5,16 +6,23 @@ import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dirname, join } from 'path';
-import { setApiOutput } from '../../lib/protogen-api-lib';
-import { SaveRequest } from '../../lib/protogen-ui-lib';
+import { setApiOutput } from '../../../lib/protogen-api-lib';
+import { SaveRequest } from '../../../lib/protogen-ui-lib';
 
-const configPath=process.env['NX_PROTOGEN_CONFIG'];
+//const configPath=process.env['NX_PROTOGEN_CONFIG'];
 
 const notNameReg=/[^\w-]/g;
 
 export default async function protogenApiHandler (req: NextApiRequest, res: NextApiResponse)
 {
     try{
+
+        const configId=arySingle(req.query['config'])??'';
+        const configPath=process.env['NX_PROTOGEN_CONFIG_'+configId.toUpperCase()];
+        if(!configPath){
+            res.status(404);
+            return;
+        }
 
         const json=(await readFile(configPath??'./protogen-config.json')).toString();
         const {
