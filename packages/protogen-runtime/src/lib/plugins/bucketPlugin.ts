@@ -71,6 +71,7 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                         name:b.name,
                         public:b.children?.['public']?true:false,
                         enableCors:b.children?.['cors']?true:false,
+                        versioned:b.children?.['versioned']?true:undefined,
                         arnParam:protoGetParamName(b.name),
                         mountPaths:pathsChildren.length?pathsChildren.map(n=>{
                             const source=n.children?.['source']?.value||'_';

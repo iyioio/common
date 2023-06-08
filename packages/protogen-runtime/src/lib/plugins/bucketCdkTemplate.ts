@@ -47,7 +47,8 @@ const getBuckets=():BucketInfo[]=>${buckets.map((b,i)=>`[
         enableCors:${b.enableCors?'true':'false'},
         arnParam:${b.arnParam?'_param'+i:'undefined'},${b.mountPaths?`
         mountPaths:${JSON.stringify(b.mountPaths)},`:''}
-        grantAccess:true,
+        grantAccess:true,${b.versioned?`
+        versioned:true,`:''}
     },`).join('')}
 ];`
 }

@@ -35,6 +35,7 @@ export interface BucketInfo
     grantAccess?:boolean;
     modify?:(bucket:s3.Bucket)=>void;
     mountPaths?:BucketMountPath[];
+    versioned?:boolean;
 }
 
 export interface BucketResult
@@ -66,7 +67,8 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
         for(const info of buckets){
 
             const bucket=createBucket(this,info.name,{
-                enableCors:info.enableCors
+                enableCors:info.enableCors,
+                versioned:info.versioned
             })
 
             info.modify?.(bucket);
