@@ -44,6 +44,9 @@ export class BaseUser implements IDisposable, IInit
     private readonly _claims:BehaviorSubject<Record<string,any>>=new BehaviorSubject<Record<string,any>>({});
     public get claimsSubject():ReadonlySubject<Record<string,any>>{return this._claims}
     public get claims(){return this._claims.value}
+    protected setClaims(claims:Record<string,any>){
+        this._claims.next(claims);
+    }
 
     public readonly data:SymStrHashMap;
     public readonly providerData:UserAuthProviderData;
