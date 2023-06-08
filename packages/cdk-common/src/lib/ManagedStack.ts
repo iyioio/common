@@ -11,7 +11,7 @@ export class ManagedStack extends cdk.Stack
 
     protected readonly params=new ParamOutput();
 
-    protected readonly accessManager=new AccessManager();
+    protected readonly accessManager:AccessManager;
 
     protected readonly siteContentSources:SiteContentSource[]=[];
 
@@ -22,6 +22,8 @@ export class ManagedStack extends cdk.Stack
     public constructor(scope:Construct, id:string, props?:cdk.StackProps)
     {
         super(scope,id,props);
+
+        this.accessManager=new AccessManager(this.account,this.region);
 
         this.params.setParam(awsRegionParam,this.region);
 

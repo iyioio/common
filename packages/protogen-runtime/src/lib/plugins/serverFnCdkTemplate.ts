@@ -48,7 +48,9 @@ ${
         arnParam:_fnParam${i},${info.urlParam?`
         urlParam:_fnUrlParam${i},`:''}
         grantAccess:true,
-        accessRequests:${JSON.stringify(info.accessRequests??[])},
+        accessRequests:${JSON.stringify(info.accessRequests??[])},${info.grantAccessRequests?`
+        grantAccessRequests:${JSON.stringify(info.grantAccessRequests)},`:''}${info.noPassiveAccess?`
+        noPassiveAccess:true,`:''}
         createProps:${JSON.stringify(info.createProps)},${info.siteSources?`
         siteSources:${JSON.stringify(info.siteSources)},`:''}
     }`)

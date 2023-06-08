@@ -1,6 +1,6 @@
 import { SiteContentSourceDescription } from "@iyio/cdk-common";
 import { getSubstringCount, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, addPackageInfoToProtoType, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoPrependTsImports } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, addPackageInfoToProtoType, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoNodeChildrenToGrantAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
 
@@ -233,6 +233,15 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             const accessProp=node.children?.['$access'];
             if(accessProp?.children){
                 fnInfo.accessRequests=protoNodeChildrenToAccessRequests(accessProp);
+            }
+
+            const grantAccessProp=node.children?.['$grant-access'];
+            if(grantAccessProp?.children){
+                fnInfo.grantAccessRequests=protoNodeChildrenToGrantAccessRequests(node.name,grantAccessProp);
+            }
+
+            if(node.children?.['$no-passive-access']){
+                fnInfo.noPassiveAccess=true;
             }
 
             const clientName='invoke'+name;

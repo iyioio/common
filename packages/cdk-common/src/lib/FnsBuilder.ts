@@ -4,7 +4,7 @@ import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 import { ManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
-import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessGrantGroup, IAccessRequestGroup, SiteContentSourceDescription } from "./cdk-types";
+import { AccessGranter, AccessRequest, AccessRequestDescription, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget, SiteContentSourceDescription } from "./cdk-types";
 
 export interface FnInfoAndNodeFn
 {
@@ -20,6 +20,8 @@ export interface FnInfo
     urlParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
     accessRequests?:AccessRequestDescription[];
+    grantAccessRequests?:PassiveAccessGrantDescription[];
+    noPassiveAccess?:boolean;
     /**
      * createProps.createPublicUrl must be true in-order for siteSources to be applied
      */
@@ -32,7 +34,7 @@ export interface FnsBuilderProps
     managed?:ManagedProps;
 }
 
-export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessRequestGroup
+export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup
 {
 
     public readonly fns:FnInfoAndNodeFn[];
@@ -40,6 +42,8 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
     public readonly accessGrants:AccessGranter[]=[];
 
     public readonly accessRequests:AccessRequest[]=[];
+
+    public passiveTargets:PassiveAccessTarget[]=[];
 
 
     public constructor(scope:Construct,name:string,{
@@ -65,6 +69,8 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                 fn:nodeFn
             }
 
+            let varContainer:EnvVarTarget|undefined=undefined;
+
             if(params){
                 const excludeParams:ParamTypeDef<string>[]=[];
                 if(info.arnParam){
@@ -75,22 +81,32 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                     params.setParam(info.urlParam,nodeFn.url.url,'fn');
                     excludeParams.push(info.urlParam);
                 }
-                params.addVarContainer({
+                varContainer={
                     name:info.name,
                     varContainer:nodeFn.func,
                     excludeParams,
                     requiredParams:[],
-                })
+                }
+                params.addVarContainer(varContainer)
             }
 
             if(info.grantAccess){
                 this.accessGrants.push({
                     grantName:info.name,
+                    passiveGrants:info.grantAccessRequests,
                     grant:request=>{
                         if(request.types?.includes('invoke')){
                             nodeFn.func.grantInvoke(request.grantee);
                             if(nodeFn.url){
                                 nodeFn.func.grantInvokeUrl(request.grantee);
+                            }
+                            if(request.varContainer){
+                                if(info.arnParam){
+                                    request.varContainer.requiredParams.push(info.arnParam);
+                                }
+                                if(info.urlParam){
+                                    request.varContainer.requiredParams.push(info.urlParam);
+                                }
                             }
                         }
                     }
@@ -98,7 +114,20 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             }
 
             if(info.accessRequests){
-                this.accessRequests.push(...info.accessRequests.map(i=>({...i,grantee:nodeFn.func})));
+                this.accessRequests.push(...info.accessRequests.map(i=>({
+                    ...i,
+                    varContainer,
+                    grantee:nodeFn.func
+                })));
+            }
+
+            if(!info.noPassiveAccess){
+                this.passiveTargets.push({
+                    isFn:true,
+                    targetName:info.name,
+                    grantee:nodeFn.func,
+                    varContainer
+                })
             }
 
             const fnUrl=nodeFn.url;

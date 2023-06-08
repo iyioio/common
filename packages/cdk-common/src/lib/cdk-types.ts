@@ -53,11 +53,20 @@ export type Grantee = iam.IGrantable & {
 export const allCommonAccessTypes=['read','write','delete','invoke','list','scan'] as const;
 export type CommonAccessType=typeof allCommonAccessTypes[number];
 
+
+export interface IamPolicyDescription
+{
+    allow:boolean;
+    actions:string[];
+    resources:string[];
+}
+
 export interface AccessGranter
 {
     grantName:string;
     grant?:(request:AccessRequest)=>void;
     getPolicy?:(request:AccessRequest)=>iam.PolicyStatement|iam.PolicyStatement[]|null|undefined;
+    passiveGrants?:PassiveAccessGrantDescription[];
 }
 
 export interface IAccessGrantGroup
@@ -69,13 +78,44 @@ export interface AccessRequestDescription
 {
     grantName:string;
     types?:CommonAccessType[];
+    iamPolicy?:IamPolicyDescription;
 }
 
 export interface AccessRequest extends AccessRequestDescription
 {
     grantee:Grantee;
+    varContainer?:EnvVarTarget;
 }
 
+export interface PassiveAccessGrantDescription
+{
+    grantName:string;
+    /**
+     * If true all fns should be granted access
+     */
+    allFns?:boolean;
+
+    /**
+     * If true all passive targets should be grated access
+     */
+    all?:boolean;
+
+    targetName?:string;
+    types?:CommonAccessType[];
+}
+
+export interface PassiveAccessTarget
+{
+    targetName:string;
+    grantee:Grantee;
+    varContainer?:EnvVarTarget;
+    isFn?:boolean;
+}
+
+export interface IPassiveAccessTargetGroup
+{
+    passiveTargets:PassiveAccessTarget[];
+}
 
 export interface IAccessRequestGroup
 {
