@@ -8,6 +8,12 @@ export interface UseInvokeOptions<TOutput>
     defaultValue?:TOutput;
 }
 
+/**
+ * Invokes an async function and returns the result once complete
+ * @param invoke The function to invoke
+ * @param input If undefined invocation will be disabled
+ * @param options options to customize the invocation or a refresh index
+ */
 export const useInvoke=<TInput,TOutput>(
     invoke:((input:TInput)=>Promise<TOutput>)|null|undefined,
     input:TInput|null|undefined,
