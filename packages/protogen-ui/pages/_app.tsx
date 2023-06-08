@@ -17,6 +17,7 @@ export default function App(props:AppProps){
         >
             <Head>
                 <title>Protogen</title>
+                <link rel="icon" type="image/png" href="/icon.png"></link>
             </Head>
 
         </NextJsApp>

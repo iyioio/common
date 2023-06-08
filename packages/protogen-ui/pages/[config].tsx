@@ -17,7 +17,7 @@ export default function Config()
         <div className="Config">
 
             <Head>
-                <title>🧬 {config}</title>
+                <title>{config}</title>
             </Head>
 
             <ProtogenView
