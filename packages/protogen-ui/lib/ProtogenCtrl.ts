@@ -54,8 +54,11 @@ export class ProtogenCtrl
         this.lineCtrl.updateLines();
     }
 
-    public constructor(code?:string)
+    public readonly url:string;
+
+    public constructor(code?:string,url?:string)
     {
+        this.url=url??'/api/protogen'
         this.nodes=new BehaviorSubject<NodeCtrl[]>([]);
 
         this.lineCtrl=new LineCtrl(this);
@@ -220,7 +223,7 @@ export class ProtogenCtrl
             })();
 
 
-            await fetch('/api/protogen',{method:'POST',body:JSON.stringify(request)});
+            await fetch(this.url,{method:'POST',body:JSON.stringify(request)});
         }finally{
             complete=true;
             this.exporting=false;

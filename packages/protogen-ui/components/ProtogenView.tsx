@@ -23,14 +23,14 @@ export default function ProtogenView({
 
     useEffect(()=>{
 
-        const ctrl=new ProtogenCtrl();
+        const ctrl=new ProtogenCtrl(undefined,url);
         setCtrl(ctrl);
 
         return ()=>{
             ctrl.dispose();
         }
 
-    },[]);
+    },[url]);
 
     useEffect(()=>{
         if(!ctrl){
