@@ -374,3 +374,33 @@ export const isValueInObj=(value:any,obj:Record<string,any>):boolean=>{
     }
     return false;
 }
+
+/**
+ * Sets or deletes the specified property of the object. If the given value is falsy the property
+ * is deleted, otherwise the property is set with the given value.
+ * @returns true when the property is deleted
+ */
+export const setOrDeleteFalsy=<T,K extends keyof T>(obj:T,prop:K, value:T[K]):boolean=>{
+    if(value){
+        obj[prop]=value;
+        return false;
+    }else{
+        delete obj[prop];
+        return true;
+    }
+}
+
+/**
+ * Sets or deletes the specified property of the object. If the given value is equal to the
+ * deleteWhen value  the property is deleted, otherwise the property is set with the given value.
+ * @returns true when the property is deleted
+ */
+export const setOrDeleteWhen=<T,K extends keyof T>(obj:T,prop:K, value:T[K], deleteWhen:T[K]):boolean=>{
+    if(value===deleteWhen){
+        delete obj[prop];
+        return true;
+    }else{
+        obj[prop]=value;
+        return false;
+    }
+}
