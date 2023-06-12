@@ -82,6 +82,11 @@ export interface DynamoGetOptions<T>
 export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
 {
     skipVersionCheck?:boolean;
+    /**
+     * If true the update version of the patched item will not be automatically incremented by one
+     * when the update property is not present.
+     */
+    noAutoUpdateVersion?:boolean;
 }
 
 /*

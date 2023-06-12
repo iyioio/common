@@ -4,7 +4,7 @@ import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { AuthDependentClient, DataTableDescription, IWithStoreAdapter, Scope, ValueCache, authService, getDataTableId } from "@iyio/common";
 import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
 import { convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName, getQueryCommandInput, getScanCommandInput } from "./dynamo-lib";
-import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions, isUpdateExpression } from "./dynamo-types";
+import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions, createUpdateExpression, isUpdateExpression } from "./dynamo-types";
 
 
 export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements IWithStoreAdapter
@@ -358,6 +358,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         item:ItemPatch<T>,
         {
             skipVersionCheck,
+            noAutoUpdateVersion,
             ...extendedOptions
         }:PatchTableItemOptions<T>={}
     ):Promise<boolean>{
@@ -371,6 +372,12 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         }
 
         const updateProp=skipVersionCheck?undefined:table.updateVersionProp;
+        if( !noAutoUpdateVersion &&
+            table.updateVersionProp &&
+            (item as any)[table.updateVersionProp]===undefined
+        ){
+            (item as any)[table.updateVersionProp]=createUpdateExpression({add:1});
+        }
 
         const uv=updateProp?(item as any)[updateProp]:undefined;
         const uvIsUpdateExpression=isUpdateExpression(uv);
