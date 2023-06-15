@@ -8,6 +8,7 @@ export interface ViewProps extends BaseLayoutProps
     style?:CSSProperties;
     roleNone?:boolean;
     role?:string;
+    id?:string;
 }
 
 export function View({
@@ -17,9 +18,10 @@ export function View({
     style,
     roleNone,
     role=roleNone?'none':undefined,
+    id,
     ...props
 }:ViewProps & {elem?:string}){
 
-    return React.createElement(elem,{ref:elemRef,role,style,className:baseLayoutCn(props)},children);
+    return React.createElement(elem,{ref:elemRef,role,style,id,className:baseLayoutCn(props)},children);
 
 }
