@@ -16,7 +16,8 @@ export interface ImageProps extends BaseLayoutProps
     tile?:boolean;
     bgSrc?:string|null;
     elemRef?:(elem:HTMLElement|null)=>void;
-    unstyled?:boolean,
+    unstyled?:boolean;
+    aspectRatio?:string|number;
 }
 
 export function Image({
@@ -34,6 +35,7 @@ export function Image({
     width=size,
     tile,
     unstyled,
+    aspectRatio,
     ...props
 }:ImageProps){
 
@@ -53,6 +55,7 @@ export function Image({
                 ),
                 height,
                 width,
+                aspectRatio,
                 ...style
             }}>
             {children}
