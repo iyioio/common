@@ -37,3 +37,8 @@ export const safeParseNumberOrUndefined=(value:any):number|undefined=>{
     const num=Number(value);
     return isFinite(num)?num:undefined;
 }
+
+/**
+ * Returns true if the value can be paused as a finite number.
+ */
+export const canBeNumber=(value:any):boolean=>isFinite(Number(value));
