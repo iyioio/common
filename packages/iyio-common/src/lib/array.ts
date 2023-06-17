@@ -166,3 +166,18 @@ export const uint32ArrayToNumberArray=(input:Uint32Array)=>{
     }
     return ary;
 }
+
+export const aryMoveItems=(ary:any[],fromIndex:number,toIndex:number,count=1)=>{
+    if(
+        fromIndex<0 ||
+        toIndex<0 ||
+        count<1 ||
+        fromIndex+count>ary.length ||
+        toIndex>ary.length-count)
+    {
+        return false;
+    }
+    const removed=ary.splice(fromIndex,count);
+    ary.splice(toIndex,0,...removed);
+    return true;
+}
