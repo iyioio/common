@@ -477,6 +477,9 @@ export const baseLayoutInnerGridProps={
     gridAuto8:'ioGridAuto8',
     gridAuto9:'ioGridAuto9',
     gridAuto10:'ioGridAuto10',
+    gridLeftAuto2:'ioGridLeftAuto2',
+    gridLeftAuto3:'ioGridLeftAuto3',
+    gridLeftAuto4:'ioGridLeftAuto4',
 
 } as const;
 Object.freeze(baseLayoutInnerGridProps);
