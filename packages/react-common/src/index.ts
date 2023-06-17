@@ -27,6 +27,7 @@ export * from "./lib/Text";
 export * from "./lib/View";
 export * from "./lib/common-hooks";
 export * from "./lib/icon/BasicIcon";
+export * from "./lib/obj-watch-hooks";
 export * from "./lib/page-lib";
 export * from "./lib/portal-lib";
 export * from "./lib/react-util";
