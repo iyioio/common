@@ -1,9 +1,9 @@
 import { Subscription } from "rxjs";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { DisposeCallback } from "./common-types";
-import { deepCompare, queryParamsToObject } from "./object";
+import { deepClone, deepCompare, queryParamsToObject } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
-import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem } from "./ui-lib";
+import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem } from "./ui-lib";
 import { uuid } from "./uuid";
 
 
@@ -63,6 +63,7 @@ export class UiRouterBase implements IUiRouter
         this._isDisposed=true;
         clearInterval(this.checkIv);
         this.itemsSub.unsubscribe();
+        this.listeners.splice(0,this.listeners.length);
         this._dispose?.();
     }
 
@@ -95,21 +96,133 @@ export class UiRouterBase implements IUiRouter
     }
 
     public push(path:string,query?:RouteQuery){
+        this.pushAsync(path,query);
+    }
+
+    private eventIndex=0;
+
+    protected async triggerEventAsync(evt:UiRouterEvt):Promise<void>
+    {
+        for(const listener of this.listeners){
+            try{
+                await listener(evt);
+            }catch(ex){
+                console.error('UiRouterEvtListener failed',ex);
+            }
+            if(evt.index!==this.eventIndex || this._isDisposed){
+                evt.cancel=true;
+            }
+            if(evt.cancel){
+                return;
+            }
+        }
+    }
+
+    private async pushAsync(path:string,query?:RouteQuery):Promise<void>{
+
+        const evt=await this.handlePushEvtAsync(path,query);
+        if(evt?.cancel){
+            return;
+        }
+        if(evt?.type==='push'){
+            path=evt.path;
+            query=evt.query;
+        }
+
         if(globalThis.history){
             globalThis.history.pushState(null,'',addQueryToPath(path,query));
         }
     }
 
     public pop(){
+        this.popAsync();
+    }
+
+    private async popAsync():Promise<void>{
+
+        const evt=await this.handlePopEvtAsync();
+        if(evt?.cancel){
+            return;
+        }
+
         if(globalThis.history){
             globalThis.history.back();
         }
     }
 
     public open(uri:string,options?:UiRouterOpenOptions){
+        this.openAsync(uri,options);
+    }
+
+    private async openAsync(uri:string,options?:UiRouterOpenOptions):Promise<void>{
+
+        const evt=await this.handleOpenEvtAsync(uri,options);
+        if(evt?.cancel){
+            return;
+        }
+        if(evt?.type==='open'){
+            uri=evt.uri;
+            options=evt.options;
+        }
+
         if(globalThis.window){
             globalThis.window.open(uri,options?.target,options?.target==='_blank'?'noreferrer':undefined)
         }
+    }
+
+    protected async handlePushEvtAsync(path:string,query?:RouteQuery):Promise<UiRouterEvt|undefined>
+    {
+        const index=++this.eventIndex;
+
+        if(!this.listeners.length){
+            return undefined;
+        }
+
+        const evt:UiRouterEvt={
+            index,
+            cancel:false,
+            type:'push',
+            path,
+            query:deepClone(query),
+        }
+        await this.triggerEventAsync(evt);
+        return evt;
+    }
+
+    protected async handlePopEvtAsync():Promise<UiRouterEvt|undefined>
+    {
+        const index=++this.eventIndex;
+
+        if(!this.listeners.length){
+            return undefined;
+        }
+
+        const evt:UiRouterEvt={
+            index,
+            cancel:false,
+            type:'pop',
+        }
+        await this.triggerEventAsync(evt);
+        return evt;
+    }
+
+    protected async handleOpenEvtAsync(uri:string,options?:UiRouterOpenOptions):Promise<UiRouterEvt|undefined>
+    {
+        const index=++this.eventIndex;
+
+        if(!this.listeners.length){
+            return undefined;
+        }
+
+        const evt:UiRouterEvt={
+            index,
+            cancel:false,
+            type:'open',
+            uri,
+            options:deepClone(options),
+        }
+        await this.triggerEventAsync(evt);
+        return evt;
     }
 
     public getCurrentRoute():RouteInfo
@@ -130,6 +243,38 @@ export class UiRouterBase implements IUiRouter
             asPath:window.location.pathname+window.location.search,
             query:queryParamsToObject(window.location.search),
         }
+    }
+
+    private readonly listeners:UiRouterEvtListener[]=[];
+
+    public addListener(listener:UiRouterEvtListener):void
+    {
+        if(this._isDisposed){
+            return;
+        }
+        this.listeners.push(listener);
+    }
+
+    public addListenerWithDispose(listener:UiRouterEvtListener):DisposeCallback
+    {
+        if(this._isDisposed){
+            return ()=>{/* */}
+        }
+        this.listeners.push(listener);
+        return ()=>{
+            this.removeListener(listener);
+        }
+    }
+
+    public removeListener(listener:UiRouterEvtListener):boolean
+    {
+        const i=this.listeners.indexOf(listener);
+        if(i===-1){
+            return false;
+        }
+
+        this.listeners.splice(i,1);
+        return true;
     }
 
 }

@@ -1,5 +1,5 @@
-import { HashMap, RouteInfo, uuid } from "@iyio/common";
-import { createContext, useContext, useMemo } from "react";
+import { HashMap, RouteInfo, UiRouterEvtListener, uiRouterService, uuid } from "@iyio/common";
+import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 
 export const useRoute=():RouteInfo=>
 {
@@ -37,3 +37,16 @@ export const useRouteQuery=():HashMap<string>=>{
 }
 
 export const RouteCtx=createContext<RouteInfo|null>(null);
+
+export const useRoutingListener=(listener:UiRouterEvtListener|null|undefined)=>{
+    const refs=useRef({listener});
+    refs.current.listener=listener;
+
+    useEffect(()=>{
+
+        const routeServer=uiRouterService();
+
+        return routeServer.addListenerWithDispose(evt=>refs.current.listener?.(evt));
+
+    },[])
+}

@@ -28,7 +28,17 @@ export class BrowserUiRouter extends UiRouterBase
         this.options={...options}
     }
 
-    public override push(path:string,query?:RouteQuery){
+    public override async push(path:string,query?:RouteQuery){
+
+        const evt=await this.handlePushEvtAsync(path,query);
+        if(evt?.cancel){
+            return;
+        }
+        if(evt?.type==='push'){
+            path=evt.path;
+            query=evt.query;
+        }
+
         if(shouldUseNativeNavigation(path) || !this.options.useHistory){
             globalThis.location.assign(addQueryToPath(path,query));
         }else{

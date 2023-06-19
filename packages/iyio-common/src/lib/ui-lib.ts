@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { HashMap } from "./common-types";
+import { DisposeCallback, HashMap } from "./common-types";
 import { ReadonlySubject } from "./rxjs-types";
 import { getUriHost, getUriProtocol } from "./uri";
 
@@ -46,6 +46,39 @@ export interface UiRouterOpenOptions
     target?:string;
 }
 
+export type UiRouterEvt=
+{
+    /**
+     * An index that increments for each event that occurs.
+     */
+    index:number;
+    cancel:boolean;
+} & (
+    {
+        type:'push';
+        path:string;
+        query?:RouteQuery;
+
+    } |
+    {
+        type:'pop';
+    } |
+    {
+        type:'open';
+        uri:string;
+        options?:UiRouterOpenOptions;
+    }
+)
+
+export type UiRouterEvtType=UiRouterEvt['type'];
+
+/**
+ * Called before a ui routing event occurs. The listener can modify or cancel the event. Async
+ * listeners will delay the routing event until they complete. If another routing event occurs
+ * while an async listener is being awaited the routing event is canceled.
+ */
+export type UiRouterEvtListener=(evt:UiRouterEvt)=>void|Promise<void>;
+
 export interface IUiRouter
 {
 
@@ -69,6 +102,21 @@ export interface IUiRouter
     open(uri:string,options?:UiRouterOpenOptions):void|Promise<void>;
 
     getCurrentRoute():RouteInfo;
+
+    /**
+     * Adds a routing event listener
+     */
+    addListener(listener:UiRouterEvtListener):void;
+
+    /**
+     * Adds a routing event listener that can be remove by calling the returned callback.
+     */
+    addListenerWithDispose(listener:UiRouterEvtListener):DisposeCallback;
+
+    /**
+     * Removes a routing event listener. Returns false if the listener was not found.
+     */
+    removeListener(listener:UiRouterEvtListener):boolean;
 }
 
 export const addQueryToPath=(path:string,query:RouteQuery|null|undefined)=>{
