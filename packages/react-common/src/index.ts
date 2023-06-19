@@ -22,6 +22,7 @@ export * from "./lib/PageTransitionOptions";
 export * from "./lib/PanZoomView";
 export * from "./lib/Portal";
 export * from "./lib/PortalRenderer";
+export * from "./lib/ScrollView";
 export * from "./lib/SlimButton";
 export * from "./lib/Text";
 export * from "./lib/View";
