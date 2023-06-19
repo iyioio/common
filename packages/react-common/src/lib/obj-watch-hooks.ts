@@ -1,27 +1,44 @@
-import { ObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjWatchEvt, isWatcherValueChangeEvent, stopWatchingObj, watchObj } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
-export const useWObj=<T>(obj:T,enabled=true):T=>{
+export interface UseWObjOptions
+{
+    disable?:boolean;
+    /**
+     * If true the load event will be triggered on the watched object
+     */
+    load?:boolean;
+
+}
+
+export const useWObj=<T>(obj:T,{
+    disable,
+    load,
+}:UseWObjOptions={}):T=>{
 
     const [,setRefresh]=useState(0);
 
     useEffect(()=>{
 
-        if(!obj || !enabled){
+        if(!obj || disable){
             return;
         }
 
-        const watcher=watchObj(obj);
+        const watcher=watchObj<T>(obj);
         if(!watcher){
             return;
         }
 
         let m=true;
 
-        const listener=()=>{
-            if(m){
+        const listener=(obj:T,evt:ObjWatchEvt<T>)=>{
+            if(m && isWatcherValueChangeEvent(evt.type)){
                 setRefresh(v=>v+1);
             }
+        }
+
+        if(load){
+            watcher.triggerChange({type:'load'})
         }
 
         watcher.addListener(listener);
@@ -32,25 +49,45 @@ export const useWObj=<T>(obj:T,enabled=true):T=>{
             watcher.removeListener(listener);
         }
 
-    },[obj,enabled]);
+    },[obj,disable,load]);
 
     return obj;
 }
 
 
-export const useWObjProp=<T,P extends T extends (null|undefined) ? any: keyof T>(obj:T,prop:P): T extends (null|undefined) ? undefined : T[P]=>{
-    const value=useWProp<T,P>(obj,prop);
+export const useWObjProp=<T,P extends T extends (null|undefined) ? any: keyof T>(
+    obj:T,
+    prop:P,
+    objOptions?:UseWObjOptions,
+    propOptions?:UseWPropOptions,
+): T extends (null|undefined) ? undefined : T[P]=>{
 
-    useWObj(value);
+    const value=useWProp<T,P>(obj,prop,propOptions);
 
-    return value;
+    return useWObj(value,objOptions);
+}
+export interface UseWPropOptions
+{
+    disable?:boolean;
+    /**
+     * If true the load event will be triggered on the watched object
+     */
+    load?:boolean;
+
 }
 
-export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(obj:T,prop:P): T extends (null|undefined) ? undefined : T[P]=>{
+export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(obj:T,prop:P,{
+    disable,
+    load,
+}:UseWPropOptions={}): T extends (null|undefined) ? undefined : T[P]=>{
 
     const [value,setValue]=useState<T[P]|undefined>((prop===null || prop===undefined || !obj)?undefined:obj[prop]);
 
     useEffect(()=>{
+
+        if(disable){
+            return;
+        }
 
         if(!obj || !prop){
             setValue(undefined);
@@ -67,9 +104,13 @@ export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(ob
         let m=true;
 
         const listener=(_:T,evt:ObjWatchEvt<T>)=>{
-            if(m && (evt.type==='set' || evt.type==='delete') && evt.prop===prop){
+            if(m && (((evt.type==='set' || evt.type==='delete') && evt.prop===prop))|| evt.type==='change'){
                 setValue(obj[prop]);
             }
+        }
+
+        if(load){
+            watcher.triggerChange({type:'load',prop:prop})
         }
 
         watcher.addListener(listener);
@@ -80,7 +121,7 @@ export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(ob
             watcher.removeListener(listener);
         }
 
-    },[obj,prop]);
+    },[obj,prop,disable,load]);
 
     return value as any;
 

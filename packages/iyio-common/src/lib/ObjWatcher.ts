@@ -218,6 +218,11 @@ export class ObjWatcher<
                 case 'aryMove':
                     path.push(evt.toIndex);
                     break;
+                case 'load':
+                    if(evt.prop){
+                        path.push(evt.prop as any);
+                    }
+                    break;
                 case 'change':
                     break;
                 default:

@@ -1,5 +1,6 @@
 import { ObjWatcher } from "./ObjWatcher";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
+import { ObjWatchEvtType } from "./obj-watch-types";
 
 const watcherProp=Symbol('watcher');
 
@@ -229,4 +230,19 @@ export const wTriggerChange=<T>(obj:T|null|undefined):void=>{
         })
     }
 
+}
+
+export const isWatcherValueChangeEvent=(type:ObjWatchEvtType):boolean=>{
+
+    switch(type){
+        case 'set':
+        case 'delete':
+        case 'change':
+        case 'aryChange':
+        case 'aryMove':
+            return true;
+
+        default:
+            return false;
+    }
 }

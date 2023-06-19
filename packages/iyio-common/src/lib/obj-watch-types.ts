@@ -71,6 +71,19 @@ export type ObjWatchEvt<T>=(
     {
         type:'change';
     }
+|
+    {
+        /**
+         * Triggered when the watched object should load resources. This event is triggered by
+         * watchers and is usually used with lazy loading resources.
+         */
+        type:'load';
+
+        /**
+         * The prop to load
+         */
+        prop?:keyof T;
+    }
 
 )
 
