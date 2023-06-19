@@ -18,6 +18,7 @@ export interface ImageProps extends BaseLayoutProps
     elemRef?:(elem:HTMLElement|null)=>void;
     unstyled?:boolean;
     aspectRatio?:string|number;
+    imgFixed?:boolean;
 }
 
 export function Image({
@@ -36,6 +37,7 @@ export function Image({
     tile,
     unstyled,
     aspectRatio,
+    imgFixed,
     ...props
 }:ImageProps){
 
@@ -50,7 +52,7 @@ export function Image({
                 [unstyled?'backgroundImage':'background']:unstyled?(
                     `url(${src})${bgSrc?` ,url(${bgSrc})`:''}`
                 ):(
-                    `url(${src}) center/${tile?'auto':contain?'contain':'cover'} ${tile?'repeat':'no-repeat'}${bgSrc
+                    `${imgFixed?'fixed ':''}url(${src}) center/${tile?'auto':contain?'contain':'cover'} ${tile?'repeat':'no-repeat'}${bgSrc
                     ?` ,url(${bgSrc}) center/${bgContain?'contain':'cover'} no-repeat`:''}`
                 ),
                 height,
