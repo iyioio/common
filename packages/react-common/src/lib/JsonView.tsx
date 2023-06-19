@@ -27,7 +27,7 @@ export function JsonView({
     },[value,whitespace,replacer]);
 
     return (
-        <div className={bcn(props,"JsonView")}>{json}<Style global jsx>{`
+        <div className={bcn(props,"JsonView")}>{json}<Style global id="JsonView-aIKx1HyuEz36zzr1vYX0" jsx>{`
             .JsonView{
                 white-space:pre;
             }
