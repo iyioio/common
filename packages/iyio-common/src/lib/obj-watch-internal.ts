@@ -26,7 +26,7 @@ export const objWatchAryInsert=(ary:any[],index:number,beforeRemove:(()=>void)|u
 
 export const objWatchArySplice=(ary:any[],index:number,deleteCount:number,beforeRemove:(()=>void)|undefined,...values:any[]):boolean=>{
     if( index<0 ||
-        index>=ary.length ||
+        index>=ary.length+(values.length?1:0) ||
         (deleteCount && (index+deleteCount)>ary.length))
     {
         return false;
