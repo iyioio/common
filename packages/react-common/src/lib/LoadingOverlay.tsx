@@ -23,6 +23,8 @@ interface LoadingOverlayProps
     delayMs?:number;
 
     style?:CSSProperties;
+
+    delayIndictor?:boolean;
 }
 
 export function LoadingOverlay({
@@ -33,6 +35,7 @@ export function LoadingOverlay({
     backgroundColor,
     transitionLengthMs=500,
     delayMs=0,
+    delayIndictor,
     style={}
 }:LoadingOverlayProps){
 
@@ -44,7 +47,7 @@ export function LoadingOverlay({
     const hide=useDelayedValue(disabled,transitionLengthMs+1000,false);
 
     return (
-        <div className={cn("LoadingOverlay",{disabled})} style={{
+        <div className={cn("LoadingOverlay",{disabled,delayIndictor})} style={{
             zIndex,
             backgroundColor,
             transition:`opacity ${transitionLengthMs}ms ease-in-out`,
@@ -76,6 +79,14 @@ export function LoadingOverlay({
                 .LoadingOverlay.disabled{
                     opacity:0;
                     pointer-events:none;
+                }
+                @keyframes LoadingOverlay-delayIndicator{
+                    0%{opacity:0}
+                    50%{opacity:0}
+                    100%{opacity:0}
+                }
+                .LoadingOverlay.delayIndictor .LoadingIndicator{
+                    animation:LoadingOverlay-delayIndicator 2s;
                 }
             `}</Style>
         </div>
