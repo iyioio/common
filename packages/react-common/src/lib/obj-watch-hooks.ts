@@ -11,12 +11,12 @@ export interface UseWObjOptions
 
 }
 
-export const useWObj=<T>(obj:T,{
+export const useWObjWithRefresh=<T>(obj:T,{
     disable,
     load,
-}:UseWObjOptions={}):T=>{
+}:UseWObjOptions={}):[T,number]=>{
 
-    const [,setRefresh]=useState(0);
+    const [refresh,setRefresh]=useState(0);
 
     useEffect(()=>{
 
@@ -51,10 +51,25 @@ export const useWObj=<T>(obj:T,{
 
     },[obj,disable,load]);
 
-    return obj;
+    return [obj,refresh];
+}
+export const useWObj=<T>(obj:T,options={}):T=>{
+
+    return useWObjWithRefresh<T>(obj,options)[0]
 }
 
 
+export const useWObjPropWithRefresh=<T,P extends T extends (null|undefined) ? any: keyof T>(
+    obj:T,
+    prop:P,
+    objOptions?:UseWObjOptions,
+    propOptions?:UseWPropOptions,
+): [T extends (null|undefined) ? undefined : T[P],number]=>{
+
+    const value=useWProp<T,P>(obj,prop,propOptions);
+
+    return useWObjWithRefresh(value,objOptions);
+}
 export const useWObjProp=<T,P extends T extends (null|undefined) ? any: keyof T>(
     obj:T,
     prop:P,
