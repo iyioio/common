@@ -141,6 +141,8 @@ export function Carousel({
     ...props
 }:CarouselProps){
 
+    const isControlled=index!==undefined && onIndexChange===undefined;
+
     if(!items && children){
         items=Children.map(children,(child,index)=>({
             key:index,
@@ -159,15 +161,16 @@ export function Carousel({
     const arrowRenderer=(typeof arrows === 'function')?arrows:undefined;
 
     const [_activeIndex,setActiveIndex]=useState(index??0);
-    const activeIndex=Math.max(0,Math.min(_activeIndex,items.length-1));
+    const activeIndex=isControlled?index:Math.max(0,Math.min(_activeIndex,items.length-1));
 
     useEffect(()=>{
         onIndexChange?.(activeIndex);
     },[onIndexChange,activeIndex]);
 
-    const [plane,setPlane]=useState<HTMLElement|null>(null);
-
     const onSwipe=useCallback((e:SwipeDirection)=>{
+        if(isControlled){
+            return;
+        }
         setActiveIndex(v=>{
             switch(e){
 
@@ -185,7 +188,7 @@ export function Carousel({
             }
             return v;
         })
-    },[plane,vertical])
+    },[vertical,isControlled])
 
     const setSwipeRoot=useSwipe(onSwipe);
 
@@ -196,7 +199,7 @@ export function Carousel({
     return (
         <div ref={setSwipeRoot} className={bcn(props,"Carousel",{vertical,horizontal:!vertical,fill},indicatorsPosition)}>
 
-            <div ref={setPlane} className="Carousel-plane" style={{
+            <div className="Carousel-plane" style={{
                 [vertical?'height':'width']:100*items.length+'%',
                 transform:`translate${vertical?'Y':'X'}(-${100/items.length*activeIndex}%)`,
                 ['margin'+strFirstToUpper(indicatorSide)]:indicators?indicatorMargin?indicatorMargin:(indicatorSize+16)+'px':undefined,
