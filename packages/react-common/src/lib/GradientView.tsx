@@ -18,6 +18,8 @@ interface GradientViewProps extends OptionalBooleanSides
     endColor?:string;
     endPosition?:string;
     endOpacity?:number;
+    width?:string;
+    height?:string;
     /**
      * If provided all other position and color values are overwritten.
      */
@@ -42,7 +44,9 @@ export function GradientView({
     endPosition="50%",
     endColor=(hexColor??'#000000')+percentToCssHex(endOpacity),
     points=[{color:startColor,position:startPosition},{color:endColor,position:endPosition}],
-    style={},
+    width,
+    height,
+    style,
     children,
     className,
     ...props
@@ -51,6 +55,8 @@ export function GradientView({
     return (
         <div className={bcn(props,"GradientView",className)} style={{
             background:`linear-gradient(${rotation}, ${points.map(p=>`${p.color} ${p.position}`).join(', ')}`,
+            width,
+            height,
             ...style,
         }}>
             {children}
