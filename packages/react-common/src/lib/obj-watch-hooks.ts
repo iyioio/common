@@ -1,7 +1,7 @@
 import { ObjWatchEvt, isWatcherValueChangeEvent, stopWatchingObj, watchObj } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
-export interface UseWObjOptions
+export interface UseWObjOptions<T>
 {
     disable?:boolean;
     /**
@@ -9,14 +9,20 @@ export interface UseWObjOptions
      */
     load?:boolean;
 
+    propFilter?:(keyof T)[];
+
 }
 
 export const useWObjWithRefresh=<T>(obj:T,{
     disable,
     load,
-}:UseWObjOptions={}):[T,number]=>{
+    propFilter
+}:UseWObjOptions<T>={}):[T,number]=>{
 
     const [refresh,setRefresh]=useState(0);
+
+    const refs=useRef({propFilter});
+    refs.current.propFilter=propFilter;
 
     useEffect(()=>{
 
@@ -32,7 +38,15 @@ export const useWObjWithRefresh=<T>(obj:T,{
         let m=true;
 
         const listener=(obj:T,evt:ObjWatchEvt<T>)=>{
-            if(m && isWatcherValueChangeEvent(evt.type)){
+            if( m &&
+                isWatcherValueChangeEvent(evt.type) &&
+                (
+                    !refs.current.propFilter ||
+                    (evt.type==='delete' || evt.type==='set'?
+                        refs.current.propFilter.includes(evt.prop)
+                    :true)
+                )
+            ){
                 setRefresh(v=>v+1);
             }
         }
@@ -53,7 +67,7 @@ export const useWObjWithRefresh=<T>(obj:T,{
 
     return [obj,refresh];
 }
-export const useWObj=<T>(obj:T,options={}):T=>{
+export const useWObj=<T>(obj:T,options:UseWObjOptions<T>={}):T=>{
 
     return useWObjWithRefresh<T>(obj,options)[0]
 }
@@ -62,24 +76,24 @@ export const useWObj=<T>(obj:T,options={}):T=>{
 export const useWObjPropWithRefresh=<T,P extends T extends (null|undefined) ? any: keyof T>(
     obj:T,
     prop:P,
-    objOptions?:UseWObjOptions,
+    objOptions?:UseWObjOptions<T[P]>,
     propOptions?:UseWPropOptions,
 ): [T extends (null|undefined) ? undefined : T[P],number]=>{
 
     const value=useWProp<T,P>(obj,prop,propOptions);
 
-    return useWObjWithRefresh(value,objOptions);
+    return useWObjWithRefresh(value,objOptions as any);
 }
 export const useWObjProp=<T,P extends T extends (null|undefined) ? any: keyof T>(
     obj:T,
     prop:P,
-    objOptions?:UseWObjOptions,
+    objOptions?:UseWObjOptions<T[P]>,
     propOptions?:UseWPropOptions,
 ): T extends (null|undefined) ? undefined : T[P]=>{
 
     const value=useWProp<T,P>(obj,prop,propOptions);
 
-    return useWObj(value,objOptions);
+    return useWObj(value,objOptions as any);
 }
 export interface UseWPropOptions
 {
