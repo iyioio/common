@@ -162,7 +162,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             const _forEach=await forEachPage(result.items,result.lastKey);
             if(Array.isArray(_forEach)){
                 await Promise.all(_forEach);
-            }else if(_forEach){
+            }else if(_forEach===false){
                 if(discardItems){
                     result.items=[];
                 }
@@ -170,8 +170,9 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             }
         }
 
-        const fillRemaining=(options.limit && result.items.length<options.limit && result.lastKey)?true:false;
+        const optionsLimit=options.limit??input.Limit;
 
+        const fillRemaining=(optionsLimit && result.items.length<optionsLimit && result.lastKey)?true:false;
 
         if((!returnAll || !result.lastKey || !result.items.length) && !fillRemaining){
             if(discardItems){
@@ -180,7 +181,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
             return result
         }
 
-        const limit=options.limit??result.items.length;
+        const limit=optionsLimit??result.items.length;
         const {
             stepLimitStart=100,
             stepLimitMax=stepLimitStart*20,
@@ -188,7 +189,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         }=options;
         let total=result.items.length;
         const firstKey=result.lastKey;
-        if(fillRemaining && options.limit && options.limit<stepLimitStart){
+        if(fillRemaining && optionsLimit && optionsLimit<stepLimitStart){
             input.Limit=stepLimitStart;
         }
         const allItems=discardItems?[]:result.items;
@@ -201,7 +202,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
                 const _forEach=await forEachPage(result.items,result.lastKey);
                 if(Array.isArray(_forEach)){
                     await Promise.all(_forEach);
-                }else if(_forEach){
+                }else if(_forEach===false){
                     _continue=false;
                 }
             }
