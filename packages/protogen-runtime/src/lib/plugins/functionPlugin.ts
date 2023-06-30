@@ -72,7 +72,16 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
             const args=protoGetChildren(node.children?.['args'],false);
             const returnNode=node.children?.['return']
             const returnTypeBase=returnNode?.type||'void';
-            const returnType=(isAsync?`Promise<${returnTypeBase}>`:returnTypeBase)+(returnNode?.types?.[0]?.isArray?'[]':'');
+            const returnOptional=returnNode?.optional?true:false;
+            const returnArray=returnNode?.types?.[0]?.isArray?true:false;
+            let rb=returnTypeBase+(returnOptional?'|undefined':'');
+            if(returnArray && returnOptional){
+                rb=`(${rb})`
+            }
+            if(returnArray){
+                rb=rb+'[]'
+            }
+            const returnType=isAsync?`Promise<${rb}>`:rb;
 
             const argsExportName=name+'FunctionArgsScheme';
             const argsPackage=importMap[argsExportName];
