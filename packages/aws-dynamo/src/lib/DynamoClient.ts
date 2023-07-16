@@ -401,9 +401,9 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         let success=false;
         try{
             const update=createItemUpdateInputOrNull(tableName,key,item,true,{
-                ...extendedOptions,
                 matchCondition:!uvIsUpdateExpression && updateProp && uv!==undefined?
                     {[updateProp]:uv}:undefined,
+                ...extendedOptions,
             });
             if(!update){
                 return false;

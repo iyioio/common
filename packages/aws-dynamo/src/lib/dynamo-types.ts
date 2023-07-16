@@ -79,7 +79,7 @@ export interface DynamoGetOptions<T>
     includeProps?:(keyof T)[];
 }
 
-export interface PatchTableItemOptions<T> extends Omit<ExtendedItemUpdateOptions<T>,'matchCondition'>
+export interface PatchTableItemOptions<T> extends ExtendedItemUpdateOptions<T>
 {
     skipVersionCheck?:boolean;
     /**
