@@ -591,7 +591,7 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('absBottom','position:absolute !important;bottom:0;left:0:right:0')
     add('absLeft','position:absolute !important;top:0;bottom:0;left:0')
     add('absRight','position:absolute !important;top:0;bottom:0;right:0')
-    add('absTopLeft','position:absolute !important;top:0left:0')
+    add('absTopLeft','position:absolute !important;top:0;left:0')
     add('absTopRight','position:absolute !important;top:0;right:0')
     add('absBottomLeft','position:absolute !important;bottom:0;left:0')
     add('absBottomRight','position:absolute !important;bottom:0;right:0')
