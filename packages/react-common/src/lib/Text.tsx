@@ -10,6 +10,7 @@ export interface TextProps extends BaseLayoutProps, BaseLayoutFontProps, BaseLay
     elemRef?:(elem:HTMLElement|null)=>void;
     style?:CSSProperties;
     p?:boolean;
+    title?:string;
 }
 
 export function Text({
@@ -19,6 +20,7 @@ export function Text({
     elemRef,
     style,
     p,
+    title,
     ...props
 }:TextProps & {elem?:string}){
 
@@ -44,6 +46,6 @@ export function Text({
 
     const c=baseLayoutCn(props);
 
-    return React.createElement(elem,{ref:elemRef,style,className:c?'Text '+c:'Text'},children??text);
+    return React.createElement(elem,{ref:elemRef,style,title,className:c?'Text '+c:'Text'},children??text);
 
 }
