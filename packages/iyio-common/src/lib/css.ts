@@ -57,3 +57,48 @@ export const css=(strings:TemplateStringsArray,...values:any[])=>{
 }
 
 export const percentToCssHex=(n:number)=>Math.floor(n*255).toString(16).padStart(2,'0');
+
+export const convertRgbToHex=(rgb:string|null|undefined):string|undefined=>{
+
+    if(!rgb){
+        return undefined;
+    }
+
+    const match=/^\s*rgba?\s*\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,?\s*([\d.]+)?\s*\)\s*$/i.exec(rgb);
+    if(!match){
+        if(rgb.trim().startsWith('#')){
+            return rgb.trim().toLowerCase();
+        }
+        return undefined;
+    }
+
+    const r=Math.round(Math.max(0,Math.min(255,Number(match[1]))));
+    const g=Math.round(Math.max(0,Math.min(255,Number(match[2]))));
+    const b=Math.round(Math.max(0,Math.min(255,Number(match[3]))));
+    const a=match[4]?Math.max(0,Math.min(1,Number(match[4]))):Number.NaN;
+
+    if(!isFinite(r) || !isFinite(g) || !isFinite(b)){
+        return undefined;
+    }
+
+    if(isFinite(a)){
+        return `#${
+            r.toString(16).padStart(2,'0')
+        }${
+            g.toString(16).padStart(2,'0')
+        }${
+            b.toString(16).padStart(2,'0')
+        }${
+            Math.round(a*255).toString(16).padStart(2,'0')
+        }`.toLowerCase();
+    }else{
+        return `#${
+            r.toString(16).padStart(2,'0')
+        }${
+            g.toString(16).padStart(2,'0')
+        }${
+            b.toString(16).padStart(2,'0')
+        }`.toLowerCase();
+    }
+
+}
