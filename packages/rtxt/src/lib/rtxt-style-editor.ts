@@ -20,6 +20,8 @@ export const insertRTxtEditorStyleSheet=(prefix=defaultRTxtClassNamePrefix,{
         return;
     }
 
+    globalThis.document?.querySelectorAll('[data-rtxt-editor-style]').forEach(s=>s.remove());
+
     style.setAttribute('type','text/css');
     style.setAttribute('data-rtxt-editor-style','1');
 
@@ -128,6 +130,10 @@ export const insertRTxtEditorStyleSheet=(prefix=defaultRTxtClassNamePrefix,{
     height:1.6rem;
     align-self:center;
     padding:0 0.25rem;
+}
+
+.${prefix}disable-mouse{
+    pointer-events:none !important;
 }
 
     `??'';

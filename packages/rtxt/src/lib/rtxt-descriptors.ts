@@ -2,44 +2,74 @@ import { RTxtDescriptor } from "./rtxt-types";
 
 export const getDefaultRTxtNodeDescriptors=():RTxtDescriptor[]=>[
     {
-        type:'size1',
+        type:'sn4',
         group:'size',
         elem:'span',
         priority:-100,
     },
     {
-        type:'size2',
+        type:'sn3',
         group:'size',
         elem:'span',
         priority:-100,
     },
     {
-        type:'size3',
+        type:'sn2',
         group:'size',
         elem:'span',
         priority:-100,
     },
     {
-        type:'color',
+        type:'sn1',
+        group:'size',
+        elem:'span',
+        priority:-100,
+    },
+    {
+        type:'s1',
+        group:'size',
+        elem:'span',
+        priority:-100,
+    },
+    {
+        type:'s2',
+        group:'size',
+        elem:'span',
+        priority:-100,
+    },
+    {
+        type:'s3',
+        group:'size',
+        elem:'span',
+        priority:-100,
+    },
+    {
+        type:'s4',
+        group:'size',
+        elem:'span',
+        priority:-100,
+    },
+    {
+        type:'f',
+        elem:'span',
+        priority:-90,
+        inlineStyle:node=>({
+            ['font-family']:node.atts?.['font']
+        }),
+        className:node=>node.atts?.['font-class'],
+        remove:node=>{
+            delete node.atts?.['font'];
+            delete node.atts?.['font-class'];
+        }
+    },
+    {
+        type:'c',
         elem:'span',
         priority:-80,
         style:node=>({
             color:node.atts?.['color']
         }),
         remove:node=>delete node.atts?.['color'],
-    },
-    {
-        type:'font',
-        elem:'span',
-        priority:-90,
-        inlineStyle:node=>({
-            ['font-family']:node.atts?.['font']
-        }),
-        className:node=>node.atts?.['fontClass'],
-        remove:node=>{
-            delete node.atts?.['font'];
-            delete node.atts?.['fontClass'];
-        }
     },
     {
         type:'span',
@@ -52,6 +82,5 @@ export const getDefaultRTxtNodeDescriptors=():RTxtDescriptor[]=>[
     {
         type:'s',
         elem:'s',
-        priority:100
     }
 ]

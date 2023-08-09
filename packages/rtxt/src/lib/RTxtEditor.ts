@@ -1,15 +1,47 @@
-import { ReadonlySubject, aryRemoveItem, convertRgbToHex, deepClone, escapeHtml, isDomNodeDescendantOf } from "@iyio/common";
+import { ReadonlySubject, aryRemoveItem, convertRgbToHex, escapeHtml, isDomNodeDescendantOf } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
 import { RTxtRenderer } from "./RTxtRenderer";
-import { convertRTxtDocToSingleCharNodes, elemToRTxtDoc, getRTxtNodeLine, getRTxtNodesLines, getRTxtSelection, selectRTxtSelection, sortRTxtNodeTypes } from "./rtxt-lib";
+import { ToolGrouping, getDeepestElem, getNodeElem, getTextNode, getToolElem, hasForeignElems } from "./rtxt-internal";
+import { elemToRTxtDoc, getRTxtNodeLine, getRTxtNodesLines, getRTxtSelection, selectRTxtSelection, shouldIgnoreRTxtLineElem, sortRTxtNodeTypes } from "./rtxt-lib";
 import { insertRTxtEditorStyleSheet } from "./rtxt-style-editor";
 import { getDefaultRTxtTools } from "./rtxt-tools";
-import { RTxtAlignment, RTxtDescriptor, RTxtDoc, RTxtEditorOptions, RTxtLine, RTxtNode, RTxtSelection, RTxtTool, RTxtToolSelection, defaultRTxtClassNamePrefix, defaultRTxtLineElem, defaultRTxtNodeType, rTxtDocAtt, rTxtIndexLookupAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types";
+import { RTxtAlignment, RTxtDescriptor, RTxtEditorOptions, RTxtLine, RTxtNode, RTxtSelection, RTxtTool, RTxtToolSelection, defaultRTxtClassNamePrefix, defaultRTxtLineElem, defaultRTxtNodeType, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types";
+
 
 export class RTxtEditor
 {
 
-    public readonly renderer:RTxtRenderer;
+    private readonly _renderer:BehaviorSubject<RTxtRenderer|null>=new BehaviorSubject<RTxtRenderer|null>(null);
+    public get rendererSubject():ReadonlySubject<RTxtRenderer|null>{return this._renderer}
+    public get renderer(){return this._renderer.value}
+    public set renderer(value:RTxtRenderer|null){
+        if(value==this._renderer.value || (this._isDisposed && value)){
+            return;
+        }
+        if(this._renderer.value){
+            this._renderer.value.editModeRefCount--;
+            if(this._renderer.value.elem){
+                this._renderer.value.elem.removeEventListener('input',this.onInput);
+                this._renderer.value.elem.removeEventListener('focus',this.onFocus);
+                this._renderer.value.elem.removeEventListener('blur',this.onBlur);
+                this._renderer.value.elem.classList.remove(`${this._renderer.value.classPrefix}focus`);
+            }
+        }
+        if(value){
+            value.editModeRefCount++;
+            if(value.elem){
+                value.elem.addEventListener('input',this.onInput);
+                value.elem.addEventListener('focus',this.onFocus);
+                value.elem.addEventListener('blur',this.onBlur);
+            }
+        }else{
+            this._selection.next(null);
+            this.deselectAllTools();
+            this.hideMenu();
+        }
+        this._renderer.next(value);
+
+    }
 
     public menu:HTMLElement|null;
 
@@ -17,49 +49,42 @@ export class RTxtEditor
     public get selectionSubject():ReadonlySubject<RTxtSelection|null>{return this._selection}
     public get selection(){return this._selection.value}
 
-    public readonly defaultDoc:RTxtDoc;
-
     public readonly tools:RTxtTool[];
 
     public readonly options:RTxtEditorOptions;
 
-    public constructor(options:RTxtEditorOptions){
+    public readonly classPrefix:string;
+
+    public constructor(options:RTxtEditorOptions={}){
 
         const {
             renderer,
             useCustomStyleSheet,
             tools=getDefaultRTxtTools(renderer instanceof RTxtRenderer?renderer.options:renderer),
+            classPrefix,
         }=options;
 
         this.options=options;
 
         if(renderer instanceof RTxtRenderer){
             this.renderer=renderer;
-        }else{
+        }else if(renderer){
             this.renderer=new RTxtRenderer(renderer,true);
         }
 
+        this.classPrefix=classPrefix??this.renderer?.options.classPrefix??defaultRTxtClassNamePrefix;
+
         this.tools=tools;
-
-        convertRTxtDocToSingleCharNodes(this.renderer.doc);
-
-        this.renderer.editMode=true;
-
-        this.defaultDoc=deepClone(this.renderer.doc);
 
         if(!useCustomStyleSheet){
             insertRTxtEditorStyleSheet();
         }
 
         globalThis.document?.addEventListener('selectionchange',this.onSelectionChange);
+        globalThis.document?.body.addEventListener('mousedown',this.bodyMouseDown);
+        globalThis.document?.body.addEventListener('mouseup',this.bodyMouseUp);
 
         this.menu=this.renderMenu();
-
-        if(this.renderer.elem){
-            this.renderer.elem.addEventListener('input',this.onInput);
-            this.renderer.elem.contentEditable='true';
-            this.renderer.render();
-        }
 
     }
 
@@ -72,25 +97,51 @@ export class RTxtEditor
         }
         this._isDisposed=true;
         globalThis.document?.removeEventListener('selectionchange',this.onSelectionChange);
-        if(this.renderer.elem){
-            this.renderer.elem.removeEventListener('input',this.onInput);
-        }
+        globalThis.document?.body.removeEventListener('mousedown',this.bodyMouseDown);
+        globalThis.document?.body.removeEventListener('mouseup',this.bodyMouseUp);
         this.menu?.remove();
+        this.renderer=null;
     }
 
     private readonly onInput=()=>{
         this.syncElemToDoc();
+        this.renderer?.queueExport();
+    }
+
+    private readonly onFocus=()=>{
+        this.renderer?.elem?.classList.add(`${this.renderer.classPrefix}focus`);
+    }
+
+    private readonly onBlur=()=>{
+        this.renderer?.elem?.classList.remove(`${this.renderer.classPrefix}focus`);
+    }
+
+    private readonly bodyMouseDown=(e:MouseEvent)=>{
+        if(!this.menu || !(e.target instanceof Node)){
+            return;
+        }
+        if(!isDomNodeDescendantOf(e.target,this.menu,true)){
+            this.menu.classList.add(`${this.classPrefix}disable-mouse`)
+        }
+    }
+
+    private readonly bodyMouseUp=()=>{
+        this.menu?.classList.remove(`${this.classPrefix}disable-mouse`)
     }
 
     private readonly onSelectionChange=()=>{
+        if(!this.renderer){
+            return;
+        }
         const sel=globalThis.document?.getSelection();
-        if( !sel ||
+        if( this.renderer.isEmpty ||
+            !sel ||
             !sel.rangeCount ||
             !sel.anchorNode ||
             !sel.focusNode ||
             (sel.anchorNode===sel.focusNode && sel.anchorOffset===sel.focusOffset) ||
-            !isDomNodeDescendantOf(sel.anchorNode,this.renderer.elem,true) ||
-            !isDomNodeDescendantOf(sel.focusNode,this.renderer.elem,true)
+            !isDomNodeDescendantOf(sel?.anchorNode,this.renderer.elem,true) ||
+            !isDomNodeDescendantOf(sel?.focusNode,this.renderer.elem,true)
         ){
             if( !sel ||
                 (
@@ -106,7 +157,7 @@ export class RTxtEditor
         }
         const selection=getRTxtSelection(sel,this.renderer.nodeLookup,this.renderer.elem);
         this._selection.next(selection);
-        //console.info('selection',selection,selection?rTxtSelectionToString(selection,this.renderer.nodeLookup):null);
+        //console.info('selection',sel,selection,selection?rTxtSelectionToString(selection,this.renderer.nodeLookup):null);
 
         const pos=sel.getRangeAt(0).getBoundingClientRect();
 
@@ -120,7 +171,7 @@ export class RTxtEditor
     }
 
     private deselectAllTools(){
-        const className=`${this.renderer.options.classPrefix??defaultRTxtClassNamePrefix}selected`;
+        const className=`${this.classPrefix}selected`;
         for(const group of this.toolElemGroupings){
             for(const elem of group.elems){
                 elem.classList.remove(className);
@@ -132,13 +183,17 @@ export class RTxtEditor
                 nodes:[],
                 lines:[],
                 toolElems:group.elems,
-                toolElem:group.elems[0],
+                toolElem:getToolElem(group.elems),
             });
         }
     }
 
     private setToolSelection(selection:RTxtSelection){
-        const className=`${this.renderer.options.classPrefix??defaultRTxtClassNamePrefix}selected`;
+        if(!this.renderer){
+            this.deselectAllTools();
+            return;
+        }
+        const className=`${this.classPrefix}selected`;
         const singleAry:string[]=[''];
 
         const elemAtCursor=this.getElementAt(selection.cursorIndex);
@@ -195,7 +250,7 @@ export class RTxtEditor
                     nodes,
                     lines,
                     toolElems:group.elems,
-                    toolElem:group.elems[0],
+                    toolElem:getToolElem(group.elems),
                     elemAtCursor,
                     styleAtCursor,
                     colorAtCursor,
@@ -210,7 +265,7 @@ export class RTxtEditor
                     nodes:[],
                     lines,
                     toolElems:group.elems,
-                    toolElem:group.elems[0],
+                    toolElem:getToolElem(group.elems),
                     elemAtCursor,
                     styleAtCursor,
                     colorAtCursor,
@@ -247,12 +302,11 @@ export class RTxtEditor
         if(!container || !menu){
             return null;
         }
-        const classPrefix=this.renderer.options.classPrefix??defaultRTxtClassNamePrefix;
-        container.classList.add(classPrefix+'editor-menu-container');
-        container.classList.add(classPrefix+'editor-menu-container-closed');
+        container.classList.add(this.classPrefix+'editor-menu-container');
+        container.classList.add(this.classPrefix+'editor-menu-container-closed');
 
         container.appendChild(menu);
-        menu.classList.add(`${classPrefix}editor-menu`);
+        menu.classList.add(`${this.classPrefix}editor-menu`);
 
         this.toolElemGroupings=[];
 
@@ -300,10 +354,7 @@ export class RTxtEditor
 
         if(!this.menuVisible){
             this.menuVisible=true;
-            this.menu.classList.remove(
-                (this.renderer.options.classPrefix??defaultRTxtClassNamePrefix)+
-                'editor-menu-container-closed'
-            );
+            this.menu.classList.remove(this.classPrefix+'editor-menu-container-closed');
         }
     }
 
@@ -313,10 +364,7 @@ export class RTxtEditor
             return;
         }
         this.menuVisible=false;
-        this.menu.classList.add(
-            (this.renderer.options.classPrefix??defaultRTxtClassNamePrefix)+
-            'editor-menu-container-closed'
-        );
+        this.menu.classList.add(this.classPrefix+'editor-menu-container-closed');
     }
 
     public toggleSelection(selection:RTxtSelection,nodeType:string,atts?:Record<string,string>){
@@ -328,6 +376,10 @@ export class RTxtEditor
     }
 
     public applyToSection(selection:RTxtSelection,nodeType:string,atts?:Record<string,string>){
+
+        if(!this.renderer){
+            return;
+        }
 
         for(const node of selection.nodes){
             if(!node.t){
@@ -364,9 +416,15 @@ export class RTxtEditor
                 }
             }
         }
+
+        this.renderer?.queueExport();
     }
 
-    public removeFromSelection(selection:RTxtSelection,nodeType:string){
+    public removeFromSelection(selection:RTxtSelection,nodeType:string)
+    {
+        if(!this.renderer){
+            return;
+        }
 
         for(const node of selection.nodes){
             if(!node.t){
@@ -380,6 +438,8 @@ export class RTxtEditor
                 desc?.remove?.(node);
             }
         }
+
+        this.renderer?.queueExport();
     }
 
     public someHaveNodeType(selection:RTxtSelection,nodeType:string):boolean{
@@ -418,6 +478,10 @@ export class RTxtEditor
 
     public syncElemToDoc()
     {
+        if(!this.renderer){
+            return;
+        }
+        const startEmpty=this.renderer.isEmpty;
         const selection=globalThis.document?.getSelection();
         const caretNode=(selection && selection?.anchorNode===selection?.focusNode)?selection.anchorNode:null;
         let setCaretElem:Element|null=null;
@@ -437,7 +501,7 @@ export class RTxtEditor
         let lastFormattedElem:Element|null=null;
         for(let i=0;i<docElem.childNodes.length;i++){
             const lineElem=docElem.childNodes.item(i);
-            if(!lineElem){
+            if(!lineElem || shouldIgnoreRTxtLineElem(lineElem)){
                 continue;
             }
 
@@ -484,7 +548,12 @@ export class RTxtEditor
 
                 let elem=_elem as Element;
 
-                if(elem.getAttribute(rTxtNodeAtt)){
+                if(!elem.textContent || elem.getAttribute(rTxtIgnoreAtt) || elem instanceof HTMLBRElement){
+                    elem.remove();
+                    li--;
+                    hasChange=true;
+                    continue;
+                }else if(elem.getAttribute(rTxtNodeAtt)){
                     lastFormattedElem=elem;
                 }else if(lastFormattedElem){
                     reRender=true;
@@ -510,12 +579,12 @@ export class RTxtEditor
                 const hasFocus=caretNode?true:false;
 
                 const textNode=getTextNode(elem);
-                if(textNode?.textContent && textNode.textContent.length!==1){
+                if(textNode?.textContent && textNode.textContent.length!==1 && Array.from(textNode.textContent).length!==1){
 
                     hasChange=true;
 
                     //split
-                    const text=textNode.textContent;
+                    const text=Array.from(textNode.textContent);
                     textNode.textContent=text[0]??null;
 
                     const elemNode=getNodeElem(textNode);
@@ -547,6 +616,12 @@ export class RTxtEditor
             lineIndex++;
 
         }
+        this.renderer.isEmpty=nodeIndex===0;
+        if(this.renderer.isEmpty!==startEmpty){
+            hasChange=true;
+            reRender=true;
+        }
+
 
         if(hasChange){
             const {doc,lookup}=elemToRTxtDoc(docElem);
@@ -563,13 +638,23 @@ export class RTxtEditor
         }
 
         const caretTo=setCaretElem?getTextNode(setCaretElem):null;
-        if(caretTo && selection){
+
+        if(this.renderer.isEmpty){
+            this.renderer.render();
+            this.renderer.focus();
+        }else if(caretTo && selection){
             selection.collapse(caretTo,caretTo.textContent?.length||1);
+        }else if(selection){
+            const last=getTextNode(docElem,true,false);
+            if(last){
+                selection.removeAllRanges();
+                selection.collapse(last,last.textContent?.length);
+            }
         }
     }
 
     public getElementAt(index:number):Element|undefined{
-        const docElem=this.renderer.elem;
+        const docElem=this.renderer?.elem;
         if(!docElem){
             return undefined;
         }
@@ -588,14 +673,14 @@ export class RTxtEditor
 
     public getCursorLine():RTxtLine|undefined{
         const node=this.selection?.cursorNode;
-        if(!node){
+        if(!node || !this.renderer){
             return undefined;
         }
         return getRTxtNodeLine(this.renderer.doc,node);
     }
 
     public getSelectedLines():RTxtLine[]{
-        if(!this.selection){
+        if(!this.selection || !this.renderer){
             return [];
         }
         return getRTxtNodesLines(this.renderer.doc,this.selection.nodes);
@@ -603,6 +688,9 @@ export class RTxtEditor
 
     public setSelectedLineAlignment(align:RTxtAlignment)
     {
+        if(!this.renderer){
+            return;
+        }
         const sel=this.selection;
         const elem=this.renderer.elem;
         const lines=this.getSelectedLines();
@@ -618,74 +706,18 @@ export class RTxtEditor
             selectRTxtSelection(sel,elem);
         }
     }
-}
 
+    private readonly rendererQueue:RTxtRenderer[]=[];
 
-const getTextNode=(elem:Node):Text|null=>{
-    if(elem.childNodes.length!==1){
-        return null;
+    public queueRenderer(renderer:RTxtRenderer){
+        this.rendererQueue.push(renderer);
+        this.renderer=this.rendererQueue[this.rendererQueue.length-1]??null;
     }
 
-    const child=elem.firstChild;
-    if(!child){
-        return null;
-    }
-    if(child instanceof Text){
-        return child;
-    }
-
-    return getTextNode(child);
-}
-
-
-const getDeepestElem=(elem:Element):Element=>{
-    if(elem.childNodes.length!==1){
-        return elem;
-    }
-
-    const child=elem.firstChild;
-    if(!child || !(child instanceof Element)){
-        return elem;
-    }
-
-    return getDeepestElem(child);
-}
-
-const getNodeElem=(node:Node):Element|null=>{
-    while(node){
-        if(!node.parentElement || !node.parentNode){
-            return null;
-        }
-        if(node.parentElement.getAttribute(rTxtLineIndexAtt) || node.parentElement.getAttribute(rTxtDocAtt))
-        {
-            return node instanceof Element?node:null;
-        }
-        node=node.parentNode;
-    }
-    return null;
-
-}
-
-const hasForeignElems=(elem:Element):boolean=>{
-
-    if(!elem.getAttribute(rTxtNodeAtt)){
-        return true;
-    }
-
-    for(let i=0;i<elem.children.length;i++){
-        const child=elem.children[i];
-        if(!child){
-            continue;
-        }
-        if(hasForeignElems(child)){
-            return true;
+    public dequeueRenderer(renderer:RTxtRenderer){
+        if(aryRemoveItem(this.rendererQueue,renderer)){
+            this.renderer=this.rendererQueue[this.rendererQueue.length-1]??null;
         }
     }
-
-    return false;
 }
 
-interface ToolGrouping{
-    tool:RTxtTool;
-    elems:Element[];
-}

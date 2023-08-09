@@ -1,5 +1,5 @@
-import { isDomNodeDescendantOf } from "@iyio/common";
-import { RTxtAlignment, RTxtDescriptor, RTxtDoc, RTxtDocAndLookup, RTxtDomSelection, RTxtLine, RTxtNode, RTxtSelection, defaultRTxtNodeType, rTxtAttPrefix, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtTypeAtt } from "./rtxt-types";
+import { aryRemoveAll, aryShallowUnorderedCompare, deepClone, getObjKeyCount, isDomNodeDescendantOf } from "@iyio/common";
+import { RTxtAlignment, RTxtDescriptor, RTxtDoc, RTxtDocAndLookup, RTxtDomSelection, RTxtLine, RTxtNode, RTxtSelection, defaultRTxtNodeType, rTxtAttPrefix, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtTypeAtt } from "./rtxt-types";
 
 export const getRTxtSelection=(
     domSelection:RTxtDomSelection,
@@ -169,63 +169,66 @@ export const convertRTxtDocToSingleCharNodes=(doc:RTxtDoc):boolean=>{
     return changed;
 }
 
+export const minifyRTxtDoc=(doc:RTxtDoc):RTxtDoc=>{
+
+    const destDoc:RTxtDoc={lines:[]};
+
+    for(const lineOrNodes of doc.lines){
+
+        const srcNodes=getRTxtLineNodes(lineOrNodes);
+        const srcLine=Array.isArray(lineOrNodes)?undefined:lineOrNodes;
+        const destNodes:RTxtNode[]=[];
+
+        if(srcNodes.length>0){
+            let currentNode:RTxtNode=deepClone(srcNodes[0]??{});
+            let currentTypes=getRTxtNodeNormalizedTypes(currentNode);
+            destNodes.push(currentNode);
+            for(let i=1;i<srcNodes.length;i++){
+                const srcNode=srcNodes[i];
+                if(!srcNode){
+                    continue;
+                }
+
+                const srcTypes=getRTxtNodeNormalizedTypes(srcNode);
+
+                if(aryShallowUnorderedCompare(currentTypes,srcTypes)){
+                    currentNode.v=(currentNode.v??'')+(srcNode.v??'');
+                }else{
+                    currentNode=deepClone(srcNode);
+                    currentTypes=srcTypes;
+                    destNodes.push(currentNode);
+                }
+            }
+        }
+
+        if(srcLine && getObjKeyCount(srcLine)>1){
+            let destLine:RTxtLine={...srcLine};
+            delete (destLine as any).nodes;
+            destLine=deepClone(destLine);
+            (destLine as any).nodes=destNodes;
+            destDoc.lines.push(destLine);
+        }else{
+            destDoc.lines.push(destNodes);
+        }
+
+    }
+
+
+    return destDoc;
+}
+
+export const getRTxtNodeNormalizedTypes=(node:RTxtNode):string[]=>{
+    const types=node.t?(Array.isArray(node.t)?node.t:[node.t]):[];
+    aryRemoveAll(types,defaultRTxtNodeType);
+    return types;
+}
+
 export const sortRTxtNodeTypes=(node:RTxtNode,descriptors:Record<string,RTxtDescriptor>):void=>{
     if(!node.t || (typeof node.t === 'string')){
         return;
     }
 
     node.t.sort((a,b)=>(descriptors[a]?.priority??0)-(descriptors[b]?.priority??0));
-}
-
-
-export const reIndexRTxtDocElem=(docElem:Element):void=>{
-    let lineIndex=0;
-    let nodeIndex=0;
-    for(let i=0;i<docElem.children.length;i++){
-        const lineElem=docElem.children.item(i);
-        if(!lineElem){
-            continue;
-        }
-
-        const lineIndexAtt=lineElem.getAttribute(rTxtLineIndexAtt);
-        if(!lineIndexAtt){
-            continue;
-        }
-
-        lineElem.setAttribute(rTxtLineIndexAtt,lineIndex.toString());
-
-        for(let li=0;li<lineElem.children.length;li++){
-            const elem=lineElem.children.item(li);
-            if(!elem){
-                continue;
-            }
-
-            const nodeIndexAtt=elem.getAttribute(rTxtIndexLookupAtt);
-
-            if(!nodeIndexAtt){
-                continue;
-            }
-
-            setAttRecursive(elem,rTxtIndexLookupAtt,nodeIndex.toString());
-
-            nodeIndex++;
-
-        }
-
-        lineIndex++;
-
-    }
-}
-
-const setAttRecursive=(elem:Element,att:string,value:string):void=>{
-    elem.setAttribute(att,value);
-    for(let i=0;i<elem.children.length;i++){
-        const child=elem.children[i];
-        if(!child){
-            continue;
-        }
-        setAttRecursive(child,att,value);
-    }
 }
 
 export const elemToRTxtDoc=(docElem:Element):RTxtDocAndLookup=>{
@@ -235,7 +238,7 @@ export const elemToRTxtDoc=(docElem:Element):RTxtDocAndLookup=>{
 
     for(let i=0;i<docElem.children.length;i++){
         const lineElem=docElem.children.item(i);
-        if(!lineElem){
+        if(!lineElem || shouldIgnoreRTxtLineElem(lineElem)){
             continue;
         }
 
@@ -299,7 +302,7 @@ export const elemToRTxtNode=(nodeElem:Element):RTxtNode|null=>{
         if(!atts){
             atts={}
         }
-        atts[att.value.substring(rTxtAttPrefix.length)]=att.value;
+        atts[att.name.substring(rTxtAttPrefix.length)]=att.value;
     }
 
     const t=type?(type.includes(',')?type.split(','):type):undefined;
@@ -316,7 +319,7 @@ export const elemToRTxtNode=(nodeElem:Element):RTxtNode|null=>{
     return node;
 }
 
-export const getRTxtNodeTypes=(nodes:RTxtNode[]|null|undefined):string[]=>{
+export const getRTxtNodesTypes=(nodes:RTxtNode[]|null|undefined):string[]=>{
     const types:string[]=[];
     if(!nodes){
         return types;
@@ -365,4 +368,35 @@ export const getRTxtNodesLines=(doc:RTxtDoc,nodes:RTxtNode[]):RTxtLine[]=>{
         }
     }
     return lines;
+}
+
+export const shouldIgnoreRTxtLineElem=(node:Node|null|undefined):boolean=>{
+    if(!node){
+        return true;
+    }
+
+    if(((node instanceof Element) && node.getAttribute(rTxtIgnoreAtt)) || (node instanceof HTMLBRElement)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+export const isRTxtDocEmpty=(doc:RTxtDoc|null|undefined):boolean=>{
+    if(!doc?.lines?.length){
+        return true;
+    }
+
+    for(const line of doc.lines){
+        if(Array.isArray(line)){
+            if(line.length){
+                return false;
+            }
+        }else if(line.nodes.length){
+            return false;
+        }
+    }
+
+    return true;
+
 }

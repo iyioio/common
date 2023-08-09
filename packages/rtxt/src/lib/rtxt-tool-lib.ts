@@ -1,6 +1,5 @@
 import type { RTxtEditor } from "./RTxtEditor";
 import { selectRTxtSelection } from "./rtxt-lib";
-import { defaultRTxtClassNamePrefix } from "./rtxt-types";
 
 export interface CreateRTxtToolButtonOptions
 {
@@ -24,7 +23,7 @@ export const createRTxtToolButton=({
         throw new Error('DOM methods not supported in current environment');
     }
 
-    const classPrefix=editor.renderer.options.classPrefix??defaultRTxtClassNamePrefix;
+    const classPrefix=editor.classPrefix;
 
     btn.innerHTML=innerHTML;
     btn.classList.add(`${classPrefix}button`);
@@ -35,10 +34,10 @@ export const createRTxtToolButton=({
     btn.addEventListener('click',()=>{
         if(type){
             const sel=editor.selection;
-            const elem=editor.renderer.elem;
+            const elem=editor.renderer?.elem;
             if(sel && elem){
                 editor.toggleSelection(sel,type);
-                editor.renderer.render();
+                editor.renderer?.render();
                 selectRTxtSelection(sel,elem);
             }
         }
@@ -71,7 +70,7 @@ export const createRTxtToolInput=({
         throw new Error('DOM methods not supported in current environment');
     }
 
-    const classPrefix=editor.renderer.options.classPrefix??defaultRTxtClassNamePrefix;
+    const classPrefix=editor.classPrefix;
 
     input.type=inputType;
 
@@ -83,7 +82,7 @@ export const createRTxtToolInput=({
     const createCallback=(evtType:string,callback:(value:string,input:HTMLInputElement)=>(Record<string,string>|void))=>{
         input.addEventListener(evtType,()=>{
             const sel=editor.selection;
-            const elem=editor.renderer.elem;
+            const elem=editor.renderer?.elem;
             if(sel && elem){
                 const atts=callback(input.value,input);
                 if(atts){
@@ -91,7 +90,7 @@ export const createRTxtToolInput=({
                 }else{
                     editor.toggleSelection(sel,type);
                 }
-                editor.renderer.render();
+                editor.renderer?.render();
                 selectRTxtSelection(sel,elem);
             }
         })
@@ -136,7 +135,7 @@ export const createRTxtToolDropdown=({
         throw new Error('DOM methods not supported in current environment');
     }
 
-    const classPrefix=editor.renderer.options.classPrefix??defaultRTxtClassNamePrefix;
+    const classPrefix=editor.classPrefix;
 
     select.classList.add(`${classPrefix}select`);
     if(className){
@@ -158,7 +157,7 @@ export const createRTxtToolDropdown=({
     select.addEventListener('change',()=>{
         const opt=options.find(o=>(o.value??o.type??'')===select.value);
         const sel=editor.selection;
-        const elem=editor.renderer.elem;
+        const elem=editor.renderer?.elem;
         if(!opt || !sel || !elem){
             return;
         }
@@ -167,7 +166,7 @@ export const createRTxtToolDropdown=({
             let changed=false;
             for(const tool of editor.tools){
                 for(const type of tool.types){
-                    const desc=editor.renderer.descriptors[type];
+                    const desc=editor.renderer?.descriptors[type];
                     if(desc?.group===opt.clearGroup){
                         changed=true;
                         editor.removeFromSelection(sel,type);
@@ -176,14 +175,14 @@ export const createRTxtToolDropdown=({
                 }
             }
             if(changed){
-                editor.renderer.render();
+                editor.renderer?.render();
                 selectRTxtSelection(sel,elem);
             }
         }
 
         if(opt.clearType){
             editor.removeFromSelection(sel,opt.clearType);
-            editor.renderer.render();
+            editor.renderer?.render();
             selectRTxtSelection(sel,elem);
             onChange?.(opt.clearType,select);
         }
@@ -204,7 +203,7 @@ export const createRTxtToolDropdown=({
                 }
             }
             editor.toggleSelection(sel,opt.type,atts as Record<string,string>|undefined);
-            editor.renderer.render();
+            editor.renderer?.render();
             selectRTxtSelection(sel,elem);
             onChange?.(opt.type,select);
         }

@@ -1,5 +1,5 @@
 import { getRTxtIcon } from "./rtxt-icons";
-import { getRTxtNodeTypes, selectRTxtSelection } from "./rtxt-lib";
+import { getRTxtNodesTypes, selectRTxtSelection } from "./rtxt-lib";
 import { RTxtDropdownOption, createRTxtToolButton, createRTxtToolDropdown, createRTxtToolInput, createRTxtToolLabel } from "./rtxt-tool-lib";
 import { RTxtFontFamily, RTxtRenderOptions, RTxtTool } from "./rtxt-types";
 
@@ -10,16 +10,21 @@ export const getDefaultRTxtTools=({
     const defaults:(RTxtTool|undefined)[]=[
         !fontFamilies?undefined:createRTxtFontFamilyTool(fontFamilies),
         {
-            types:['size1','size2','size3'],
+            types:['s1','s2','s3','s4','sn1','sn2','sn3','sn4'],
             render:editor=>[
                 createRTxtToolLabel('Size'),
                 createRTxtToolDropdown({
                     editor,
                     options:[
+                        {type:'sn4',label:'-4'},
+                        {type:'sn3',label:'-3'},
+                        {type:'sn2',label:'-2'},
+                        {type:'sn1',label:'-1'},
                         {clearGroup:'size',label:'+0'},
-                        {type:'size3',label:'+1'},
-                        {type:'size2',label:'+2'},
-                        {type:'size1',label:'+3'},
+                        {type:'s1',label:'+1'},
+                        {type:'s2',label:'+2'},
+                        {type:'s3',label:'+3'},
+                        {type:'s4',label:'+4'},
                     ]
                 })
             ],
@@ -67,10 +72,10 @@ export const getDefaultRTxtTools=({
             }),
         },
         {
-            types:['color'],
+            types:['c'],
             render:(editor)=>createRTxtToolInput({
                 editor,
-                type:'color',
+                type:'c',
                 inputType:'color',
                 className:'color-picker',
                 onInput:v=>({color:v})
@@ -90,16 +95,16 @@ export const getDefaultRTxtTools=({
                 className:'button-clear',
                 onClick:()=>{
                     const sel=editor.selection;
-                    const elem=editor.renderer.elem;
+                    const elem=editor.renderer?.elem;
                     if(!sel){
                         return;
                     }
-                    const types=getRTxtNodeTypes(sel.nodes);
+                    const types=getRTxtNodesTypes(sel.nodes);
                     if(types.length){
                         for(const type of types){
                             editor.removeFromSelection(sel,type);
                         }
-                        editor.renderer.render();
+                        editor.renderer?.render();
                     }
                     if(elem){
                         selectRTxtSelection(sel,elem);
@@ -164,18 +169,18 @@ export const getDefaultRTxtTools=({
 }
 
 export const createRTxtFontFamilyTool=(families:RTxtFontFamily[]):RTxtTool=>({
-    types:['font'],
+    types:['f'],
     render:editor=>[
             createRTxtToolLabel('Font'),
             createRTxtToolDropdown({
             editor,
             options:[
-                {clearType:'font',label:'default'},
+                {clearType:'f',label:'default'},
                 ...families.map<RTxtDropdownOption>(f=>({
-                    clearType:'font',
-                    type:'font',
+                    clearType:'f',
+                    type:'f',
                     label:f.label,
-                    atts:{font:f.family,fontClass:f.className},
+                    atts:{font:f.family,['font-class']:f.className},
                     value:f.family??f.className??f.label,
                 }))
             ]
@@ -183,7 +188,7 @@ export const createRTxtFontFamilyTool=(families:RTxtFontFamily[]):RTxtTool=>({
     ],
     onSelectionChange:({toolElem,nodeAtCursor})=>{
         if(toolElem instanceof HTMLSelectElement){
-            toolElem.value=nodeAtCursor?.atts?.['font']??nodeAtCursor?.atts?.['fontClass']??'';
+            toolElem.value=nodeAtCursor?.atts?.['font']??nodeAtCursor?.atts?.['font-class']??'';
         }
     },
 }

@@ -22,12 +22,16 @@ export const rTxtNodeAtt='data-rtxt-node';
 
 export const rTxtDocAtt='rtxt-doc';
 
+export const rTxtIgnoreAtt='rtxt-ignore';
+
 export const defaultRTxtClassNamePrefix='rtxt-';
 
 export const defaultRTxtDocClassName='rtxt-doc';
 
 export type RTxtAlignment='start'|'center'|'end';
 export const defaultRTxtAlignment:RTxtAlignment='start';
+
+export const defaultRTxtChangeDelayMs=600;
 
 export interface RTxtDoc
 {
@@ -73,7 +77,7 @@ export interface RTxtEditorOptions
     /**
      * Css selector, viewer or HTML element to bind the editor to.
      */
-    renderer:RTxtRenderer|RTxtRenderOptions;
+    renderer?:RTxtRenderer|RTxtRenderOptions;
 
     /**
      * If true the default editor style sheet will not be inserted.
@@ -87,6 +91,11 @@ export interface RTxtEditorOptions
      * getDefaultRTxtTools will be used.
      */
     tools?:RTxtTool[];
+
+    /**
+     * A prefix that will be added to all rendered editor classNames
+     */
+    classPrefix?:string;
 }
 
 export interface RTxtRenderOptions
@@ -142,6 +151,13 @@ export interface RTxtRenderOptions
      * If true not style sheet will be generated to support the supplied fontFamilies.
      */
     disableFontFamilyCss?:boolean;
+
+    placeholder?:string;
+
+    /**
+     * Number of milliseconds the delayed change event is delayed by.
+     */
+    changeDelayMs?:number;
 }
 
 export interface RTxtDescriptor

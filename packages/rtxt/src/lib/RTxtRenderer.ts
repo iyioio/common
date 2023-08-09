@@ -1,9 +1,10 @@
 import { ReadonlySubject, deepClone, escapeHtml } from '@iyio/common';
 import { BehaviorSubject } from 'rxjs';
 import { getDefaultRTxtNodeDescriptors } from "./rtxt-descriptors";
-import { getRTxtLineNodes } from './rtxt-lib';
+import { getTextNode } from './rtxt-internal';
+import { convertRTxtDocToSingleCharNodes, getRTxtLineNodes, minifyRTxtDoc } from './rtxt-lib';
 import { insertRTxtViewerStyleSheet } from './rtxt-style-renderer';
-import { RTxtDescriptor, RTxtDoc, RTxtNode, RTxtRenderOptions, RTxtStyleProvider, defaultRTxtClassNamePrefix, defaultRTxtDocClassName, defaultRTxtLineElem, defaultRTxtNodeType, rTxtAttPrefix, rTxtDocAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtNodeAtt, rTxtTypeAtt } from "./rtxt-types";
+import { RTxtDescriptor, RTxtDoc, RTxtNode, RTxtRenderOptions, RTxtStyleProvider, defaultRTxtChangeDelayMs, defaultRTxtClassNamePrefix, defaultRTxtDocClassName, defaultRTxtLineElem, defaultRTxtNodeType, rTxtAttPrefix, rTxtDocAtt, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtNodeAtt, rTxtTypeAtt } from "./rtxt-types";
 
 export class RTxtRenderer
 {
@@ -14,14 +15,47 @@ export class RTxtRenderer
 
     public readonly descriptors:Record<string,RTxtDescriptor>;
 
+    public readonly classPrefix:string;
+
+    public isEmpty=true;
+
     private readonly _editMode:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
     public get editModeSubject():ReadonlySubject<boolean>{return this._editMode}
     public get editMode(){return this._editMode.value}
-    public set editMode(value:boolean){
-        if(value==this._editMode.value){
+
+    private readonly _editModeRefCount:BehaviorSubject<number>=new BehaviorSubject<number>(0);
+    public get editModeRefCountSubject():ReadonlySubject<number>{return this._editModeRefCount}
+    public get editModeRefCount(){return this._editModeRefCount.value}
+    public set editModeRefCount(value:number){
+        if(value==this._editModeRefCount.value){
             return;
         }
-        this._editMode.next(value);
+        const wasOn=this._editModeRefCount.value!==0;
+        const isOn=value!==0;
+        this._editModeRefCount.next(value);
+
+        if(wasOn!==isOn){
+            if(isOn){
+                const clone=deepClone(this.doc);
+                if(convertRTxtDocToSingleCharNodes(clone)){
+                    this.doc=clone;
+                }
+                if(this.elem){
+                    this.elem.contentEditable='true';
+                    this.elem.classList.add(`${this.classPrefix}edit-mode`);
+                }
+                this._editMode.next(true);
+            }else{
+                this.doc=minifyRTxtDoc(this.doc);
+                if(this.elem){
+                    this.elem.contentEditable='false';
+                    this.elem.classList.remove(`${this.classPrefix}edit-mode`);
+                }
+                this._editMode.next(false);
+            }
+            this.render();
+        }
+
     }
 
     private readonly _doc:BehaviorSubject<RTxtDoc>;
@@ -32,7 +66,12 @@ export class RTxtRenderer
             return;
         }
         this._doc.next(value);
+        this.queueExport();
     }
+
+    private readonly _exportDoc:BehaviorSubject<RTxtDoc|null>=new BehaviorSubject<RTxtDoc|null>(null);
+    public get exportDocSubject():ReadonlySubject<RTxtDoc|null>{return this._exportDoc}
+    public get exportDoc(){return this._exportDoc.value}
 
     public nodeLookup:RTxtNode[]=[];
 
@@ -44,9 +83,12 @@ export class RTxtRenderer
             descriptors,
             useCustomStyleSheet,
             docClassName=defaultRTxtDocClassName,
+            classPrefix=defaultRTxtClassNamePrefix,
         }=options;
         this.options={...options};
         Object.freeze(this.options);
+
+        this.classPrefix=classPrefix;
 
         const descAry=descriptors??getDefaultRTxtNodeDescriptors();
         this.descriptors={}
@@ -113,12 +155,20 @@ export class RTxtRenderer
             buffer,
             nodeIndex:0,
         }
-
+        let lineIndex=0;
         for(let li=0;li<this.doc.lines.length;li++){
             const line=this.doc.lines[li];
             if(!line){
                 continue;
             }
+
+            if(!ctx.nodeIndex){
+                lineIndex=0;
+                if(buffer.length){
+                    buffer.splice(0,buffer.length);
+                }
+            }
+
             if(lineBreaks && buffer.length){
                 buffer.push('<br/>');
             }
@@ -127,7 +177,8 @@ export class RTxtRenderer
 
             buffer.push(`<${lineElem}${
                 lineObj?.align && lineObj.align!=='start'?` style="text-align:${lineObj.align==='end'?'right':'center'}"`:''
-            }${this.editMode?` ${rTxtNodeAtt}="1" ${rTxtLineAlignAtt}="${lineObj?.align??'start'}" ${rTxtLineIndexAtt}="${li}"`:''}>`);
+            }${this.editMode?` ${rTxtNodeAtt}="1" ${rTxtLineAlignAtt}="${lineObj?.align??'start'}" ${rTxtLineIndexAtt}="${lineIndex}"`:''}>`);
+
 
             const lineNodes=getRTxtLineNodes(line);
             for(let ni=0;ni<lineNodes.length;ni++){
@@ -152,11 +203,40 @@ export class RTxtRenderer
             }
             buffer.push(`</${lineElem}>`);
 
+            lineIndex++;
+
         }
 
+        if(!lineIndex){
+            buffer.push(`<${lineElem}${this.editMode?` ${rTxtNodeAtt}="1" ${rTxtLineIndexAtt}="0"`:''}></${lineElem}>`)
+        }
+
+        const renderPlaceholder=(this.options.placeholder && !ctx.nodeIndex && this.editMode)?true:false
+
+        if(renderPlaceholder){
+            buffer.push(
+                `<div class="${this.classPrefix}placeholder" contenteditable="false" ${rTxtIgnoreAtt}="1">${
+                    escapeHtml(this.options.placeholder??'')
+                }</div>`
+            )
+        }
 
         if(this.elem){
             this.elem.innerHTML=buffer.join('');
+            this.isEmpty=ctx.nodeIndex===0;
+            if(this.isEmpty){
+                this.elem.classList.add(`${this.classPrefix}doc-empty`);
+                if(renderPlaceholder){
+                    const placeholder=this.elem.querySelector(`.${this.classPrefix}placeholder`);
+                    const firstLine=this.elem.querySelector(`[${rTxtLineIndexAtt}]`)
+                    if((firstLine instanceof HTMLElement) && placeholder){
+                        firstLine.style.minWidth=placeholder.clientWidth+'px';
+                        firstLine.style.minHeight=placeholder.clientHeight+'px';
+                    }
+                }
+            }else{
+                this.elem.classList.remove(`${this.classPrefix}doc-empty`);
+            }
         }
 
         return buffer;
@@ -186,9 +266,9 @@ export class RTxtRenderer
             const elemTypeDesc:RTxtDescriptor|undefined=this.descriptors[nodeType];
             const elemType=elemTypeDesc?.elem??nodeType;
 
-            buffer.push(`<${elemType} ${rTxtNodeAtt}="1"`);
+            buffer.push(`<${elemType}`);
             if(this.editMode && ti==0){
-                buffer.push(` ${rTxtTypeAtt}="${escapeHtml(types.join(','))}" ${rTxtIndexLookupAtt}="${ctx.nodeIndex}"`);
+                buffer.push(` ${rTxtNodeAtt}="1" ${rTxtTypeAtt}="${escapeHtml(types.join(','))}" ${rTxtIndexLookupAtt}="${ctx.nodeIndex}"`);
                 if(node.atts){
                     for(const e in node.atts){
                         const v=node.atts[e];
@@ -246,7 +326,7 @@ export class RTxtRenderer
 
             const addClass=(className:string)=>{
 
-                className=(this.options.classPrefix??defaultRTxtClassNamePrefix)+className;
+                className=this.classPrefix+className;
 
                 if(!styleMap){
                     styleMap={};
@@ -295,6 +375,67 @@ export class RTxtRenderer
             buffer.push('</'+elemType+'/>');
 
         }
+    }
+
+    public focus()
+    {
+        if(!this.elem){
+            return;
+        }
+        this.elem.focus();
+        const txt=getTextNode(this.elem,true,false);
+        const sel=globalThis.window?.getSelection();
+        if(!txt){
+            const first=this.elem.children[0];
+            if(first && sel){
+                sel.removeAllRanges();
+                sel.collapse(first,0);
+            }
+            return;
+        }
+
+        if(!sel){
+            return;
+        }
+        sel.removeAllRanges();
+        sel.collapse(txt,txt.textContent?.length);
+    }
+
+    public selectAll()
+    {
+        if(!this.elem){
+            return;
+        }
+        this.elem.focus();
+
+        const sel=globalThis.window?.getSelection();
+        if(!sel){
+            return;
+        }
+        sel.removeAllRanges();
+        const range=new Range();
+        for(let i=0;i<this.elem.children.length;i++){
+            const child=this.elem.children[i];
+            if(child){
+                range.selectNode(child);
+            }
+        }
+        sel.addRange(range);
+    }
+
+
+
+    private changeIndex=0;
+
+    public queueExport()
+    {
+        const index=++this.changeIndex;
+        setTimeout(()=>{
+            if(index!==this.changeIndex){
+                return;
+            }
+            this._exportDoc.next(minifyRTxtDoc(this.doc));
+        },this.options.changeDelayMs??defaultRTxtChangeDelayMs);
     }
 }
 
