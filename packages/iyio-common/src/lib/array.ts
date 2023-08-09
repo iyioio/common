@@ -181,3 +181,24 @@ export const aryMoveItems=(ary:any[],fromIndex:number,toIndex:number,count=1)=>{
     ary.splice(toIndex,0,...removed);
     return true;
 }
+
+export const aryShallowUnorderedCompare=(a:any[]|null|undefined,b:any[]|null|undefined):boolean=>{
+
+    if(!a || !b || a.length!==b.length){
+        return false;
+    }
+
+    for(const item of a){
+        if(!b.includes(item)){
+            return false;
+        }
+    }
+
+    for(const item of b){
+        if(!a.includes(item)){
+            return false;
+        }
+    }
+
+    return true;
+}
