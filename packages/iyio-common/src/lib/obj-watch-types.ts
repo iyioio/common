@@ -1,3 +1,11 @@
+export type RecursiveObjWatchEvt<T>=ObjWatchEvt<T> & {
+
+    /**
+     * Path to the recursively access object
+     */
+    path?:(string|number|null)[];
+}
+
 export type ObjWatchEvt<T>=(
     {
         type:'set';
@@ -96,4 +104,4 @@ export type ObjWatchListener<T=any>=(obj:T,evt:ObjWatchEvt<T>)=>void;
  * The path param is mutated as the change event moves between watchers. If a reference to the
  * path is needed after the return of the callback make sure to make a copy.
  */
-export type ObjRecursiveListener=(obj:any,evt:ObjWatchEvt<any>,path:(string|number)[])=>void;
+export type ObjRecursiveListener=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>void;

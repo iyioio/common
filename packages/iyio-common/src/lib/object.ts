@@ -133,6 +133,31 @@ export const getValueByPath=(value:any,path:string,defaultValue:any=undefined,ro
         }else{
             value=value?.[p];
         }
+        if(value===undefined){
+            return defaultValue;
+        }
+    }
+
+    return value===undefined?defaultValue:value;
+}
+
+export const getValueByAryPath=(value:any,path:(string|number|null)[],defaultValue:any=undefined,pathLength=path.length,rootGetter?:(key:string|number)=>any):any=>{
+
+    for(let i=0;i<pathLength;i++){
+        const p=path[i];
+        if(p===undefined){
+            return defaultValue;
+        }else if(p===null){
+            continue;
+        }
+        if(i===0 && rootGetter && value?.[p]===undefined){
+            value=rootGetter(p);
+        }else{
+            value=value?.[p];
+        }
+        if(value===undefined){
+            return defaultValue;
+        }
     }
 
     return value===undefined?defaultValue:value;

@@ -232,6 +232,23 @@ export const wTriggerChange=<T>(obj:T|null|undefined):void=>{
 
 }
 
+
+export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T):void=>{
+    if(!obj){
+        return;
+    }
+
+
+    const watcher=getObjWatcher<T>(obj,false);
+    if(watcher){
+        watcher.triggerChange({
+            type:'load',
+            prop,
+        })
+    }
+
+}
+
 export const isWatcherValueChangeEvent=(type:ObjWatchEvtType):boolean=>{
 
     switch(type){

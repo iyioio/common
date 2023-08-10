@@ -206,7 +206,7 @@ export class ObjWatcher<
         }
 
         if(this.ancestors || this.rListeners){
-            const path:(string|number)[]=[];
+            const path:(string|number|null)[]=[];
             switch(evt.type){
                 case 'set':
                 case 'delete':
@@ -219,21 +219,22 @@ export class ObjWatcher<
                     path.push(evt.toIndex);
                     break;
                 case 'load':
-                    if(evt.prop){
-                        path.push(evt.prop as any);
+                    if(evt.prop===undefined){
+                        path.push(null);
+                    }else{
+                        path.push((evt.prop as any)??null);
                     }
                     break;
-                case 'change':
-                    break;
                 default:
-                    return;
+                    path.push(null);
+                    break;
             }
             const called:ObjWatcher<any>[]=[];
             this.triggerRecursiveChange(this.obj,path,evt,called);
         }
     }
 
-    private triggerRecursiveChange(obj:any,path:(string|number)[],evt:ObjWatchEvt<any>,called:ObjWatcher<any>[]){
+    private triggerRecursiveChange(obj:any,path:(string|number|null)[],evt:ObjWatchEvt<any>,called:ObjWatcher<any>[]){
 
         if(called.includes(this as any)){
             return;
