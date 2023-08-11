@@ -158,8 +158,11 @@ export const convertRTxtDocToSingleCharNodes=(doc:RTxtDoc):boolean=>{
             }
             changed=true;
             nodes.splice(i,1);
-            for(const char of node.v){
-                nodes.splice(i,0,{...node,v:char});
+            const chars=Array.from(node.v);
+            for(const char of chars){
+                const clone=deepClone(node);
+                clone.v=char;
+                nodes.splice(i,0,clone);
                 i++;
             }
             i--;
