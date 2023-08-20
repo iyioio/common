@@ -24,9 +24,9 @@ export const createDbCluster=(scope:Construct)=>
         throw new Error(`RDS full secret ARN is available. ${dbCluster.secret?'Has Secret':'NO secret'}`);
     }
 
-    new cdk.CfnOutput(scope,rdsClusterArnParam.typeName,{value:dbCluster.clusterArn});
-    new cdk.CfnOutput(scope,rdsSecretArnParam.typeName,{value:rdsAdminCredentialsArn});
-    new cdk.CfnOutput(scope,rdsDatabaseParam.typeName,{value:defaultDatabaseName});
+    new cdk.CfnOutput(scope,rdsClusterArnParam.typeName+'Param',{value:dbCluster.clusterArn});
+    new cdk.CfnOutput(scope,rdsSecretArnParam.typeName+'Param',{value:rdsAdminCredentialsArn});
+    new cdk.CfnOutput(scope,rdsDatabaseParam.typeName+'Param',{value:defaultDatabaseName});
 
     return {
         dbCluster,

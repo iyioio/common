@@ -37,7 +37,7 @@ export const createAuthFunc=(scope:Construct,role:iam.Role)=>{
     authFunc.grantInvoke(role);
     authUrl.grantInvokeUrl(role);
 
-    new cdk.CfnOutput(scope,'authFuncUrl',{value:authUrl.url});
+    new cdk.CfnOutput(scope,'authFuncUrlParam',{value:authUrl.url});
 
     return {authFunc,authUrl}
 }

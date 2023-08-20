@@ -23,6 +23,12 @@ export interface FnBaseHandlerOptions
     returnsHttpResponse?:boolean;
     inputScheme?:ZodSchema;
     outputScheme?:ZodSchema;
+    defaultHttpMethod?:HttpMethod;
+    defaultHttpPath?:string;
+    defaultQueryString?:string;
+    inputProp?:string;
+    inputParseProp?:string;
+    httpLike?:boolean;
 }
 
 export interface FnHandlerOptions extends FnBaseHandlerOptions
@@ -42,6 +48,12 @@ export interface FnEvent
     query:Record<string,string>;
     headers:Record<string,string>;
     claims:Record<string,any>;
+
+    /**
+     * For websocket events this is the connection id of the socket
+     */
+    connectionId?:string;
+
     /**
      * Typically a user id
      */

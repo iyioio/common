@@ -15,6 +15,7 @@ export * from './lib/LocalStorageStore';
 export * from './lib/Lock';
 export * from './lib/MemoryStore';
 export * from './lib/NamedValue';
+export * from './lib/ObjMirror';
 export * from './lib/ObjWatcher';
 export * from './lib/PromiseCache';
 export * from './lib/PromiseSource';
@@ -122,5 +123,7 @@ export * from './lib/uri';
 export * from './lib/uuid';
 export * from './lib/validation';
 export * from './lib/window-size-lib';
+export * from './lib/ws';
+export * from './lib/ws.deps';
 export * from './lib/zod-helpers';
 

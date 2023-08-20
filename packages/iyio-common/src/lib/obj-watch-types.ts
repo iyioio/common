@@ -1,3 +1,7 @@
+// any changes to RecursiveObjWatchEvt or ObjWatchEvt should be reflected in
+// packages/obj-sync/src/lib/obj-sync-types.ts
+
+
 export type RecursiveObjWatchEvt<T>=ObjWatchEvt<T> & {
 
     /**
@@ -6,7 +10,12 @@ export type RecursiveObjWatchEvt<T>=ObjWatchEvt<T> & {
     path?:(string|number|null)[];
 }
 
-export type ObjWatchEvt<T>=(
+export type ObjWatchEvt<T>={
+    /**
+     * Can be used to specify the source of the event
+     */
+    source?:any;
+} & (
     {
         type:'set';
 

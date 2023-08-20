@@ -1,7 +1,7 @@
 import { Observable, Subject } from 'rxjs';
-import { wAryMove, wArySplice, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
+import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
 import { ObjWatchEvt, RecursiveObjWatchEvt } from "./obj-watch-types";
-import { deepClone, getValueByAryPath } from './object';
+import { getValueByAryPath } from './object';
 
 export class ObjMirror{
 
@@ -18,21 +18,10 @@ export class ObjMirror{
 
 
     public readonly recursiveCallback=(obj:any,evt:ObjWatchEvt<any>,path?:(string|number|null)[])=>{
-        evt=deepClone(evt);
-        if(path){
-            path=[...path];
-            path.shift();
-            if(path.length===0){
-                path=undefined;
-            }else{
-                path.reverse();
-                (evt as RecursiveObjWatchEvt<any>).path=path;
-            }
-        }
-        this.handleEvent(evt);
+        this.handleEvent(objWatchEvtToRecursiveObjWatchEvt(evt,path));
     }
 
-    public handleEvent(evt:RecursiveObjWatchEvt<any>)
+    public handleEvent(evt:RecursiveObjWatchEvt<any>,source?:any)
     {
         let obj=this.obj;
 
@@ -47,35 +36,35 @@ export class ObjMirror{
         switch(evt.type){
 
             case 'set':
-                wSetProp(obj,evt.prop,evt.value);
+                wSetProp(obj,evt.prop,evt.value,source);
                 break;
 
             case 'delete':
-                wDeleteProp(obj,evt.prop);
+                wDeleteProp(obj,evt.prop,source);
                 break;
 
             case 'aryChange':
                 if(evt.values){
-                    wArySplice(obj,evt.index,evt.deleteCount??0,...evt.values);
+                    wArySpliceWithSource(source,obj,evt.index,evt.deleteCount??0,evt.values);
                 }else{
-                    wArySplice(obj,evt.index,evt.deleteCount??0);
+                    wArySpliceWithSource(source,obj,evt.index,evt.deleteCount??0,[]);
                 }
                 break;
 
             case 'aryMove':
-                wAryMove(obj,evt.fromIndex,evt.toIndex,evt.count);
+                wAryMove(obj,evt.fromIndex,evt.toIndex,evt.count,source);
                 break;
 
             case 'change':
-                wTriggerChange(obj);
+                wTriggerChange(obj,source);
                 break;
 
             case 'load':
-                wTriggerLoad(obj,evt.prop);
+                wTriggerLoad(obj,evt.prop,source);
                 break;
 
             case 'event':
-                wTriggerEvent(obj,evt.eventType,evt.eventValue);
+                wTriggerEvent(obj,evt.eventType,evt.eventValue,source);
                 break;
         }
     }

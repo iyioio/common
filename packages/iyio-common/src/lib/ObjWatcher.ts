@@ -64,7 +64,7 @@ export class ObjWatcher<
 
         if(this._recursive){
             for(const e in this.obj){
-                if(typeof e === 'object'){
+                if(typeof this.obj[e] === 'object'){
                     const watcher=stopWatchingObj(this.obj[e]);
                     if(watcher){
                         watcher.removeAncestor(this as any,e);
@@ -196,7 +196,35 @@ export class ObjWatcher<
         return true;
     }
 
+    private changeQueue:ObjWatchEvt<T>[]=[];
+    private queueChangeRequestCount=0;
+
+    public requestQueueChanges()
+    {
+        this.queueChangeRequestCount++;
+    }
+
+    public requestDequeueChanges()
+    {
+        this.queueChangeRequestCount--;
+        if(this.queueChangeRequestCount===0 && this.changeQueue.length){
+            const queue=this.changeQueue;
+            this.changeQueue=[];
+            for(const evt of queue){
+                this.triggerChange(evt);
+            }
+        }else if(this.queueChangeRequestCount<0){
+            throw new Error('queue change request count unbalanced');
+        }
+    }
+
     public triggerChange(evt:ObjWatchEvt<T>){
+
+        if(this.queueChangeRequestCount){
+            this.changeQueue.push({...evt});
+            return;
+        }
+
         for(const listener of this.listeners){
             try{
                 listener(this.obj,evt);
@@ -285,7 +313,7 @@ export class ObjWatcher<
         }
     }
 
-    public setProp<K extends keyof T>(prop:K, value:T[K]):T[K]{
+    public setProp<K extends keyof T>(prop:K, value:T[K], source?:any):T[K]{
         if(this.obj[prop]===value){
             return value;
         }
@@ -300,11 +328,12 @@ export class ObjWatcher<
             type:'set',
             prop,
             value,
+            source
         })
         return value;
     }
 
-    public deleteProp<K extends keyof T>(prop:K):void{
+    public deleteProp<K extends keyof T>(prop:K, source?:any):void{
         if(this._recursive){
             this.removeDescendant(prop);
         }
@@ -312,10 +341,14 @@ export class ObjWatcher<
         this.triggerChange({
             type:'delete',
             prop,
+            source
         })
     }
-
     public aryPush(...values:TArrayValue[]):void{
+        this.aryPushWithSource(undefined,values);
+    }
+
+    public aryPushWithSource(source:any, values:TArrayValue[]):void{
         if(!Array.isArray(this.obj)){
             return;
         }
@@ -329,11 +362,13 @@ export class ObjWatcher<
         this.triggerChange({
             type:'aryChange',
             index,
-            values:values as any
+            values:values as any,
+            source
         })
     }
 
-    public aryRemove(value:TArrayValue):boolean{
+
+    public aryRemove(value:TArrayValue,source?:any):boolean{
         if(!Array.isArray(this.obj)){
             return false;
         }
@@ -341,10 +376,10 @@ export class ObjWatcher<
         if(i===-1){
             return false;
         }
-        return this.aryRemoveAt(i as TIndex,1);
+        return this.aryRemoveAt(i as TIndex,1,source);
     }
 
-    public aryRemoveAt(index:TIndex,deleteCount=1):boolean{
+    public aryRemoveAt(index:TIndex,deleteCount=1,source?:any):boolean{
         if( !Array.isArray(this.obj) ||
             (typeof index !== 'number') ||
             !objWatchAryRemoveAt(this.obj,index,deleteCount,this._recursive?()=>this.removeDescendant(index):undefined))
@@ -354,16 +389,25 @@ export class ObjWatcher<
         this.triggerChange({
             type:'aryChange',
             index:index,
-            deleteCount
+            deleteCount,
+            source
         })
         return true;
     }
 
     public aryInsert(index:TIndex,...values:TArrayValue[]):boolean{
-        return this.arySplice(index,0,...values);
+        return this.arySpliceWithSource(undefined,index,0,values);
+    }
+
+    public aryInsertWithSource(source:any,index:TIndex,...values:TArrayValue[]):boolean{
+        return this.arySpliceWithSource(source,index,0,values);
     }
 
     public arySplice(index:TIndex,deleteCount:number,...values:TArrayValue[]):boolean{
+        return this.arySpliceWithSource(undefined,index,deleteCount,values);
+    }
+
+    public arySpliceWithSource(source:any,index:TIndex,deleteCount:number,values:TArrayValue[]):boolean{
         if( !Array.isArray(this.obj) ||
             (typeof index !== 'number') ||
             !objWatchArySplice(this.obj,index,deleteCount,this._recursive && deleteCount?()=>{
@@ -383,12 +427,13 @@ export class ObjWatcher<
             type:'aryChange',
             index:index,
             deleteCount,
-            values:values as any
+            values:values as any,
+            source
         })
         return true;
     }
 
-    public aryMove(fromIndex:TIndex,toIndex:TIndex,count=1):boolean{
+    public aryMove(fromIndex:TIndex,toIndex:TIndex,count=1,source?:any):boolean{
         if( !Array.isArray(this.obj) ||
             (typeof fromIndex !== 'number') ||
             (typeof toIndex !== 'number') ||
@@ -401,6 +446,7 @@ export class ObjWatcher<
             fromIndex,
             toIndex,
             count,
+            source
         })
         return true;
     }

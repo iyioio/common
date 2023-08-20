@@ -8,6 +8,7 @@
         "@aws-cdk/aws-apigatewayv2-alpha": "^2.73.0-alpha.0",
         "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.73.0-alpha.0",
         "@aws-cdk/aws-elasticloadbalancingv2-targets": "^1.198.1",
+        "@aws-sdk/client-apigatewaymanagementapi": "^3.391.0",
         "@aws-sdk/client-cognito-identity-provider": "^3.312.0",
         "@aws-sdk/client-dynamodb": "^3.312.0",
         "@aws-sdk/client-lambda": "^3.312.0",
@@ -36,6 +37,7 @@
         "styled-jsx": "5.0.7",
         "tslib": "^2.3.0",
         "uuid": "^9.0.0",
+        "ws": "^8.13.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {

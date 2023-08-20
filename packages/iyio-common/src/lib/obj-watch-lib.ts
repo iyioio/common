@@ -1,6 +1,7 @@
 import { ObjWatcher } from "./ObjWatcher";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjWatchEvtType } from "./obj-watch-types";
+import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt } from "./obj-watch-types";
+import { deepClone } from "./object";
 
 const watcherProp=Symbol('watcher');
 
@@ -60,13 +61,13 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
 }
 
-export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P]):T[P]=>{
+export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
     if(!obj){
         return value;
     }
     const watcher=getObjWatcher<T>(obj,false);
     if(watcher){
-        watcher.setProp(prop,value);
+        watcher.setProp(prop,value,source);
     }else{
         (obj as any)[prop]=value;
     }
@@ -115,14 +116,14 @@ export const wSetPropOrDeleteWhen=<T,P extends keyof T>(obj:T|null|undefined,pro
     return value;
 }
 
-export const wDeleteProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P):void=>{
+export const wDeleteProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,source?:any):void=>{
 
      if(!obj){
         return;
     }
     const watcher=getObjWatcher<T>(obj,false);
     if(watcher){
-        watcher.deleteProp(prop);
+        watcher.deleteProp(prop,source);
     }else{
         delete obj[prop];
     }
@@ -143,13 +144,16 @@ export const wAryPush=<T extends Array<any>>(obj:T|null|undefined,...values:T[nu
 }
 
 export const wArySplice=<T extends Array<any>>(obj:T|null|undefined,index:number,deleteCount:number,...values:T[number][]):boolean=>{
+    return wArySpliceWithSource<T>(undefined,obj,index,deleteCount,values);
+}
+export const wArySpliceWithSource=<T extends Array<any>>(source:any,obj:T|null|undefined,index:number,deleteCount:number,values:T[number][]):boolean=>{
 
      if(!obj){
         return false;
     }
     const watcher=getObjWatcher<T>(obj,false);
     if(watcher){
-        return watcher.arySplice(index as any,deleteCount,...values);
+        return watcher.arySpliceWithSource(source,index as any,deleteCount,values);
     }else{
         return objWatchArySplice(obj,index,deleteCount,undefined,...values);
     }
@@ -184,14 +188,14 @@ export const wAryRemoveAt=<T extends Array<any>>(obj:T|null|undefined,index:numb
 
 }
 
-export const wAryMove=<T extends Array<any>>(obj:T|null|undefined,fromIndex:number,toIndex:number,count=1):boolean=>{
+export const wAryMove=<T extends Array<any>>(obj:T|null|undefined,fromIndex:number,toIndex:number,count=1,source?:any):boolean=>{
 
      if(!obj){
         return false;
     }
     const watcher=getObjWatcher<T>(obj,false);
     if(watcher){
-        return watcher.aryMove(fromIndex as any,toIndex as any,count);
+        return watcher.aryMove(fromIndex as any,toIndex as any,count,source);
     }else{
         return objWatchAryMove(obj,fromIndex,toIndex,count);
     }
@@ -199,7 +203,7 @@ export const wAryMove=<T extends Array<any>>(obj:T|null|undefined,fromIndex:numb
 }
 
 
-export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:any):void=>{
+export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:any,source?:any):void=>{
     if(!obj){
         return;
     }
@@ -210,14 +214,15 @@ export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:an
         watcher.triggerChange({
             type:'event',
             eventType:type,
-            eventValue:value
+            eventValue:value,
+            source
         })
     }
 
 }
 
 
-export const wTriggerChange=<T>(obj:T|null|undefined):void=>{
+export const wTriggerChange=<T>(obj:T|null|undefined,source?:any):void=>{
     if(!obj){
         return;
     }
@@ -227,13 +232,14 @@ export const wTriggerChange=<T>(obj:T|null|undefined):void=>{
     if(watcher){
         watcher.triggerChange({
             type:'change',
+            source,
         })
     }
 
 }
 
 
-export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T):void=>{
+export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T,source?:any):void=>{
     if(!obj){
         return;
     }
@@ -244,6 +250,7 @@ export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T):void=>{
         watcher.triggerChange({
             type:'load',
             prop,
+            source
         })
     }
 
@@ -262,4 +269,17 @@ export const isWatcherValueChangeEvent=(type:ObjWatchEvtType):boolean=>{
         default:
             return false;
     }
+}
+
+export const objWatchEvtToRecursiveObjWatchEvt=(evt:ObjWatchEvt<any>,path?:(string|number|null)[])=>{
+    evt=deepClone(evt);
+    if(path){
+        path=[...path];
+        path.shift();
+        if(path.length!==0){
+            path.reverse();
+            (evt as RecursiveObjWatchEvt<any>).path=path;
+        }
+    }
+    return evt;
 }

@@ -17,7 +17,7 @@ export abstract class AuthDependentClient<TClient>
     }
 
     protected readonly clientCacheKey=Symbol();
-    public getClient(){
+    public getClient():TClient{
         return this.authServerUserDataCache.getOrCreate(this.clientCacheKey,()=>this.createAuthenticatedClient())
     }
 

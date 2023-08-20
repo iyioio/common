@@ -16,6 +16,12 @@ export const fnHandler=async ({
     returnsHttpResponse,
     inputScheme,
     outputScheme,
+    httpLike,
+    defaultHttpMethod=httpLike?'POST':undefined,
+    defaultHttpPath=httpLike?'/':undefined,
+    defaultQueryString,
+    inputProp,
+    inputParseProp=httpLike?'body':undefined,
 }:FnHandlerOptions)=>{
     if(logRequest){
         console.info('serverlessHandler',evt);
@@ -25,10 +31,10 @@ export const fnHandler=async ({
 
     const requestContextHttpPath=evt?.requestContext?.http?.path;
     const requestContextHttpMethod=evt?.requestContext?.http?.method;
-    const requestContextPath=evt?.requestContext?.path;
-    const requestContextMethod=evt?.requestContext?.httpMethod;
+    const requestContextPath=evt?.requestContext?.path??defaultHttpPath;
+    const requestContextMethod=evt?.requestContext?.httpMethod??defaultHttpMethod;
 
-    const queryString=evt?.rawQueryString;
+    const queryString=evt?.rawQueryString??defaultQueryString;
     const query=queryString?queryParamsToObject(queryString):{}
 
     let path=(
@@ -56,9 +62,13 @@ export const fnHandler=async ({
     const responseDefaults={cors};
 
     let input=(
-        fnInvokeEvent?
-            fnInvokeEvent.input:
-        isHttp?
+        inputProp?
+            evt[inputProp]
+        :inputParseProp?
+            (typeof evt[inputParseProp]==='string')?JSON.parse(evt[inputParseProp]):undefined
+        :fnInvokeEvent?
+            fnInvokeEvent.input
+        :isHttp?
             (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:(method==='GET' && inputScheme)?zodCoerceObject(inputScheme,query):undefined)
         :
             evt
@@ -107,6 +117,11 @@ export const fnHandler=async ({
         claims,
         sub
     }
+
+    if(typeof evt.requestContext?.connectionId === 'string'){
+        fnEvent.connectionId=evt.requestContext.connectionId;
+    }
+
     const transformers=FnEventTransformers.all();
     for(const t of transformers){
         await t(fnEvent);
@@ -152,6 +167,7 @@ export const fnHandler=async ({
             return result;
         }
     }catch(ex){
+        console.log('hio 👋 👋 👋',{ex});
         let logError=true;
         let code=500;
         let message='Internal server error';

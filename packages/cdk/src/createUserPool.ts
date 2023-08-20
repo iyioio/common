@@ -129,9 +129,9 @@ export const createUserPool=(scope:Construct)=>{
         }
     );
 
-    new cdk.CfnOutput(scope,"cognitoUserPoolId",{value:userPool.userPoolId});
-    new cdk.CfnOutput(scope,"cognitoUserPoolClientId",{value:userPoolClient.userPoolClientId});
-    new cdk.CfnOutput(scope,"cognitoIdentityPoolId",{value:idPool.ref});
+    new cdk.CfnOutput(scope,"cognitoUserPoolIdParam",{value:userPool.userPoolId});
+    new cdk.CfnOutput(scope,"cognitoUserPoolClientIdParam",{value:userPoolClient.userPoolClientId});
+    new cdk.CfnOutput(scope,"cognitoIdentityPoolIdParam",{value:idPool.ref});
 
     return {
         userPool,

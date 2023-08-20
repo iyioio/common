@@ -16,6 +16,19 @@
                 "command": "cdk deploy && ../../scripts/apply-config.sh"
             }
         },
+        "deploy-approve": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "npx cdk deploy --require-approval never && ../../scripts/apply-config.sh"
+            }
+        },
         "synth": {
             "dependsOn": [
                 {
@@ -27,6 +40,19 @@
             "options": {
                 "cwd": "packages/cdk",
                 "command": "cdk synth"
+            }
+        },
+        "diff": {
+            "dependsOn": [
+                {
+                    "target": "build",
+                    "projects": "dependencies"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/cdk",
+                "command": "cdk diff"
             }
         },
         "bootstrap": {
