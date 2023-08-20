@@ -33,6 +33,9 @@ export const downloadBlob=(name:string, blob:Blob)=>{
     // Remove link from body
     setTimeout(()=>{
         document.body.removeChild(link);
+        setTimeout(()=>{
+            URL.revokeObjectURL(blobUrl);
+        },10000);
     },1000);
 
     return true;
