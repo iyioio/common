@@ -23,6 +23,8 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
 
     public logCommandInput=false;
 
+    public logCommandOutput=false;
+
     public constructor(clientConfig:DynamoDBClientConfig,userDataCache:ValueCache<any>,storeAdapterOptions:DynamoStoreAdapterOptions={}){
         super(userDataCache);
         this.clientConfig=clientConfig;
@@ -360,6 +362,10 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         {
             skipVersionCheck,
             noAutoUpdateVersion,
+            handleReturnedValues,
+            handleOutput,
+            returnValues=(handleReturnedValues||handleOutput)?'UPDATED_NEW':undefined,
+            transformInput,
             ...extendedOptions
         }:PatchTableItemOptions<T>={}
     ):Promise<boolean>{
@@ -400,7 +406,7 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
 
         let success=false;
         try{
-            const update=createItemUpdateInputOrNull(tableName,key,item,true,{
+            let update=createItemUpdateInputOrNull(tableName,key,item,true,{
                 matchCondition:!uvIsUpdateExpression && updateProp && uv!==undefined?
                     {[updateProp]:uv}:undefined,
                 ...extendedOptions,
@@ -409,11 +415,31 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
                 return false;
             }
 
+            if(returnValues && returnValues!=='NONE'){
+                update.ReturnValues=returnValues;
+            }
+
+            if(transformInput){
+                update=transformInput(update);
+            }
+
             if(this.logCommandInput){
                 console.info('patchTableItem',update);
             }
 
-            await this.getClient().send(new UpdateItemCommand(update));
+            const commandResult=await this.getClient().send(new UpdateItemCommand(update));
+
+            if(this.logCommandOutput){
+                console.info('patchTableItem - output',commandResult);
+            }
+
+            if(handleOutput){
+                handleOutput(commandResult);
+            }
+
+            if(handleReturnedValues && commandResult.Attributes){
+                handleReturnedValues(unmarshall(commandResult.Attributes) as any);
+            }
 
             success=true;
 

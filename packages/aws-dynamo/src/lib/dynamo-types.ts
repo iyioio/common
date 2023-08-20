@@ -1,4 +1,4 @@
-import { GetItemCommandInput, QueryCommandInput, ScanCommandInput } from "@aws-sdk/client-dynamodb";
+import { GetItemCommandInput, QueryCommandInput, ScanCommandInput, UpdateItemCommandInput, UpdateItemCommandOutput } from "@aws-sdk/client-dynamodb";
 import { DataTableDescription, DataTableIndex } from "@iyio/common";
 
 export interface PageResult<T>
@@ -87,6 +87,27 @@ export interface PatchTableItemOptions<T> extends ExtendedItemUpdateOptions<T>
      * when the update property is not present.
      */
     noAutoUpdateVersion?:boolean;
+
+    /**
+     * Controls the values that are returned from an update. Defaults to NONE or UPDATED_NEW if
+     * handleReturnedValues or handleOutput is defined.
+     */
+    returnValues?:'NONE'|'ALL_OLD'|'UPDATED_OLD'|'ALL_NEW'|'UPDATED_NEW'
+
+    /**
+     * Called with the returned values of the update command
+     */
+    handleReturnedValues?:(values?:Partial<T>)=>void;
+
+    /**
+     * Called with raw results of the update command
+     */
+    handleOutput?:(commandOutput:UpdateItemCommandOutput)=>void;
+
+    /**
+     * Can be used to transform the UpdateItemCommandInput before being sent to the database
+     */
+    transformInput?:(input:UpdateItemCommandInput)=>UpdateItemCommandInput;
 }
 
 /*
@@ -216,9 +237,19 @@ const UpdateExpressionFlag=Symbol('UpdateExpressionFlag');
 export interface BaseUpdateExpression<T>
 {
     /**
-     * If not undefined add will be added to the current value of the target object.
+     * If defined add will be added to the current value of the target object.
      */
     add?:any;
+
+    /**
+     * If defined the values will be appended to the current value of the target object
+     */
+    listPush?:any[];
+
+    /**
+     * If defined the values will be prepended to the current value of the target object
+     */
+    listUnshift?:any[];
 
     /**
      * If true the property will be removed from the target object.

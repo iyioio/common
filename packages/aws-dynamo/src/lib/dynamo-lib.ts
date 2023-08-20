@@ -39,16 +39,22 @@ export function createItemUpdateInputOrNull<T>(
                 values[vk]=convertToAttr(patchValue.add);
                 names[nk]=e;
                 adds.push(`${nk} ${vk}`);
-            }
-
-            if(patchValue.removeProperty===true){
+            }else if(patchValue.listPush){
+                values[vk]=convertToAttr(patchValue.listPush);
+                names[nk]=e;
+                sets.push(`${nk} = list_append(${nk}, ${vk})`);
+            }else if(patchValue.listUnshift){
+                values[vk]=convertToAttr(patchValue.listUnshift);
+                names[nk]=e;
+                sets.push(`${nk} = list_append(${vk}, ${nk})`);
+            }else if(patchValue.removeProperty===true){
                 names[nk]=e;
                 removeProperties.push(`${nk}`);
             }
         }else{
             values[vk]=convertToAttr(patchValue);
             names[nk]=e;
-            sets.push(`${nk} = ${vk}`)
+            sets.push(`${nk} = ${vk}`);
         }
         i++;
     }
