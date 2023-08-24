@@ -1,4 +1,4 @@
-import { EnvParams, createScope, deepCompare, delayAsync, secondMs, shortUuid, wSetProp } from '@iyio/common';
+import { EnvParams, createScope, deepCompare, delayAsync, secondMs, shortUuid, wAryMove, wAryPush, wSetProp } from '@iyio/common';
 import { nodeWsModule } from '@iyio/node-common';
 import { ObjSyncWebsocketClient } from './ObjSyncWebsocketClient';
 
@@ -29,6 +29,35 @@ describe('obj-sync',()=>{
         return props;
     }
 
+    const defaultSameTimeout=1000;
+    let sameTimeout=defaultSameTimeout;
+    let logSameError=true;
+    const expectSameAsync=async (task:string,obj:any,...objs:any[])=>{
+        const start=Date.now();
+        while(true){
+            let diffI:number|undefined;
+            for(let i=0;i<objs.length;i++){
+                if(!deepCompare(obj,objs[i])){
+                    diffI=i;
+                }
+            }
+            if(diffI===undefined){
+                return;
+            }else if((Date.now()-start)>sameTimeout){
+                const msg=`${task} - obj states do not match at objs index ${diffI}`;
+                if(logSameError){
+                    console.error(msg,JSON.stringify({
+                        obj,
+                        ['obj'+diffI]:obj[diffI]
+                    },null,4))
+                }
+                throw new Error(msg);
+            }else{
+                await delayAsync(1);
+            }
+        }
+    }
+
     it('should connect',async ()=>{
 
         const {client}=createClient();
@@ -42,15 +71,26 @@ describe('obj-sync',()=>{
 
     },testTimeout);
 
-    it('should set prop',async ()=>{
+    it('should fail expectSameAsync',async ()=>{
+        sameTimeout=50;
+        logSameError=false;
+        try{
+            await expectSameAsync('fail',{a:1},{b:2});
+            throw new Error('expectSameAsync should have failed')
+        }catch{
+            //
+        }finally{
+            sameTimeout=defaultSameTimeout;
+            logSameError=true;
+        }
+    })
 
-        const {client,state,objId}=await createClientAsync();
-        const {client:clientB,state:stateB,objId:objIdB}=await createClientAsync(objId);
+    it('should stay in sync',async ()=>{
+
+        const {state,objId}=await createClientAsync();
+        const {state:stateB,objId:objIdB}=await createClientAsync(objId);
 
         expect(objId).toBe(objIdB);
-
-        let lastChangeIndex=client.changeIndex;
-        let lastChangeIndexB=clientB.changeIndex;
 
         wSetProp(state,'prop1',77);
         wSetProp(state,'prop2',88);
@@ -60,20 +100,28 @@ describe('obj-sync',()=>{
         expect(state['prop2']).toBe(88);
         expect(state['prop3']).toBe(99);
 
-        while(client.changeIndex===lastChangeIndex || clientB.changeIndex===lastChangeIndexB){
-            await delayAsync(1);
-        }
-
-        lastChangeIndex=client.changeIndex;
-        lastChangeIndexB=clientB.changeIndex;
-
-        expect(deepCompare(state,stateB)).toBe(true);
+        await expectSameAsync('77',state,stateB);
 
 
         const {state:stateC}=await createClientAsync(objId);
 
-
         expect(deepCompare(state,stateC)).toBe(true);
+
+        await expectSameAsync('clientC',state,stateB,stateC);
+
+        const ary:any[]=[1,2,3];
+
+        wSetProp(state,'ary',ary);
+        await expectSameAsync('set ary',state,stateB,stateC);
+
+
+        wAryPush(ary,'a','b','c');
+        await expectSameAsync('ary push',state,stateB,stateC);
+        expect(deepCompare(state['ary'],[1,2,3,'a','b','c']));
+
+        wAryMove(ary,2,4);
+        await expectSameAsync('ary move',state,stateB,stateC);
+        expect(deepCompare(state['ary'],[1,2,'a','b',3,'c']));
     })
 
 })
