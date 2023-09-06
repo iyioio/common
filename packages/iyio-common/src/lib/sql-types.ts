@@ -48,5 +48,19 @@ export interface SqlExecCommand
     noLogResult?:boolean;
 }
 
+export interface SqlMigration
+{
+    name:string;
+
+    /**
+     * An SQL script to upgrade to the migration from the previous migration
+     */
+    up:string;
+
+    /**
+     * An SQL script to downgrade to the migration from the next migration
+     */
+    down:string;
+}
 
 

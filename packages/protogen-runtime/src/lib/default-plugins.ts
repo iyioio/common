@@ -14,6 +14,8 @@ import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
+import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin";
+import { sqlTablePlugin } from "./plugins/sqlTablePlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
 import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
 import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin";
@@ -75,6 +77,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             plugin:tablePlugin
         },
         {
+            name:'sqlTablePlugin',
+            source:'@',
+            paths:[],
+            plugin:sqlTablePlugin
+        },
+        {
             name:'actionPlugin',
             source:'@',
             paths:[],
@@ -133,6 +141,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:assignPlugin
+        },
+        {
+            name:'sqlMigrationsPlugin',
+            source:'@',
+            paths:[],
+            plugin:sqlMigrationsPlugin
         },
         {// should always be the last generator
             name:'autoPackageIndexPlugin',

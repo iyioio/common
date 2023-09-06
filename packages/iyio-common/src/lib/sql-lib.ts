@@ -40,6 +40,8 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
         const v=values[i-1];
         if(isEscapedSqlValue(v)){
             strAry.push(v.value);
+        }else if(v && v.name!==undefined){
+            strAry.push(escapeSqlName(v.name));
         }else{
             strAry.push(escapeSqlValue(v));
         }

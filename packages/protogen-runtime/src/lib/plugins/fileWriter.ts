@@ -9,6 +9,7 @@ export const fileWriter=async (ctx:ProtoContext)=>{
     const {
         log,
         outputs,
+        writtenOutputs,
         dryRun,
     }=ctx;
 
@@ -18,9 +19,11 @@ export const fileWriter=async (ctx:ProtoContext)=>{
 
     for(const output of outputs){
         const name=unrootPath(output.path);
-        if(!name){
+        if(!name || writtenOutputs.includes(output)){
             continue;
         }
+
+        writtenOutputs.push(output);
 
         if(name.includes('/') || name.includes('\\')){
             const dirName=dirname(name);

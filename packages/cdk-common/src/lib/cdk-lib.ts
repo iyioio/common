@@ -1,9 +1,11 @@
 import { asArray, parseConfigBool } from "@iyio/common";
 import * as db from "aws-cdk-lib/aws-dynamodb";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from 'aws-cdk-lib/aws-logs';
+import { Construct } from "constructs";
 import * as Path from "path";
 import { Grantee } from "./cdk-types";
 
@@ -72,4 +74,20 @@ export const addPolicyToGrantee=(
         }
     }
 
+}
+
+/**
+ * Returns the default VPC for the current deployment. You must define the account and region
+ * in the env of the stack in-order to use this function.
+ *
+ * const app = new cdk.App();
+ * new ExampleStack(app, "Example", {
+ *     env:{account:"123456789012",region:"us-east-1"}
+ * })
+ * @param scope
+ * @param name
+ * @returns
+ */
+export const getDefaultVpc=(scope:Construct,name='DefaultVpc')=>{
+    return ec2.Vpc.fromLookup(scope,name,{isDefault:true})
 }

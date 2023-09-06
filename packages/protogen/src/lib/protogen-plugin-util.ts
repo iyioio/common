@@ -1,5 +1,5 @@
 import type { AccessRequestDescription, CommonAccessType, PassiveAccessGrantDescription } from "@iyio/cdk-common";
-import { HashMap, iamPolicyGrantName, joinPaths, strFirstToLower } from "@iyio/common";
+import { HashMap, aryRemoveItem, iamPolicyGrantName, joinPaths, strFirstToLower } from "@iyio/common";
 import { ProtoLibStyle, ProtoParamType } from "./protogen-pipeline-types";
 import { ProtoNode } from "./protogen-types";
 
@@ -14,6 +14,7 @@ export interface ProtoPluginPackagePathIndex extends ProtoPluginPackagePath
      * Full path to index file
      */
     indexFilename:string;
+    removePackage:()=>void;
 }
 
 export interface ProtoPackageIndex
@@ -68,6 +69,7 @@ export const getProtoPluginPackAndPath:getProtoPluginPackAndPathOverloads=(
         protoAddIndexPathToPaths(r.packageName,indexFilename,packageIndex.packagePaths);
 
         r.indexFilename=indexFilename;
+        r.removePackage=()=>protoRemoveIndexPathFromPaths(r.packageName,indexFilename,packageIndex.packagePaths);
     }
 
     return r;
@@ -98,6 +100,18 @@ export const protoAddIndexPathToPaths=(packageName:string,indexPath:string,paths
         ary.push(indexPath);
     }
     return ary;
+}
+
+export const protoRemoveIndexPathFromPaths=(packageName:string,indexPath:string,paths:Record<string,string[]>):boolean=>{
+    const ary=paths[packageName];
+    if(!ary?.includes(indexPath)){
+        return false;
+    }
+    aryRemoveItem(ary,indexPath);
+    if(ary.length===0){
+        delete paths[packageName];
+    }
+    return true;
 }
 
 

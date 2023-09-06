@@ -42,6 +42,7 @@ export interface ProtoOutput
      * file newlines.
      */
     raw?:boolean;
+    metadata?:Record<string|symbol,any>;
 }
 
 export interface ProtoSource
@@ -65,6 +66,11 @@ export interface ProtoContext
     sources:ProtoSource[];
     nodes:ProtoNode[];
     outputs:ProtoOutput[];
+    writtenOutputs:ProtoOutput[];
+    /**
+     * Starts a zero
+     */
+    generationStage:number;
     verbose:boolean;
     tab:string;
     stage:ProtoStage;
@@ -91,6 +97,13 @@ export type ProtoPipelineCallback<TConfig>=(ctx:ProtoContext,config:TConfig,plug
 export interface ProtoPipelineConfigurablePlugin<TConfigScheme extends ZodSchema, TConfig=z.infer<TConfigScheme>>
 {
     configScheme:TConfigScheme;
+    /**
+     * Allows the plugins to be executed in stages. Each stage is written before the next. This
+     * allows the generation of code that depends on other plugins written code.
+     * @default 0
+     */
+    generationStage?:number;
+    setGenerationStage?:(context:ProtoContext,plugins:ProtoPipelinePluginInfo[])=>number;
     beforeAll?:ProtoPipelineCallback<TConfig>;
     beforeEach?:ProtoPipelineCallback<TConfig>;
     stage?:ProtoPipelineCallback<TConfig>;

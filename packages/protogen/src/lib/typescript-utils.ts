@@ -78,7 +78,7 @@ export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerato
     const root=generator.root.endsWith('/')?generator.root:generator.root+'/';
 
     for(const o of ctx.outputs){
-        if(o===indexOutput || !o.path.startsWith(root)){
+        if(o===indexOutput || !o.path.startsWith(root) || !/.*.tsx?$/i.test(o.path)){
             continue;
         }
 

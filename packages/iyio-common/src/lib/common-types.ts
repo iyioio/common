@@ -104,3 +104,11 @@ export type EmptyFunction=()=>void;
 export type AnyFunction=(...args:any[])=>any;
 
 export type Side='left'|'right'|'top'|'bottom';
+
+export interface AliasRecord<T=any>
+{
+    default:T;
+    all:T[];
+}
+
+export type AliasLookup<T>=Record<string,AliasRecord<T>>;

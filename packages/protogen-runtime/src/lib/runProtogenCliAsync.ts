@@ -52,6 +52,8 @@ export const runProtogenCliAsync=async ({
                 sources:[],
                 nodes:[],
                 outputs:[],
+                writtenOutputs:[],
+                generationStage:0,
                 dataOutputs:{},
                 verbose,
                 namespace,

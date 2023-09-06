@@ -18,10 +18,13 @@ export const executeTGenPipelineAsync=async ({
 
     const runPluginsAsync=async (stage:ProtoStage)=>{
         context.stage=stage;
-        log(`\n## Stage ${stage}`);
+        log(`\n## Stage ${stage}${stage==='generate'?` gen ${context.generationStage}`:''}`);
 
         for(const info of plugins){
             const plugin=info.plugin;
+            if(stage==='generate' && (plugin.generationStage??0)!==context.generationStage){
+                continue;
+            }
             if(plugin.beforeEach){
                 log(`beforeEach ${info.source}:${info.name}`);
                 await plugin.beforeEach(context,getConfig(context,plugin),info);
@@ -53,19 +56,30 @@ export const executeTGenPipelineAsync=async ({
     await runPluginsAsync('input');
     await runPluginsAsync('preprocess');
     await runPluginsAsync('parse');
-    await runPluginsAsync('generate');
 
-    if(context.autoIndexPackages){
-        for(let i=0;i<context.outputs.length;i++){
-            const out=context.outputs[i];
-            if(out && out.isPackageIndex && !out.isAutoPackageIndex){
-                context.outputs.splice(i,1);
-                i--;
-            }
+    for(const plugin of plugins){
+        if(plugin.plugin.setGenerationStage){
+            plugin.plugin.generationStage=plugin.plugin.setGenerationStage(context,plugins);
         }
     }
 
-    await runPluginsAsync('output');
+    while(plugins.some(p=>(p.plugin.generationStage??0)>=context.generationStage)){
+        await runPluginsAsync('generate');
+
+        if(context.autoIndexPackages){
+            for(let i=0;i<context.outputs.length;i++){
+                const out=context.outputs[i];
+                if(out && out.isPackageIndex && !out.isAutoPackageIndex){
+                    context.outputs.splice(i,1);
+                    i--;
+                }
+            }
+        }
+
+        await runPluginsAsync('output');
+
+        context.generationStage++;
+    }
 
 
     for(const info of plugins){

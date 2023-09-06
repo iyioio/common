@@ -15,6 +15,17 @@ const AutoPackageIndexPluginConfig=z.object(
 export const autoPackageIndexPlugin:ProtoPipelineConfigurablePlugin<typeof AutoPackageIndexPluginConfig>=
 {
     configScheme:AutoPackageIndexPluginConfig,
+
+    setGenerationStage:(context,plugins)=>{
+        let s=0;
+        for(const p of plugins){
+            if((p.plugin.generationStage??0)>s){
+                s=p.plugin.generationStage??0;
+            }
+        }
+        return s;
+    },
+
     generate:async ({
         outputs,
         packagePaths,

@@ -167,7 +167,6 @@ export const fnHandler=async ({
             return result;
         }
     }catch(ex){
-        console.log('hio 👋 👋 👋',{ex});
         let logError=true;
         let code=500;
         let message='Internal server error';

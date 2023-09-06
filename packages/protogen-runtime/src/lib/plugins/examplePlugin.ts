@@ -2,8 +2,6 @@ import { joinPaths } from "@iyio/common";
 import { getProtoPluginPackAndPath, protoFormatTsComment, protoGenerateTsIndex, protoIsTsBuiltType, ProtoPipelineConfigurablePlugin, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
 
-const supportedTypes=['example'];
-
 const ExamplePluginConfig=z.object(
 {
     /**
@@ -48,7 +46,7 @@ export const examplePlugin:ProtoPipelineConfigurablePlugin<typeof ExamplePluginC
             {packagePaths,indexFilename:exampleIndexFilename}
         );
 
-        const supported=nodes.filter(n=>supportedTypes.includes(n.type));
+        const supported=nodes.filter(node=>node.types.some(t=>t.type==='example'));
 
         log(`${supported.length} supported node(s)`);
         if(!supported.length){

@@ -1,5 +1,5 @@
-import { asArray, getObjKeyCount, joinPaths } from "@iyio/common";
-import { ProtoNode, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
+import { AliasLookup, asArray, getObjKeyCount, joinPaths } from "@iyio/common";
+import { ProtoNode, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
 import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
 
@@ -32,7 +32,7 @@ const ZodPluginConfig=z.object(
     /**
      * A comma separated list of properties that should be converted as long strings.
      */
-    zodLongStringProps:z.string().optional(),
+    longStringProps:z.string().optional(),
 
 }).merge(SharedTsPluginConfigScheme);
 
@@ -54,7 +54,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         zodPackage='types',
         zodIndexFilename='types-index.ts',
         zodPath,
-        zodLongStringProps,
+        longStringProps,
         ...tsConfig
     })=>{
 
@@ -66,7 +66,7 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
             {packagePaths,indexFilename:zodIndexFilename}
         );
 
-        const autoLong=zodLongStringProps?zodLongStringProps.split(',').map(s=>s.trim()):[];
+        const autoLong=longStringProps?longStringProps.split(',').map(s=>s.trim()):[];
 
         log(`zodPlugin. node count = ${nodes.length}`)
 
@@ -81,54 +81,78 @@ export const zodPlugin:ProtoPipelineConfigurablePlugin<typeof ZodPluginConfig>=
         out.push(`import { z } from 'zod';`);
 
         for(const node of nodes){
+            let anyAdded=false;
+            for(const nodeType of node.types){
 
-            let added=true;
-            let nodeName=node.name;
+                let added=true;
+                let nodeName=node.name;
 
-            switch(node.type){
+                switch(nodeType.type){
 
-                case 'union':
-                    addUnion(node,out,tab,getFullName);
-                    break;
+                    case 'union':
+                        addUnion(node,out,tab,getFullName);
+                        break;
 
-                case 'enum':
-                    addEnum(node,out,tab,getFullName);
-                    break;
+                    case 'enum':
+                        addEnum(node,out,tab,getFullName);
+                        break;
 
-                case 'function':
-                    nodeName=node.name+'FunctionArgs';
-                    addInterface({...node.children?.['args']??{
-                        name:'args',
-                        type:'',
-                        address:'',
-                        types:[]
-                    },name:nodeName},out,tab,autoLong,getFullName,useCustomTypes);
-                    break;
+                    case 'array':
+                        nodeName=addArray(node,out,tab);
+                        break;
 
-                case 'serverFn':
-                    nodeName='invoke'+node.name+'FunctionArgs';
-                    addInterface({...node,name:nodeName},out,tab,autoLong,getFullName,useCustomTypes,prop=>prop.name==='input');
-                    break;
+                    case 'map':
+                        nodeName=addMap(node,out,tab);
+                        break;
 
-                case 'entity':
-                case 'struct':
-                case 'interface':
-                case 'class':
-                case 'event':
-                case 'type':
-                    addInterface(node,out,tab,autoLong,getFullName,useCustomTypes);
-                    break;
+                    case 'function':
+                        nodeName=node.name+'FunctionArgs';
+                        addInterface({...node.children?.['args']??{
+                            name:'args',
+                            type:'',
+                            address:'',
+                            types:[]
+                        },name:nodeName},out,tab,autoLong,getFullName,useCustomTypes);
+                        break;
 
-                default:
-                    added=false;
-                    break;
+                    case 'serverFn':
+                        nodeName='invoke'+node.name+'FunctionArgs';
+                        addInterface({...node,name:nodeName},out,tab,autoLong,getFullName,useCustomTypes,prop=>prop.name==='input');
+                        break;
+
+                    case 'entity':
+                    case 'struct':
+                    case 'interface':
+                    case 'class':
+                    case 'event':
+                    case 'type':
+                        addInterface(node,out,tab,autoLong,getFullName,useCustomTypes);
+                        break;
+
+                    default:
+                        added=false;
+                        break;
+                }
+
+                if(added){
+                    anyAdded=true;
+                    if(importMap[nodeName]===packageName){
+                        throw new Error(`Export conflict. ${nodeName} already exported from ${packageName}`);
+                    }
+                    importMap[nodeName]=packageName;
+                    const fullName=getFullName(nodeName);
+                    if(fullName!==nodeName){
+                        importMap[fullName]=packageName;
+                    }
+                }
             }
 
-            if(added){
-                importMap[nodeName]=packageName;
-                const fullName=getFullName(nodeName);
-                if(fullName!==nodeName){
-                    importMap[fullName]=packageName;
+            if(anyAdded){
+                const names=addAlias(node,out,tab);
+                if(names){
+                    for(const name of names){
+                        importMap[name]=packageName;
+                    }
                 }
             }
 
@@ -198,6 +222,98 @@ const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)
 
     out.push(`]);`);
     out.push(`export type ${node.name}=z.infer<typeof ${fullName}>;`);
+}
+
+const addAlias=(node:ProtoNode,out:string[],tab:string)=>{
+
+    let hasAlias=false;
+    const toAlias:AliasLookup<string>={};
+    const fromAlias:AliasLookup<string>={};
+    const aliasList:string[]=[];
+
+    if(node.children){
+        for(const name in node.children){
+            const child=node.children[name];
+            if(child.isContent || child.special){
+                continue;
+            }
+
+            const aliases=protoGetChildrenByName(child,'alias',false);
+            if(aliases.length){
+                hasAlias=true;
+                for(const a of aliases){
+
+                    const alias=a.value??'';
+                    if(aliasList.includes(alias)){
+                        throw new Error(`Alias (${alias}) already included for type (${node.name})`);
+                    }
+                    aliasList.push(alias);
+                    let record=toAlias[child.name];
+                    if(!record){
+                        record={default:alias,all:[]}
+                        toAlias[child.name]=record;
+                    }
+                    record.all.push(alias);
+
+                    record=fromAlias[alias];
+                    if(!record){
+                        record={default:child.name,all:[]}
+                        fromAlias[alias]=record;
+                    }
+                    record.all.push(child.name);
+                }
+            }
+        }
+    }
+
+    if(hasAlias){
+        out.push(`export const ${node.name}ToAlias=${JSON.stringify(toAlias,null,tab)}`);
+        out.push(`export const ${node.name}FromAlias=${JSON.stringify(fromAlias,null,tab)}`);
+        return [`${node.name}ToAlias`,`${node.name}FromAlias`]
+    }
+
+    return null;
+
+}
+
+const addArray=(node:ProtoNode,out:string[],tab:string)=>{
+
+
+    out.push('');
+    out.push(`export const ${node.name}Ary=[`);
+
+    if(node.children){
+        for(const name in node.children){
+            const child=node.children[name];
+            if(child.isContent || child.special){
+                continue;
+            }
+            out.push(`${tab}${JSON.stringify(child.name)},`);
+        }
+    }
+
+    out.push(`];`);
+    return node.name+'Ary';
+}
+
+const addMap=(node:ProtoNode,out:string[],tab:string)=>{
+
+
+    out.push('');
+    out.push(`export const ${node.name}Map={`);
+
+    if(node.children){
+        for(const name in node.children){
+            const child=node.children[name];
+            if(child.isContent || child.special){
+                continue;
+            }
+            out.push(`${tab}${JSON.stringify(child.name)}:${JSON.stringify(child.value||child.name)},`);
+        }
+    }
+
+    out.push(`};`);
+    return node.name+'Map';
 }
 
 const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],getFullName:(name:string)=>string,useCustomTypes:CustomBuiltInsType[],propFilter?:(prop:ProtoNode)=>boolean)=>{

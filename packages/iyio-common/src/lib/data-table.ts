@@ -22,6 +22,7 @@ export interface DataTableDescription<T=any>
     ttlProp?:string;
     updateVersionProp?:string;
     scheme?:ZodSchema;
+    tableType?:string;
 }
 
 export interface DataTableIndex
