@@ -45,6 +45,7 @@ export * from './lib/clipboard';
 export * from './lib/common-lib';
 export * from './lib/common-params';
 export * from './lib/common-types';
+export * from './lib/console';
 export * from './lib/crypto-bytes';
 export * from './lib/crypto-bytes-types';
 export * from './lib/crypto-bytes.deps';
