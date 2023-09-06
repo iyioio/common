@@ -1,6 +1,6 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam } from '@iyio/common';
+import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, sql } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
@@ -139,6 +139,26 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
         }
 
         return result;
+    }
+
+    /**
+     * Wakes update the database by running a select query
+     * @param timeoutMs If null wakeDatabaseAsync will wait indefinitely.
+     * @param delayMs Number of milliseconds to wait between wait attempts. default = 5 minutes
+     */
+    public async wakeDatabaseAsync(timeoutMs:number|null=minuteMs*5,delayMs=100):Promise<void>{
+        const start=Date.now();
+        while(true){
+            try{
+                await this.execAsync(sql`select ${'wake-up'} as ${{name:'action'}}`,true);
+                return;
+            }catch{
+                await delayAsync(delayMs);
+            }
+            if(timeoutMs!==null && (Date.now()-start)>timeoutMs){
+                throw new Error('Wake database timeout');
+            }
+        }
     }
 
 
