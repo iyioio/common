@@ -14,6 +14,12 @@ export interface ProtoTypeInfo
 {
     type:string;
     isArray?:boolean;
+
+    /**
+     * If defined the type is a map or Record<mapType,type>
+     */
+    mapType?:string;
+
     path:string[];
     isRefType?:boolean;
     /**

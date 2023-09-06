@@ -339,6 +339,8 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],get
 
             const propType=protoTsTypeMap[prop.type]??prop.type??'string';
             const isBuiltIn=isBuiltInType(propType);
+            const isStringRecord=prop.types[0]?.mapType==='string';
+            const isArray=prop.types[0]?.isArray;
 
             if(!isBuiltIn){
                 interfaceProps.push(`${
@@ -350,9 +352,9 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],get
                     }${
                         prop.optional?'?':''
                     }:${
-                        propType
+                        isStringRecord?`Record<${prop.types[0]?.mapType},${propType}>`:propType
                     }${
-                        prop.types[0]?.isArray?'[]':''
+                        isArray?'[]':''
                     };`
                 );
                 lazyProps.push(`${
@@ -360,9 +362,11 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],get
                     }${
                         prop.name
                     }:z.lazy(()=>${
-                        getFullName(propType)
+                        isStringRecord?
+                            `z.record(${getFullName(propType)})`:
+                            getFullName(propType)
                     })${
-                        prop.types[0]?.isArray?'.array()':''
+                        isArray?'.array()':''
                     }${getFormatCalls(prop,propType,autoLong)}${
                         prop.optional?'.optional()':''
                     },`
@@ -382,9 +386,12 @@ const addInterface=(node:ProtoNode,out:string[],tab:string,autoLong:string[],get
                 }${
                     prop.name
                 }:${
-                    customType||`z.${propType}()${getFormatCalls(prop,propType,autoLong)}`
+                    customType||(isStringRecord?
+                        `z.record(z.${propType}()${getFormatCalls(prop,propType,autoLong)})`:
+                        `z.${propType}()${getFormatCalls(prop,propType,autoLong)}`
+                    )
                 }${
-                    prop.types[0]?.isArray?'.array()':''
+                    isArray?'.array()':''
                 }${
                     prop.optional?'.optional()':''
                 },`

@@ -234,10 +234,11 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
         }
 
         const path=nameMatch.split('.');
-        const isArray=path[0].includes('[]');
+        const isArray=/\[\s*\]/.test(path[0]);
+        const mapTypeMatch=/\[\s*(\w+)\s*\]/.exec(path[0]);
         for(let i=0;i<path.length;i++){
-            if(path[i].includes('[]')){
-                path[i]=path[i].replace(/\[\]/g,'');
+            if(path[i].includes('[')){
+                path[i]=path[i].replace(/\[[\s\w]*]/g,'');
             }
         }
 
@@ -259,6 +260,9 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
         types.push(type);
         if(isArray){
             type.isArray=true;
+        }
+        if(mapTypeMatch?.[1]){
+            type.mapType=mapTypeMatch[1];
         }
         if(flags){
             if(flags.includes('*')){

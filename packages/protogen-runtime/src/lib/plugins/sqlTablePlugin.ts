@@ -182,7 +182,7 @@ const sqlTypeMap:Record<string,string>={
 }
 
 const getSqlType=(node:ProtoNode):string|undefined=>{
-    return sqlTypeMap[node.type];
+    return node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
 }
 
 const getSqlMaxLength=(node:ProtoNode,longProps:string[]):number|null=>{
