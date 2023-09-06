@@ -14,7 +14,7 @@ export interface AiCompletionRequest
 
 export interface AiCompletionMessage
 {
-    role?:'system'|'user'|'assistant';
+    role?:'system'|'user'|'assistant'|'function';
     content:string;
     name?:string;
 }
