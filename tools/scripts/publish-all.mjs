@@ -8,7 +8,7 @@ import { enumProjects } from './enum-projects.mjs';
 const dryRun=process.argv.includes('--dry-run');
 
 let includeProjects=null;
-for(let i=2;i<process.argv;i++){
+for(let i=2;i<process.argv.length;i++){
     if(process.argv[i]==='--include'){
         if(!includeProjects){
             includeProjects=[];
