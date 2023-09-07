@@ -31,7 +31,7 @@ const objSyncSocketDefault=async (
                 break;
 
             case 'get':
-                await sendStateToClientAsync(cmd.objId,cmd.clientId,fnEvt.connectionId);
+                await sendStateToClientAsync(cmd.objId,cmd.clientId,fnEvt.connectionId,cmd.defaultState);
                 break;
 
             case 'evt':

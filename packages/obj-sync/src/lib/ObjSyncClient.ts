@@ -1,4 +1,4 @@
-import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, createPromiseSource, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, createPromiseSource, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
 import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
 
@@ -26,7 +26,7 @@ export abstract class ObjSyncClient
 
     public readonly state:Record<string,any>;
 
-    private readonly watcher:ObjWatcher<any>;
+    public readonly watcher:ObjWatcher<any>;
 
     private readonly mirror:ObjMirror;
 
@@ -81,7 +81,7 @@ export abstract class ObjSyncClient
     }
 
     private onWatcherEvent=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>{
-        if(evt.source===objEvtSource || this._isDisposed){
+        if(evt[objWatchEvtSourceKey]===objEvtSource || evt.type==='load' || this._isDisposed){
             return;
         }
         const rEvt=objWatchEvtToRecursiveObjWatchEvt(evt,path) as ObjSyncRecursiveObjWatchEvt;
@@ -136,23 +136,23 @@ export abstract class ObjSyncClient
 
     private connectPromise:Promise<void>|null=null;
 
-    public async connectAsync()
+    public async connectAsync(connectWithDefaultState?:boolean)
     {
         if(this._isDisposed){
             return;
         }
 
         if(!this.connectPromise){
-            this.connectPromise=this.connectInitAsync();
+            this.connectPromise=this.connectInitAsync(connectWithDefaultState);
         }
         await this.connectPromise;
         await this.readySource.promise;
     }
 
-    private async connectInitAsync()
+    private async connectInitAsync(connectWithDefaultState?:boolean)
     {
         await this._connectAsync();
-        this.send([{type:'createClient'},{type:'get'}])
+        this.send([{type:'createClient'},{type:'get',defaultState:connectWithDefaultState?this.state:undefined}])
     }
 
     protected abstract _connectAsync():Promise<void>;
@@ -297,7 +297,7 @@ export abstract class ObjSyncClient
                         return;
                     }
                     this._changeIndex=command.changeIndex;
-                    this.setState(command.state.state,command.state.log as RecursiveObjWatchEvt<any>[]);
+                    this.setStateWithLogs(command.state.state,command.state.log as RecursiveObjWatchEvt<any>[]);
                 }
                 break;
 
@@ -309,15 +309,20 @@ export abstract class ObjSyncClient
         }
     }
 
-    private setState(obj:Record<string,any>,log:RecursiveObjWatchEvt<any>[])
+    public setState(obj:Record<string,any>)
+    {
+        this.setStateWithLogs(obj,[]);
+    }
+
+    private setStateWithLogs(obj:Record<string,any>,log:RecursiveObjWatchEvt<any>[])
     {
         this.watcher.requestQueueChanges();
         try{
             for(const e in this.state){
-                this.watcher.deleteProp(e,this);
+                this.watcher.deleteProp(e,objEvtSource);
             }
             for(const e in obj){
-                this.watcher.setProp(e,obj[e],this);
+                this.watcher.setProp(e,obj[e],objEvtSource);
             }
             for(const e of log){
                 this.mirror.handleEvent(e,objEvtSource);
@@ -332,7 +337,7 @@ export abstract class ObjSyncClient
         this.watcher.requestQueueChanges();
         try{
             for(const e in this.state){
-                this.watcher.deleteProp(e,this);
+                this.watcher.deleteProp(e,objEvtSource);
             }
         }finally{
             this.watcher.requestDequeueChanges();

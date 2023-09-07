@@ -10,11 +10,13 @@ export type RecursiveObjWatchEvt<T>=ObjWatchEvt<T> & {
     path?:(string|number|null)[];
 }
 
+export const objWatchEvtSourceKey=Symbol('objWatchEvtSourceKey')
+
 export type ObjWatchEvt<T>={
     /**
      * Can be used to specify the source of the event
      */
-    source?:any;
+    [objWatchEvtSourceKey]?:any;
 } & (
     {
         type:'set';
@@ -113,4 +115,11 @@ export type ObjWatchListener<T=any>=(obj:T,evt:ObjWatchEvt<T>)=>void;
  * The path param is mutated as the change event moves between watchers. If a reference to the
  * path is needed after the return of the callback make sure to make a copy.
  */
-export type ObjRecursiveListener=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>void;
+export type ObjRecursiveListener<T=any>=(obj:T,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>void;
+
+export interface WatchedPath
+{
+    listener:ObjRecursiveListener;
+    path:(string|number)[];
+    dispose:()=>void;
+}

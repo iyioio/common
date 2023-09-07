@@ -170,6 +170,7 @@ export const getNextEmptyAlphaKey=(obj:HashMap):string=>
     let post='';
     let key=alpha[0];
     let i=0;
+    // eslint-disable-next-line no-constant-condition
     while(true){
         if(obj[key+post]===undefined){
             return key+post;
@@ -318,13 +319,13 @@ const _mergeObjs=(
 
 }
 
-export const mergeObjs=(a:any,b:any, aryMerge?:MergeArrayOptions, maxDepth:number=1000):any=>
+export const mergeObjs=(a:any,b:any, aryMerge?:MergeArrayOptions, maxDepth=1000):any=>
 {
     return _mergeObjs(a,b,maxDepth,0,undefined,aryMerge)
 }
 
 
-export const mergeObjAry=(ary:any[], aryMerge?:MergeArrayOptions, maxDepth:number=1000):any=>
+export const mergeObjAry=(ary:any[], aryMerge?:MergeArrayOptions, maxDepth=1000):any=>
 {
 
     let m:any={};

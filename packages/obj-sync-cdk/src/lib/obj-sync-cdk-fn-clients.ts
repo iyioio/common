@@ -8,7 +8,7 @@ export const invokeObjSyncCreateDefaultStateFn=async (input:ObjSyncRemoteCommand
         return ObjSyncObjStateScheme.parse({
             objId:input.objId,
             changeIndex:0,
-            state:{},
+            state:input.defaultState??{},
             log:[]
         });
     }

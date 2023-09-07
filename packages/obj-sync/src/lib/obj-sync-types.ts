@@ -51,7 +51,6 @@ export const ObjSyncRecursiveObjWatchEvtScheme=z.object({
     index:z.number().int(),
     deleteCount:z.number().int().optional(),
     values:z.any().array().optional(),
-
 })).or(z.object({
     type:z.literal('aryMove'),
     fromIndex:z.number().int(),
@@ -67,7 +66,7 @@ export const ObjSyncRecursiveObjWatchEvtScheme=z.object({
     type:z.literal('load'),
     prop:z.string().optional(),
 })).and(z.object({
-    path:z.string().or(z.number().int()).or(z.null()).optional()
+    path:z.array(z.string().or(z.number().int()).or(z.null())).optional()
 }))
 
 export type ObjSyncRecursiveObjWatchEvt=z.infer<typeof ObjSyncRecursiveObjWatchEvtScheme>;
@@ -107,6 +106,12 @@ export const ObjSyncRemoteCommandScheme=z.object({
     objId:z.string(),
 
     evts:z.optional(z.array(ObjSyncRecursiveObjWatchEvtScheme)),
+
+    /**
+     * When used with a get request the supplied object will be used as the default state if
+     * not yet defined
+     */
+    defaultState:z.optional(z.record(z.string(),z.any())),
 })
 
 export type ObjSyncRemoteCommand=z.infer<typeof ObjSyncRemoteCommandScheme>;

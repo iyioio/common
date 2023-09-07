@@ -1,6 +1,6 @@
-import { ObjWatcher } from "./ObjWatcher";
+import { ObjWatcher, Watchable } from "./ObjWatcher";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt } from "./obj-watch-types";
+import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
 import { deepClone } from "./object";
 
 const watcherProp=Symbol('watcher');
@@ -8,11 +8,11 @@ const watcherProp=Symbol('watcher');
 /**
  * Gets or creates a object watcher for the given object and increments the watchers ref count
  */
-export const watchObj=<T>(obj:T):ObjWatcher<T>|undefined=>{
+export const watchObj=<T extends Watchable>(obj:T):ObjWatcher<T>=>{
 
     const watcher=getObjWatcher(obj,true);
     if(!watcher){
-        return undefined;
+        throw new Error('Unable to create object watcher for obj');
     }
     watcher.refCount++;
 
@@ -59,6 +59,10 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
     return watcher;
 
+}
+
+export const watchObjAtPath=<T extends Watchable>(obj:T,path:(string|number)[],listener:(value:any)=>void):WatchedPath=>{
+    return watchObj(obj).addPathListener(path,listener);
 }
 
 export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
@@ -215,7 +219,7 @@ export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:an
             type:'event',
             eventType:type,
             eventValue:value,
-            source
+            [objWatchEvtSourceKey]:source
         })
     }
 
@@ -232,7 +236,7 @@ export const wTriggerChange=<T>(obj:T|null|undefined,source?:any):void=>{
     if(watcher){
         watcher.triggerChange({
             type:'change',
-            source,
+            [objWatchEvtSourceKey]:source,
         })
     }
 
@@ -250,7 +254,7 @@ export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T,source?:any):vo
         watcher.triggerChange({
             type:'load',
             prop,
-            source
+            [objWatchEvtSourceKey]:source
         })
     }
 
@@ -272,7 +276,11 @@ export const isWatcherValueChangeEvent=(type:ObjWatchEvtType):boolean=>{
 }
 
 export const objWatchEvtToRecursiveObjWatchEvt=(evt:ObjWatchEvt<any>,path?:(string|number|null)[])=>{
+    const source=evt[objWatchEvtSourceKey];
     evt=deepClone(evt);
+    if(source!==undefined){
+        evt[objWatchEvtSourceKey]=source;
+    }
     if(path){
         path=[...path];
         path.shift();

@@ -1,7 +1,8 @@
-import { DisposeCallback } from "./common-types";
+import { DisposeCallback, RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
 import { getObjWatcher, stopWatchingObj } from "./obj-watch-lib";
-import { ObjRecursiveListener, ObjWatchEvt, ObjWatchListener } from "./obj-watch-types";
+import { ObjRecursiveListener, ObjWatchEvt, ObjWatchListener, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
+import { getValueByAryPath } from "./object";
 
 
 let nextId=1;
@@ -11,6 +12,8 @@ interface ObjAncestor
     watcher:ObjWatcher<any>;
     key:string|number;
 }
+
+export type Watchable=Record<string,any>|any[];
 
 export class ObjWatcher<
     T,
@@ -141,6 +144,53 @@ export class ObjWatcher<
             }
         }
         return false;
+    }
+
+    /**
+     * Adds a recursive listener that is only triggered when a change to the targed path occurs.
+     * Changes to the path of the returned WatchedPath object can be made without issue
+     */
+    public addPathListener(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void):WatchedPath
+    {
+
+        if(typeof path === 'string'){
+            path=path.split('.');
+        }
+
+        const watchedPath:WatchedPath={
+            path,
+            listener:(obj,evt,evtPath)=>{
+                if(!evtPath.length || evtPath.length>path.length){
+                    return;
+                }
+                for(let i=0;i<evtPath.length;i++){
+                    if(evtPath[evtPath.length-1-i]!==path[i]){
+                        return;
+                    }
+                }
+                onChange(getValueByAryPath(this.obj,path as (string|number)[]));
+            },
+            dispose:()=>{
+                this.removeRecursiveListener(watchedPath.listener);
+            }
+        }
+        this.addRecursiveListener(watchedPath.listener);
+        return watchedPath;
+    }
+
+    /**
+     * Functions the same as addPathListener with the excpetion that onChange is immediately called
+     */
+    public watchPath(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void,skipInitCall=false):WatchedPath
+    {
+        const watchedPath=this.addPathListener(path,onChange);
+
+        if(!skipInitCall){
+            const value=getValueByAryPath(this.obj,watchedPath.path);
+            onChange(value);
+        }
+
+        return watchedPath;
     }
 
     /**
@@ -328,7 +378,7 @@ export class ObjWatcher<
             type:'set',
             prop,
             value,
-            source
+            [objWatchEvtSourceKey]:source
         })
         return value;
     }
@@ -341,7 +391,7 @@ export class ObjWatcher<
         this.triggerChange({
             type:'delete',
             prop,
-            source
+            [objWatchEvtSourceKey]:source
         })
     }
     public aryPush(...values:TArrayValue[]):void{
@@ -363,7 +413,7 @@ export class ObjWatcher<
             type:'aryChange',
             index,
             values:values as any,
-            source
+            [objWatchEvtSourceKey]:source
         })
     }
 
@@ -390,7 +440,7 @@ export class ObjWatcher<
             type:'aryChange',
             index:index,
             deleteCount,
-            source
+            [objWatchEvtSourceKey]:source
         })
         return true;
     }
@@ -428,7 +478,7 @@ export class ObjWatcher<
             index:index,
             deleteCount,
             values:values as any,
-            source
+            [objWatchEvtSourceKey]:source
         })
         return true;
     }
@@ -446,7 +496,7 @@ export class ObjWatcher<
             fromIndex,
             toIndex,
             count,
-            source
+            [objWatchEvtSourceKey]:source
         })
         return true;
     }

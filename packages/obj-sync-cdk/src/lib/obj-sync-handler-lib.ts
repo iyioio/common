@@ -1,9 +1,9 @@
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 import { cognitoBackendAuthProviderModule } from "@iyio/aws-credential-providers";
 import { createUpdateExpression, dynamoClient } from "@iyio/aws-dynamo";
-import { EnvParams, ScopeModule, initRootScope, unused } from "@iyio/common";
+import { EnvParams, ObjMirror, ScopeModule, initRootScope, unused } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
-import { ObjSyncClientCommand, ObjSyncClientConnection, ObjSyncConnectionTable, ObjSyncObjState, ObjSyncObjStateTable, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand } from "@iyio/obj-sync";
+import { ObjSyncClientCommand, ObjSyncClientConnection, ObjSyncConnectionTable, ObjSyncObjState, ObjSyncObjStateTable, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, objSyncAutoMergeLogLengthParam } from "@iyio/obj-sync";
 import { invokeObjSyncCreateDefaultStateFn, invokeObjSyncTransformClientConnectionFn } from "./obj-sync-cdk-fn-clients";
 
 let _apiClient:ApiGatewayManagementApiClient|null=null;
@@ -50,7 +50,12 @@ export const createClientConnectionAsync=async (cmd:ObjSyncRemoteCommand,socketI
     return client;
 }
 
-export const sendStateToClientAsync=async (objId:string,clientId:string,connectionId:string)=>{
+export const sendStateToClientAsync=async (
+    objId:string,
+    clientId:string,
+    connectionId:string,
+    defaultState?:Record<string,any>
+)=>{
 
     const [
         client,
@@ -76,6 +81,7 @@ export const sendStateToClientAsync=async (objId:string,clientId:string,connecti
             type:'get',
             objId,
             clientId,
+            defaultState
         });
 
         if(!state){
@@ -132,6 +138,7 @@ export const queueSyncEvtAsync=async (
     verifyWriteAccess();
 
     let changeIndex:number|undefined;
+    let logLength:number|undefined;
 
     await dynamoClient().patchTableItem(ObjSyncObjStateTable,{
         objId,
@@ -139,8 +146,8 @@ export const queueSyncEvtAsync=async (
         log:createUpdateExpression({listPush:evts}),
     },{
         handleReturnedValues:updated=>{
-            console.log('hio 👋 👋 👋 updated props',{updated});
             changeIndex=updated?.changeIndex;
+            logLength=updated?.log?.length;
         }
     })
 
@@ -160,7 +167,7 @@ export const queueSyncEvtAsync=async (
         //todo - trigger function to send update to remaining clients
     }
 
-    await Promise.all(clients.items.map(async client=>{
+    const promises:Promise<any>[]=clients.items.map(async client=>{
         try{
             await sendData<ObjSyncClientCommand>(client.socketId,{
                 changeIndex:changeIndex??0,
@@ -171,6 +178,61 @@ export const queueSyncEvtAsync=async (
             })
         }catch(ex){
             console.error('Unable to send message to client',{objId,clientId:client.clientId});
+            await dynamoClient().deleteFromTableAsync(
+                ObjSyncConnectionTable,
+                {clientId:client.clientId}
+            )
         }
-    }))
+    })
+
+    if(logLength && logLength>=objSyncAutoMergeLogLengthParam()){
+        promises.push(safeMergeLogIntoStateAsync(objId,changeIndex))
+    }
+
+    await Promise.all(promises);
+}
+
+const safeMergeLogIntoStateAsync=async (objId:string,changeIndex?:number):Promise<boolean>=>{
+    try{
+        return await mergeLogIntoStateAsync(objId,changeIndex);
+    }catch(ex){
+        console.error(`Merge log into state failed. objId:${objId}`,ex);
+        return false;
+    }
+}
+
+/**
+ * Merges the change events in the log of a ObjSyncObjState in the it's state. This function should
+ * be periodically call for ObjSyncObjState objects as their logs grow.
+ * @param objId Id of the obj to merge
+ * @param changeIndex If defined the object must have a matching change index in-order for the
+ *                    merge to be committed
+ * @returns true if the merge was committed
+ */
+const mergeLogIntoStateAsync=async (objId:string,changeIndex?:number):Promise<boolean>=>{
+    const obj=await dynamoClient().getFromTableAsync(
+        ObjSyncObjStateTable,
+        {objId}
+    )
+
+    if(!obj?.state || (changeIndex!==undefined && changeIndex!==obj.changeIndex)){
+        return false;
+    }
+
+    if(!obj.log?.length){
+        return true;
+    }
+
+    const mirror=new ObjMirror(obj.state);
+    mirror.handleEvents(obj.log as any);
+
+    return await dynamoClient().patchTableItem(ObjSyncObjStateTable,{
+        objId,
+        log:[],
+        state:obj.state,
+    },{
+        matchCondition:changeIndex===undefined?undefined:{
+            changeIndex
+        }
+    })
 }

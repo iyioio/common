@@ -53,6 +53,7 @@ export type UiRouterEvt=
      */
     index:number;
     cancel:boolean;
+    data?:Record<string|symbol,any>;
 } & (
     {
         type:'push';

@@ -1,13 +1,8 @@
-import { Observable, Subject } from 'rxjs';
 import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
 import { ObjWatchEvt, RecursiveObjWatchEvt } from "./obj-watch-types";
 import { getValueByAryPath } from './object';
 
 export class ObjMirror{
-
-    private readonly _onOutOfSync=new Subject<RecursiveObjWatchEvt<any>>();
-    public get onOutOfSync():Observable<RecursiveObjWatchEvt<any>>{return this._onOutOfSync}
-
 
     public readonly obj:any;
 
@@ -19,6 +14,13 @@ export class ObjMirror{
 
     public readonly recursiveCallback=(obj:any,evt:ObjWatchEvt<any>,path?:(string|number|null)[])=>{
         this.handleEvent(objWatchEvtToRecursiveObjWatchEvt(evt,path));
+    }
+
+    public handleEvents(evts:RecursiveObjWatchEvt<any>[],source?:any)
+    {
+        for(const evt of evts){
+            this.handleEvent(evt,source);
+        }
     }
 
     public handleEvent(evt:RecursiveObjWatchEvt<any>,source?:any)
