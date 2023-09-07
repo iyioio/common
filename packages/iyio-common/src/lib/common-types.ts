@@ -112,3 +112,11 @@ export interface AliasRecord<T=any>
 }
 
 export type AliasLookup<T>=Record<string,AliasRecord<T>>;
+
+export type RecursiveKeyOf<T>={
+    [TKey in keyof Required<T> & (string|number)]:
+        Required<T>[TKey] extends any[]?`${TKey}`:
+        Required<T>[TKey] extends object
+            ?`${TKey}`|`${TKey}.${RecursiveKeyOf<Required<T>[TKey]>}`
+            :`${TKey}`;
+}[keyof Required<T>&(string|number)];
