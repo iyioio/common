@@ -1,4 +1,4 @@
-import { ObjWatchEvt, isWatcherValueChangeEvent, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjWatchEvt, ObjWatcher, isWatcherValueChangeEvent, stopWatchingObj, watchObj } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
 export interface UseWObjOptions<T>
@@ -30,10 +30,7 @@ export const useWObjWithRefresh=<T>(obj:T,{
             return;
         }
 
-        const watcher=watchObj<T>(obj);
-        if(!watcher){
-            return;
-        }
+        const watcher=watchObj(obj) as ObjWatcher<T>;
 
         let m=true;
 
@@ -125,10 +122,7 @@ export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(ob
 
         setValue(obj[prop]);
 
-        const watcher=watchObj<T>(obj);
-        if(!watcher){
-            return;
-        }
+        const watcher=watchObj(obj) as ObjWatcher<T>;
 
         let m=true;
 
@@ -168,10 +162,7 @@ export const useWEvent=<T>(obj:T|null|undefined,eventType:string|symbol|null|und
             return;
         }
 
-        const watcher=watchObj<T>(obj);
-        if(!watcher){
-            return;
-        }
+        const watcher=watchObj(obj) as ObjWatcher<T>;
 
         const listener=(_:T,evt:ObjWatchEvt<T>)=>{
             if(evt.type==='event' && (!refs.current.eventType || refs.current.eventType===evt.eventType)){
