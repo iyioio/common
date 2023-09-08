@@ -474,12 +474,18 @@ export const protoAddLink=(node:ProtoNode,link:ProtoLink,allowDuplicates=false):
     return true;
 }
 
-export const protoChildrenToArray=(children:ProtoChildren|null|undefined):ProtoNode[]=>{
+export const protoChildrenToArray=(children:ProtoChildren|null|undefined,filterOutNonStandard=false):ProtoNode[]=>{
     if(!children){
         return [];
     }
     const ary:ProtoNode[]=[];
     for(const name in children){
+        const child=children[name];
+        if( !child ||
+            (filterOutNonStandard && (child.special || child.isContent))
+        ){
+            continue;
+        }
         ary.push(children[name]);
     }
     return ary;

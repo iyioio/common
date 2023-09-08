@@ -13,6 +13,7 @@ import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin";
 import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
+import { secretPlugin } from "./plugins/secretPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
 import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin";
 import { sqlTablePlugin } from "./plugins/sqlTablePlugin";
@@ -101,6 +102,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             plugin:userPoolPlugin
         },
         {
+            name:'secretPlugin',
+            source:'@',
+            paths:[],
+            plugin:secretPlugin
+        },
+        {
             name:'serverFnPlugin',
             source:'@',
             paths:[],
@@ -131,12 +138,6 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             plugin:nextJsPagePlugin
         },
         {
-            name:'paramPlugin',
-            source:'@',
-            paths:[],
-            plugin:paramPlugin
-        },
-        {
             name:'assignPlugin',
             source:'@',
             paths:[],
@@ -147,6 +148,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:sqlMigrationsPlugin
+        },
+        {// should always be the second to last generator
+            name:'paramPlugin',
+            source:'@',
+            paths:[],
+            plugin:paramPlugin
         },
         {// should always be the last generator
             name:'autoPackageIndexPlugin',

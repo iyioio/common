@@ -1,6 +1,8 @@
 import { joinPaths, objHasValues } from "@iyio/common";
-import { ProtoParamType, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoGenerateTsIndex } from "@iyio/protogen";
+import { ProtoParamType, ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoAddContextParam, protoChildrenToArray, protoGenerateTsIndex } from "@iyio/protogen";
 import { z } from "zod";
+
+const supportedTypes=['params'];
 
 const ParamPluginConfig=z.object(
 {
@@ -26,10 +28,36 @@ export const paramPlugin:ProtoPipelineConfigurablePlugin<typeof ParamPluginConfi
         libStyle,
         paramPackageName,
         paramMap,
+        nodes,
+        paramPackage,
+        importMap,
+        log,
     },{
         paramsFilename='params.ts',
         paramIndexFilename='params-index.ts',
     })=>{
+
+        const defMap={
+            'string':'defineStringParam',
+            'boolean':'defineBoolParam',
+            'number':'defineNumberParam',
+        }
+
+        const supported=nodes.filter(node=>node.types.some(t=>supportedTypes.includes(t.type)));
+
+        log(`${supported.length} supported node(s)`);
+        for(const node of supported){
+            const children=protoChildrenToArray(node.children,true);
+            for(const prop of children){
+                if(paramMap[prop.name]){
+                    throw new Error(`param name conflict. paramName:${prop.name}`);
+                }
+                protoAddContextParam(
+                    prop.name,paramPackage,paramMap,importMap,
+                    (defMap[prop.value as keyof typeof defMap]?(prop.value??''):'string') as any
+                );
+            }
+        }
 
         if(!objHasValues(paramMap)){
             return;
@@ -45,11 +73,6 @@ export const paramPlugin:ProtoPipelineConfigurablePlugin<typeof ParamPluginConfi
 
         const out:string[]=[''];
         const types:ProtoParamType[]=[];
-        const defMap={
-            'string':'defineStringParam',
-            'boolean':'defineBoolParam',
-            'number':'defineNumberParam',
-        }
         for(const paramName in paramMap){
             const paramType=paramMap[paramName];
             if(!types.includes(paramType)){

@@ -16,6 +16,7 @@
         "baseUrl": ".",
         "paths": {
             "@iyio/aws": ["packages/aws/src/index.ts"],
+            "@iyio/aws-secrets": ["packages/aws-secrets/src/index.ts"],
             "@iyio/aws-credential-providers": [
                 "packages/aws-credential-providers/src/index.ts"
             ],

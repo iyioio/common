@@ -6,6 +6,7 @@ export * from './lib/ManagedStack';
 export * from './lib/NodeFn';
 export * from './lib/ParamOutput';
 export * from './lib/RedirectApi';
+export * from './lib/SecretBuilder';
 export * from './lib/SiteBuilder';
 export * from './lib/SqlCluster';
 export * from './lib/StaticWebSite';

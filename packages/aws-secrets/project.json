@@ -1,0 +1,46 @@
+{
+    "name": "aws-secrets",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/aws-secrets/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@iyio/nx-common:lib-builder",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/aws-secrets",
+                "main": "packages/aws-secrets/src/index.ts",
+                "tsConfig": "packages/aws-secrets/tsconfig.lib.json",
+                "assets": ["packages/aws-secrets/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs aws-secrets {args.ver} {args.tag}"
+            },
+            "dependsOn": [
+                {
+                    "projects": "self",
+                    "target": "build"
+                }
+            ]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/aws-secrets/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/aws-secrets"],
+            "options": {
+                "jestConfig": "packages/aws-secrets/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

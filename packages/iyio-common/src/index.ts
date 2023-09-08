@@ -96,6 +96,8 @@ export * from './lib/rxjs-helpers';
 export * from './lib/rxjs-types';
 export * from './lib/scope-lib';
 export * from './lib/scope-types';
+export * from './lib/secret-manager';
+export * from './lib/secret-manager.deps';
 export * from './lib/series-ctrls';
 export * from './lib/series-lib';
 export * from './lib/series-types';
