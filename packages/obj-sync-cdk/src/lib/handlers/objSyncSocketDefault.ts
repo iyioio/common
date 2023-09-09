@@ -1,7 +1,7 @@
 import { dynamoClient } from '@iyio/aws-dynamo';
 import { BadRequestError, FnEvent, FnEventEventTypeDisconnect, FnEventEventTypeMessage, asArray, createFnHandler } from '@iyio/common';
-import { ObjSyncRemoteCommand } from '@iyio/obj-sync';
-import { cleanUpSocket, createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendStateToClientAsync } from '../obj-sync-handler-lib';
+import { ObjSyncClientCommand, ObjSyncRemoteCommand } from '@iyio/obj-sync';
+import { cleanUpSocket, createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib';
 
 initBackend();
 
@@ -42,6 +42,15 @@ const objSyncSocketDefault=async (
                         throw new BadRequestError('Evt command must define the evt prop');
                     }
                     await queueSyncEvtAsync(cmd.objId,cmd.clientId,fnEvt.connectionId,cmd.evts);
+                    break;
+
+                case 'ping':
+                    await sendData<ObjSyncClientCommand>(fnEvt.connectionId,{
+                        type:'pong',
+                        clientId:cmd.clientId,
+                        objId:cmd.objId,
+                        changeIndex:0,
+                    })
                     break;
             }
 

@@ -119,7 +119,7 @@ export const sendStateToClientAsync=async (
     });
 }
 
-const sendData=<T>(connectionId:string,data:T)=>getApiClient().send(new PostToConnectionCommand({
+export const sendData=<T>(connectionId:string,data:T)=>getApiClient().send(new PostToConnectionCommand({
     Data:getEncoder().encode(JSON.stringify(data)),
     ConnectionId:connectionId
 }))

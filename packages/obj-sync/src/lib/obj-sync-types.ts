@@ -100,7 +100,7 @@ export type ObjSyncObjState=z.infer<typeof ObjSyncObjStateScheme>;
 
 
 
-export const ObjSyncRemoteCommandTypeScheme=z.enum(['delete','get','evt','createClient']);
+export const ObjSyncRemoteCommandTypeScheme=z.enum(['delete','get','evt','createClient','ping']);
 export type ObjSyncRemoteCommandType=z.infer<typeof ObjSyncRemoteCommandTypeScheme>;
 
 
@@ -143,7 +143,7 @@ export type ScopedObjSyncRemoteCommand=Omit<ObjSyncRemoteCommand,'clientId'|'obj
 
 
 
-export const ObjSyncClientCommandTypeScheme=z.enum(['set','delete','evt','reset']);
+export const ObjSyncClientCommandTypeScheme=z.enum(['set','delete','evt','reset','pong']);
 export type ObjSyncClientCommandType=z.infer<typeof ObjSyncClientCommandTypeScheme>;
 
 

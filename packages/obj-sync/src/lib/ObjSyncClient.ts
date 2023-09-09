@@ -13,6 +13,7 @@ export interface ObjSyncClientOptions
     maxCommandQueueSize?:number;
     clientMapProp?:string;
     autoDeleteClientObjects?:boolean;
+    pingIntervalMs?:number;
 }
 
 export abstract class ObjSyncClient
@@ -34,6 +35,8 @@ export abstract class ObjSyncClient
 
     private readonly maxCommandQueueSeconds:number;
 
+    protected readonly pingIntervalMs?:number;
+
     private readonly maxCommandQueueSize:number;
     private readonly clientMapProp?:string;
     private readonly autoDeleteClientObjects?:boolean;
@@ -52,6 +55,7 @@ export abstract class ObjSyncClient
         maxCommandQueueSize=100,
         clientMapProp,
         autoDeleteClientObjects,
+        pingIntervalMs,
     }:ObjSyncClientOptions){
         this.objId=objId;
         this.clientId=clientId;
@@ -60,6 +64,7 @@ export abstract class ObjSyncClient
         this.maxCommandQueueSize=maxCommandQueueSize;
         this.clientMapProp=clientMapProp;
         this.autoDeleteClientObjects=autoDeleteClientObjects;
+        this.pingIntervalMs=pingIntervalMs;
         const watcher=watchObj(state);
         if(!watcher){
             throw new Error('Unable to get or create watcher for target state object');
@@ -165,10 +170,25 @@ export abstract class ObjSyncClient
             defaultState:connectWithDefaultState?this.state:undefined,
             clientMapProp:this.clientMapProp,
             autoDeleteClientObjects:this.autoDeleteClientObjects,
-        }])
+        }]);
+        this.pingLoop();
     }
 
     protected abstract _connectAsync():Promise<void>;
+
+    protected pingLoop()
+    {
+        if(this.pingIntervalMs===undefined){
+            return;
+        }
+        const iv=setInterval(()=>{
+            if(this.isDisposed){
+                clearInterval(iv);
+                return;
+            }
+            this.send({type:'ping'})
+        },this.pingIntervalMs)
+    }
 
     protected handleError(error:any){
 
@@ -258,6 +278,8 @@ export abstract class ObjSyncClient
     {
         if(command.type==='reset'){
             this.dispose();
+            return;
+        }else if(command.type==='pong'){
             return;
         }
 

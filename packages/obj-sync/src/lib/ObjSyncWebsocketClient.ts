@@ -30,7 +30,10 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
         webSocketFactory,
         ...options
     }:ObjSyncWebsocketClientOptions & ObjSyncClientOptions){
-        super(options);
+        super({
+            pingIntervalMs:40000,
+            ...options
+        });
         this.endpoint=endpoint;
         this.webSocketFactory=webSocketFactory;
     }
