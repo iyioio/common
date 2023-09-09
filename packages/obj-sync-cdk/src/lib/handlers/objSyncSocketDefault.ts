@@ -1,16 +1,16 @@
 import { dynamoClient } from '@iyio/aws-dynamo';
-import { BadRequestError, FnEvent, asArray, createFnHandler } from '@iyio/common';
+import { BadRequestError, FnEvent, FnEventEventTypeDisconnect, FnEventEventTypeMessage, asArray, createFnHandler } from '@iyio/common';
 import { ObjSyncRemoteCommand } from '@iyio/obj-sync';
-import { createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendStateToClientAsync } from '../obj-sync-handler-lib';
+import { cleanUpSocket, createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendStateToClientAsync } from '../obj-sync-handler-lib';
 
 initBackend();
 
 const objSyncSocketDefault=async (
     fnEvt:FnEvent,
-    input:ObjSyncRemoteCommand|ObjSyncRemoteCommand[]
+    input:ObjSyncRemoteCommand|ObjSyncRemoteCommand[]|undefined|null
 ):Promise<void>=>{
 
-    console.log('default',JSON.stringify({input},null,4)); // todo - remove
+    console.log('default',fnEvt.eventType,JSON.stringify({input},null,4)); // todo - remove
     dynamoClient().logCommandInput=true; // todo - remove
     dynamoClient().logCommandOutput=true; // todo - remove
 
@@ -20,29 +20,34 @@ const objSyncSocketDefault=async (
         throw new BadRequestError(msg);
     }
 
-    const commands=asArray(input);
+    if(fnEvt.eventType===FnEventEventTypeMessage && input){
 
-    for(const cmd of commands){
+        const commands=asArray(input);
 
-        switch(cmd.type){
+        for(const cmd of commands){
 
-            case 'createClient':
-                await createClientConnectionAsync(cmd,fnEvt.connectionId,fnEvt.sub);
-                break;
+            switch(cmd.type){
 
-            case 'get':
-                await sendStateToClientAsync(cmd.objId,cmd.clientId,fnEvt.connectionId,cmd.defaultState);
-                break;
+                case 'createClient':
+                    await createClientConnectionAsync(cmd,fnEvt.connectionId,fnEvt.sub);
+                    break;
 
-            case 'evt':
-                if(!cmd.evts){
-                    console.error('Evt command must define the evt prop');
-                    throw new BadRequestError('Evt command must define the evt prop');
-                }
-                await queueSyncEvtAsync(cmd.objId,cmd.clientId,fnEvt.connectionId,cmd.evts);
-                break;
+                case 'get':
+                    await sendStateToClientAsync(fnEvt.connectionId,cmd);
+                    break;
+
+                case 'evt':
+                    if(!cmd.evts){
+                        console.error('Evt command must define the evt prop');
+                        throw new BadRequestError('Evt command must define the evt prop');
+                    }
+                    await queueSyncEvtAsync(cmd.objId,cmd.clientId,fnEvt.connectionId,cmd.evts);
+                    break;
+            }
+
         }
-
+    }else if(fnEvt.eventType===FnEventEventTypeDisconnect){
+        await cleanUpSocket(fnEvt.connectionId);
     }
 
 }

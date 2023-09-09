@@ -35,6 +35,14 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
         this.webSocketFactory=webSocketFactory;
     }
 
+    public override dispose(): void {
+        if(this.isDisposed){
+            return;
+        }
+        super.dispose();
+        this.socket?.close();
+    }
+
     protected _connectAsync():Promise<void>{
 
         return new Promise((resolve,reject)=>{

@@ -3,7 +3,7 @@ import { cognitoBackendAuthProviderModule } from "@iyio/aws-credential-providers
 import { createUpdateExpression, dynamoClient } from "@iyio/aws-dynamo";
 import { EnvParams, ObjMirror, ScopeModule, initRootScope, unused } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
-import { ObjSyncClientCommand, ObjSyncClientConnection, ObjSyncConnectionTable, ObjSyncObjState, ObjSyncObjStateTable, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, objSyncAutoMergeLogLengthParam } from "@iyio/obj-sync";
+import { ObjSyncClientCommand, ObjSyncClientConnection, ObjSyncConnectionTable, ObjSyncConnectionTableIndexMap, ObjSyncObjState, ObjSyncObjStateTable, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, objSyncAutoMergeLogLengthParam } from "@iyio/obj-sync";
 import { invokeObjSyncCreateDefaultStateFn, invokeObjSyncTransformClientConnectionFn } from "./obj-sync-cdk-fn-clients";
 
 let _apiClient:ApiGatewayManagementApiClient|null=null;
@@ -51,10 +51,14 @@ export const createClientConnectionAsync=async (cmd:ObjSyncRemoteCommand,socketI
 }
 
 export const sendStateToClientAsync=async (
-    objId:string,
-    clientId:string,
     connectionId:string,
-    defaultState?:Record<string,any>
+    {
+        objId,
+        clientId,
+        defaultState,
+        autoDeleteClientObjects,
+        clientMapProp
+    }:ObjSyncRemoteCommand,
 )=>{
 
     const [
@@ -81,7 +85,9 @@ export const sendStateToClientAsync=async (
             type:'get',
             objId,
             clientId,
-            defaultState
+            defaultState,
+            autoDeleteClientObjects,
+            clientMapProp
         });
 
         if(!state){
@@ -132,7 +138,9 @@ export const queueSyncEvtAsync=async (
     objId:string,
     clientId:string,
     connectionId:string,
-    evts:ObjSyncRecursiveObjWatchEvt[]
+    evts:ObjSyncRecursiveObjWatchEvt[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    byPassSecurity=false,
 )=>{
 
     verifyWriteAccess();
@@ -178,10 +186,11 @@ export const queueSyncEvtAsync=async (
             })
         }catch(ex){
             console.error('Unable to send message to client',{objId,clientId:client.clientId});
-            await dynamoClient().deleteFromTableAsync(
-                ObjSyncConnectionTable,
-                {clientId:client.clientId}
-            )
+            try{
+                await cleanUpSocket(client.socketId);
+            }catch(ex){
+                console.error('Clean up socket failed',client)
+            }
         }
     })
 
@@ -236,3 +245,52 @@ const mergeLogIntoStateAsync=async (objId:string,changeIndex?:number):Promise<bo
         }
     })
 }
+
+
+export const cleanUpSocket=async (socketId:string)=>{
+
+    await dynamoClient().queryMatchTableAsync({
+        table:ObjSyncConnectionTable,
+        index:ObjSyncConnectionTableIndexMap.socketId,
+        matchKey:{
+            socketId
+        },
+        forEachPage:items=>items.map(async client=>{
+
+            try{
+                await dynamoClient().deleteFromTableAsync(
+                    ObjSyncConnectionTable,
+                    {
+                        objId:client.objId,
+                        clientId:client.clientId
+                    }
+                )
+            }catch(ex){
+                console.error('Unable to remove client from connections table',{socketId});
+            }
+
+            const stateObj=await dynamoClient().getFromTableAsync(
+                ObjSyncObjStateTable,
+                {objId:client.objId},
+                {includeProps:['autoDeleteClientObjects','clientMapProp']}
+            );
+
+            if(!stateObj || !stateObj.autoDeleteClientObjects || !stateObj.clientMapProp){
+                return;
+            }
+
+            await queueSyncEvtAsync(
+                client.objId,
+                client.clientId,
+                client.socketId,
+                [{
+                    type:'delete',
+                    prop:client.clientId,
+                    path:[stateObj.clientMapProp]
+                }],
+                true
+            )
+        })
+    })
+}
+

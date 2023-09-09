@@ -5,12 +5,15 @@ export const invokeObjSyncCreateDefaultStateFn=async (input:ObjSyncRemoteCommand
 
     const fn=objSyncCreateDefaultStateFnArnParam.get();
     if(!fn){
-        return ObjSyncObjStateScheme.parse({
+        const stateObj:ObjSyncObjState={
             objId:input.objId,
             changeIndex:0,
             state:input.defaultState??{},
-            log:[]
-        });
+            clientMapProp:input.clientMapProp,
+            autoDeleteClientObjects:input.autoDeleteClientObjects,
+            log:[],
+        }
+        return ObjSyncObjStateScheme.parse(stateObj);
     }
 
     return await lambdaClient().invokeAsync<ObjSyncRemoteCommand,ObjSyncObjState>({

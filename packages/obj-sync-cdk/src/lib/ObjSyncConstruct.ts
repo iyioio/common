@@ -7,8 +7,6 @@ import { Construct } from 'constructs';
 export interface ObjSyncConstructOptions
 {
     managed?:ManagedProps;
-    connectFnProps?:NodeFnProps;
-    disconnectFnProps?:NodeFnProps;
     defaultFnProps?:NodeFnProps;
     webApiProps?:WebsocketApiProps;
     createDefaultStateFn?:lambda.Function;
@@ -28,8 +26,6 @@ export class ObjSyncConstruct extends Construct
 
     public constructor(scope:Construct,id:string,{
         managed={},
-        connectFnProps,
-        disconnectFnProps,
         defaultFnProps,
         webApiProps,
         createDefaultStateFn,
@@ -41,22 +37,6 @@ export class ObjSyncConstruct extends Construct
         const {
             params
         }=managed;
-
-        const connectFn=new NodeFn(this,'Connect',{
-            // todo - handle path to fn when packaged in lib
-            handlerFileName:'../../packages/obj-sync-cdk/src/lib/handlers/objSyncSocketConnect.ts',
-            minify:true,
-            timeoutMs:5*1000,
-            ...connectFnProps,
-        });
-
-        const disconnectFn=new NodeFn(this,'Disconnect',{
-            // todo - handle path to fn when packaged in lib
-            handlerFileName:'../../packages/obj-sync-cdk/src/lib/handlers/objSyncSocketDisconnect.ts',
-            minify:true,
-            timeoutMs:5*1000,
-            ...disconnectFnProps,
-        });
 
         const handlerFn=new NodeFn(this,'Default',{
             // todo - handle path to fn when packaged in lib
@@ -118,8 +98,7 @@ export class ObjSyncConstruct extends Construct
         this.websocketApi=new WebsocketApi(this,'Sockets',{
             name:'Sockets',
             stageName:'prd',
-            connectFn:connectFn.func,
-            disconnectFn:disconnectFn.func,
+            disconnectFn:handlerFn.func,
             defaultFn:handlerFn.func,
             ...webApiProps,
         });

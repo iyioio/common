@@ -32,6 +32,7 @@ export const ObjSyncClientConnectionScheme=z.object({
     rules:ObjSyncRuleScheme.array().optional(),
 
     userId:z.string().optional(),
+
 })
 
 export type ObjSyncClientConnection=z.infer<typeof ObjSyncClientConnectionScheme>;
@@ -81,6 +82,18 @@ export const ObjSyncObjStateScheme=z.object({
 
     log:z.array(ObjSyncRecursiveObjWatchEvtScheme),
 
+    /**
+     * Defines the path to an object that has values with keys matching the ids of the clients
+     * connected to the object
+     */
+    clientMapProp:z.string().optional(),
+
+    /**
+     * If true objects in the client object map at the path defined by clientMapProp will be
+     * automatically deleted on disconnect.
+     */
+    autoDeleteClientObjects:z.boolean().optional(),
+
 })
 
 export type ObjSyncObjState=z.infer<typeof ObjSyncObjStateScheme>;
@@ -112,6 +125,16 @@ export const ObjSyncRemoteCommandScheme=z.object({
      * not yet defined
      */
     defaultState:z.optional(z.record(z.string(),z.any())),
+
+    /**
+     * Value used for the clientMapProp prop when creating a new object
+     */
+    clientMapProp:z.string().optional(),
+
+    /**
+     * Value used for the autoDeleteClientObjects prop when creating a new object
+     */
+    autoDeleteClientObjects:z.boolean().optional(),
 })
 
 export type ObjSyncRemoteCommand=z.infer<typeof ObjSyncRemoteCommandScheme>;

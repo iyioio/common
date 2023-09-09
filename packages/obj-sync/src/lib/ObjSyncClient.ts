@@ -11,6 +11,8 @@ export interface ObjSyncClientOptions
     state:Record<string,any>;
     maxCommandQueueSeconds?:number;
     maxCommandQueueSize?:number;
+    clientMapProp?:string;
+    autoDeleteClientObjects?:boolean;
 }
 
 export abstract class ObjSyncClient
@@ -33,6 +35,8 @@ export abstract class ObjSyncClient
     private readonly maxCommandQueueSeconds:number;
 
     private readonly maxCommandQueueSize:number;
+    private readonly clientMapProp?:string;
+    private readonly autoDeleteClientObjects?:boolean;
 
     private readonly _isReady:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
     public get isReadySubject():ReadonlySubject<boolean>{return this._isReady}
@@ -46,12 +50,16 @@ export abstract class ObjSyncClient
         state,
         maxCommandQueueSeconds=20,
         maxCommandQueueSize=100,
+        clientMapProp,
+        autoDeleteClientObjects,
     }:ObjSyncClientOptions){
         this.objId=objId;
         this.clientId=clientId;
         this.state=state;
         this.maxCommandQueueSeconds=maxCommandQueueSeconds;
         this.maxCommandQueueSize=maxCommandQueueSize;
+        this.clientMapProp=clientMapProp;
+        this.autoDeleteClientObjects=autoDeleteClientObjects;
         const watcher=watchObj(state);
         if(!watcher){
             throw new Error('Unable to get or create watcher for target state object');
@@ -152,7 +160,12 @@ export abstract class ObjSyncClient
     private async connectInitAsync(connectWithDefaultState?:boolean)
     {
         await this._connectAsync();
-        this.send([{type:'createClient'},{type:'get',defaultState:connectWithDefaultState?this.state:undefined}])
+        this.send([{type:'createClient'},{
+            type:'get',
+            defaultState:connectWithDefaultState?this.state:undefined,
+            clientMapProp:this.clientMapProp,
+            autoDeleteClientObjects:this.autoDeleteClientObjects,
+        }])
     }
 
     protected abstract _connectAsync():Promise<void>;

@@ -1,4 +1,4 @@
-import { DataTableDescription } from '@iyio/common';
+import { DataTableDescription, DataTableIndex } from '@iyio/common';
 import { ObjSyncClientConnection, ObjSyncClientConnectionScheme, ObjSyncObjState, ObjSyncObjStateScheme } from "./obj-sync-types";
 import { objSyncClientConnectionTableParam, objSyncObjStateTableParam } from "./obj-sync.deps";
 
@@ -8,10 +8,15 @@ export const ObjSyncConnectionTable:DataTableDescription<ObjSyncClientConnection
     sortKey:"clientId",
     tableIdParam:objSyncClientConnectionTableParam,
     scheme:ObjSyncClientConnectionScheme,
+    indexes:[
+        {
+            name:"socket",
+            primary:"socketId",
+        },
+    ],
 }
 export const ObjSyncConnectionTableIndexMap={
-    //"obj":ObjSyncConnectionTable.indexes?.[0] as DataTableIndex,
-    //"socket":ObjSyncConnectionTable.indexes?.[1] as DataTableIndex,
+    "socketId":ObjSyncConnectionTable.indexes?.[0] as DataTableIndex,
 }
 
 export const ObjSyncObjStateTable:DataTableDescription<ObjSyncObjState>={
