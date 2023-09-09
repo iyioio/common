@@ -122,6 +122,10 @@ export const fnHandler=async ({
         fnEvent.connectionId=evt.requestContext.connectionId;
     }
 
+    if(typeof evt.requestContext?.eventType === 'string'){
+        fnEvent.eventType=evt.requestContext.eventType;
+    }
+
     const transformers=FnEventTransformers.all();
     for(const t of transformers){
         await t(fnEvent);

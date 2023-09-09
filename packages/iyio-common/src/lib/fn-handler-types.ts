@@ -38,6 +38,10 @@ export interface FnHandlerOptions extends FnBaseHandlerOptions
     handler:FnHandler;
 }
 
+export const FnEventEventTypeConnect="CONNECT";
+export const FnEventEventTypeMessage="MESSAGE";
+export const FnEventEventTypeDisconnect="DISCONNECT";
+
 export interface FnEvent
 {
     sourceEvent:any;
@@ -53,6 +57,12 @@ export interface FnEvent
      * For websocket events this is the connection id of the socket
      */
     connectionId?:string;
+
+    /**
+     * For websocket events this is either CONNECT, MESSAGE or DISCONNECT
+     * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html
+     */
+    eventType?:string;
 
     /**
      * Typically a user id
