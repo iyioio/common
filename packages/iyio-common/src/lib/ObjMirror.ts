@@ -1,4 +1,4 @@
-import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
+import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetOrMergeProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
 import { ObjWatchEvt, RecursiveObjWatchEvt } from "./obj-watch-types";
 import { getValueByAryPath } from './object';
 
@@ -6,9 +6,12 @@ export class ObjMirror{
 
     public readonly obj:any;
 
-    public constructor(obj:any)
+    public readonly mergeValues:boolean;
+
+    public constructor(obj:any,mergeValues:boolean=false)
     {
         this.obj=obj;
+        this.mergeValues=mergeValues;
     }
 
 
@@ -38,7 +41,11 @@ export class ObjMirror{
         switch(evt.type){
 
             case 'set':
-                wSetProp(obj,evt.prop,evt.value,source);
+                if(this.mergeValues){
+                    wSetOrMergeProp(obj,evt.prop,evt.value,source);
+                }else{
+                    wSetProp(obj,evt.prop,evt.value,source);
+                }
                 break;
 
             case 'delete':

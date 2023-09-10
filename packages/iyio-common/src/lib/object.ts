@@ -120,6 +120,18 @@ export const deleteUndefined=<T>(obj:T):T=>
     return obj;
 }
 
+/**
+ * Deletes all properties of an object
+ */
+export const deleteAllObjProps=(obj:any)=>{
+    if(!obj){
+        return;
+    }
+    for(const e in obj){
+        delete obj[e];
+    }
+}
+
 export const getValueByPath=(value:any,path:string,defaultValue:any=undefined,rootGetter?:(key:string)=>any):any=>{
 
     const parts=path.split('.');
@@ -429,4 +441,38 @@ export const setOrDeleteWhen=<T,K extends keyof T>(obj:T,prop:K, value:T[K], del
         obj[prop]=value;
         return false;
     }
+}
+
+/**
+ * Returns true if the value is an object that is an instance of a class
+ */
+export const isNonClassInstanceObject=(value:any)=>{
+    return (
+        value &&
+        (typeof value === 'object') &&
+        Object.getPrototypeOf(value)===Object.prototype
+    )
+}
+
+export const objValuesToAry=<T>(obj:T):(Exclude<T,undefined|null>[keyof Exclude<T,undefined|null>])[]=>{
+    const ary:any[]=[];
+    if(!obj){
+        return ary;
+    }
+    for(const e in obj){
+        ary.push(obj[e])
+    }
+    return ary;
+}
+
+export const objFind=<T,V=Exclude<T,undefined|null>[keyof Exclude<T,undefined|null>]>(obj:T,test:(value:V)=>any):V|undefined=>{
+    if(!obj){
+        return undefined;
+    }
+    for(const e in obj){
+        if(test((obj as any)[e])){
+            return (obj as any)[e];
+        }
+    }
+    return undefined;
 }

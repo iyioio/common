@@ -1,8 +1,8 @@
 import { DisposeCallback, RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { getObjWatcher, stopWatchingObj } from "./obj-watch-lib";
-import { ObjRecursiveListener, ObjWatchEvt, ObjWatchListener, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
-import { getValueByAryPath } from "./object";
+import { getObjWatcher, stopWatchingObj, wDeleteProp, wSetProp } from "./obj-watch-lib";
+import { ObjRecursiveListener, ObjWatchEvt, ObjWatchListener, PathListenerOptions, PathWatchOptions, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
+import { deepCompare, getValueByAryPath, isNonClassInstanceObject } from "./object";
 
 
 let nextId=1;
@@ -12,8 +12,6 @@ interface ObjAncestor
     watcher:ObjWatcher<any>;
     key:string|number;
 }
-
-export type Watchable=Record<string,any>|any[];
 
 export class ObjWatcher<
     T,
@@ -147,10 +145,10 @@ export class ObjWatcher<
     }
 
     /**
-     * Adds a recursive listener that is only triggered when a change to the targed path occurs.
+     * Adds a recursive listener that is only triggered when a change to the target path occurs.
      * Changes to the path of the returned WatchedPath object can be made without issue
      */
-    public addPathListener(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void):WatchedPath
+    public addPathListener(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void,options?:PathListenerOptions):WatchedPath
     {
 
         if(typeof path === 'string'){
@@ -160,10 +158,10 @@ export class ObjWatcher<
         const watchedPath:WatchedPath={
             path,
             listener:(obj,evt,evtPath)=>{
-                if(!evtPath.length || evtPath.length>path.length){
+                if(!evtPath.length || options?.deep?path.length>evtPath.length:evtPath.length>path.length){
                     return;
                 }
-                for(let i=0;i<evtPath.length;i++){
+                for(let i=0;i<evtPath.length && i<path.length;i++){
                     if(evtPath[evtPath.length-1-i]!==path[i]){
                         return;
                     }
@@ -179,18 +177,33 @@ export class ObjWatcher<
     }
 
     /**
-     * Functions the same as addPathListener with the excpetion that onChange is immediately called
+     * Functions the same as addPathListener with the exception that onChange is immediately called
      */
-    public watchPath(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void,skipInitCall=false):WatchedPath
+    public watchPath(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void,options?:PathWatchOptions):WatchedPath
     {
-        const watchedPath=this.addPathListener(path,onChange);
+        const watchedPath=this.addPathListener(path,onChange,options);
 
-        if(!skipInitCall){
+        if(!options?.skipInitCall){
             const value=getValueByAryPath(this.obj,watchedPath.path);
             onChange(value);
         }
 
         return watchedPath;
+    }
+
+    /**
+     * Functions the same as watchPath except options.deep is set to true. This has
+     * the effect of calling the onChange callback when descendant properties of the watched path
+     * change.
+     */
+    public watchDeepPath(path:(string|number)[]|RecursiveKeyOf<T>,onChange:(value:any)=>void,options?:PathWatchOptions):WatchedPath
+    {
+        if(options){
+            options={...options,deep:true}
+        }else{
+            options={deep:true}
+        }
+        return this.watchPath(path,onChange,options);
     }
 
     /**
@@ -363,6 +376,23 @@ export class ObjWatcher<
         }
     }
 
+    public setOrMergeProp<K extends keyof T>(prop:K, value:T[K], source?:any):T[K]{
+        const current=this.obj[prop];
+        if( isNonClassInstanceObject(value) &&
+            isNonClassInstanceObject(current)
+        ){
+            if(deepCompare(current,value)){
+                console.log('hio 👋 👋 👋 MERGE DeepCompare true -----------------',);
+                return current;
+            }
+            _wMergeObj(1000,current,value,source);
+            return current;
+        }else{
+            return this.setProp(prop,value,source);
+        }
+
+    }
+
     public setProp<K extends keyof T>(prop:K, value:T[K], source?:any):T[K]{
         if(this.obj[prop]===value){
             return value;
@@ -384,6 +414,9 @@ export class ObjWatcher<
     }
 
     public deleteProp<K extends keyof T>(prop:K, source?:any):void{
+        if(!(prop in (this.obj as object))){
+            return;
+        }
         if(this._recursive){
             this.removeDescendant(prop);
         }
@@ -502,4 +535,50 @@ export class ObjWatcher<
     }
 
 
+}
+
+
+export const wMergeObj=(
+    current:any,
+    value:any,
+    source?:any
+):boolean=>{
+    if(isNonClassInstanceObject(current) && isNonClassInstanceObject(value)){
+        _wMergeObj(1000,current,value,source);
+        return true;
+    }else{
+        return false;
+    }
+}
+
+const _wMergeObj=(
+    maxDepth:number,
+    current:any,
+    value:any,
+    source?:any
+):void=>{
+    if(maxDepth<0){
+        throw new Error('ObjectWatcher mergeObjs max depth reached');
+    }
+    const watcher=getObjWatcher(current,false);
+    watcher?.requestQueueChanges();
+    try{
+        for(const e in value){
+
+            const cv=current[e];
+            const vv=value[e];
+            if(isNonClassInstanceObject(cv) && isNonClassInstanceObject(vv)){
+                _wMergeObj(maxDepth-1,cv,vv,source);
+            }else{
+                wSetProp(current,e,vv,source);
+            }
+        }
+        for(const e in current){
+            if(value[e]===undefined){
+                wDeleteProp(current,e,source);
+            }
+        }
+    }finally{
+        watcher?.requestDequeueChanges();
+    }
 }

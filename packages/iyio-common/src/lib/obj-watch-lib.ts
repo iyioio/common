@@ -1,6 +1,6 @@
-import { ObjWatcher, Watchable } from "./ObjWatcher";
+import { ObjWatcher } from "./ObjWatcher";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
+import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt, Watchable, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
 import { deepClone } from "./object";
 
 const watcherProp=Symbol('watcher');
@@ -62,7 +62,10 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 }
 
 export const watchObjAtPath=<T extends Watchable>(obj:T,path:(string|number)[],listener:(value:any)=>void):WatchedPath=>{
-    return watchObj(obj).addPathListener(path,listener);
+    return watchObj(obj).watchPath(path,listener);
+}
+export const watchObjAtDeepPath=<T extends Watchable>(obj:T,path:(string|number)[],listener:(value:any)=>void):WatchedPath=>{
+    return watchObj(obj).watchDeepPath(path,listener);
 }
 
 export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
@@ -75,6 +78,27 @@ export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[
     }else{
         (obj as any)[prop]=value;
     }
+    return value;
+}
+export const wSetOrMergeProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
+    if(!obj){
+        return value;
+    }
+    const watcher=getObjWatcher<T>(obj,false);
+    if(watcher){
+        watcher.setOrMergeProp(prop,value,source);
+    }else{
+        (obj as any)[prop]=value;
+    }
+    return value;
+}
+
+export const wToggleProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,source?:any):boolean=>{
+    if(!obj){
+        return false;
+    }
+    const value=!obj[prop];
+    wSetProp(obj,prop,value as any,source);
     return value;
 }
 
@@ -130,6 +154,19 @@ export const wDeleteProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,sourc
         watcher.deleteProp(prop,source);
     }else{
         delete obj[prop];
+    }
+}
+
+
+/**
+ * Deletes all properties of an object
+ */
+export const wDeleteAllObjProps=(obj:any)=>{
+    if(!obj){
+        return;
+    }
+    for(const e in obj){
+        wDeleteProp(obj,e);
     }
 }
 

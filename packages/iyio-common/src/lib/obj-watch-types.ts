@@ -110,6 +110,8 @@ export type ObjWatchEvtType=ObjWatchEvt<any>['type'];
 
 export type ObjWatchListener<T=any>=(obj:T,evt:ObjWatchEvt<T>)=>void;
 
+export type Watchable=Record<string,any>|any[];
+
 /**
  * Called when a recursive change is make to a recursively watched object.
  * The path param is mutated as the change event moves between watchers. If a reference to the
@@ -122,4 +124,20 @@ export interface WatchedPath
     listener:ObjRecursiveListener;
     path:(string|number)[];
     dispose:()=>void;
+}
+
+
+export interface PathListenerOptions
+{
+    /**
+     * If true descendants of the watched path will also trigger change callbacks.
+     */
+    deep?:boolean;
+}
+export interface PathWatchOptions extends PathListenerOptions
+{
+    /**
+     * If true the change callback will not be called at initialization.
+     */
+    skipInitCall?:boolean;
 }

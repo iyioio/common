@@ -1,4 +1,4 @@
-import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, createPromiseSource, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, asArray, createPromiseSource, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
 import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
 
@@ -70,7 +70,7 @@ export abstract class ObjSyncClient
             throw new Error('Unable to get or create watcher for target state object');
         }
         this.watcher=watcher;
-        this.mirror=new ObjMirror(state);
+        this.mirror=new ObjMirror(state,true);
 
         watcher.addRecursiveListener(this.onWatcherEvent);
     }
@@ -105,7 +105,7 @@ export abstract class ObjSyncClient
 
     public send(cmd:ScopedObjSyncRemoteCommand|ScopedObjSyncRemoteCommand[])
     {
-        console.log('hio 👋 👋 👋 SEND',cmd);
+        console.log('hio 👋 👋 👋 SND',...asArray(cmd));
         if(this._isDisposed){
             return;
         }
@@ -198,7 +198,7 @@ export abstract class ObjSyncClient
 
     protected handleCommand(command:ObjSyncClientCommand|ObjSyncClientCommand[])
     {
-        console.log('hio 👋 👋 👋',{command});
+        console.log('hio 👋 👋 👋 RCV',...asArray(command));
         if(this._isDisposed){
             return;
         }
