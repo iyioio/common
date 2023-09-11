@@ -102,12 +102,12 @@ export interface UseWPropOptions
 
 }
 
-export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(obj:T,prop:P,{
+export const useWProp=<T,P extends keyof NonNullable<T>>(obj:T,prop:P,{
     disable,
     load,
-}:UseWPropOptions={}): T extends (null|undefined) ? undefined : T[P]=>{
+}:UseWPropOptions={}): T extends (null|undefined) ? undefined : NonNullable<T>[P]=>{
 
-    const [value,setValue]=useState<T[P]|undefined>((prop===null || prop===undefined || !obj)?undefined:obj[prop]);
+    const [value,setValue]=useState<NonNullable<T>[P]|undefined>((prop===null || prop===undefined || !obj)?undefined:obj[prop]);
 
     useEffect(()=>{
 
@@ -133,7 +133,7 @@ export const useWProp=<T,P extends T extends (null|undefined) ? any: keyof T>(ob
         }
 
         if(load){
-            watcher.triggerChange({type:'load',prop:prop})
+            watcher.triggerChange({type:'load',prop:prop as any})
         }
 
         watcher.addListener(listener);
