@@ -481,6 +481,9 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('lineHeight150','line-height:1.5em')
     add('lineHeight175','line-height:1.75em')
     add('lineHeight200','line-height:2em')
+    add('textShadowSm','text-shadow: 1px 1px 1px #00000033;')
+    add('textShadowMd','text-shadow: 3px 3px 3px #00000033;')
+    add('textShadowLg','text-shadow: 7px 7px 10px #00000066;')
 
     addWithAlias('color1',cl,`color:${cl.color1};fill:${cl.color1}`)
     addWithAlias('color2',cl,`color:${cl.color2};fill:${cl.color2}`)
@@ -588,7 +591,7 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('posRel','position:relative !important')
     add('posFixed','position:fixed !important')
     add('absTop','position:absolute !important;top:0;left:0;right:0')
-    add('absBottom','position:absolute !important;bottom:0;left:0:right:0')
+    add('absBottom','position:absolute !important;bottom:0;left:0;right:0')
     add('absLeft','position:absolute !important;top:0;bottom:0;left:0')
     add('absRight','position:absolute !important;top:0;bottom:0;right:0')
     add('absTopLeft','position:absolute !important;top:0;left:0')

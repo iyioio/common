@@ -91,6 +91,9 @@ export const baseLayoutFontProps={
     lineHeight150:'ioLineHeight150',
     lineHeight175:'ioLineHeight175',
     lineHeight200:'ioLineHeight200',
+    textShadowSm:'ioTextShadowSm',
+    textShadowMd:'ioTextShadowMd',
+    textShadowLg:'ioTextShadowLg',
     body:'ioBody',//mapped - faceDefault
     h1:'ioH1',//mapped - face1
     h2:'ioH2',//mapped - face2
