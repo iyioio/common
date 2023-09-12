@@ -1,6 +1,7 @@
 import { HashMap, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
+import { useRouteRedirectFallback } from "./common-hooks";
 import { LockScreenRenderer } from "./LockScreenRenderer";
 import { PortalRenderer } from "./PortalRenderer";
 import { useUiReady } from "./useUiReady";
@@ -18,6 +19,11 @@ export interface BaseAppContainerProps
     noBaseLayoutStyleSheet?:boolean;
     staticEnvVars?:HashMap<string>;
     useStaticEnvVarsInProduction?:boolean;
+    /**
+     * Useful in situations where a server is not capable of serving the correct route for dyanmic
+     * paths or removing .html extentions such as hosting on S3.
+     */
+    enableRouteRedirectFallback?:boolean;
 }
 
 export function BaseAppContainer({
@@ -31,6 +37,7 @@ export function BaseAppContainer({
     noPortalRenderer,
     staticEnvVars,
     afterAll,
+    enableRouteRedirectFallback,
 }:BaseAppContainerProps){
 
     const stateRef=useRef({scopeInit,staticEnvVars});
@@ -75,6 +82,8 @@ export function BaseAppContainer({
             onScopeInited?.(scope);
         }
     },[inited,onScopeInited,scope])
+
+    useRouteRedirectFallback(inited && enableRouteRedirectFallback);
 
     if(initBeforeRender && !inited){
         return null;

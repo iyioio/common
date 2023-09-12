@@ -1,4 +1,4 @@
-import { areShallowEqual, CancelToken } from "@iyio/common";
+import { areShallowEqual, CancelToken, uiRouterService } from "@iyio/common";
 import { DependencyList, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export function useAlphaId(){
@@ -52,4 +52,19 @@ export const useShallowRef=<T>(value:T):T=>{
     }
 
     return valueRef.current;
+}
+
+let redirectFallbackChecked=false;
+export const useRouteRedirectFallback=(enabled=true)=>{
+
+    useEffect(()=>{
+
+        if(!enabled || redirectFallbackChecked){
+            return;
+        }
+
+        redirectFallbackChecked=true;
+
+        uiRouterService().push(globalThis?.window?.location.pathname??'/');
+    },[enabled]);
 }
