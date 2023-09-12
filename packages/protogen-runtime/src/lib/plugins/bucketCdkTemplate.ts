@@ -40,7 +40,7 @@ export class ${constructName} extends BucketBuilder
 
 }
 
-const getBuckets=():BucketInfo[]=>${buckets.map((b,i)=>`[
+const getBuckets=():BucketInfo[]=>[${buckets.map((b,i)=>`
     {
         name:${JSON.stringify(b.name)},
         public:${b.public?'true':'false'},
