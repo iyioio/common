@@ -2,6 +2,7 @@ import { ParamTypeDef } from "@iyio/common";
 import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { ParamOutput } from "./ParamOutput";
 
@@ -136,10 +137,29 @@ export interface SiteContentSourceDescription
     accessSiteOrigin?:boolean;
 }
 
+/**
+ * Get converted into a SiteContentSource with an S3 source
+ */
+export interface BucketSiteContentSource
+{
+    bucket:string|s3.Bucket;
+    originPath?:string;
+    fallbackBucket?:string|s3.Bucket;
+    fallbackOriginPath?:string;
+    pattern:string;
+}
+
 export interface NamedFn
 {
     name:string;
     fn:lambda.Function;
     domain?:string;
     url?:lambda.FunctionUrl;
+}
+
+export interface NamedBucket
+{
+    name:string;
+    bucket:s3.Bucket;
+    public:boolean;
 }

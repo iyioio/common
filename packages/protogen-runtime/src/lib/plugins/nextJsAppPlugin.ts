@@ -1,4 +1,4 @@
-import { SiteInfo } from "@iyio/cdk-common";
+import { BucketSiteContentSource, SiteInfo } from "@iyio/cdk-common";
 import { joinPaths, strFirstToUpper } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoGetChildrenByName, protoMergeJson } from "@iyio/protogen";
 import { z } from "zod";
@@ -101,6 +101,7 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                             throw new Error(`redirectHandler type not found. type:${redirectHandler}, appName:${node.name}`);
                         }
                         const domains=protoGetChildrenByName(node,'domain',false);
+                        const bucketSources=protoGetChildrenByName(node,'bucketSource',false);
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
                             redirectHandler,
@@ -110,6 +111,27 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                                 domainName:domains[0]?.value?.trim(),
                                 additionalDomainNames:domains.length>1?domains.map(d=>d.value?.trim()).filter((d,i)=>d && i>0) as string[]:undefined,
                                 createOutputs:true,
+                                fallbackBucket:node.children?.['fallbackBucket']?.value,
+                                bucketSources:bucketSources?bucketSources.map(n=>{
+                                    const name=n.children?.['bucket']?.value;
+                                    const pattern=n.children?.['pattern']?.value;
+                                    if(!name){
+                                        throw new Error(`nextApp(${node.name}) bucketSource requires a bucket to be defined`);
+                                    }
+                                    if(!pattern){
+                                        throw new Error(`nextApp(${node.name}) bucketSource requires a pattern to be defined`);
+                                    }
+                                    const source:BucketSiteContentSource={
+                                        bucket:name,
+                                        pattern,
+                                        originPath:n.children?.['originPath']?.value,
+                                        fallbackBucket:n.children?.['fallbackBucket']?.value,
+                                        fallbackOriginPath:n.children?.['fallbackOriginPath']?.value,
+
+                                    }
+                                    return source;
+                                }):undefined
+
                             }
                         })
 

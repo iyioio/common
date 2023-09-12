@@ -55,6 +55,7 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
+            buckets:namedBuckets
         }={},
     }:BucketBuilderProps)
     {
@@ -68,7 +69,14 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
 
             const bucket=createBucket(this,info.name,{
                 enableCors:info.enableCors,
-                versioned:info.versioned
+                versioned:info.versioned,
+                blockPublicAccess:s3.BlockPublicAccess.BLOCK_ACLS,
+            })
+
+            namedBuckets?.push({
+                name:info.name,
+                bucket,
+                public:info.public?true:false,
             })
 
             info.modify?.(bucket);

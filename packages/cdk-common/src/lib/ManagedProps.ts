@@ -1,6 +1,6 @@
 import type { AccessManager } from "./AccessManager";
 import type { ParamOutput } from "./ParamOutput";
-import { NamedFn, SiteContentSource } from "./cdk-types";
+import { NamedBucket, NamedFn, SiteContentSource } from "./cdk-types";
 
 export interface ManagedProps
 {
@@ -11,4 +11,8 @@ export interface ManagedProps
     readonly siteContentSources?:SiteContentSource[];
 
     readonly fns?:NamedFn[];
+
+    readonly buckets?:NamedBucket[];
+
+
 }

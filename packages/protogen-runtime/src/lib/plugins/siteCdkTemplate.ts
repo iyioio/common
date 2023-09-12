@@ -12,6 +12,7 @@ export interface ${constructName}Props
     transform?:(sites:SiteInfo[])=>SiteInfo[];
 }
 
+// if using a bucket builder create the bucket builder first
 export class ${constructName} extends SiteBuilder
 {
 

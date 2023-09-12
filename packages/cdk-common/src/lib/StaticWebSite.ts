@@ -8,9 +8,10 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
+import { ManagedProps } from "./ManagedProps";
 import { ParamOutput } from "./ParamOutput";
 import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
-import { NamedFn, SiteContentSource } from "./cdk-types";
+import { BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types";
 import { getRegexRedirectMapAsString } from "./getRedirectMap";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
@@ -26,9 +27,10 @@ export interface StaticWebSiteProps
     domainName?:string;
     additionalDomainNames?:string[];
     envVars?:HashMap<string>;
-    fallbackBucket?:s3.Bucket;
+    fallbackBucket?:s3.Bucket|string;
     createOutputs?:boolean;
     additionalSources?:SiteContentSource[];
+    bucketSources?:BucketSiteContentSource[],
     redirectHandler?:NamedFn;
 }
 
@@ -52,10 +54,19 @@ export class StaticWebSite extends Construct {
         fallbackBucket,
         createOutputs,
         additionalSources=[],
+        bucketSources=[],
         redirectHandler,
-    }:StaticWebSiteProps){
+    }:StaticWebSiteProps,managed:ManagedProps={}){
 
         super(scope, name);
+
+        if(typeof fallbackBucket === 'string'){
+            const name=fallbackBucket;
+            fallbackBucket=managed.buckets?.find(b=>b.name===name)?.bucket;
+            if(!fallbackBucket){
+                throw new Error(`No managed fallback bucket found my name ${name}`);
+            }
+        }
 
         let dir:string;
         if(path){
@@ -194,7 +205,6 @@ export class StaticWebSite extends Construct {
 
                 }:undefined,
                 originConfigs:[
-                    ...additionalSources.map(s=>s.source),
                     {
                         s3OriginSource:{
                             s3BucketSource:bucket,
@@ -239,6 +249,59 @@ export class StaticWebSite extends Construct {
                             }]:undefined
                         }],
                     },
+                    ...additionalSources.map(s=>s.source),
+                    ...bucketSources.map(bucketSource=>{
+
+                        let sourceBucket=bucketSource.bucket;
+                        let sourceFallbackBucket=bucketSource.fallbackBucket;
+
+                        if(typeof sourceBucket === 'string'){
+                            const name=sourceBucket;
+                            const bk=managed.buckets?.find(b=>b.name===name)?.bucket;
+                            if(!bk){
+                                throw new Error(`No managed source bucket found my name ${name}`);
+                            }
+                            sourceBucket=bk;
+                        }
+                        addBucketResourcePolicy(sourceBucket);
+
+                        if(typeof sourceFallbackBucket === 'string'){
+                            const name=sourceFallbackBucket;
+                            const bk=managed.buckets?.find(b=>b.name===name)?.bucket;
+                            if(!bk){
+                                throw new Error(`No managed source fallback bucket found my name ${name}`);
+                            }
+                            sourceFallbackBucket=bk;
+                        }
+                        if(sourceFallbackBucket){
+                            addBucketResourcePolicy(sourceFallbackBucket);
+                        }
+
+                        const source:cf.SourceConfiguration={
+                            s3OriginSource:{
+                                s3BucketSource:sourceBucket,
+                                originAccessIdentity:originIdent,
+                                originPath:bucketSource.originPath,
+                            },
+                            failoverS3OriginSource:sourceFallbackBucket?{
+                                s3BucketSource:sourceFallbackBucket,
+                                originAccessIdentity:originIdent,
+                                originPath:bucketSource.fallbackOriginPath,
+                            }:undefined,
+                            failoverCriteriaStatusCodes:sourceFallbackBucket?[404,403]:undefined,
+                            behaviors:[{
+                                isDefaultBehavior:false,
+                                viewerProtocolPolicy:cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                compress:true,
+                                allowedMethods:cf.CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
+                                pathPattern:bucketSource.pattern.includes('*')?
+                                    bucketSource.pattern:
+                                    bucketSource.pattern+(bucketSource.pattern.endsWith('/')?'*':'/*'),
+                            }],
+                        }
+
+                        return source;
+                    }),
                 ],
                 errorConfigurations:[
                     {
