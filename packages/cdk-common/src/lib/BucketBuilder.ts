@@ -36,6 +36,9 @@ export interface BucketInfo
     modify?:(bucket:s3.Bucket)=>void;
     mountPaths?:BucketMountPath[];
     versioned?:boolean;
+    website?:boolean;
+    websiteIndexDocument?:string;
+    websiteErrorDocument?:string;
 }
 
 export interface BucketResult
@@ -71,6 +74,8 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 enableCors:info.enableCors,
                 versioned:info.versioned,
                 blockPublicAccess:s3.BlockPublicAccess.BLOCK_ACLS,
+                websiteErrorDocument:info.websiteErrorDocument??(info.website?'index.html':undefined),
+                websiteIndexDocument:info.websiteIndexDocument??(info.website?'index.html':undefined),
             })
 
             namedBuckets?.push({
