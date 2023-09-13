@@ -1,4 +1,6 @@
 import { ParamTypeDef } from "@iyio/common";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
+import * as cfo from "aws-cdk-lib/aws-cloudfront-origins";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
@@ -37,6 +39,8 @@ export interface BucketInfo
     mountPaths?:BucketMountPath[];
     versioned?:boolean;
     website?:boolean;
+    disableWebsiteCache?:boolean;
+    websiteParam?:ParamTypeDef<string>;
     websiteIndexDocument?:string;
     websiteErrorDocument?:string;
 }
@@ -74,8 +78,8 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 enableCors:info.enableCors,
                 versioned:info.versioned,
                 blockPublicAccess:s3.BlockPublicAccess.BLOCK_ACLS,
-                websiteErrorDocument:info.websiteErrorDocument??(info.website?'index.html':undefined),
-                websiteIndexDocument:info.websiteIndexDocument??(info.website?'index.html':undefined),
+                websiteErrorDocument:info.websiteErrorDocument,
+                websiteIndexDocument:info.websiteIndexDocument,
             })
 
             namedBuckets?.push({
@@ -129,6 +133,35 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                         destinationBucket:bucket,
                         destinationKeyPrefix:path.mountPath
                     });
+                }
+            }
+
+            if(info.website){
+                const originAccessIdentity=new cf.OriginAccessIdentity(this,info.name+'Oai');
+                bucket.grantRead(originAccessIdentity);
+
+                const dist=new cf.Distribution(this,info.name+'Dist',{
+                    defaultRootObject:'index.html',
+                    errorResponses:[
+                        {
+                            httpStatus:404,
+                            responseHttpStatus:200,
+                            responsePagePath:'/index.html'
+                        },
+                        {
+                            httpStatus:403,
+                            responseHttpStatus:200,
+                            responsePagePath:'/index.html'
+                        },
+                    ],
+                    defaultBehavior:{
+                        origin:new cfo.S3Origin(bucket,{originAccessIdentity}),
+                        cachePolicy:info.disableWebsiteCache?cf.CachePolicy.CACHING_DISABLED:undefined,
+                    },
+                });
+
+                if(info.websiteParam && params){
+                    params.setParam(info.websiteParam,`https://${dist.distributionDomainName}`);
                 }
             }
 

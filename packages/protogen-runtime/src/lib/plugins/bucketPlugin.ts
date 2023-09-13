@@ -60,6 +60,9 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
 
         for(const node of supported){
             protoAddContextParam(node.name,paramPackage,paramMap,importMap);
+            if(node.children?.['website']){
+                protoAddContextParam(node.name+'Website',paramPackage,paramMap,importMap);
+            }
         }
 
         if(bucketCdkConstructFile){
@@ -73,9 +76,11 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                         enableCors:b.children?.['cors']?true:false,
                         versioned:b.children?.['versioned']?true:undefined,
                         website:b.children?.['website']?true:undefined,
+                        disableWebsiteCache:b.children?.['disableWebsiteCache']?true:undefined,
                         websiteIndexDocument:b.children?.['websiteIndexDocument']?.value,
                         websiteErrorDocument:b.children?.['websiteErrorDocument']?.value,
                         arnParam:protoGetParamName(b.name),
+                        websiteParam:b.children?.['website']?protoGetParamName(b.name+'Website'):undefined,
                         mountPaths:pathsChildren.length?pathsChildren.map(n=>{
                             const source=n.children?.['source']?.value||'_';
                             const mount=n.children?.['mount']?.value||source;
