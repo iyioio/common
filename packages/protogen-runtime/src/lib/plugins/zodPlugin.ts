@@ -194,7 +194,7 @@ const addEnum=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=
 
     out.push('}')
 
-    out.push(`export const ${fullName}=z.nativeEnum(${node.name})`);
+    out.push(`export const ${fullName}=z.number().int()`);
 }
 
 const addUnion=(node:ProtoNode,out:string[],tab:string,getFullName:(name:string)=>string)=>{
