@@ -382,7 +382,6 @@ export class ObjWatcher<
             isNonClassInstanceObject(current)
         ){
             if(deepCompare(current,value)){
-                console.log('hio 👋 👋 👋 MERGE DeepCompare true -----------------',);
                 return current;
             }
             _wMergeObj(1000,current,value,source);
