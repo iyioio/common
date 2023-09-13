@@ -202,3 +202,49 @@ export const aryShallowUnorderedCompare=(a:any[]|null|undefined,b:any[]|null|und
 
     return true;
 }
+
+export const aryPushUnique=<T>(ary:T[]|null|undefined,value:T):boolean=>{
+    if(!ary || ary.includes(value)){
+        return false;
+    }
+    ary.push(value);
+    return true;
+}
+
+export const aryPushUniqueMany=<T>(ary:T[]|null|undefined,values:T[]):number=>{
+    let count=0;
+    if(!ary){
+        return count;
+    }
+    for(let i=0;i<values.length;i++){
+        const v=values[i];
+        if(!ary.includes(v as any)){
+            ary.push(v as any);
+            count++;
+        }
+    }
+    return count;
+}
+
+export const aryUnshiftUnique=<T>(ary:T[]|null|undefined,value:T):boolean=>{
+    if(!ary || ary.includes(value)){
+        return false;
+    }
+    ary.unshift(value);
+    return true;
+}
+
+export const aryUnshiftUniqueMany=<T>(ary:T[]|null|undefined,values:T[]):number=>{
+    let count=0;
+    if(!ary){
+        return count;
+    }
+    for(let i=0;i<values.length;i++){
+        const v=values[i];
+        if(!ary.includes(v as any)){
+            ary.splice(count,0,v as any);
+            count++;
+        }
+    }
+    return count;
+}
