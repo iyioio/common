@@ -26,6 +26,7 @@ export * from "./lib/RichTextView";
 export * from "./lib/ScrollView";
 export * from "./lib/SlimButton";
 export * from "./lib/Text";
+export * from "./lib/Theme";
 export * from "./lib/View";
 export * from "./lib/common-hooks";
 export * from "./lib/icon/BasicIcon";
