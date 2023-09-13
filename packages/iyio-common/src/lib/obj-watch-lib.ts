@@ -1,4 +1,5 @@
 import { ObjWatcher } from "./ObjWatcher";
+import { RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
 import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt, Watchable, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
 import { deepClone } from "./object";
@@ -61,10 +62,10 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
 }
 
-export const watchObjAtPath=<T extends Watchable>(obj:T,path:(string|number)[],listener:(value:any)=>void):WatchedPath=>{
+export const watchObjAtPath=<T extends Watchable>(obj:T,path:(string|number)[]|RecursiveKeyOf<T>,listener:(value:any)=>void):WatchedPath=>{
     return watchObj(obj).watchPath(path,listener);
 }
-export const watchObjAtDeepPath=<T extends Watchable>(obj:T,path:(string|number)[],listener:(value:any)=>void):WatchedPath=>{
+export const watchObjAtDeepPath=<T extends Watchable>(obj:T,path:(string|number)[]|RecursiveKeyOf<T>,listener:(value:any)=>void):WatchedPath=>{
     return watchObj(obj).watchDeepPath(path,listener);
 }
 
