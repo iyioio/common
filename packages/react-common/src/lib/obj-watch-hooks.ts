@@ -97,12 +97,12 @@ export const useWObjPropWithRefresh=<T,P extends T extends (null|undefined) ? an
 
     return useWObjWithRefresh(value,objOptions as any);
 }
-export const useWObjProp=<T,P extends T extends (null|undefined) ? any: keyof T>(
+export const useWObjProp=<T extends object|null|undefined,P extends keyof NonNullable<T>>(
     obj:T,
     prop:P,
-    objOptions?:UseWObjOptions<T[P]>,
+    objOptions?:UseWObjOptions<NonNullable<T>[P]>,
     propOptions?:UseWPropOptions,
-): T extends (null|undefined) ? undefined : T[P]=>{
+): T extends (null|undefined) ? undefined : NonNullable<T>[P]=>{
 
     const value=useWProp<T,P>(obj,prop,propOptions);
 
