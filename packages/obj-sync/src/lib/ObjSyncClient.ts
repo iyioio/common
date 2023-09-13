@@ -37,6 +37,8 @@ export abstract class ObjSyncClient
 
     protected readonly pingIntervalMs?:number;
 
+    public logCommands=false;
+
     private readonly maxCommandQueueSize:number;
     private readonly clientMapProp?:string;
     private readonly autoDeleteClientObjects?:boolean;
@@ -105,7 +107,9 @@ export abstract class ObjSyncClient
 
     public send(cmd:ScopedObjSyncRemoteCommand|ScopedObjSyncRemoteCommand[])
     {
-        console.log('hio 👋 👋 👋 SND',...asArray(cmd));
+        if(this.logCommands){
+            console.info('>> obj-sync SND',...asArray(cmd));
+        }
         if(this._isDisposed){
             return;
         }
@@ -198,7 +202,9 @@ export abstract class ObjSyncClient
 
     protected handleCommand(command:ObjSyncClientCommand|ObjSyncClientCommand[])
     {
-        console.log('hio 👋 👋 👋 RCV',...asArray(command));
+        if(this.logCommands){
+            console.info('<< obj-sync RCV',...asArray(command));
+        }
         if(this._isDisposed){
             return;
         }
