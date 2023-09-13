@@ -1,4 +1,4 @@
-import { ObjWatchEvt, ObjWatcher, isWatcherValueChangeEvent, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjWatchEvt, ObjWatcher, RecursiveKeyOf, isWatcherValueChangeEvent, stopWatchingObj, watchObj, watchObjAtDeepPath } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
 export interface UseWObjOptions<T>
@@ -11,6 +11,22 @@ export interface UseWObjOptions<T>
 
     propFilter?:(keyof T)[];
 
+}
+
+export const useWatchPath=<T>(obj:T,path:RecursiveKeyOf<T>)=>{
+    const [update,setUpdate]=useState(0);
+    useEffect(()=>{
+        if(!obj){
+            return;
+        }
+        const watchedPath=watchObjAtDeepPath(obj,path.split('.'),()=>{
+            setUpdate(v=>v+1);
+        })
+
+        return watchedPath.dispose;
+
+    },[obj,path]);
+    return update;
 }
 
 export const useWObjWithRefresh=<T>(obj:T,{
