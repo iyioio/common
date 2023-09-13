@@ -9,6 +9,7 @@ export interface ScrollViewProps extends ViewProps
     containerProps?:ViewProps;
     children?:any;
     direction?:ScrollViewDirection;
+    overflowRef?:(elem:HTMLElement|null)=>void;
 }
 
 export function ScrollView({
@@ -18,13 +19,14 @@ export function ScrollView({
     direction='y',
     row,
     col,
+    overflowRef,
     ...props
 }:ScrollViewProps){
 
     return (
         <View className={cn("ScrollView",'scroll-'+direction,className)} {...props}>
 
-            <div>
+            <div ref={overflowRef}>
                 <View row={row} col={col} {...containerProps}>
                     {children}
                 </View>
