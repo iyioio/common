@@ -601,6 +601,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     add('absFill','position:absolute !important;left:0;top:0;right:0;bottom:0')
     add('absFillWh','position:absolute !important;left:0;top:0;width:100%;height:100%')
     add('wh100','width:100%;height:100%')
+    add('w100','width:100%')
+    add('h100','height:100%')
     add('borderBox','box-sizing:border-box')
     add('pointerEventsNone','pointer-events:none')
     add('cursorPointer','cursor:pointer')

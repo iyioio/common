@@ -535,6 +535,8 @@ export const baseLayoutUtilProps={
     absFill:'ioAbsFill',
     absFillWh:'ioAbsFillWh',
     wh100:'ioWh100',
+    w100:'ioW100',
+    h100:'ioH100',
     borderBox:'ioBorderBox',
     pointerEventsNone:'ioPointerEventsNone',
     cursorPointer:'ioCursorPointer',
