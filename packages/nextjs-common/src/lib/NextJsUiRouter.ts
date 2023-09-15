@@ -7,24 +7,26 @@ export class NextJsUiRouter extends UiRouterBase
 
     public override async push(path:string,query?:RouteQuery){
 
-        const evt=await this.handlePushEvtAsync(path,query);
-        if(evt?.cancel){
-            return;
-        }
-        if(evt?.type==='push'){
-            path=evt.path;
-            query=evt.query;
-        }
+        this.loadingCount++;
 
-        if(shouldUseNativeNavigation(path)){
-            globalThis.location.assign(addQueryToPath(path,query));
-        }else{
-            try{
-                this.loadingCount++;
-                await Router.push(addQueryToPath(path,query));
-            }finally{
-                this.loadingCount--;
+        try{
+            const evt=await this.handlePushEvtAsync(path,query);
+            if(evt?.cancel){
+                return;
             }
+            if(evt?.type==='push'){
+                path=evt.path;
+                query=evt.query;
+            }
+
+            if(shouldUseNativeNavigation(path)){
+                globalThis.location.assign(addQueryToPath(path,query));
+            }else{
+                    await Router.push(addQueryToPath(path,query));
+            }
+
+        }finally{
+            this.loadingCount--;
         }
     }
     public override pop(){
