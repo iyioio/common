@@ -23,6 +23,7 @@ export * from "./lib/PanZoomView";
 export * from "./lib/Portal";
 export * from "./lib/PortalRenderer";
 export * from "./lib/RichTextView";
+export * from "./lib/RouteLoadingIndicator";
 export * from "./lib/ScrollView";
 export * from "./lib/SlimButton";
 export * from "./lib/Text";
