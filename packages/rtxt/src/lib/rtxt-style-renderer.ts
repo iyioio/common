@@ -31,6 +31,7 @@ export const insertRTxtViewerStyleSheet=({
     outline-offset:0.6rem;
     border-radius:1px;
     outline:none;
+    word-break:break-word;
 }
 @keyframes ${prefix}doc-outline-keyframes{
     0%{outline:1px solid #ffffff00}
