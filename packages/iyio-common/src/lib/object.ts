@@ -99,6 +99,56 @@ export const deepClone=<T>(obj:T, maxDepth=20):T=>
 
 }
 
+export const conditionalDeepClone=<T>(
+    obj:T,
+    checkKey:(key:string|number,value:any,paths:(string|number)[],values:any[])=>boolean,
+    maxDepth=20,
+    path:(string|number)[]=[],
+    values:any[]=[]):T=>
+{
+    if(maxDepth<0){
+        throw new Error(`deepClone max depth reached (${path.join(' -> ')})`);
+    }
+    maxDepth--;
+    if(!obj || typeof obj !== 'object'){
+        return obj;
+    }
+
+    if(Array.isArray(obj)){
+        const clone:any[]=[];
+        for(let i=0;i<obj.length;i++){
+            path.push(i);
+            values.push(obj[i]);
+            if(!checkKey(i,obj[i],path,values)){
+                path.pop();
+                values.pop();
+                continue;
+            }
+            clone.push(conditionalDeepClone(obj[i],checkKey,maxDepth,path,values));
+            path.pop();
+            values.pop();
+        }
+        return clone as any;
+    }else{
+        const clone:any={}
+        for(const e in obj){
+            path.push(e);
+            values.push(obj[e]);
+            if(!checkKey(e,obj[e],path,values)){
+                path.pop();
+                values.pop();
+                continue;
+            }
+            clone[e]=conditionalDeepClone(obj[e],checkKey,maxDepth,path,values);
+            path.pop();
+            values.pop();
+        }
+        return clone;
+    }
+
+
+}
+
 /**
  * Duplicates the passed in object then deletes all undefined members then returns the new object
  */
