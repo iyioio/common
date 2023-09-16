@@ -171,6 +171,11 @@ export interface ProtoNode{
      * If true the value from the source of the node should be copied to the node
      */
     copySource?:boolean;
+
+    /**
+     * Address of a node that this node was inherited from
+     */
+    inheritedAddress?:string;
 }
 
 

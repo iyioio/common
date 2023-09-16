@@ -15,7 +15,7 @@ export const markdownParser=async ({
 
         log(`parse - ${source.input}`);
 
-        const mNodes=protoMarkdownParseNodes(source.content).rootNodes;
+        const mNodes=protoMarkdownParseNodes(source.content,{applyInheritance:true}).rootNodes;
 
         log(`${mNodes.length} node(s) parsed`);
 

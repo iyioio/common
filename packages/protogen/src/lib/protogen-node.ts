@@ -1,4 +1,4 @@
-import { deleteUndefined, getSubstringCount, Point, safeParseNumber } from "@iyio/common";
+import { conditionalDeepClone, deleteUndefined, getSubstringCount, Point, safeParseNumber } from "@iyio/common";
 import { protoSetLayout } from "./protogen-lib";
 import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale, ProtoTypeInfo } from "./protogen-types";
 
@@ -270,6 +270,109 @@ export const protoMergeNodes=(destNodes:ProtoNode[],srcNodes:ProtoNode[])=>
 
 }
 
+export const protoApplyInheritance=(nodes:ProtoNode[])=>{
+    for(const node of nodes){
+
+        if(node.address.includes('.')){
+            continue;
+        }
+
+        for(const type of node.types){
+
+            if(!type.isRefType || !type.copySource){
+                continue;
+            }
+
+            const fromNode=nodes.find(n=>n.address===type.type);
+            if(!fromNode){
+                console.log(nodes)
+                throw new Error(`Unable to find node (${type.type}) for inheritance by (${node.name})`);
+            }
+
+            protoInheritNodesFrom(node,fromNode,nodes);
+            updateInheritedAddresses(node,[node.address],true);
+
+        }
+
+    }
+}
+
+const updateInheritedAddresses=(node:ProtoNode,path:string[],requireInherited:boolean)=>{
+    if(!node.children){
+        return;
+    }
+    for(const c in node.children){
+        const child=node.children[c];
+        if(!child || (requireInherited && !child.inheritedAddress)){
+            continue;
+        }
+
+        path.push(child.name);
+        child.address=path.join('.');
+        updateInheritedAddresses(child,path,false);
+        path.pop();
+
+
+    }
+}
+
+const shouldBeNode=(node:Partial<ProtoNode>|undefined|null):boolean=>{
+ return (
+    node &&
+    (typeof node.name === 'string') &&
+    (typeof node.address === 'string') &&
+    (typeof node.type === 'string') &&
+    Array.isArray(node.types)
+ )?true:false;
+}
+export const protoCloneNode=(node:ProtoNode):ProtoNode=>{
+    return conditionalDeepClone(node,(key,value,path,values)=>{
+        const child=values[values.length-2] as Partial<ProtoNode>|undefined;
+        const parent=values[values.length-4] as Partial<ProtoNode>|undefined;
+        const skip=(
+            key==='renderData' &&
+            (child?shouldBeNode(child):true) &&
+            (parent?shouldBeNode(parent):true)
+        )
+        return !skip
+    });
+}
+
+export const protoInheritNodesFrom=(to:ProtoNode,from:ProtoNode,allNodes:ProtoNode[],inheritanceChain:string[]=[])=>{
+    if(inheritanceChain.includes(from.name)){
+        throw new Error(`inheritance loop detected (${inheritanceChain.join(' -> ')} -> ${from.name})`)
+    }
+
+    inheritanceChain.push(from.name);
+
+    if(from.children){
+        for(const c in from.children){
+            const child=from.children[c];
+            if(!child || child.inheritedAddress || to.children?.[c]){
+                continue;
+            }
+            const clone=protoCloneNode(child);
+            clone.inheritedAddress=clone.address;
+            if(!to.children){
+                to.children={};
+            }
+            to.children[c]=clone;
+            allNodes.push(clone);
+
+        }
+    }
+
+    for(const type of from.types){
+        if(type.isRefType && type.copySource){
+            const fromNode=allNodes.find(n=>n.address===type.type);
+            if(!fromNode){
+                throw new Error(`Unable to find node (${type.type}) for inheritance by (${to.name}).`);
+            }
+            protoInheritNodesFrom(to,fromNode,allNodes,inheritanceChain);
+        }
+    }
+}
+
 
 export interface ProtoNormalizeNodesOptions
 {
@@ -279,6 +382,7 @@ export interface ProtoNormalizeNodesOptions
     addressMap?:ProtoAddressMap;
     srcLink?:boolean;
     addComments?:boolean;
+    applyInheritance?:boolean;
 }
 
 export const protoNormalizeNodes=(nodes:ProtoNode[],{
@@ -288,7 +392,13 @@ export const protoNormalizeNodes=(nodes:ProtoNode[],{
     updateBefore=true,
     addComments=true,
     addressMap=protoCreateNodeAddressMap(nodes),
+    applyInheritance,
 }:ProtoNormalizeNodesOptions={})=>{
+
+    if(applyInheritance){
+        protoApplyInheritance(nodes);
+        addressMap=protoCreateNodeAddressMap(nodes)
+    }
 
     let lastNode=null;
     for(const node of nodes){
