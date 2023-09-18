@@ -6,6 +6,16 @@ import { ReadonlySubject } from "./rxjs-types";
 import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem } from "./ui-lib";
 import { uuid } from "./uuid";
 
+export interface UiRouterBaseOptions
+{
+    disableAutoChangeChecking?:boolean;
+    changeCheckIntervalMs?:number;
+    /**
+     * Minimum number of milliseconds between a manual route change triggered by one of the public or
+     * protected methods of UiRouteBase and auto detected route changes.
+     */
+    minAutoChangeMarginMs?:number;
+}
 
 export class UiRouterBase implements IUiRouter
 {
@@ -31,12 +41,28 @@ export class UiRouterBase implements IUiRouter
         this._isLoading.next(value>0);
     }
 
+    protected readonly disableAutoChangeChecking:boolean;
+    protected readonly changeCheckIntervalMs:number;
+    protected readonly minAutoChangeMarginMs:number;
+    protected readonly changeCheckIv:any;
+
+    protected lastTriggerTime:number=0;
+    protected lastTriggerPath:string|null=null;
+
     private readonly _dispose:DisposeCallback|null;
     private readonly checkIv:any;
     private readonly itemsSub:Subscription;
 
-    public constructor()
+    public constructor({
+        disableAutoChangeChecking=false,
+        changeCheckIntervalMs=250,
+        minAutoChangeMarginMs=1000,
+    }:UiRouterBaseOptions={})
     {
+        (globalThis.window as any).______ROUTER=this;
+        this.disableAutoChangeChecking=disableAutoChangeChecking;
+        this.changeCheckIntervalMs=changeCheckIntervalMs;
+        this.minAutoChangeMarginMs=minAutoChangeMarginMs;
         this.checkIv=setInterval(this.historyListener,30);
         if(globalThis.window){
             globalThis.window.addEventListener('popstate',this.historyListener);
@@ -51,6 +77,10 @@ export class UiRouterBase implements IUiRouter
         this.itemsSub=this.navItemsSubject.subscribe(()=>{
             this.checkForChange(true);
         })
+
+        if(!disableAutoChangeChecking){
+            this.changeCheckIv=setInterval(this.autoCheck,changeCheckIntervalMs)
+        }
     }
 
     private _isDisposed=false;
@@ -62,6 +92,7 @@ export class UiRouterBase implements IUiRouter
         }
         this._isDisposed=true;
         clearInterval(this.checkIv);
+        clearInterval(this.changeCheckIv);
         this.itemsSub.unsubscribe();
         this.listeners.splice(0,this.listeners.length);
         this._dispose?.();
@@ -78,12 +109,38 @@ export class UiRouterBase implements IUiRouter
         this.updateActive();
     }
 
-    protected updateActive()
+    protected getCurrentUnmatchedRouteItem()
     {
         const route=this.getCurrentRoute();
         const match=findMatchingUiActionItem({to:route.asPath},this.navItemsSubject.value)??null;
         if(!deepCompare(match,this._activeNavItem.value)){
+            return match;
+        }else{
+            return undefined;
+        }
+    }
+
+    protected updateActive()
+    {
+        const match=this.getCurrentUnmatchedRouteItem();
+        if(match){
             this._activeNavItem.next(match);
+        }
+
+    }
+
+    private readonly autoCheck=()=>{
+        if( this._loadingCount>0 ||
+            (Date.now()-this.lastTriggerTime)<this.minAutoChangeMarginMs ||
+            this.lastTriggerPath===null)
+        {
+            return;
+        }
+
+        const route=this.getCurrentRoute();
+        if(route.asPath!==this.lastTriggerPath){
+            console.info('Auto push route',route);
+            this.handlePushEvtAsync(route.asPath);
         }
 
     }
@@ -103,12 +160,15 @@ export class UiRouterBase implements IUiRouter
 
     protected async triggerEventAsync(evt:UiRouterEvt):Promise<void>
     {
+        this.lastTriggerTime=Date.now();
+        this.lastTriggerPath=evt.type==='push'?evt.path:null;
         for(const listener of this.listeners){
             try{
                 await listener(evt);
             }catch(ex){
                 console.error('UiRouterEvtListener failed',ex);
             }
+            this.lastTriggerTime=Date.now();
             if(evt.index!==this.eventIndex || this._isDisposed){
                 evt.cancel=true;
             }
