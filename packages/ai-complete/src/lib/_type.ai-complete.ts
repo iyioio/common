@@ -7,3 +7,5 @@ export const AiCompletionProviders=defineProvider<AiCompletionProvider>("AiCompl
 export const aiComplete=defineService('aiComplete',scope=>AiCompletionService.fromScope(scope));
 
 export const httpAiCompletionUrlParam=defineStringParam('httpAiCompletionUrl','/api/complete');
+
+export const aiCompletionFnArnParam=defineStringParam('aiCompletionFnArn');

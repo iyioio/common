@@ -1,4 +1,5 @@
-import { ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined } from "zod";
+import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined } from "zod";
+import { JsonScheme } from "./json-scheme";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
 export const getZodErrorMessage=(zodError:ZodError):string=>{
@@ -104,4 +105,86 @@ export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{re
     }else{
         return {error:parsedResult.error}
     }
+}
+
+
+
+export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=10):JsonScheme|undefined=>{
+    return _zodTypeToJsonScheme(scheme,maxDepth)?.jsonType;
+}
+
+
+
+const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,optional:boolean}|undefined=>{
+
+    if(depth<=0){
+        return undefined;
+    }
+
+    let optional=false;
+    if(type instanceof ZodOptional){
+        type=type.unwrap();
+        optional=true;
+    }
+
+    const jsonType:JsonScheme={}
+
+    if(type instanceof ZodString){
+        jsonType.type='string';
+    }else if(type instanceof ZodNumber){
+        jsonType.type=type._def.checks.some(c=>c.kind==='int')?'integer':'number';
+    }else if(type instanceof ZodBoolean){
+        jsonType.type='boolean';
+    }else if(type instanceof ZodNull){
+        jsonType.type='null';
+    }else if(type instanceof ZodUndefined){
+        return undefined;
+    }else if(type instanceof ZodLazy){
+        const inner=(type._def as ZodLazyDef)?.getter?.();
+        return inner?_zodTypeToJsonScheme(inner,depth-1):undefined;
+    }else if(type instanceof ZodEnum){
+        const tsType=getZodEnumPrimitiveType(type);
+        if(tsType!=='undefined'){
+            jsonType.type=tsType;
+        }
+        const values=type._def.values;
+        if(Array.isArray(values)){
+            jsonType.enum=[...values];
+        }
+    }else if(type instanceof ZodObject){
+        jsonType.type='object';
+        const required:string[]=[];
+        const properties:Record<string,JsonScheme>={};
+        for(const e in type.shape){
+            const prop=_zodTypeToJsonScheme(type.shape[e],depth-1);
+            if(!prop){
+                continue;
+            }
+            if(!prop.optional){
+                required.push(e);
+            }
+            properties[e]=prop.jsonType;
+        }
+        if(required.length){
+            jsonType.required=required;
+        }
+        jsonType.properties=properties;
+
+    }else if(type instanceof ZodArray){
+        jsonType.type='array';
+        const itemType=_zodTypeToJsonScheme(type._def.type,depth-1);
+        if(itemType){
+            jsonType.items=itemType.jsonType;
+        }else{
+            jsonType.items=false;
+        }
+    }else{
+        return undefined;
+    }
+
+    if(type.description){
+        jsonType.description=type.description;
+    }
+
+    return {jsonType,optional};
 }

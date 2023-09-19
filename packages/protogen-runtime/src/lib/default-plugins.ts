@@ -1,5 +1,6 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { actionPlugin } from "./plugins/actionPlugin";
+import { aiCompletionPlugin } from "./plugins/aiCompletionPlugin";
 import { assignPlugin } from "./plugins/assignPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { bucketPlugin } from "./plugins/bucketPlugin";
@@ -112,6 +113,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:serverFnPlugin
+        },
+        {
+            name:'aiCompletionPlugin',
+            source:'@',
+            paths:[],
+            plugin:aiCompletionPlugin
         },
         {
             name:'bucketPlugin',

@@ -44,6 +44,8 @@
             "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"],
             "@iyio/ai-complete": ["packages/ai-complete/src/index.ts"],
             "@iyio/ai-complete-openai": ["packages/ai-complete-openai/src/index.ts"],
+            "@iyio/ai-complete-lambda": ["packages/ai-complete-lambda/src/index.ts"],
+            "@iyio/ai-complete-openai-cdk": ["packages/ai-complete-openai-cdk/src/index.ts"],
             "@iyio/media-common": ["packages/media-common/src/index.ts"],
             "@iyio/obj-sync": ["packages/obj-sync/src/index.ts"],
             "@iyio/obj-sync-cdk": ["packages/obj-sync-cdk/src/index.ts"],

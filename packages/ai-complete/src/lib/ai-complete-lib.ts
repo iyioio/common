@@ -2,6 +2,8 @@ import { ProviderTypeDef, Scope, TypeDef } from "@iyio/common";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from "./ai-complete-types";
 
+export const aiCompleteModelCliam='aiCompleteModel';
+
 export interface AiCompletionServiceOptions
 {
     providers:ProviderTypeDef<AiCompletionProvider>;
