@@ -1,11 +1,16 @@
 import { JsonScheme } from "@iyio/common";
 import { z } from "zod";
 
+export interface CompletionOptions
+{
+    allowedModels?:string[];
+}
+
 export interface AiCompletionProvider
 {
-    completeAsync(request:AiCompletionRequest):Promise<AiCompletionResult>;
+    completeAsync(request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>;
 
-    canComplete?(request:AiCompletionRequest):boolean;
+    canComplete?(request:AiCompletionRequest,options?:CompletionOptions):boolean;
 }
 
 // export const AiCompletionFunctionParamScheme=z.object({
@@ -35,9 +40,22 @@ export type AiCompletionFunctionCall=z.infer<typeof AiCompletionFunctionCallSche
 export const AiCompletionRoleScheme=z.enum(['system','user','assistant','function']);
 export type AiCompletionRole=z.infer<typeof AiCompletionRoleScheme>;
 
+export const AiComplationMessageTypeScheme=z.enum(['text','image']);
+export type AiComplationMessageType=z.infer<typeof AiComplationMessageTypeScheme>;
+
 export const AiCompletionMessageScheme=z.object({
     role:AiCompletionRoleScheme.optional(),
-    content:z.string(),
+    content:z.string().optional(),
+    url:z.string().optional(),
+    /**
+     * The type of the message
+     */
+    type:AiComplationMessageTypeScheme,
+    /**
+     * The requested message type to response with.
+     * @defaul 'text'
+     */
+    requestedResponseType:AiComplationMessageTypeScheme.optional(),
     name:z.string().optional(),
     call:AiCompletionFunctionCallScheme.optional(),
 })
@@ -46,7 +64,6 @@ export type AiCompletionMessage=z.infer<typeof AiCompletionMessageScheme>;
 
 export const AiCompletionOptionScheme=z.object({
     message:AiCompletionMessageScheme,
-    contentType:z.string(),
     confidence:z.number(),
 })
 export type AiCompletionOption=z.infer<typeof AiCompletionOptionScheme>;
@@ -64,6 +81,8 @@ export const AiCompletionRequestScheme=z.object({
     prompt:AiCompletionMessageScheme.array(),
     providerData:z.any().optional(),
     functions:AiCompletionFunctionScheme.array().optional(),
+    returnProviderData:z.boolean().optional(),
+    model:z.string().optional(),
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme>;
 

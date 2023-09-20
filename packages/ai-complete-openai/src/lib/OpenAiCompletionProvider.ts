@@ -1,7 +1,7 @@
-import { AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
-import { Scope, SecretManager, deleteUndefined, secretManager } from '@iyio/common';
+import { AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from '@iyio/ai-complete';
+import { Scope, SecretManager, UnauthorizedError, deleteUndefined, secretManager } from '@iyio/common';
 import { parse } from 'jsonc-parser';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAIApi from 'openai';
 import { openAiApiKeyParam, openAiModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
@@ -37,6 +37,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         apiKey,
         secretManager,
         secretsName,
+        //model='gpt-4',
         model='gpt-3.5-turbo',
     }:OpenAiCompletionProviderOptions){
         this.apiKey=apiKey;
@@ -58,54 +59,81 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 if(!apiKey){
                     throw new Error('Unable to get OpenAi apiKey');
                 }
-                return new OpenAIApi(new Configuration({
-                    apiKey
-                }))
+                return new OpenAIApi({
+                    apiKey,
+                    dangerouslyAllowBrowser:true,
+                })
             })();
         }
 
         return await this.apiPromise;
     }
 
-    public async completeAsync(request: AiCompletionRequest):Promise<AiCompletionResult>
+    public async completeAsync(request:AiCompletionRequest,{
+        allowedModels=[this.model]
+    }:CompletionOptions={}):Promise<AiCompletionResult>
     {
+        allowedModels=allowedModels.map(m=>m==='default'?this.model:m);
+
+        const model=request.model??this.model;
+
+        if(!allowedModels.includes(model)){
+            throw new UnauthorizedError(`Requested model (${model}) is not allowed to be used`);
+        }
+
         const api=await this.getApiAsync();
 
-        const r=await api.createChatCompletion({
-            model:this.model,
-            stream:false,
-            messages:request.prompt.map((m,i)=>deleteUndefined({
-                role:m.role??(i===0?'system':'user'),
-                content:m.content,
-                name:m.name
-            })),
-            functions:request.functions?.map(f=>{
-                return deleteUndefined({
-                    name:f.name,
-                    description:f.description,
-                    parameters:f.params
+        const lastMsg=request.prompt[request.prompt.length-1];
+        if(lastMsg?.requestedResponseType==='image'){
+            const r=await api.images.generate({
+                prompt:lastMsg.content??'',
+                n:1,
+                size:'512x512'
+            });
+
+            return {
+                options:[{
+                    message:{
+                        type:'image',
+                        url:r.data[0]?.url,
+                    },
+                    confidence:1,
+                }]
+            }
+        }else{
+
+            const r=await api.chat.completions.create({
+                model,
+                stream:false,
+                messages:request.prompt.filter(m=>m.type==='text').map((m,i)=>deleteUndefined({
+                    role:m.role??(i===0?'system':'user'),
+                    content:m.content??'',
+                    name:m.name
+                })),
+                functions:request.functions?.map(f=>{
+                    return deleteUndefined({
+                        name:f.name,
+                        description:f.description,
+                        parameters:f.params??{}
+                    })
                 })
             })
-        })
 
-        return {
-            options:r.data.choices.map<AiCompletionOption>(c=>({
-                message:{
-                    role:c.message?.role,
-                    content:c.message?.content??'',
-                    call:c.message?.function_call?{
-                        name:c.message.function_call.name??'',
-                        params:parse(c.message.function_call.arguments??'{}')
-                    }:undefined
+            return {
+                options:r.choices.map<AiCompletionOption>(c=>({
+                    message:{
+                        type:'text',
+                        role:c.message?.role,
+                        content:c.message?.content??'',
+                        call:c.message?.function_call?{
+                            name:c.message.function_call.name??'',
+                            params:parse(c.message.function_call.arguments??'{}')
+                        }:undefined
 
-                },
-                contentType:'text/plain',
-                confidence:1,
-            })),
-            providerData:{
-                data:r.data,
-                status:r.status,
-                statusText:r.statusText,
+                    },
+                    confidence:1,
+                })),
+                providerData:request.returnProviderData?r:undefined
             }
         }
     }

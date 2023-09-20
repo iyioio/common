@@ -9,13 +9,16 @@ const CompleteOpenAiPrompt=async (
     input:AiCompletionRequest
 ):Promise<AiCompletionResult>=>{
 
-    if(fnEvt.claims?.[aiCompleteModelCliam]!=='default'){
+    const modelsString=fnEvt.claims?.[aiCompleteModelCliam];
+    if(!(typeof modelsString === 'string')){
         throw new UnauthorizedError();
     }
 
     console.log('CompleteOpenAiPrompt',JSON.stringify(input,null,4)); // todo - remove
 
-    return await aiComplete().completeAsync(input);
+    return await aiComplete().completeAsync(input,{
+        allowedModels:modelsString.split(',').map(m=>m.trim())
+    });
 }
 
 export const handler=createFnHandler(CompleteOpenAiPrompt,{

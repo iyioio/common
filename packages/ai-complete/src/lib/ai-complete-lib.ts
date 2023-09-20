@@ -1,6 +1,6 @@
 import { ProviderTypeDef, Scope, TypeDef } from "@iyio/common";
 import { AiCompletionProviders } from "./_type.ai-complete";
-import { AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from "./ai-complete-types";
+import { AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
 
 export const aiCompleteModelCliam='aiCompleteModel';
 
@@ -27,9 +27,9 @@ export class AiCompletionService
         this.providers=providers;
     }
 
-    private getProvider(request:AiCompletionRequest):AiCompletionProvider|undefined{
+    private getProvider(request:AiCompletionRequest,options?:CompletionOptions):AiCompletionProvider|undefined{
         return this.providers.getFirst(null,p=>{
-            if(p.canComplete?.(request)){
+            if(p.canComplete?.(request,options)){
                 return p;
             }else{
                 return undefined;
@@ -43,15 +43,15 @@ export class AiCompletionService
         })
     }
 
-    public async completeAsync(request:AiCompletionRequest):Promise<AiCompletionResult>
+    public async completeAsync(request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>
     {
-        const provider=this.getProvider(request);
+        const provider=this.getProvider(request,options);
         if(!provider){
             return {
                 options:[]
             }
         }
 
-        return await provider.completeAsync(request);
+        return await provider.completeAsync(request,options);
     }
 }

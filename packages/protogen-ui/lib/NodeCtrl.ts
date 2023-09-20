@@ -129,6 +129,7 @@ export class NodeCtrl
             const results=await Promise.all(matches.map(v=>aiComplete().completeAsync({
                 prompt:[
                     {
+                        type:'text',
                         role:'system',
                         content:
 `You are an expert programer writing documentation for an application in a language based on markdown.
@@ -147,6 +148,7 @@ The current documentation is as follows:
 ${this.parent.nodes.value.map((e,i)=>e===this || i>20?'':e.getFullCode()).join('\n\n')}`,
                     },
                     {
+                        type:'text',
                         role:'user',
                         content:v
                     }
