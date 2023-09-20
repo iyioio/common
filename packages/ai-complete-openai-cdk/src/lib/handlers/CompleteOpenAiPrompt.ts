@@ -14,7 +14,7 @@ const CompleteOpenAiPrompt=async (
         throw new UnauthorizedError();
     }
 
-    console.log('CompleteOpenAiPrompt',JSON.stringify(input,null,4)); // todo - remove
+    console.log('CompleteOpenAiPrompt - ',JSON.stringify(input,null,4)); // todo - remove
 
     return await aiComplete().completeAsync(input,{
         allowedModels:modelsString.split(',').map(m=>m.trim())
