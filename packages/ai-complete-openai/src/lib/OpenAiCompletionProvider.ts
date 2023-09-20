@@ -1,6 +1,6 @@
 import { AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from '@iyio/ai-complete';
 import { Scope, SecretManager, UnauthorizedError, deleteUndefined, secretManager } from '@iyio/common';
-import { parse } from 'jsonc-parser';
+import { parse } from 'json5';
 import OpenAIApi from 'openai';
 import { openAiApiKeyParam, openAiModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';

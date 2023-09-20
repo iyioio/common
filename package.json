@@ -30,7 +30,7 @@
         "core-js": "^3.6.5",
         "date-fns": "^2.29.3",
         "highlight.js": "^11.7.0",
-        "jsonc-parser": "^3.2.0",
+        "json5": "^2.2.3",
         "next": "^13.2.4",
         "node-fetch": "^2.6.9",
         "openai": "^4.8.0",
