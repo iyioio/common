@@ -38,6 +38,7 @@ export * from './lib/base-layout';
 export * from './lib/base-layout-generator';
 export * from './lib/base-layout-generator-types';
 export * from './lib/base64';
+export * from './lib/blob-lib';
 export * from './lib/cdk-common-const';
 export * from './lib/cli-parser';
 export * from './lib/client-download';
