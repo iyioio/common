@@ -127,8 +127,9 @@ export class NodeCtrl
         try{
 
             const results=await Promise.all(matches.map(v=>aiComplete().completeAsync({
-                prompt:[
+                messages:[
                     {
+                        id:shortUuid(),
                         type:'text',
                         role:'system',
                         content:
@@ -148,6 +149,7 @@ The current documentation is as follows:
 ${this.parent.nodes.value.map((e,i)=>e===this || i>20?'':e.getFullCode()).join('\n\n')}`,
                     },
                     {
+                        id:shortUuid(),
                         type:'text',
                         role:'user',
                         content:v

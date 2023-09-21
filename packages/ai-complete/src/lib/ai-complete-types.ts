@@ -8,9 +8,12 @@ export interface CompletionOptions
 
 export interface AiCompletionProvider
 {
-    completeAsync(request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>;
 
-    canComplete?(request:AiCompletionRequest,options?:CompletionOptions):boolean;
+    getAllowedModels?():readonly string[];
+
+    completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>;
+
+    canComplete?(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):boolean;
 }
 
 // export const AiCompletionFunctionParamScheme=z.object({
@@ -37,27 +40,76 @@ export const AiCompletionFunctionCallScheme=z.object({
 })
 export type AiCompletionFunctionCall=z.infer<typeof AiCompletionFunctionCallScheme>;
 
+export const AiCompletionFunctionCallErrorScheme=z.object({
+    name:z.string(),
+    error:z.string(),
+})
+export type AiCompletionFunctionCallError=z.infer<typeof AiCompletionFunctionCallErrorScheme>;
+
 export const AiCompletionRoleScheme=z.enum(['system','user','assistant','function']);
 export type AiCompletionRole=z.infer<typeof AiCompletionRoleScheme>;
 
-export const AiComplationMessageTypeScheme=z.enum(['text','image']);
+export const AiComplationMessageTypeScheme=z.enum(['text','image','audio','function','function-error','error']);
 export type AiComplationMessageType=z.infer<typeof AiComplationMessageTypeScheme>;
 
 export const AiCompletionMessageScheme=z.object({
+
+    id:z.string(),
+
+    /**
+     * Id of a message to replace in the current conversation.
+     */
+    replaceId:z.string().optional(),
+
+    name:z.string().optional(),
+
     role:AiCompletionRoleScheme.optional(),
+
     content:z.string().optional(),
+
     url:z.string().optional(),
+
+    /**
+     * Base64 blob of data
+     */
+    data:z.string().optional(),
+
+    dataContentType:z.string().optional(),
+
     /**
      * The type of the message
      */
     type:AiComplationMessageTypeScheme,
+
     /**
      * The requested message type to response with.
-     * @defaul 'text'
      */
     requestedResponseType:AiComplationMessageTypeScheme.optional(),
-    name:z.string().optional(),
+
     call:AiCompletionFunctionCallScheme.optional(),
+
+    callError:AiCompletionFunctionCallErrorScheme.optional(),
+
+    /**
+     * Id of another message that cause an error
+     */
+    errorCausedById:z.string().optional(),
+
+    /**
+     * If true the message has a type of either error or function-error
+     */
+    isError:z.boolean().optional(),
+
+    /**
+     * The AI model to use with the message. Typically only the model of the last message is used.
+     * For example messages that are submitted to a chat model will all use the same model.
+     */
+    model:z.string().optional(),
+
+    /**
+     * An optional Id that can be used to help track abuse.
+     */
+    userId:z.string().optional(),
 })
 export type AiCompletionMessage=z.infer<typeof AiCompletionMessageScheme>;
 
@@ -70,46 +122,29 @@ export type AiCompletionOption=z.infer<typeof AiCompletionOptionScheme>;
 
 
 export const AiCompletionResultScheme=z.object({
+    /**
+     * A list of messages generated before the returned options were generated. For
+     * example when a audio message is received it will be transcribed and a message will be
+     * created from the transcription and that message will be added to the before list.
+     */
+    preGeneration:AiCompletionMessageScheme.array().optional(),
     options:AiCompletionOptionScheme.array(),
-    providerData:z.any().optional(),
 })
 export type AiCompletionResult=z.infer<typeof AiCompletionResultScheme>;
 
 
 export const AiCompletionRequestScheme=z.object({
-    // todo - add properties that a provider can use to determine if it can handle a prompt
-    prompt:AiCompletionMessageScheme.array(),
+
+    messages:AiCompletionMessageScheme.array(),
     providerData:z.any().optional(),
     functions:AiCompletionFunctionScheme.array().optional(),
-    returnProviderData:z.boolean().optional(),
-    model:z.string().optional(),
+
+    /**
+     * If true only preGeneration messages should be returned. This can be useful in the case
+     * where you would like to transcribe a message but not a have response generated from the
+     * transcription.
+     */
+    preGenerateOnly:z.boolean().optional(),
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme>;
 
-
-
-export interface _AiCompletionRequest
-{
-    prompt:AiCompletionMessage[];
-    providerData?:any;
-}
-
-export interface _AiCompletionResult
-{
-    options:AiCompletionOption[];
-    providerData?:any;
-}
-
-export interface _AiCompletionOption
-{
-    message:AiCompletionMessage;
-    contentType:string;
-    confidence:number;
-}
-
-export interface _AiCompletionMessage
-{
-    role?:AiCompletionRole;
-    content:string;
-    name?:string;
-}

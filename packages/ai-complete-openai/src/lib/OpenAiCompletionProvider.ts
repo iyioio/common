@@ -1,14 +1,16 @@
-import { AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from '@iyio/ai-complete';
-import { Scope, SecretManager, UnauthorizedError, deleteUndefined, secretManager } from '@iyio/common';
+import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
+import { FileBlob, Scope, SecretManager, deleteUndefined, secretManager, shortUuid } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
-import { openAiApiKeyParam, openAiModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
+import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
 export interface OpenAiCompletionProviderOptions
 {
     apiKey?:string;
-    model?:string;
+    chatModels?:string[];
+    audioModels?:string[];
+    imageModels?:string[];
     secretManager?:SecretManager;
     secretsName?:string;
 }
@@ -21,7 +23,9 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             apiKey:scope.to(openAiApiKeyParam).get(),
             secretManager:scope.to(secretManager).get(),
             secretsName:scope.to(openAiSecretsParam).get(),
-            model:scope.to(openAiModelParam).get(),
+            chatModels:scope.to(openAiChatModelParam).get()?.split(',').map(m=>m.trim()),
+            audioModels:scope.to(openAiAudioModelParam).get()?.split(',').map(m=>m.trim()),
+            imageModels:scope.to(openAiImageModelParam).get()?.split(',').map(m=>m.trim()),
         })
     }
 
@@ -31,19 +35,32 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
     private readonly secretsName?:string;
 
-    public readonly model:string;
+    private readonly _allowedModels:string[];
+
+    private readonly _chatModel?:string;
+    private readonly _audioModel?:string;
+    private readonly _imageModel?:string;
 
     public constructor({
         apiKey,
         secretManager,
         secretsName,
         //model='gpt-4',
-        model='gpt-3.5-turbo',
+        chatModels=['gpt-3.5-turbo'],
+        audioModels=['whisper-1'],
+        imageModels=['dalle'],
     }:OpenAiCompletionProviderOptions){
         this.apiKey=apiKey;
         this.secretManager=secretManager;
         this.secretsName=secretsName;
-        this.model=model;
+        this._allowedModels=[...chatModels,...audioModels,...imageModels];
+        this._chatModel=chatModels[0];
+        this._audioModel=audioModels[0];
+        this._imageModel=imageModels[0];
+    }
+
+    public getAllowedModels():readonly string[]{
+        return this._allowedModels;
     }
 
     private apiPromise:Promise<OpenAIApi>|null=null;
@@ -69,73 +86,144 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         return await this.apiPromise;
     }
 
-    public async completeAsync(request:AiCompletionRequest,{
-        allowedModels=[this.model]
-    }:CompletionOptions={}):Promise<AiCompletionResult>
+    public async completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
-        allowedModels=allowedModels.map(m=>m==='default'?this.model:m);
 
-        const model=request.model??this.model;
+        switch(lastMessage.type){
 
-        if(!allowedModels.includes(model)){
-            throw new UnauthorizedError(`Requested model (${model}) is not allowed to be used`);
+            case 'text':
+                return await this.completeChatAsync(lastMessage,request);
+
+            case 'audio':
+                return await this.completeAudioAsync(lastMessage);
+
+            case 'image':
+                return await this.completeImageAsync(lastMessage);
+
+            default:
+                return {options:[]}
+
+        }
+    }
+
+    private async completeChatAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
+    {
+        const model=lastMessage?.model??this._chatModel;
+        if(!model){
+            throw new Error('Chat AI model not defined');
         }
 
         const api=await this.getApiAsync();
 
-        const lastMsg=request.prompt[request.prompt.length-1];
-        if(lastMsg?.requestedResponseType==='image'){
-            const r=await api.images.generate({
-                prompt:lastMsg.content??'',
-                n:1,
-                size:'512x512'
-            });
-
-            return {
-                options:[{
-                    message:{
-                        type:'image',
-                        url:r.data[0]?.url,
-                    },
-                    confidence:1,
-                }]
-            }
-        }else{
-
-            const r=await api.chat.completions.create({
-                model,
-                stream:false,
-                messages:request.prompt.filter(m=>m.type==='text').map((m,i)=>deleteUndefined({
-                    role:m.role??(i===0?'system':'user'),
-                    content:m.content??'',
-                    name:m.name
-                })),
-                functions:request.functions?.map(f=>{
-                    return deleteUndefined({
-                        name:f.name,
-                        description:f.description,
-                        parameters:f.params??{}
-                    })
+        const r=await api.chat.completions.create({
+            model,
+            stream:false,
+            messages:request.messages.filter(m=>m.type==='text').map((m)=>deleteUndefined({
+                role:m.role??'user',
+                content:m.content??'',
+                name:m.name,
+                user:lastMessage?.userId,
+            })),
+            functions:request.functions?.map(f=>{
+                return deleteUndefined({
+                    name:f.name,
+                    description:f.description,
+                    parameters:f.params??{}
                 })
             })
+        })
+
+        return {options:r.choices.map<AiCompletionOption>(c=>{
+
+            let params:Record<string,any>|undefined;
+            let callError:AiCompletionFunctionCallError|undefined;;
+
+            if(c.message.function_call?.arguments){
+                try{
+                    params=parse(c.message.function_call.arguments??'{}');
+                }catch(ex){
+                    callError={
+                        name:c.message.function_call.name,
+                        error:`Unable to parse arguments - ${(ex as any)?.message}\n${c.message.function_call.arguments}`
+                    }
+                }
+            }
 
             return {
-                options:r.choices.map<AiCompletionOption>(c=>({
-                    message:{
-                        type:'text',
-                        role:c.message?.role,
-                        content:c.message?.content??'',
-                        call:c.message?.function_call?{
-                            name:c.message.function_call.name??'',
-                            params:parse(c.message.function_call.arguments??'{}')
-                        }:undefined
+                message:{
+                    id:shortUuid(),
+                    type:callError?'function-error':c.message?.function_call?'function':'text',
+                    role:c.message?.role,
+                    content:c.message?.content??'',
+                    call:(c.message?.function_call && !callError)?{
+                        name:c.message.function_call.name??'',
+                        params:params??{}
+                    }:undefined,
+                    callError,
+                    errorCausedById:callError?lastMessage.id:undefined,
+                    isError:callError?true:undefined,
 
-                    },
-                    confidence:1,
-                })),
-                providerData:request.returnProviderData?r:undefined
+                },
+                confidence:1,
             }
+        })};
+    }
+
+    private async completeAudioAsync(lastMessage:AiCompletionMessage):Promise<AiCompletionResult>
+    {
+        const model=lastMessage?.model??this._audioModel;
+        if(!model){
+            throw new Error('Audio AI model not defined');
         }
+
+        const api=await this.getApiAsync();
+
+        const type=lastMessage.dataContentType??'audio/mp3';
+
+        const file=new FileBlob([Buffer.from(lastMessage.data??'','base64')],'audio.'+(type.split('/')[1]??'mp3'),{type});
+
+        const r=await api.audio.transcriptions.create({
+            file,
+            model,
+            prompt:lastMessage.content,
+            response_format:'text',
+        })
+
+        const text=(typeof r === 'string')?r:r.text;
+
+        return {options:[],preGeneration:[{
+            id:shortUuid(),
+            type:'text',
+            role:lastMessage.role,
+            content:text,
+            replaceId:lastMessage.id,
+        }]}
+    }
+
+    private async completeImageAsync(lastMessage:AiCompletionMessage):Promise<AiCompletionResult>
+    {
+        const model=lastMessage?.model??this._imageModel;
+        if(!model){
+            throw new Error('Image AI model not defined');
+        }
+
+        const api=await this.getApiAsync();
+
+        const r=await api.images.generate({
+            prompt:lastMessage.content??'',
+            n:1,
+            size:'512x512',
+            user:lastMessage.userId,
+        });
+
+        return {options:[{
+            message:{
+                id:shortUuid(),
+                type:'image',
+                url:r.data[0]?.url,
+            },
+            confidence:1,
+        }]}
     }
 
 }

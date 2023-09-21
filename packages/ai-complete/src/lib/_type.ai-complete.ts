@@ -1,5 +1,5 @@
 import { defineProvider, defineService, defineStringParam } from "@iyio/common";
-import { AiCompletionService } from "./ai-complete-lib";
+import { AiCompletionService } from "./AiCompletionService";
 import { AiCompletionProvider } from "./ai-complete-types";
 
 export const AiCompletionProviders=defineProvider<AiCompletionProvider>("AiCompletionProviders");

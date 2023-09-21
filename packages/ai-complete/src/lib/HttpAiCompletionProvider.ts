@@ -1,6 +1,6 @@
 import { HttpClient, Scope, httpClient } from '@iyio/common';
 import { httpAiCompletionUrlParam } from './_type.ai-complete';
-import { AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from './ai-complete-types';
+import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from './ai-complete-types';
 
 export interface HttpAiCompletionProviderOptions
 {
@@ -30,7 +30,7 @@ export class HttpAiCompletionProvider implements AiCompletionProvider
         this.httpClient=hc;
     }
 
-    public async completeAsync(request: AiCompletionRequest):Promise<AiCompletionResult>
+    public async completeAsync(lastMessage:AiCompletionMessage,request: AiCompletionRequest):Promise<AiCompletionResult>
     {
         const r=await this.httpClient.postAsync<AiCompletionResult>(this.url,request);
 
