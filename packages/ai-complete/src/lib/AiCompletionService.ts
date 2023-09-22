@@ -119,7 +119,7 @@ export class AiCompletionService
             }
         }
 
-        if(lastMessage?.type==='audio'){
+        if(lastMessage?.role==='user' && lastMessage.type==='audio'){
             const success=await complete(lastMessage);
             if(!success){
                 return result??{options:[]}
@@ -130,7 +130,7 @@ export class AiCompletionService
             return result??{options:[]}
         }
 
-        if(lastMessage){
+        if(lastMessage?.role==='user'){
             const success=await complete(lastMessage);
             if(!success){
                 return result??{options:[]}
