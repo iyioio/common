@@ -1,5 +1,6 @@
 import { JsonScheme } from "@iyio/common";
-import { z } from "zod";
+import { z, ZodType, ZodTypeAny } from "zod";
+import { AiCompletionService } from "./AiCompletionService";
 
 export interface CompletionOptions
 {
@@ -148,3 +149,15 @@ export const AiCompletionRequestScheme=z.object({
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme>;
 
+export type AiCompletionMessageOptionalId=Omit<AiCompletionMessage,'id'> & {
+    id?:string;
+}
+
+export interface AiCompletionFunctionInterface<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>
+{
+    name:string;
+    description:string;
+    params:Z;
+    callback?:(params:T,aiService:AiCompletionService)=>C;
+    render?:(params:T,callbackResult:Awaited<C>,aiService:AiCompletionService)=>V;
+}

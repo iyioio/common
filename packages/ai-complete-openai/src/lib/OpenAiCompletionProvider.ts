@@ -89,7 +89,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     public async completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
 
-        switch(lastMessage.type){
+        switch(lastMessage.requestedResponseType??lastMessage.type){
 
             case 'text':
                 return await this.completeChatAsync(lastMessage,request);

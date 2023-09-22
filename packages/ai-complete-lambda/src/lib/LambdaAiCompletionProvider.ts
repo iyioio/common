@@ -1,4 +1,4 @@
-import { AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, aiCompletionFnArnParam } from '@iyio/ai-complete';
+import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, aiCompletionFnArnParam } from '@iyio/ai-complete';
 import { LambdaClient } from '@iyio/aws-lambda';
 import { Scope } from '@iyio/common';
 
@@ -30,7 +30,7 @@ export class LambdaAiCompletionProvider implements AiCompletionProvider
         this.lambdaClient=lambdaClient;
     }
 
-    public async completeAsync(request: AiCompletionRequest):Promise<AiCompletionResult>
+    public async completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
         return await this.lambdaClient.invokeAsync<AiCompletionRequest,AiCompletionResult>({
             label:'LambdaAiCompletionProvider',

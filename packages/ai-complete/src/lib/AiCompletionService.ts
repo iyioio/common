@@ -1,7 +1,8 @@
 import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid } from "@iyio/common";
+import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
-import { aiCompleteDefaultModel, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
+import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, aiFunctionInterfaceToFunction, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
+import { AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
 
 export interface AiCompletionServiceOptions
 {
@@ -49,7 +50,7 @@ export class AiCompletionService
         request.messages=[...request.messages];
 
         let result:AiCompletionResult|null=null;
-        let lastMessage=request.messages[request.messages.length-1];
+        let lastMessage:AiCompletionMessage|undefined=request.messages[request.messages.length-1];
 
         const mergeResult=(r:AiCompletionResult)=>{
             r.options.sort((a,b)=>b.confidence-a.confidence);
@@ -139,6 +140,90 @@ export class AiCompletionService
         return result??{options:[]}
     }
 
+    public async generateImageAsync(prompt:string):Promise<AiCompletionMessage|null>
+    {
+        const result=await this.completeAsync({messages:[{
+            id:shortUuid(),
+            type:'text',
+            requestedResponseType:'image',
+            content:prompt
+        }]})
+
+        const msg=result.options[0]?.message;
+        return (msg?.type==='image' && msg.url)?msg:null;
+    }
+
+    public async generateFunctionParamsAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
+        fi:AiCompletionFunctionInterface<Z,T,C,V>,
+        prompt:string|AiCompletionMessage|AiCompletionMessage[],
+        descriptionOverride?:string
+    ):Promise<T|undefined>{
+
+        if(typeof prompt === 'string'){
+            prompt=[{
+                id:shortUuid(),
+                type:'text',
+                content:prompt
+            }]
+        }else if(!Array.isArray(prompt)){
+            prompt=[prompt];
+        }
+
+        const fn=aiFunctionInterfaceToFunction(fi);
+        if(descriptionOverride!==undefined){
+            fn.description=descriptionOverride;
+        }
+
+        const result=await this.completeAsync({
+            messages:prompt,
+            functions:[fn],
+        });
+
+        const msg=result.options[0]?.message;
+        if(!msg){
+            return undefined;
+        }
+        if(msg.isError){
+            throw new Error(msg.callError?.error??'Call failed');
+        }
+
+        if(!msg.call){
+            return undefined;
+        }
+
+        return fi.params.parse(msg.call.params);
+    }
+
+    public async callFunctionAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
+        fi:AiCompletionFunctionInterface<Z,T,C,V>,
+        prompt:string|AiCompletionMessage|AiCompletionMessage[],
+        {
+            descriptionOverride,
+            applyToMessage,
+            render=applyToMessage?true:false,
+        }:AiCompletionServiceCallFunctionOptions={}
+    ):Promise<CallAiFunctionInterfaceResult<C,V>|undefined>{
+
+        const params=await this.generateFunctionParamsAsync(fi,prompt,descriptionOverride);
+        if(!params){
+            return undefined;
+        }
+
+        const callReulst=await callAiFunctionInterfaceAsync(fi,render,params,this);
+        if(applyToMessage){
+            applyResultToAiMessage(applyToMessage,callReulst);
+        }
+
+        return callReulst;
+    }
+
+}
+
+export interface AiCompletionServiceCallFunctionOptions
+{
+    descriptionOverride?:string;
+    render?:boolean;
+    applyToMessage?:AiCompletionMessage;
 }
 
 const expandModels=(models:string[]|null|undefined,allowed:readonly string[]):readonly string[]=>{
