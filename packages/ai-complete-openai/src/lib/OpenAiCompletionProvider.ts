@@ -45,7 +45,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         apiKey,
         secretManager,
         secretsName,
-        //model='gpt-4',
+        //chatModels=['gpt-4'],
         chatModels=['gpt-3.5-turbo'],
         audioModels=['whisper-1'],
         imageModels=['dalle'],
