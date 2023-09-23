@@ -48,6 +48,9 @@ export class DomListener
             keyLowercase:nativeEvt.key.toLowerCase(),
             keyUppercase:nativeEvt.key.toUpperCase(),
             cancel:false,
+            preventDefault(){
+                nativeEvt.preventDefault();
+            }
         }
         this.keyPressEvtTrigger.trigger(evt);
     }

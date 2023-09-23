@@ -19,6 +19,7 @@ export interface DomKeyEvt
     keyLowercase:string;
     keyUppercase:string;
     cancel:boolean;
+    preventDefault():void;
 }
 
 export type DomKeyListener=(evt:DomKeyEvt)=>void;
