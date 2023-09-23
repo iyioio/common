@@ -1,5 +1,6 @@
 {
     "name": "@iyio/protogen",
     "version": "0.0.11",
-    "type": "commonjs"
+    "type": "commonjs",
+    "sideEffects": false
 }

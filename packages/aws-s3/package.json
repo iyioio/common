@@ -1,5 +1,6 @@
 {
     "name": "@iyio/aws-s3",
     "version": "0.2.5",
-    "type": "commonjs"
+    "type": "commonjs",
+    "sideEffects": false
 }
