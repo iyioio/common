@@ -1,5 +1,6 @@
 import { BehaviorSubject } from "rxjs";
 import { DisposeCallback, HashMap } from "./common-types";
+import { queryParamsToObject } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
 import { getUriHost, getUriProtocol } from "./uri";
 
@@ -39,6 +40,27 @@ export interface RouteInfo
     route:string;
     asPath:string;
     query:HashMap<string|string[]|undefined>;
+}
+
+export const createDefaultRouteInfo=():RouteInfo=>({
+    key:'_',
+    path:'',
+    route:'',
+    asPath:'',
+    query:{},
+})
+
+export const getWindowLocationRouteInfo=():RouteInfo=>{
+    if(!globalThis.window){
+        return createDefaultRouteInfo();
+    }
+    return {
+        key:window.history?((window.history.state as any).key??'_'):'_',
+        path:window.location.pathname,
+        route:window.location.pathname,
+        asPath:window.location.pathname+window.location.search,
+        query:queryParamsToObject(window.location.search),
+    }
 }
 
 export interface UiRouterOpenOptions
@@ -93,6 +115,9 @@ export interface IUiRouter
 
     readonly isLoadingSubject:ReadonlySubject<boolean>;
     readonly isLoading:boolean;
+
+    currentRouteSubject:ReadonlySubject<RouteInfo>;
+    currentRoute:RouteInfo;
 
     dispose?():void;
 

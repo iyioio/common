@@ -1,9 +1,9 @@
 import { Subscription } from "rxjs";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { DisposeCallback } from "./common-types";
-import { deepClone, deepCompare, queryParamsToObject } from "./object";
+import { deepClone, deepCompare } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
-import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem } from "./ui-lib";
+import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem, getWindowLocationRouteInfo } from "./ui-lib";
 import { uuid } from "./uuid";
 
 export interface UiRouterBaseOptions
@@ -15,6 +15,7 @@ export interface UiRouterBaseOptions
      * protected methods of UiRouteBase and auto detected route changes.
      */
     minAutoChangeMarginMs?:number;
+    initRoute?:RouteInfo;
 }
 
 export class UiRouterBase implements IUiRouter
@@ -41,6 +42,10 @@ export class UiRouterBase implements IUiRouter
         this._isLoading.next(value>0);
     }
 
+    private readonly _currentRoute:BehaviorSubject<RouteInfo>;
+    public get currentRouteSubject():ReadonlySubject<RouteInfo>{return this._currentRoute}
+    public get currentRoute(){return this._currentRoute.value}
+
     protected readonly disableAutoChangeChecking:boolean;
     protected readonly changeCheckIntervalMs:number;
     protected readonly minAutoChangeMarginMs:number;
@@ -57,6 +62,7 @@ export class UiRouterBase implements IUiRouter
         disableAutoChangeChecking=false,
         changeCheckIntervalMs=250,
         minAutoChangeMarginMs=1000,
+        initRoute=getWindowLocationRouteInfo(),
     }:UiRouterBaseOptions={})
     {
         (globalThis.window as any).______ROUTER=this;
@@ -64,6 +70,7 @@ export class UiRouterBase implements IUiRouter
         this.changeCheckIntervalMs=changeCheckIntervalMs;
         this.minAutoChangeMarginMs=minAutoChangeMarginMs;
         this.checkIv=setInterval(this.historyListener,30);
+        this._currentRoute=new BehaviorSubject<RouteInfo>(initRoute);
         if(globalThis.window){
             globalThis.window.addEventListener('popstate',this.historyListener);
             globalThis.window.addEventListener('hashchange',this.historyListener);
@@ -140,9 +147,21 @@ export class UiRouterBase implements IUiRouter
         const route=this.getCurrentRoute();
         if(route.asPath!==this.lastTriggerPath){
             console.info('Auto push route',route);
-            this.handlePushEvtAsync(route.asPath);
+            this.handlePushEvtAsync(route.asPath).then(()=>this.triggerRouteChanged())
         }
 
+    }
+
+    protected triggerRouteChanged()
+    {
+        const route=this.getCurrentRoute();
+        try{
+            if(!deepCompare(route,this._currentRoute.value)){
+                this._currentRoute.next(route);
+            }
+        }catch(ex){
+            console.warn('Error while triggering next currentRoute',ex);
+        }
     }
 
     private readonly historyListener=()=>{
@@ -208,6 +227,7 @@ export class UiRouterBase implements IUiRouter
         if(globalThis.history){
             globalThis.history.back();
         }
+        this.triggerRouteChanged();
     }
 
     public open(uri:string,options?:UiRouterOpenOptions){
@@ -287,22 +307,7 @@ export class UiRouterBase implements IUiRouter
 
     public getCurrentRoute():RouteInfo
     {
-        if(!globalThis.window){
-            return {
-                key:'_',
-                path:'',
-                route:'',
-                asPath:'',
-                query:{},
-            }
-        }
-        return {
-            key:window.history?((window.history.state as any).key??'_'):'_',
-            path:window.location.pathname,
-            route:window.location.pathname,
-            asPath:window.location.pathname+window.location.search,
-            query:queryParamsToObject(window.location.search),
-        }
+        return getWindowLocationRouteInfo();
     }
 
     private readonly listeners:UiRouterEvtListener[]=[];

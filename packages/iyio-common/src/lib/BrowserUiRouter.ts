@@ -44,10 +44,12 @@ export class BrowserUiRouter extends UiRouterBase
         }else{
             globalThis.history.pushState(null,'',addQueryToPath(path,query));
         }
+        this.triggerRouteChanged();
     }
 
     public override pop(){
         globalThis.history.back();
+        this.triggerRouteChanged();
     }
 
 }

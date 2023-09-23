@@ -1,9 +1,17 @@
-import { addQueryToPath, RouteInfo, RouteQuery, shouldUseNativeNavigation, UiRouterBase } from "@iyio/common";
+import { addQueryToPath, RouteInfo, RouteQuery, shouldUseNativeNavigation, UiRouterBase, UiRouterBaseOptions } from "@iyio/common";
 import Router from 'next/router';
 import { getRouteInfo } from "./next-route-helper";
 
 export class NextJsUiRouter extends UiRouterBase
 {
+
+    public constructor(options:UiRouterBaseOptions={})
+    {
+        super({
+            initRoute:getRouteInfo(Router),
+            ...options,
+        })
+    }
 
     public override async push(path:string,query?:RouteQuery){
 
@@ -28,9 +36,11 @@ export class NextJsUiRouter extends UiRouterBase
         }finally{
             this.loadingCount--;
         }
+        this.triggerRouteChanged();
     }
     public override pop(){
         Router.back();
+        this.triggerRouteChanged();
     }
 
     public override getCurrentRoute():RouteInfo{
