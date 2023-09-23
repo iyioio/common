@@ -1,8 +1,8 @@
-import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid } from "@iyio/common";
+import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
-import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, aiFunctionInterfaceToFunction, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
+import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
+import { AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
 
 export interface AiCompletionServiceOptions
 {
@@ -155,12 +155,12 @@ export class AiCompletionService
         return (msg?.type==='image' && msg.url)?msg:null;
     }
 
-    public async generateFunctionParamsAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
-        fi:AiCompletionFunctionInterface<Z,T,C,V>,
+    public async generateFunctionParamsAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>>(
+        functionName:string,
+        description:string,
+        params:Z,
         prompt:string|AiCompletionMessage|AiCompletionMessage[],
-        descriptionOverride?:string
     ):Promise<T|undefined>{
-
         if(typeof prompt === 'string'){
             prompt=[{
                 id:shortUuid(),
@@ -172,9 +172,10 @@ export class AiCompletionService
             prompt=[prompt];
         }
 
-        const fn=aiFunctionInterfaceToFunction(fi);
-        if(descriptionOverride!==undefined){
-            fn.description=descriptionOverride;
+        const fn:AiCompletionFunction={
+            name:functionName,
+            description,
+            params:zodTypeToJsonScheme(params,10),
         }
 
         const result=await this.completeAsync({
@@ -194,10 +195,24 @@ export class AiCompletionService
             return undefined;
         }
 
-        return fi.params.parse(msg.call.params);
+        return params.parse(msg.call.params);
     }
 
-    public async callFunctionAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
+    public async generateFunctionInterfaceParamsAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
+        fi:AiCompletionFunctionInterface<Z,T,C,V>,
+        prompt:string|AiCompletionMessage|AiCompletionMessage[],
+        descriptionOverride?:string
+    ):Promise<T|undefined>{
+
+        return this.generateFunctionParamsAsync(
+            fi.name,
+            descriptionOverride??fi.description,
+            fi.params,
+            prompt,
+        )
+    }
+
+    public async callFunctionInterfaceAsync<Z extends ZodTypeAny=ZodType<any>,T=z.infer<Z>,C=any,V=any>(
         fi:AiCompletionFunctionInterface<Z,T,C,V>,
         prompt:string|AiCompletionMessage|AiCompletionMessage[],
         {
@@ -207,7 +222,7 @@ export class AiCompletionService
         }:AiCompletionServiceCallFunctionOptions={}
     ):Promise<CallAiFunctionInterfaceResult<C,V>|undefined>{
 
-        const params=await this.generateFunctionParamsAsync(fi,prompt,descriptionOverride);
+        const params=await this.generateFunctionInterfaceParamsAsync(fi,prompt,descriptionOverride);
         if(!params){
             return undefined;
         }
