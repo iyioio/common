@@ -190,13 +190,17 @@ export const fnHandler=async ({
     }
 }
 
-export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={}):((evt:any,context:any)=>Promise<any>)=>{
-    return (evt:any,context:any)=>fnHandler({
+export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={}):((evt:any,context:any)=>Promise<any>) & {rawHandler:FnHandler}=>{
+    const handlerProxy=(evt:any,context:any)=>fnHandler({
         ...options,
         handler,
         evt,
         context,
     });
+
+    handlerProxy.rawHandler=handler;
+
+    return handlerProxy;
 }
 
 export const isRawFnResult=(value:any): value is RawFnResult=>{
@@ -212,3 +216,14 @@ export const createRawFnResult=(result:any):RawFnResult=>{
         rawFlag:RawFnFlag
     }
 }
+
+export const createEmptyEventSource=():FnEvent=>({
+    sourceEvent:{},
+    context:{},
+    path:'/',
+    method:'GET',
+    routePath:'/',
+    query:{},
+    headers:{},
+    claims:{},
+})
