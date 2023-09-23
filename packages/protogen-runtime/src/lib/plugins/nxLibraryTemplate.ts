@@ -74,7 +74,8 @@ export default {
 `{
     "name": "${packageName}",
     "version": "0.0.1",
-    "type": "commonjs"
+    "type": "commonjs",
+    "sideEffects": false
 }
 `,
 
