@@ -86,6 +86,7 @@ export function ModalBase({
                     props,
                     'ModelBase',
                     open?'ModelBase-open':'ModelBase-closed',
+                    !show&&'hidden',
                     noDefaultTransition?undefined:(open?'ModelBase-defaultIn':'ModelBase-defaultOut'),
                     {center,scrollable,hideScrollBarOnOut,renderInline}
                 )}>
@@ -123,6 +124,9 @@ export function ModalBase({
                 .ModelBase-closed.hideScrollBarOnOut.scrollable .ModelBase-content{
                     overflow-y:hidden;
                     overflow-y:clip;
+                }
+                .ModelBase.hidden{
+                    display:none;
                 }
 
 
