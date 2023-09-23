@@ -109,6 +109,7 @@ export class AiCompletionService
                     confidence:1,
                     message:{
                         id:shortUuid(),
+                        role:'assistant',
                         type:'error',
                         content:(ex as any)?.message,
                         errorCausedById:msg.id,
@@ -144,6 +145,7 @@ export class AiCompletionService
     {
         const result=await this.completeAsync({messages:[{
             id:shortUuid(),
+            role:'user',
             type:'text',
             requestedResponseType:'image',
             content:prompt
@@ -163,6 +165,7 @@ export class AiCompletionService
             prompt=[{
                 id:shortUuid(),
                 type:'text',
+                role:'user',
                 content:prompt
             }]
         }else if(!Array.isArray(prompt)){

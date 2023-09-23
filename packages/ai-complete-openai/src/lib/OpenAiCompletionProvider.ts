@@ -218,6 +218,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         return {options:[{
             message:{
+                role:'assistant',
                 id:shortUuid(),
                 type:'image',
                 url:r.data[0]?.url,

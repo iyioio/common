@@ -89,10 +89,12 @@ export const callAiFunctionInterfaceAsync=async <Z extends ZodTypeAny=ZodType<an
         try{
             result=await callAiCompletionFunctionInterface(fi,params as any,aiService);
         }catch(error){
+            const msg=`AiCompletionFunction callback (${fi.name}) failed - ${(error as any)?.message}`
+            console.warn(msg,error);
             return {
                 callError:{
                     name:fi.name,
-                    error:`AiCompletionFunction callback (${fi.name}) failed - ${(error as any)?.message}`,
+                    error:msg,
                 }
             }
         }
@@ -101,10 +103,12 @@ export const callAiFunctionInterfaceAsync=async <Z extends ZodTypeAny=ZodType<an
         try{
             view=await renderAiCompletionFunctionInterface(fi,params as any,result,aiService);
         }catch(error){
+            const msg=`AiCompletionFunction render (${fi.name}) failed - ${(error as any)?.message}`
+            console.warn(msg,error);
             return {
                 callError:{
                     name:fi.name,
-                    error:`AiCompletionFunction render (${fi.name}) failed - ${(error as any)?.message}`,
+                    error:msg,
                 }
             }
         }
@@ -120,6 +124,5 @@ export const applyResultToAiMessage=(message:AiCompletionMessage,result:CallAiFu
     setAiCompletionMessageView(message,view);
     if(callError){
         message.callError=callError;
-        console.warn(callError.error,callError);
     }
 }

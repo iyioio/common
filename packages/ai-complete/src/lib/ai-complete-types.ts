@@ -64,7 +64,7 @@ export const AiCompletionMessageScheme=z.object({
 
     name:z.string().optional(),
 
-    role:AiCompletionRoleScheme.optional(),
+    role:AiCompletionRoleScheme,
 
     content:z.string().optional(),
 
