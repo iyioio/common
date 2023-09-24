@@ -20,6 +20,11 @@ export interface DomKeyEvt
     keyUppercase:string;
     cancel:boolean;
     preventDefault():void;
+    /**
+     * If defined this is the current input element. In some cases you will not want to responsed
+     * to a keyboard short cut if an input element is focused.
+     */
+    inputElem?:HTMLElement;
 }
 
 export type DomKeyListener=(evt:DomKeyEvt)=>void;

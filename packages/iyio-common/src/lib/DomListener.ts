@@ -1,5 +1,5 @@
 import { DomKeyEvt } from "./dom-listener-types";
-import { createEvtTrigger } from "./evt";
+import { EvtHandleTrigger, createEvtTrigger } from "./evt";
 
 export class DomListener
 {
@@ -7,11 +7,15 @@ export class DomListener
     private readonly keyPressEvtTrigger=createEvtTrigger<DomKeyEvt>(true);
     public get keyPressEvt(){return this.keyPressEvtTrigger.handle}
 
+    private readonly keyDownEvtTrigger=createEvtTrigger<DomKeyEvt>(true);
+    public get keyDownEvt(){return this.keyDownEvtTrigger.handle}
+
 
     public constructor()
     {
         if(globalThis.window){
             globalThis.window.addEventListener('keypress',this.onKeyPress)
+            globalThis.window.addEventListener('keydown',this.onKeyDown)
         }
     }
 
@@ -25,11 +29,20 @@ export class DomListener
         this._isDisposed=true;
         if(globalThis.window){
             globalThis.window.removeEventListener('keypress',this.onKeyPress)
+            globalThis.window.removeEventListener('keydown',this.onKeyDown)
         }
     }
 
     private readonly onKeyPress=(nativeEvt:KeyboardEvent)=>{
-        if(!this.keyPressEvtTrigger.listenerCount){
+        this.triggerEvent(nativeEvt,this.keyPressEvtTrigger);
+    }
+
+    private readonly onKeyDown=(nativeEvt:KeyboardEvent)=>{
+        this.triggerEvent(nativeEvt,this.keyDownEvtTrigger);
+    }
+
+    private triggerEvent=(nativeEvt:KeyboardEvent,handler:EvtHandleTrigger<DomKeyEvt>)=>{
+        if(!handler.listenerCount){
             return;
         }
         let k=nativeEvt.code.toLowerCase();
@@ -52,7 +65,15 @@ export class DomListener
                 nativeEvt.preventDefault();
             }
         }
-        this.keyPressEvtTrigger.trigger(evt);
+
+        const active=globalThis.document?.activeElement;
+        if(active && inputElems.includes(active.tagName.toLowerCase()) && (active instanceof HTMLElement)){
+            evt.inputElem=active;
+        }
+
+        handler.trigger(evt);
     }
 
 }
+
+const inputElems=['input','textarea','select'];
