@@ -68,6 +68,17 @@ export interface ProtoContext
     outputs:ProtoOutput[];
     writtenOutputs:ProtoOutput[];
     /**
+     * Array of paths that will be checked for files that are allowed to be
+     * auto deleted. Paths can be files or directories. Ending a directory
+     * path with /* will cause auto delete files to be searched for recursivly.
+     * A file is allowed to be auto deleted if its first line has an auto delete
+     * tag.
+     *
+     * Auto delete tag example:
+     *  <ALLOW_AUTO_DELETE DEPENDENCIES="{comma separated list of depencencies}" />
+     */
+    autoDeletePaths:string[];
+    /**
      * Starts a zero
      */
     generationStage:number;

@@ -53,6 +53,7 @@ export const runProtogenCliAsync=async ({
                 nodes:[],
                 outputs:[],
                 writtenOutputs:[],
+                autoDeletePaths:[],
                 generationStage:0,
                 dataOutputs:{},
                 verbose,

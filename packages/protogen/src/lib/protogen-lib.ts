@@ -102,3 +102,8 @@ export const invokeProtoCallable=(callable:ProtoCallable,namedArgs:Record<string
 
 
 export const getProtoAutoDeleteComment=(dependencies:string[])=>`/* <ALLOW_AUTO_DELETE DEPENDENCIES="${dependencies.join(', ')}" /> */`;
+
+export const getProtoAutoDeleteDeps=(firstLine:string):string[]|undefined=>{
+    const match=/<ALLOW_AUTO_DELETE\s+DEPENDENCIES="([^"]+)"\s*\/>/.exec(firstLine);
+    return match?.[1]?.split(',').map(d=>d.trim()).filter(d=>d);
+}

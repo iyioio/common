@@ -131,6 +131,8 @@ export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerato
 {
     const out:string[]=[];
 
+    ctx.autoDeletePaths.push(generator.root+(generator.recursive?(generator.root.endsWith('/')?'*':'/*'):''));
+
     const exclude=generator.exclude??[];
     const root=generator.root.endsWith('/')?generator.root:generator.root+'/';
 

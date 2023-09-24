@@ -1,8 +1,10 @@
 import { asArray, unrootPath } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
-import { ProtoContext, protoMergeSourceCode, protoMergeTsImports } from "@iyio/protogen";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import { dirname } from "path";
+import { ProtoContext, getProtoAutoDeleteDeps, protoMergeSourceCode, protoMergeTsImports } from "@iyio/protogen";
+import { createReadStream } from "fs";
+import { mkdir, readFile, readdir, stat, unlink, writeFile } from "fs/promises";
+import { dirname, join } from "path";
+import { createInterface } from 'readline';
 
 export const fileWriter=async (ctx:ProtoContext)=>{
 
@@ -110,4 +112,50 @@ export const fileWriter=async (ctx:ProtoContext)=>{
         }
     }
 
+    const checked:Record<string,boolean>={};
+    await Promise.all(ctx.autoDeletePaths.map(async ad=>{
+
+        const paths:string[]=[];
+        await autoDeleteAsync(ctx,ad,paths,checked,ad.endsWith('/*'),true);
+    }))
+
+}
+
+const autoDeleteAsync=async (ctx:ProtoContext,path:string,paths:string[],checked:Record<string,boolean>,recursive:boolean,first:boolean):Promise<void>=>{
+    if(path.endsWith('/*')){
+        path=path.substring(0,path.length-2);
+    }
+    if(checked[path]){
+        return;
+    }
+    checked[path]=true;
+    if(!await pathExistsAsync(path)){
+        return;
+    }
+    if((await stat(path)).isDirectory()){
+        if(!recursive && !first){
+            return;
+        }
+        const items=await readdir(path);
+        for(const item of items){
+            await autoDeleteAsync(ctx,join(path,item),paths,checked,recursive,false);
+        }
+    }else{
+        const stream=createReadStream(path);
+        const reader=createInterface(stream);
+        const line=await new Promise<string>((r)=>{
+            reader.on('line',line=>r(line));
+        })
+        reader.close();
+        stream.close();
+
+        const deps=getProtoAutoDeleteDeps(line);
+
+        if(deps && !ctx.nodes.some(n=>deps.includes(n.name))){
+            ctx.log(`delete - ${path}`);
+            if(!ctx.dryRun){
+                await unlink(path);
+            }
+        }
+    }
 }
