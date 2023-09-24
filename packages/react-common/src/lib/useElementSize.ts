@@ -1,10 +1,16 @@
 import { ElementSizeObserver, Size } from "@iyio/common";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
-export const useElementSize=():[Size,(elem:Element|null|undefined)=>void]=>{
+export const useElementSize=(e?:Element|null):[Size,(elem:Element|null|undefined)=>void]=>{
 
-    const [elem,setElem]=useState<Element|null|undefined>(null);
+    const [elem,setElem]=useState<Element|null|undefined>(e??null);
     const [size,setSize]=useState<Size>({width:0,height:0});
+
+    useEffect(()=>{
+        if(e!==undefined){
+            setElem(e);
+        }
+    },[e]);
 
     useLayoutEffect(()=>{
         if(!elem){
