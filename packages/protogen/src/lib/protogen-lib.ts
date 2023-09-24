@@ -99,3 +99,6 @@ export const invokeProtoCallable=(callable:ProtoCallable,namedArgs:Record<string
 
     return callable.implementation(...args);
 }
+
+
+export const getProtoAutoDeleteComment=(dependencies:string[])=>`/* <ALLOW_AUTO_DELETE DEPENDENCIES="${dependencies.join(', ')}" /> */`;

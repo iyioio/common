@@ -1,5 +1,6 @@
 import { getPathNoExt, HashMap } from "@iyio/common";
 import { ProtoContext, ProtoIndexGenerator, ProtoOutput } from "./protogen-pipeline-types";
+import { ProtoNode } from "./protogen-types";
 
 export const protoTsTypeMap:HashMap<string>={
     'int':'number',
@@ -58,8 +59,64 @@ export const protoPrependTsImports=(types:string[],importMap:HashMap<string>,pre
 }
 
 export const protoFormatTsComment=(comment:string,tab:string)=>(
-    `${tab}/**\n${tab} * ${comment.split('\n').join(`\n${tab} * `)}\n${tab} */`
+    `${tab}/**\n${tab} * ${escapeComment(comment).split('\n').join(`\n${tab} * `)}\n${tab} */`
 )
+
+export const protoGetFullNodeTsComment=(node:ProtoNode,tab:string):string=>{
+    const out=[`${tab}/**`];
+    let comment=node.comment?.trim();
+    if(comment){
+        out.push(`${tab} * ${comment.split('\n').join(`\n${tab} * `)}`);
+    }
+
+    if(node.children){
+        for(const c in node.children){
+            const child=node.children[c];
+            comment=child?.comment?.trim();
+            if(comment && !child.special && !child.isContent){
+                out.push(`${tab} * `);
+                out.push(`${tab} * ${`- ${c} - ${escapeComment(comment)}`.split('\n').join(`\n${tab} *   `)}`)
+            }
+        }
+    }
+
+    if(out.length<2){
+        return '';
+    }
+
+    out.push(`${tab} */`);
+
+    return out.join('\n');
+}
+
+export const protoGetFullNodeComment=(node:ProtoNode,tab:string):string=>{
+    const out=[];
+    let comment=node.comment?.trim();
+    if(comment){
+        out.push(comment);
+    }
+
+    if(node.children){
+        for(const c in node.children){
+            const child=node.children[c];
+            comment=child?.comment?.trim();
+            if(comment && !child.special && !child.isContent){
+                out.push('');
+                out.push(`- ${c} - ${comment}`.split('\n').join('\n   '))
+            }
+        }
+    }
+
+    if(out.length<1){
+        return '';
+    }
+
+    out.push(`${tab} */`);
+
+    return out.join('\n');
+}
+
+const escapeComment=(comment:string)=>comment.replace(/\*\//g,'(star)/');
 
 export const addTsImport=(im:string,packageName:string|null|undefined,imports:string[],importMap:HashMap<string>)=>{
     if(!imports.includes(im)){
