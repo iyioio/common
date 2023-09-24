@@ -7,6 +7,7 @@ import { JwtProvider } from "./jwt";
 import { JwtProviders } from "./jwt.deps";
 import { deleteUndefined } from "./object";
 import { Scope, TypeDef } from "./scope-types";
+import { getUriProtocol } from "./uri";
 
 export interface HttpClientOptions
 {
@@ -141,9 +142,11 @@ export class HttpClient
             })
         }
 
-        const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
-        if(signer){
-            await signer.sign(baseRequest);
+        if(getUriProtocol(uri)){
+            const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
+            if(signer){
+                await signer.sign(baseRequest);
+            }
         }
 
         const fetcher=this.options.fetchers?.getFirst(null,p=>p.canFetch(baseRequest)?p:undefined);
@@ -206,6 +209,18 @@ export class HttpClient
     public async getAsync<T>(uri:string,options?:HttpClientRequestOptions):Promise<T|undefined>
     {
         return await this.requestAsync<T>('GET',uri,undefined,options);
+    }
+
+    public async getStringAsync(uri:string,options?:HttpClientRequestOptions):Promise<string|undefined>
+    {
+        const response=await this.requestAsync<Response>('GET',uri,undefined,{
+            returnFetchResponse:true,
+            ...options
+        });
+        if(!response){
+            return undefined;
+        }
+        return await response.text();
     }
 
     public async postAsync<T>(uri:string,body:any,options?:HttpClientRequestOptions):Promise<T|undefined>
