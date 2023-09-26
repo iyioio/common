@@ -1,5 +1,5 @@
-import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
-import { FileBlob, Scope, SecretManager, deleteUndefined, secretManager, shortUuid } from '@iyio/common';
+import { AiComplationMessageType, AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
+import { FileBlob, Scope, SecretManager, deleteUndefined, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
@@ -225,6 +225,22 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             },
             confidence:1,
         }]}
+    }
+
+
+
+    public getMaxTokensForMessageType?(messageType:AiComplationMessageType,model?:string):number|undefined
+    {
+        unused(messageType,model);
+        // todo - check based on model
+        return 4096;
+    }
+
+    public getTokenEstimateForMessage?(message:string,model?:string):number|undefined
+    {
+        unused(model);
+        // todo - check based on model
+        return message.length/3;
     }
 
 }

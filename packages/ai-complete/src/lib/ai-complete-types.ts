@@ -15,6 +15,10 @@ export interface AiCompletionProvider
     completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>;
 
     canComplete?(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):boolean;
+
+    getMaxTokensForMessageType?(messageType:AiComplationMessageType,model?:string):number|undefined;
+
+    getTokenEstimateForMessage?(message:string,model?:string):number|undefined;
 }
 
 // export const AiCompletionFunctionParamScheme=z.object({

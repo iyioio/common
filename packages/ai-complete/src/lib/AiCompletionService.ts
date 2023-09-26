@@ -2,7 +2,7 @@ import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeT
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
+import { AiComplationMessageType, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
 
 export interface AiCompletionServiceOptions
 {
@@ -233,6 +233,18 @@ export class AiCompletionService
         }
 
         return callReulst;
+    }
+
+    public getMaxTokensForMessageType(messageType:AiComplationMessageType,model?:string):number{
+        return this.providers.getFirst(null,p=>{
+            return p.getMaxTokensForMessageType?.(messageType,model);
+        })??3000;
+    }
+
+    public getTokenEstimateForMessage(message:string,model?:string):number{
+        return this.providers.getFirst(null,p=>{
+            return p.getTokenEstimateForMessage?.(message,model);
+        })??(message.length/2)
     }
 
 }
