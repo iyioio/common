@@ -132,7 +132,8 @@ const autoDeleteAsync=async (ctx:ProtoContext,path:string,paths:string[],checked
     if(!await pathExistsAsync(path)){
         return;
     }
-    if((await stat(path)).isDirectory()){
+    const s=await stat(path);
+    if(s.isDirectory()){
         if(!recursive && !first){
             return;
         }
@@ -140,7 +141,7 @@ const autoDeleteAsync=async (ctx:ProtoContext,path:string,paths:string[],checked
         for(const item of items){
             await autoDeleteAsync(ctx,join(path,item),paths,checked,recursive,false);
         }
-    }else{
+    }else if(s.size>20){
         const stream=createReadStream(path);
         const reader=createInterface(stream);
         const line=await new Promise<string>((r)=>{
