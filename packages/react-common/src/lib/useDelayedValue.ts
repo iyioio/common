@@ -24,3 +24,29 @@ export const useDelayedValue=<T>(value:T,delayMs:number,noDelayFor?:T,startValue
 
     return val;
 }
+
+
+export const useDelayedFalsyValue=<T>(value:T,delayMs:number,startValue?:T):T=>{
+
+    const [val,setVal]=useState(startValue===undefined?value:startValue);
+
+    useEffect(()=>{
+        if(value){
+            setVal(value);
+            return;
+        }
+        let m=true;
+
+        setTimeout(()=>{
+            if(m){
+                setVal(value);
+            }
+        },delayMs)
+
+        return ()=>{
+            m=false;
+        }
+    },[value,delayMs])
+
+    return val;
+}
