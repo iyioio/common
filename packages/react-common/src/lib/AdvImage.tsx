@@ -1,6 +1,6 @@
 import { LazyImage, LazyImageProps } from "./LazyImage";
 
-interface AdvImageProps extends Omit<LazyImageProps,'notLazy'>
+export interface AdvImageProps extends Omit<LazyImageProps,'notLazy'>
 {
 
     lazy?:boolean;
