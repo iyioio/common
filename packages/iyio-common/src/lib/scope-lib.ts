@@ -1,13 +1,13 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { CancelToken } from "./CancelToken";
+import { createPromiseSource } from "./PromiseSource";
+import { ScopedSetter, Setter, createScopedSetter, isScopedSetter, isSetterOrScopedSetter } from "./Setter";
 import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
 import { asArray } from "./array";
-import { CancelToken } from "./CancelToken";
-import { continueFunction, FunctionLoopControl, parseConfigBool, shouldBreakFunction } from "./common-lib";
-import { AnyFunction, HashMap, SymHashMap } from "./common-types";
+import { FunctionLoopControl, continueFunction, parseConfigBool, shouldBreakFunction } from "./common-lib";
+import { AnyAsyncFunction, AnyFunction, HashMap, SymHashMap } from "./common-types";
 import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
-import { createPromiseSource } from "./PromiseSource";
 import { CallableTypeDef, ClientTypeDef, FactoryTypeDef, FluentProviderType, FluentTypeProvider, GeneratorTypeDef, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
-import { createScopedSetter, isScopedSetter, isSetterOrScopedSetter, ScopedSetter, Setter } from "./Setter";
 
 const ScopeDefineType=Symbol('ScopeDefineType');
 const ScopeDefineCallableType=Symbol('ScopeDefineCallableType');
@@ -897,6 +897,11 @@ export const defineProvider=<T>(
     :ProviderTypeDef<T>=>rootScope.defineType<T>(name,defaultProvider);
 
 export const defineFactory=<T extends AnyFunction>(
+    name:string,
+    defaultFactory?:T)
+    :FactoryTypeDef<T>=>rootScope.defineGeneratorType<T>(name,defaultFactory);
+
+export const defineAsyncFactory=<T extends AnyAsyncFunction>(
     name:string,
     defaultFactory?:T)
     :FactoryTypeDef<T>=>rootScope.defineGeneratorType<T>(name,defaultFactory);

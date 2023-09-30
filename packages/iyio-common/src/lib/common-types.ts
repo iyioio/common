@@ -103,6 +103,8 @@ export type EmptyFunction=()=>void;
 
 export type AnyFunction=(...args:any[])=>any;
 
+export type AnyAsyncFunction=(...args:any[])=>Promise<any>;
+
 export type Side='left'|'right'|'top'|'bottom';
 
 export interface AliasRecord<T=any>
