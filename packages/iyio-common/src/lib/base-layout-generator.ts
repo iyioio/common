@@ -436,8 +436,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
             c.push('h1,h2,h3,h4,h5,h6,p{margin:0;font-weight:400}')
         }
         c.push('.Text{display:inline-block}')
-        c.push(`.SlimButton{display:flex;border:none;padding:0;margin:0;background:none;cursor:pointer}`)
+        c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
+        c.push(`.SlimButton[disabled]{cursor:default}`)
     }
+    add('unsetAll',`unsetAll`);
     addWithAlias('face20',fc,generateFontFaceCss(fc.face20))
     addWithAlias('face19',fc,generateFontFaceCss(fc.face19))
     addWithAlias('face18',fc,generateFontFaceCss(fc.face18))
