@@ -148,7 +148,7 @@ export interface BaseLayoutCssGenerationOptions
      * The value used for semi-transparencies.
      * @default 0.5
      */
-    semiTransparency?:number;
+    semiTransparency?:number|string;
 
     fontConfig?:FontFaceConfig;
 
