@@ -13,3 +13,5 @@ export type TrimRight<Str extends string>=string extends Str ?
 export type Trim<Str extends string>=string extends Str?
     'Error':
     TrimRight<TrimLeft<Str>>;
+
+export type WhiteSpace=' '|'\n'|'\r'|'\t';
