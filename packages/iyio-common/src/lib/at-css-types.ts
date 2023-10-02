@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseLayoutProps } from "./base-layout";
 import { ClassNameValue } from "./css";
+import type { StyleSheetOrder } from "./css-order";
 import { Trim, WhiteSpace } from "./typescript-util-types";
 
 
@@ -89,7 +90,7 @@ export interface AtCssOptions<S extends string>
     disableAutoInsert?:boolean;
     css:S;
     disableParsing?:boolean;
-
+    order?:number|StyleSheetOrder;
 }
 
 export type AtCssOptionsDefaults=Partial<Omit<AtCssOptions<string>,'css'>>;

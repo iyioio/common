@@ -1,4 +1,6 @@
-import { AtCssOptions, AtCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtSheet, bcn, cn } from "@iyio/common";
+import { AtCssOptions, AtCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtSheet, bcn, cn, getStyleSheetOrder } from "@iyio/common";
+
+const orderAtt='data-at-dot-css-order';
 
 export const atCss=<S extends string>(
     options:AtCssOptions<S>,
@@ -46,13 +48,41 @@ export const atCss=<S extends string>(
             return;
         }
 
+        const id='at-dot-css-'+name
+        globalThis.document.getElementById(id)?.remove();
+
+        const order=getStyleSheetOrder(options.order);
+
         const style=globalThis.document.createElement('style');
-        //todo - add prefixes
-        style.innerHTML=options.css;
+        style.id=id;
+        style.setAttribute(orderAtt,order.toString());
+        style.innerHTML=options.css.replace(
+            /\W(backdrop-filter)\s*:([^;}:]*)/gim,
+            (match,prop,value)=>`${match};-webkit-${prop}:${value}`);
+
         (options as any).css='';
 
-        //todo - enforce order
-        globalThis.document.head.append(style);
+        const styles=globalThis.document.head.querySelectorAll(`style[${orderAtt}]`);
+
+        for(let i=0;i<styles.length;i++){
+            const existingStyle=styles.item(i);
+            if(!existingStyle){
+                continue;
+            }
+
+            const o=Number(existingStyle.getAttribute(orderAtt));
+            if(isFinite(o) && order<o){
+                globalThis.document.head.insertBefore(style,existingStyle);
+                return;
+            }
+        }
+
+        const before=globalThis.document.head.querySelector('link,style');
+        if(before){
+            globalThis.document.head.insertBefore(style,before);
+        }else{
+            globalThis.document.head.append(style);
+        }
 
     }
 
@@ -107,10 +137,3 @@ export const atCss=<S extends string>(
 
     return root as any;
 };
-
-
-
-export class AtStyleSheet
-{
-
-}

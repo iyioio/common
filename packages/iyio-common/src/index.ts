@@ -55,6 +55,7 @@ export * from './lib/crypto-bytes';
 export * from './lib/crypto-bytes-types';
 export * from './lib/crypto-bytes.deps';
 export * from './lib/css';
+export * from './lib/css-order';
 export * from './lib/csv-lib';
 export * from './lib/csv-types';
 export * from './lib/data-table';
