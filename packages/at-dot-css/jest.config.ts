@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: 'at-css',
+    displayName: 'at-dot-css',
     preset: '../../jest.preset.js',
     testEnvironment: 'node',
     transform: {
@@ -10,5 +10,5 @@ export default {
         ],
     },
     moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageDirectory: '../../coverage/packages/at-css',
+    coverageDirectory: '../../coverage/packages/at-dot-css',
 };

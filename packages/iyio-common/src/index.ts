@@ -33,7 +33,7 @@ export * from './lib/ValueBag';
 export * from './lib/ValueBag.deps';
 export * from './lib/ValueCache';
 export * from './lib/array';
-export * from './lib/at-css-types';
+export * from './lib/at-dot-css-types';
 export * from './lib/auth-types';
 export * from './lib/auth.deps';
 export * from './lib/authModule';

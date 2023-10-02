@@ -36,14 +36,14 @@ type GetValue<S extends string>=string extends S?
         SplitDot<Classes>:
         null;
 
-export type ParseAt<S extends string>=string extends S?
+export type ParseAtDotCss<S extends string>=string extends S?
     'Error':
     S extends `${infer _Start}@.${infer ClassName}{${infer Rest}`?
         {
             [K in SplitClasses<`@.${Trim<ClassName>}`>]:GetValue<`${ClassName} `>;
-        } & Exclude<ParseAt<Rest>,S>
+        } & Exclude<ParseAtDotCss<Rest>,S>
     :
-        {___AT_NOT_PROP___:true}
+        {___AT_DOT_NOT_PROP___:true}
     ;
 
 type SplitSection<S extends string>=string extends S?
@@ -65,9 +65,9 @@ export type AtCssCall<T>=string extends T?T extends string?
     ((selectors?:{[KT in T]:any},options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string):never:
     ((selectors?:T,options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string);
 
-export type ParseAtSheet<
+export type ParseAtDotSheet<
     S extends string,
-    P=Omit<ParseAt<SplitSection<SplitLargeSection<S>>>,'___AT_NOT_PROP___'>>=
+    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<S>>>,'___AT_DOT_NOT_PROP___'>>=
 {
     readonly [K in AllKeys<P>]:P[K] extends null?
         AtCssCall<{[CK in K]?:true}>:
@@ -83,7 +83,7 @@ export type ParseAtSheet<
     isStyleSheetInserted():boolean;
 });
 
-export interface AtCssOptions<S extends string>
+export interface AtDotCssOptions<S extends string>
 {
     namespace?:string;
     name:string;
@@ -93,4 +93,4 @@ export interface AtCssOptions<S extends string>
     order?:number|StyleSheetOrder;
 }
 
-export type AtCssOptionsDefaults=Partial<Omit<AtCssOptions<string>,'css'>>;
+export type AtDotCssOptionsDefaults=Partial<Omit<AtDotCssOptions<string>,'css'>>;

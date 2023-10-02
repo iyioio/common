@@ -1,11 +1,11 @@
-import { AtCssOptions, AtCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtSheet, bcn, cn, getStyleSheetOrder } from "@iyio/common";
+import { AtDotCssOptions, AtDotCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotSheet, bcn, cn, getStyleSheetOrder } from "@iyio/common";
 
 const orderAtt='data-at-dot-css-order';
 
-export const atCss=<S extends string>(
-    options:AtCssOptions<S>,
-    defaults?:AtCssOptionsDefaults
-):ParseAtSheet<S>=>{
+export const atDotCss=<S extends string>(
+    options:AtDotCssOptions<S>,
+    defaults?:AtDotCssOptionsDefaults
+):ParseAtDotSheet<S>=>{
 
     const namespace=options.namespace??defaults?.namespace;
     const name=namespace?`${namespace}--${options.name}`:options.name;

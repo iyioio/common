@@ -1,4 +1,4 @@
-import { atCss } from './at-css';
+import { atDotCss } from './at-dot-css';
 
 const st={
     color:'red'
@@ -8,7 +8,7 @@ describe('at-css',()=>{
 
     it('Parse style sheet',()=>{
 
-        const cl = atCss({
+        const cl = atDotCss({
             //namespace:'iyio',
             name:'ExampleComp',
             css:`
