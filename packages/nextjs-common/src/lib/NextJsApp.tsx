@@ -3,6 +3,7 @@ import { AppProps } from "next/app";
 import { FunctionComponent, useCallback, useState } from "react";
 import { DefaultLayout, DefaultLayoutProps } from "./DefaultLayout";
 import { NextJsAppContainer, NextJsAppContainerProps } from "./NextJsAppContainer";
+import { NextJsStyleSheets } from "./NextJsStyleSheets";
 import { getRouteInfo } from "./next-route-helper";
 
 
@@ -50,10 +51,10 @@ export function NextJsApp({
             {...props}
             afterAll={<>
                 {GlobalStyle && <GlobalStyle/>}
+                <NextJsStyleSheets/>
                 {afterAll}
             </>}
         >
-
             {children}
 
             {renderLayout &&

@@ -1,6 +1,5 @@
-import { AtDotCssOptions, AtDotCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotSheet, bcn, cn, getStyleSheetOrder } from "@iyio/common";
-
-const orderAtt='data-at-dot-css-order';
+import { AtDotCssOptions, AtDotCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotSheet, bcn, cn } from "@iyio/common";
+import { atDotCssRenderer } from "./at-dot-css.deps";
 
 export const atDotCss=<S extends string>(
     options:AtDotCssOptions<S>,
@@ -8,9 +7,13 @@ export const atDotCss=<S extends string>(
 ):ParseAtDotSheet<S>=>{
 
     const namespace=options.namespace??defaults?.namespace;
-    const name=namespace?`${namespace}--${options.name}`:options.name;
+    const name=options.id??namespace?`${namespace}--${options.name}`:options.name;
     const disableAutoInsert=(options.disableAutoInsert || defaults?.disableAutoInsert)?true:false
     const prefix=name+'-';
+    if(!options.id){
+        options.id='at-dot-css-'+name;
+    }
+    const id=options.id;
 
     const root=(
         flags?:Record<string,any>,
@@ -44,51 +47,25 @@ export const atDotCss=<S extends string>(
         }
         inserted=true;
 
-        if(!globalThis?.document?.createElement){
+        const renderer=atDotCssRenderer();
+
+        renderer.removeSheet(id);
+        renderer.addSheet(id,options);
+
+    }
+
+    const removeStyleSheet=()=>{
+        if(!inserted){
             return;
         }
-
-        const id='at-dot-css-'+name
-        globalThis.document.getElementById(id)?.remove();
-
-        const order=getStyleSheetOrder(options.order);
-
-        const style=globalThis.document.createElement('style');
-        style.id=id;
-        style.setAttribute(orderAtt,order.toString());
-        style.innerHTML=options.css.replace(
-            /\W(backdrop-filter)\s*:([^;}:]*)/gim,
-            (match,prop,value)=>`${match};-webkit-${prop}:${value}`);
-
-        (options as any).css='';
-
-        const styles=globalThis.document.head.querySelectorAll(`style[${orderAtt}]`);
-
-        for(let i=0;i<styles.length;i++){
-            const existingStyle=styles.item(i);
-            if(!existingStyle){
-                continue;
-            }
-
-            const o=Number(existingStyle.getAttribute(orderAtt));
-            if(isFinite(o) && order<o){
-                globalThis.document.head.insertBefore(style,existingStyle);
-                return;
-            }
-        }
-
-        const before=globalThis.document.head.querySelector('link,style');
-        if(before){
-            globalThis.document.head.insertBefore(style,before);
-        }else{
-            globalThis.document.head.append(style);
-        }
-
+        inserted=false;
+        atDotCssRenderer().removeSheet(id);
     }
 
     const isStyleSheetInserted=()=>inserted;
 
     root.insertStyleSheet=insertStyleSheet;
+    root.removeStyleSheet=removeStyleSheet;
     root.isStyleSheetInserted=isStyleSheetInserted;
     root.toString=root;
 
@@ -130,7 +107,13 @@ export const atDotCss=<S extends string>(
         return n?`.${name} .${prefix}${n}`:'.'+name;
     }
     if(!options.disableParsing){
-        options.css=options.css.replace(/@\.([\w-]+)/g,replacer) as any;
+        options.css=(
+            options.css
+            .replace(/@\.([\w-]+)/g,replacer)
+            .replace(
+                /\W(backdrop-filter)\s*:([^;}:]*)/gim,
+                (match,prop,value)=>`${match};-webkit-${prop}:${value}`)
+        )as any;
     }
 
     (root as any).root=root;

@@ -119,7 +119,6 @@ export * from './lib/store-types';
 export * from './lib/store.deps';
 export * from './lib/string';
 export * from './lib/string-converters';
-export * from './lib/style-builder';
 export * from './lib/time';
 export * from './lib/time-types';
 export * from './lib/tmp-helpers';

@@ -34,14 +34,14 @@ type GetValue<S extends string>=string extends S?
     'Error':
     S extends `${infer _Start}.${infer Classes}${','|'{'|WhiteSpace}${infer Rest}`?
         SplitDot<Classes>:
-        null;
+        '___AT_DOT_NOT_PROP___';
 
-export type ParseAtDotCss<S extends string>=string extends S?
+export type ParseAtDotCss<S extends string,Suffix extends string='@@'>=string extends S?
     'Error':
     S extends `${infer _Start}@.${infer ClassName}{${infer Rest}`?
         {
-            [K in SplitClasses<`@.${Trim<ClassName>}`>]:GetValue<`${ClassName} `>;
-        } & Exclude<ParseAtDotCss<Rest>,S>
+            [K in `${SplitClasses<`@.${Trim<ClassName>}`>}${Suffix}`]:GetValue<`${ClassName} `>;
+        } & Exclude<ParseAtDotCss<Rest,`${Suffix}@`>,S>
     :
         {___AT_DOT_NOT_PROP___:true}
     ;
@@ -58,33 +58,36 @@ type SplitLargeSection<S extends string>=string extends S?
         Before|SplitLargeSection<After>:
         S;
 
-type AllKeys<T>=T extends any?keyof T:never;
 
+export type GetAtDotClassName<T>=
+    ((selectors?:T|null,options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string);
 
-export type AtCssCall<T>=string extends T?T extends string?
-    ((selectors?:{[KT in T]:any},options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string):never:
-    ((selectors?:T,options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string);
+type RemoveSuffix<S>=S extends string?S extends `${infer Name}@${infer _Rest}`?Name:S:never;
+
+export interface AtDotStyleSheetMethods
+{
+    insertStyleSheet():void;
+    removeStyleSheet():void;
+    isStyleSheetInserted():boolean;
+}
 
 export type ParseAtDotSheet<
     S extends string,
-    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<S>>>,'___AT_DOT_NOT_PROP___'>>=
-{
-    readonly [K in AllKeys<P>]:P[K] extends null?
-        AtCssCall<{[CK in K]?:true}>:
-        P[K] extends string?
-            AtCssCall<{[CK in P[K]]?:any}>:
-            never
-} & (
-    P extends {['']:any}?
-        AtCssCall<{[CK in P['']]?:any}>:
-        AtCssCall<{['']?:true}>
-) & ({
-    insertStyleSheet():void;
-    isStyleSheetInserted():boolean;
-});
+    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<S>>>,'___AT_DOT_NOT_PROP___'>,
+    M={
+        readonly [K in keyof P as K extends string?RemoveSuffix<K>:never ]:
+            GetAtDotClassName<{[CK in P[K] extends string?Exclude<P[K],'___AT_DOT_NOT_PROP___'>:never]?:any}>
+    },
+    RootCall=(
+        M extends {root:any}?
+            GetAtDotClassName<{[CK in M['root'] as RemoveSuffix<M['root']>]?:any}>:
+            GetAtDotClassName<Record<string,never>>
+    )
+>= M & AtDotStyleSheetMethods & RootCall;
 
 export interface AtDotCssOptions<S extends string>
 {
+    id?:string;
     namespace?:string;
     name:string;
     disableAutoInsert?:boolean;

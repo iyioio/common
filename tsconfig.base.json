@@ -15,6 +15,7 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
+            "@iyio/at-dot-css": ["packages/at-dot-css/src/index.ts"],
             "@iyio/aws": ["packages/aws/src/index.ts"],
             "@iyio/aws-secrets": ["packages/aws-secrets/src/index.ts"],
             "@iyio/aws-credential-providers": [
