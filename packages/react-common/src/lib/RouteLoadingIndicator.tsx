@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Style from "styled-jsx/style";
 import { View } from "./View";
 import { useSubject } from "./rxjs-hooks";
+import { useDelayedValue } from "./useDelayedValue";
 
 export interface RouteLoadingIndicatorProps
 {
@@ -12,6 +13,7 @@ export interface RouteLoadingIndicatorProps
     enableDebugging?:boolean;
     childrenShowDelayMs?:number;
     childrenFadeInDurationMs?:number;
+    unmountChildrenDelayMs?:number;
     duration?:number;
     zIndex?:number;
 }
@@ -23,6 +25,7 @@ export function RouteLoadingIndicator({
     enableDebugging,
     childrenShowDelayMs=2000,
     childrenFadeInDurationMs=600,
+    unmountChildrenDelayMs=2000,
     duration=1000,
     zIndex=10000,
 }:RouteLoadingIndicatorProps)
@@ -80,19 +83,22 @@ export function RouteLoadingIndicator({
 
     },[isLoading,bar,childrenShowDelayMs,duration]);
 
+    const showOverlayIndicator=(showOverlay || enableDebugging) && !closeOverlay;
+    const showOverlayIndicatorDelayed=useDelayedValue(showOverlayIndicator,unmountChildrenDelayMs,true);
+
     return (
         <>
 
             {!!children && <View
                 roleNone
                 col
-                className={cn("RouteLoadingIndicator-overlay",{isLoading:(showOverlay || enableDebugging) && !closeOverlay})}
+                className={cn("RouteLoadingIndicator-overlay",{isLoading:showOverlayIndicator})}
                 style={{
                     zIndex,
                     transition:`opacity ${childrenFadeInDurationMs}ms ease-in-out`,
                 }}
             >
-                {children}
+                {showOverlayIndicatorDelayed && children}
             </View>}
 
             <div
