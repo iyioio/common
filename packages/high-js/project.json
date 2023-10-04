@@ -4,13 +4,13 @@
     "sourceRoot": "packages/high-js/src",
     "projectType": "library",
     "targets": {
-        "test-extension": {
+        "test-ext": {
             "executor": "nx:run-commands",
             "options": {
                 "command": "code --extensionDevelopmentPath=$(pwd)/packages/high-js/ --disable-extensions packages/high-js/examples"
             }
         },
-        "publish-extension": {
+        "publish-ext": {
             "executor": "nx:run-commands",
             "options": {
                 "cwd": "packages/high-js",

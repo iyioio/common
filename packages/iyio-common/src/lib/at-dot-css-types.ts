@@ -36,11 +36,32 @@ type GetValue<S extends string>=string extends S?
         SplitDot<Classes>:
         '___AT_DOT_NOT_PROP___';
 
+export type TrimVar<Str extends string>=string extends Str ?
+    'Error':
+    Str extends `${infer Str} `|`${infer Str}\n`|`${infer Str}\r`|`${infer Str}\t`|`${infer Str};`?
+        TrimVar<Str>:
+        Str;
+
+type GetVars<S extends string>=string extends S?
+    'Error':
+    S extends `${infer _Start}@@${infer VarName}${';'|WhiteSpace}${infer Rest}`?
+        `VAR**${TrimVar<VarName>}`|GetVars<Rest>:
+        '___AT_DOT_NOT_PROP___';
+
+type GetVarsBody<S extends string>=string extends S?
+    'Error':
+    S extends `${infer VarBody}}${infer _Rest}`?
+        VarBody:
+        '';
+
+type Example=GetVars<` @@var ;    @@ext  `>
+type Example2=GetVarsBody<` @@var ;    @@ext } @@xt `>
+
 export type ParseAtDotCss<S extends string,Suffix extends string='@@'>=string extends S?
     'Error':
     S extends `${infer _Start}@.${infer ClassName}{${infer Rest}`?
         {
-            [K in `${SplitClasses<`@.${Trim<ClassName>}`>}${Suffix}`]:GetValue<`${ClassName} `>;
+            [K in `${SplitClasses<`@.${Trim<ClassName>}`>}${Suffix}`]:GetValue<`${ClassName} `>|GetVars<`${GetVarsBody<Rest>} `>;
         } & Exclude<ParseAtDotCss<Rest,`${Suffix}@`>,S>
     :
         {___AT_DOT_NOT_PROP___:true}
@@ -64,11 +85,19 @@ export type GetAtDotClassName<T>=
 
 type RemoveSuffix<S>=S extends string?S extends `${infer Name}@${infer _Rest}`?Name:S:never;
 
+type FilterVars<S extends string>=S extends `VAR**${infer _Rest}`?never:S;
+type GetVarName<S extends string>=S extends `VAR**${infer VarName}`?VarName:never;
+
 export interface AtDotStyleCtrl
 {
     insertStyleSheet():void;
     removeStyleSheet():void;
     isStyleSheetInserted():boolean;
+}
+
+export interface AtDotVars<T=any>
+{
+    vars(vars?:Partial<T>,style?:Partial<CSSStyleDeclaration>):Record<string,any>|undefined;
 }
 
 export type ParseAtDotStyle<
@@ -77,10 +106,13 @@ export type ParseAtDotStyle<
         `@.root{};${S}`
     >>>,'___AT_DOT_NOT_PROP___'>,
     M={
-        readonly [K in keyof P as K extends string?RemoveSuffix<K>:never ]:
-            GetAtDotClassName<{[CK in P[K] extends string?Exclude<P[K],'___AT_DOT_NOT_PROP___'>:never]?:any}>
-    }
->=M & ({root:()=>string});
+        readonly [K in keyof P as K extends string?  RemoveSuffix<K>:never ]:
+            GetAtDotClassName<{[CK in P[K] extends string?Exclude<FilterVars<P[K]>,'___AT_DOT_NOT_PROP___'>:never]?:any}>
+    },
+    VMap={
+        readonly [K in keyof P as P[K] extends string?GetVarName<P[K]>:never]:any
+    },
+>=M & AtDotVars<VMap> & ({root:()=>string});
 
 export interface AtDotStyle<S extends string>
 {
@@ -98,6 +130,11 @@ export interface AtDotStyle<S extends string>
      * normally it would only have a class name of "meNamespace--Example"
      */
     includeNameWithoutNameSpace?:boolean;
+
+    /**
+     * If true debugging information will be logged to the console.
+     */
+    debug?:boolean;
 }
 
 export type AtDotStyleDefaults=Partial<Omit<AtDotStyle<string>,'css'>>;

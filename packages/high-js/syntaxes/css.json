@@ -30,6 +30,10 @@
         }
     ],
     "repository": {
+        "at-dot":{
+            "match": "@@\\w+",
+            "name":"variable.other.constant.object.ts"
+        },
         "interpolation": {
             "contentName": "meta.embedded.line.ts",
             "begin": "\\${",
@@ -229,7 +233,7 @@
                     ]
                 },
                 {
-                    "match": "(@).(\\w*)",
+                    "match": "(@)\\.(\\w*)",
                     "captures":{
                         "1":{
                             "name":"keyword.control.export"
@@ -248,6 +252,49 @@
                             ]
                         }
                     }
+                },
+                {
+                    "begin": "(?=@(mobileSmUp|mobileUp|tabletSmUp|tabletUp|desktopSmUp|desktopUp|mobileSmDown|mobileDown|tabletSmDown|tabletDown|desktopSmDown|desktopDown))",
+                    "end": "(?<=})(?!\\G)",
+                    "patterns": [
+                        {
+                            "include": "#interpolation"
+                        },
+                        {
+                            "match": "\\G(@)(mobileSmUp|mobileUp|tabletSmUp|tabletUp|desktopSmUp|desktopUp|mobileSmDown|mobileDown|tabletSmDown|tabletDown|desktopSmDown|desktopDown)",
+                            "captures": {
+                                "0": {
+                                    "name": "keyword.control.at-rule.media.css"
+                                },
+                                "1": {
+                                    "name": "punctuation.definition.keyword.css"
+                                }
+                            }
+                        },
+                        {
+                            "begin": "{",
+                            "beginCaptures": {
+                                "0": {
+                                    "name": "punctuation.section.media.begin.bracket.curly.css"
+                                }
+                            },
+                            "end": "}",
+                            "endCaptures": {
+                                "0": {
+                                    "name": "punctuation.section.media.end.bracket.curly.css"
+                                }
+                            },
+                            "name": "meta.at-rule.media.body.css",
+                            "patterns": [
+                                {
+                                    "include": "#interpolation"
+                                },
+                                {
+                                    "include": "$self"
+                                }
+                            ]
+                        }
+                    ]
                 },
                 {
                     "begin": "(?i)(?=@media(\\s|\\(|/\\*|$))",
@@ -1178,6 +1225,9 @@
                 },
                 {
                     "include": "#url"
+                },
+                {
+                    "include": "#at-dot"
                 },
                 {
                     "begin": "(?i)(?<![\\w-])(var)(\\()",

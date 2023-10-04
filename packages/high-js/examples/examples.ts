@@ -1,11 +1,44 @@
 const value='red';
-
+/*css*/`
+@.stuff.ready.freddy{
+    color:@@myColor;
+}
+@.stuff{
+    display:block;
+}
+@.stuff2{
+    display:block;
+}
+@.stuff.active{
+    color:red;
+}
+@.root.disabled{
+    color:red;
+}
+`
 const css=/*css*/`
+
 .body{
     color:${value};
+    font:@@font;
 }
 html{
     color:orange;
+}
+@desktopUp{
+    @.root{
+        color:@@color;
+        font:var(--font-var)
+    }
+    @.someDiv{
+        color:@@divColor;
+    }
+}
+@media(max-width:500px){
+    @.root{
+        color:@@color;
+        font:var(--font-var)
+    }
 }
 `
 const css2=/*start-css*/`

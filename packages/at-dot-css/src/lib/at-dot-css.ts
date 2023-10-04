@@ -76,6 +76,19 @@ export const atDotCss=<S extends string>(
         [ctrlKey]:ctrl,
         root,
         toString:root,
+        vars:(vars?:any,style?:Partial<CSSStyleDeclaration>):Record<string,any>|undefined=>{
+            if(!vars && !style){
+                return undefined;
+            }
+            if(!vars){
+                return style;
+            }
+            const obj:any=style?{...style}:{};
+            for(const e in vars){
+                obj[`--${name}-${e}`]=vars[e];
+            }
+            return obj;
+        }
     };
 
     const replacer=(_:string|undefined,n:string|undefined)=>{
@@ -119,10 +132,15 @@ export const atDotCss=<S extends string>(
         options.css=(
             options.css
             .replace(/@\.([\w-]+)/g,replacer)
+            .replace(/@@\w+/g,varName=>`var(--${name}-${varName.substring(2)})`)
             .replace(
                 /\W(backdrop-filter)\s*:([^;}:]*)/gim,
                 (match,prop,value)=>`${match};-webkit-${prop}:${value}`)
         ) as any;
+    }
+
+    if(options.debug){
+        console.info('atDotCss',options,options.css);
     }
 
     return style;

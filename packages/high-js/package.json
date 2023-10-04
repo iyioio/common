@@ -1,8 +1,8 @@
 {
     "name": "high-js",
     "displayName": "high-js",
-    "description": "Syntax highlighting for a wide number of languages embedded in javascript string templates",
-    "version": "0.0.1",
+    "description": "Let your javascript see all the pretty colors 🫠",
+    "version": "0.0.2",
     "publisher": "IYIO",
     "icon": "assets/logo.png",
     "engines": {
