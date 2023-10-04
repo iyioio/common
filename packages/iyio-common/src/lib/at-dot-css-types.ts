@@ -64,28 +64,25 @@ export type GetAtDotClassName<T>=
 
 type RemoveSuffix<S>=S extends string?S extends `${infer Name}@${infer _Rest}`?Name:S:never;
 
-export interface AtDotStyleSheetMethods
+export interface AtDotStyleCtrl
 {
     insertStyleSheet():void;
     removeStyleSheet():void;
     isStyleSheetInserted():boolean;
 }
 
-export type ParseAtDotSheet<
+export type ParseAtDotStyle<
     S extends string,
-    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<S>>>,'___AT_DOT_NOT_PROP___'>,
+    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<
+        `@.root{};${S}`
+    >>>,'___AT_DOT_NOT_PROP___'>,
     M={
         readonly [K in keyof P as K extends string?RemoveSuffix<K>:never ]:
             GetAtDotClassName<{[CK in P[K] extends string?Exclude<P[K],'___AT_DOT_NOT_PROP___'>:never]?:any}>
-    },
-    RootCall=(
-        M extends {root:any}?
-            GetAtDotClassName<{[CK in M['root'] as RemoveSuffix<M['root']>]?:any}>:
-            GetAtDotClassName<Record<string,never>>
-    )
->= M & AtDotStyleSheetMethods & RootCall;
+    }
+>=M & ({root:()=>string});
 
-export interface AtDotCssOptions<S extends string>
+export interface AtDotStyle<S extends string>
 {
     id?:string;
     namespace?:string;
@@ -94,6 +91,13 @@ export interface AtDotCssOptions<S extends string>
     css:S;
     disableParsing?:boolean;
     order?:number|StyleSheetOrder;
+    /**
+     * If true and a namespace is included the root class name will also include the name without
+     * the name space. For example a sheet with includeNameWithoutNameSpace set to true and a name
+     * of Example and a namespace of meNamespace will have a class name of "Example meNamespace--Example" when
+     * normally it would only have a class name of "meNamespace--Example"
+     */
+    includeNameWithoutNameSpace?:boolean;
 }
 
-export type AtDotCssOptionsDefaults=Partial<Omit<AtDotCssOptions<string>,'css'>>;
+export type AtDotStyleDefaults=Partial<Omit<AtDotStyle<string>,'css'>>;

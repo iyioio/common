@@ -1,0 +1,22 @@
+{
+    "name": "high-js",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/high-js/src",
+    "projectType": "library",
+    "targets": {
+        "test-extension": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "code --extensionDevelopmentPath=$(pwd)/packages/high-js/ --disable-extensions packages/high-js/examples"
+            }
+        },
+        "publish-extension": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/high-js",
+                "command": "./publish.sh"
+            }
+        }
+    },
+    "tags": []
+}

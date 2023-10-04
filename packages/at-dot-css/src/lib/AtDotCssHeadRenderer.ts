@@ -1,11 +1,11 @@
-import { AtDotCssOptions, getStyleSheetOrder } from "@iyio/common";
+import { AtDotStyle, getStyleSheetOrder } from "@iyio/common";
 import { IAtDotCssRenderer } from "./at-dot-css-lib-types";
 
 const orderAtt='data-at-dot-css-order';
 
 export class AtDotCssHeadRenderer implements IAtDotCssRenderer
 {
-    public addSheet(id:string,options:AtDotCssOptions<string>):void
+    public addSheet(id:string,options:AtDotStyle<string>):void
     {
         if(!globalThis.document?.createElement){
             return;

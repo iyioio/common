@@ -1,0 +1,59 @@
+{
+    "name": "high-js",
+    "displayName": "high-js",
+    "description": "Syntax highlighting for a wide number of languages embedded in javascript string templates",
+    "version": "0.0.1",
+    "publisher": "IYIO",
+    "icon": "assets/logo.png",
+    "engines": {
+        "vscode": "^1.26.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/iyioio/common/packages/high-js"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "high-js",
+        "styled-components",
+        "syntax",
+        "highlight",
+        "highlighting",
+        "css-in-js"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "source.css.high-js",
+                "aliases": [
+                    "JS String Highlighter"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "source.css.high-js",
+                "scopeName": "source.css.high-js",
+                "path": "./syntaxes/css.json"
+            },
+            {
+                "injectTo": [
+                    "source.js",
+                    "source.ts",
+                    "source.jsx",
+                    "source.js.jsx",
+                    "source.tsx"
+                ],
+                "scopeName": "high-js",
+                "path": "./syntaxes/high-js.json",
+                "embeddedLanguages": {
+                    "source.css.scss": "css",
+                    "meta.embedded.line.ts": "typescript"
+                }
+            }
+        ]
+    }
+}

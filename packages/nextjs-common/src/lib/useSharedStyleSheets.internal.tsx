@@ -1,8 +1,8 @@
-import { AtDotCssOptions } from "@iyio/common";
+import { AtDotStyle } from "@iyio/common";
 import { useEffect, useState } from "react";
 import { BehaviorSubject } from "rxjs";
 
-export const sharedStyleSheets:AtDotCssOptions<string>[]=[];
+export const sharedStyleSheets:AtDotStyle<string>[]=[];
 
 export const sharedStyleSheetsUpdateSubject=new BehaviorSubject<number>(0);
 

@@ -1,0 +1,14 @@
+.github/**
+.vscode/**
+.vscode-test/**
+.gitignore
+.eslintignore
+.prettierrc
+.editorconfig
+.DS_Store
+
+tsconfig.json
+vsc-extension-quickstart.md
+
+test
+node_modules

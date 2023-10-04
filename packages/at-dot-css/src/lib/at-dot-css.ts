@@ -1,13 +1,15 @@
-import { AtDotCssOptions, AtDotCssOptionsDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotSheet, bcn, cn } from "@iyio/common";
+import { AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotStyle, bcn, cn } from "@iyio/common";
 import { atDotCssRenderer } from "./at-dot-css.deps";
 
+const ctrlKey=Symbol('ctrlKey');
+
 export const atDotCss=<S extends string>(
-    options:AtDotCssOptions<S>,
-    defaults?:AtDotCssOptionsDefaults
-):ParseAtDotSheet<S>=>{
+    options:AtDotStyle<S>,
+    defaults?:AtDotStyleDefaults
+):ParseAtDotStyle<S>=>{
 
     const namespace=options.namespace??defaults?.namespace;
-    const name=options.id??namespace?`${namespace}--${options.name}`:options.name;
+    const name=`${namespace?`${namespace}--`:''}${options.name}${options.id?`--${options.id}`:''}`;
     const disableAutoInsert=(options.disableAutoInsert || defaults?.disableAutoInsert)?true:false
     const prefix=name+'-';
     if(!options.id){
@@ -63,49 +65,56 @@ export const atDotCss=<S extends string>(
     }
 
     const isStyleSheetInserted=()=>inserted;
-
-    root.insertStyleSheet=insertStyleSheet;
-    root.removeStyleSheet=removeStyleSheet;
-    root.isStyleSheetInserted=isStyleSheetInserted;
     root.toString=root;
 
+    const ctrl:AtDotStyleCtrl={
+        insertStyleSheet:insertStyleSheet,
+        removeStyleSheet:removeStyleSheet,
+        isStyleSheetInserted:isStyleSheetInserted,
+    };
+    const style:any={
+        [ctrlKey]:ctrl,
+        root,
+        toString:root,
+    };
+
     const replacer=(_:string|undefined,n:string|undefined)=>{
-        if(n==='root'){
-            n='';
-        }
-        if(n!==undefined && !(root as any)[n]){
-            const prop=(
-                flags?:Record<string,any>,
-                opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
-            )=>{
-                if(!inserted && !disableAutoInsert){
-                    insertStyleSheet();
-                }
-                let c=n?prefix+n:name;
-                if(flags){
-                    for(const e in flags){
-                        if(flags[e]){
-                            c+=' '+e;
-                        }
-                    }
-                }
-                if(opts){
-                    if(opts.baseLayout){
-                        c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
-                    }else if(opts.classNameValues){
-                        c=cn(c,opts.classNameValues);
-                    }
-                }
-                return c;
-            }
-            prop.insertStyleSheet=insertStyleSheet;
-            prop.isStyleSheetInserted=isStyleSheetInserted;
-            prop.toString=prop;
-            (root as any)[n]=prop;
+
+        const className=n?`.${name} .${prefix}${n}`:'.'+name;
+        if(n===undefined || (style as any)[n]){
+            return className;
         }
 
-        return n?`.${name} .${prefix}${n}`:'.'+name;
+        const prop=(
+            flags?:Record<string,any>,
+            opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
+        )=>{
+            if(!inserted && !disableAutoInsert){
+                insertStyleSheet();
+            }
+            let c=n?prefix+n:name;
+            if(flags){
+                for(const e in flags){
+                    if(flags[e]){
+                        c+=' '+e;
+                    }
+                }
+            }
+            if(opts){
+                if(opts.baseLayout){
+                    c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
+                }else if(opts.classNameValues){
+                    c=cn(c,opts.classNameValues);
+                }
+            }
+            return c;
+        }
+        prop.toString=prop;
+        (style as any)[n]=prop;
+
+        return className;
     }
+
     if(!options.disableParsing){
         options.css=(
             options.css
@@ -113,10 +122,12 @@ export const atDotCss=<S extends string>(
             .replace(
                 /\W(backdrop-filter)\s*:([^;}:]*)/gim,
                 (match,prop,value)=>`${match};-webkit-${prop}:${value}`)
-        )as any;
+        ) as any;
     }
 
-    (root as any).root=root;
-
-    return root as any;
+    return style as any;
 };
+
+export const getAtDotCtrl=(style:ParseAtDotStyle<string>):AtDotStyleCtrl=>{
+    return (style as any)[ctrlKey];
+}

@@ -1,0 +1,65 @@
+{
+    "fileTypes": [
+        "js",
+        "jsx",
+        "ts",
+        "tsx"
+    ],
+    "injectionSelector": "L:source -comment -string",
+    "patterns": [
+        {
+            "begin": "/\\*css\\*/\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0": "support.type"
+            },
+            "patterns": [
+                {
+                    "include": "source.css.high-js"
+                }
+            ]
+        },
+        {
+            "begin": "(/\\*(start-css)\\*/)\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "\\s*`(/\\*(end-css)\\*/)",
+            "endCaptures":{
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "source.css.high-js"
+                }
+            ]
+        },
+        {
+            "begin": "\\w*[Cc]ss\\s*:\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0": "support.type"
+            },
+            "patterns": [
+                {
+                    "include": "source.css.high-js"
+                }
+            ]
+        }
+    ],
+    "scopeName": "high-js"
+}

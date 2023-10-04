@@ -1,4 +1,4 @@
-import { atDotCss } from './at-dot-css';
+import { atDotCss, getAtDotCtrl } from './at-dot-css';
 
 const st={
     color:'red'
@@ -8,7 +8,7 @@ describe('at-css',()=>{
 
     it('Parse style sheet',()=>{
 
-        const cl = atDotCss({
+        const style = atDotCss({
             //namespace:'iyio',
             name:'ExampleComp',
             css:`
@@ -17,6 +17,9 @@ describe('at-css',()=>{
                 }
                 @.eggs{
                     color:green;
+                }
+                @.eggs.active{
+                    color:#33ff33;
                 }
 
                 @.ham, @.bacon{
@@ -32,26 +35,29 @@ describe('at-css',()=>{
 
         //console.log('hio 👋 👋 👋',cl);
 
-        expect(cl.isStyleSheetInserted()).toBe(false);
+        const ctrl=getAtDotCtrl(style);
+        expect(ctrl).toBeTruthy();
 
-        expect(cl.eggs()).toBe('ExampleComp-eggs');
-        expect(cl.ham()).toBe('ExampleComp-ham');
-        expect(cl.bacon()).toBe('ExampleComp-bacon');
-        expect(cl.fruit()).toBe('ExampleComp-fruit');
-        expect(cl.root()).toBe('ExampleComp');
-        expect(cl()).toBe('ExampleComp');
+        expect(ctrl.isStyleSheetInserted()).toBe(false);
 
-        expect(`${cl.eggs}`).toBe('ExampleComp-eggs');
-        expect(`${cl.ham}`).toBe('ExampleComp-ham');
-        expect(`${cl.bacon}`).toBe('ExampleComp-bacon');
-        expect(`${cl.root}`).toBe('ExampleComp');
-        expect(`${cl}`).toBe('ExampleComp');
+        expect(style.eggs()).toBe('ExampleComp-eggs');
+        expect(style.eggs({active:true})).toBe('ExampleComp-eggs active');
+        expect(style.ham()).toBe('ExampleComp-ham');
+        expect(style.bacon()).toBe('ExampleComp-bacon');
+        expect(style.fruit()).toBe('ExampleComp-fruit');
+        expect(style.root()).toBe('ExampleComp');
 
-        expect(cl.fruit({seeds:'yes'})).toBe('ExampleComp-fruit seeds');
-        expect(cl.fruit({seeds:'yes'},{classNameValues:'foo'})).toBe('ExampleComp-fruit seeds foo');
-        expect(cl.fruit({seeds:'yes'},{classNameValues:'foo',baseLayout:{p1:true}})).toBe('ExampleComp-fruit seeds foo ioP1');
+        expect(`${style.eggs}`).toBe('ExampleComp-eggs');
+        expect(`${style.ham}`).toBe('ExampleComp-ham');
+        expect(`${style.bacon}`).toBe('ExampleComp-bacon');
+        expect(`${style.root}`).toBe('ExampleComp');
+        expect(`${style}`).toBe('ExampleComp');
 
-        expect(cl.isStyleSheetInserted()).toBe(true);
+        expect(style.fruit({seeds:'yes'})).toBe('ExampleComp-fruit seeds');
+        expect(style.fruit({seeds:'yes'},{classNameValues:'foo'})).toBe('ExampleComp-fruit seeds foo');
+        expect(style.fruit({seeds:'yes'},{classNameValues:'foo',baseLayout:{p1:true}})).toBe('ExampleComp-fruit seeds foo ioP1');
+
+        expect(ctrl.isStyleSheetInserted()).toBe(true);
 
     })
 

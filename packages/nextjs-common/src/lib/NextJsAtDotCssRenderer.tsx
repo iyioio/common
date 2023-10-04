@@ -1,14 +1,14 @@
 import { IAtDotCssRenderer } from "@iyio/at-dot-css";
-import { AtDotCssOptions, aryRemoveFirst, getStyleSheetOrder } from "@iyio/common";
+import { AtDotStyle, aryRemoveFirst, getStyleSheetOrder } from "@iyio/common";
 import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "./useSharedStyleSheets.internal";
 
 export class NextJsAtDotCssRenderer implements IAtDotCssRenderer
 {
-    public addSheet(id:string,options:AtDotCssOptions<string>):void
+    public addSheet(id:string,options:AtDotStyle<string>):void
     {
         const order=getStyleSheetOrder(options.order);
 
-        const styles=sharedStyleSheets as AtDotCssOptions<string>[];
+        const styles=sharedStyleSheets as AtDotStyle<string>[];
 
         let inserted=false;
 
