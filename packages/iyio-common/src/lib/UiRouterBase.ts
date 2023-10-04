@@ -60,7 +60,7 @@ export class UiRouterBase implements IUiRouter
 
     public constructor({
         disableAutoChangeChecking=false,
-        changeCheckIntervalMs=250,
+        changeCheckIntervalMs=100,
         minAutoChangeMarginMs=1000,
         initRoute=getWindowLocationRouteInfo(),
     }:UiRouterBaseOptions={})
@@ -69,7 +69,7 @@ export class UiRouterBase implements IUiRouter
         this.disableAutoChangeChecking=disableAutoChangeChecking;
         this.changeCheckIntervalMs=changeCheckIntervalMs;
         this.minAutoChangeMarginMs=minAutoChangeMarginMs;
-        this.checkIv=setInterval(this.historyListener,30);
+        this.checkIv=setInterval(this.historyListener,changeCheckIntervalMs);
         this._currentRoute=new BehaviorSubject<RouteInfo>(initRoute);
         if(globalThis.window){
             globalThis.window.addEventListener('popstate',this.historyListener);
@@ -84,10 +84,6 @@ export class UiRouterBase implements IUiRouter
         this.itemsSub=this.navItemsSubject.subscribe(()=>{
             this.checkForChange(true);
         })
-
-        if(!disableAutoChangeChecking){
-            this.changeCheckIv=setInterval(this.autoCheck,changeCheckIntervalMs)
-        }
     }
 
     private _isDisposed=false;
@@ -106,9 +102,9 @@ export class UiRouterBase implements IUiRouter
     }
 
     private lastCheckKey:string|null=null;
-    protected checkForChange(force:boolean)
+    protected checkForChange(force:boolean,currentRouteKey?:string)
     {
-        const key=globalThis.location?globalThis.location.toString():this.getCurrentRoute().key;
+        const key=globalThis.location?globalThis.location.toString():(currentRouteKey??this.getCurrentRoute().key);
         if(!force && key===this.lastCheckKey){
             return;
         }
@@ -141,13 +137,16 @@ export class UiRouterBase implements IUiRouter
             (Date.now()-this.lastTriggerTime)<this.minAutoChangeMarginMs ||
             this.lastTriggerPath===null)
         {
-            return;
+            return null;
         }
 
         const route=this.getCurrentRoute();
         if(route.asPath!==this.lastTriggerPath){
             console.info('Auto push route',route);
             this.handlePushEvtAsync(route.asPath).then(()=>this.triggerRouteChanged())
+            return null;
+        }else{
+            return route;
         }
 
     }
@@ -168,7 +167,8 @@ export class UiRouterBase implements IUiRouter
         if(this.isDisposed){
             return;
         }
-        this.checkForChange(false);
+        const route=this.disableAutoChangeChecking?null:this.autoCheck();
+        this.checkForChange(false,route?.key);
     }
 
     public push(path:string,query?:RouteQuery){
