@@ -80,8 +80,8 @@ export const atDotCss=<S extends string>(
 
     const replacer=(_:string|undefined,n:string|undefined)=>{
 
-        const className=n?`.${name} .${prefix}${n}`:'.'+name;
-        if(n===undefined || (style as any)[n]){
+        const className=(n && n!=='root')?`.${name} .${prefix}${n}`:'.'+name;
+        if(!n || style[n]){
             return className;
         }
 
@@ -110,7 +110,7 @@ export const atDotCss=<S extends string>(
             return c;
         }
         prop.toString=prop;
-        (style as any)[n]=prop;
+        style[n]=prop;
 
         return className;
     }
@@ -125,7 +125,7 @@ export const atDotCss=<S extends string>(
         ) as any;
     }
 
-    return style as any;
+    return style;
 };
 
 export const getAtDotCtrl=(style:ParseAtDotStyle<string>):AtDotStyleCtrl=>{
