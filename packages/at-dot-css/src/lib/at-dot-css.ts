@@ -3,6 +3,84 @@ import { atDotCssRenderer } from "./at-dot-css.deps";
 
 const ctrlKey=Symbol('ctrlKey');
 
+interface PropRef
+{
+    name:string;
+    ctrl:AtDotStyleCtrl;
+    disableAutoInsert:boolean;
+    prefix:string;
+}
+
+function propDef(
+    this:PropRef,
+    flags?:Record<string,any>,
+    opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
+):string{
+    if(!this.ctrl.isInserted && !this.disableAutoInsert){
+        this.ctrl.insertStyleSheet();
+    }
+    let c=this.name?this.prefix+this.name:(this.name??'');
+    if(flags){
+        for(const e in flags){
+            if(flags[e]){
+                c+=' '+e;
+            }
+        }
+    }
+    if(opts){
+        if(opts.baseLayout){
+            c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
+        }else if(opts.classNameValues){
+            c=cn(c,opts.classNameValues);
+        }
+    }
+    return c;
+}
+
+function rootDef(
+    this:PropRef,
+    flags?:Record<string,any>,
+    opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
+):string{
+    if(!this.ctrl.isInserted && !this.disableAutoInsert){
+        this.ctrl.insertStyleSheet();
+    }
+    let c=this.name;
+    if(flags){
+        for(const e in flags){
+            if(flags[e]){
+                c+=' '+e;
+            }
+        }
+    }
+    if(opts){
+        if(opts.baseLayout){
+            c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
+        }else if(opts.classNameValues){
+            c=cn(c,opts.classNameValues);
+        }
+    }
+    return c;
+}
+
+function varsDef(
+    this:PropRef,
+    vars?:any,
+    style?:Partial<CSSStyleDeclaration>
+):Record<string,any>|undefined{
+    if(!vars && !style){
+        return undefined;
+    }
+    if(!vars){
+        return style;
+    }
+    const obj:any=style?{...style}:{};
+    for(const e in vars){
+        obj[`--${this.name}-${e}`]=vars[e];
+    }
+    return obj;
+}
+
 export const atDotCss=<S extends string>(
     options:AtDotStyle<S>,
     defaults?:AtDotStyleDefaults
@@ -17,37 +95,11 @@ export const atDotCss=<S extends string>(
     }
     const id=options.id;
 
-    const root=(
-        flags?:Record<string,any>,
-        opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
-    ):string=>{
-        if(!inserted && !disableAutoInsert){
-            insertStyleSheet();
-        }
-        let c=name;
-        if(flags){
-            for(const e in flags){
-                if(flags[e]){
-                    c+=' '+e;
-                }
-            }
-        }
-        if(opts){
-            if(opts.baseLayout){
-                c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
-            }else if(opts.classNameValues){
-                c=cn(c,opts.classNameValues);
-            }
-        }
-        return c;
-    }
-
-    let inserted=false;
     const insertStyleSheet=()=>{
-        if(inserted){
+        if(ctrl.isInserted){
             return;
         }
-        inserted=true;
+        ctrl.isInserted=true;
 
         const renderer=atDotCssRenderer();
 
@@ -57,39 +109,37 @@ export const atDotCss=<S extends string>(
     }
 
     const removeStyleSheet=()=>{
-        if(!inserted){
+        if(!ctrl.isInserted){
             return;
         }
-        inserted=false;
+        ctrl.isInserted=false;
         atDotCssRenderer().removeSheet(id);
     }
-
-    const isStyleSheetInserted=()=>inserted;
-    root.toString=root;
 
     const ctrl:AtDotStyleCtrl={
         insertStyleSheet:insertStyleSheet,
         removeStyleSheet:removeStyleSheet,
-        isStyleSheetInserted:isStyleSheetInserted,
+        isInserted:false,
     };
+
+    const rootRef:PropRef={
+        name,
+        ctrl,
+        disableAutoInsert,
+        prefix
+    };
+
+    const root=rootDef.bind(rootRef);
+
+    root.toString=root;
     const style:any={
         [ctrlKey]:ctrl,
         root,
         toString:root,
-        vars:(vars?:any,style?:Partial<CSSStyleDeclaration>):Record<string,any>|undefined=>{
-            if(!vars && !style){
-                return undefined;
-            }
-            if(!vars){
-                return style;
-            }
-            const obj:any=style?{...style}:{};
-            for(const e in vars){
-                obj[`--${name}-${e}`]=vars[e];
-            }
-            return obj;
-        }
+        vars:varsDef.bind(rootRef)
     };
+
+
 
     const replacer=(_:string|undefined,n:string|undefined)=>{
 
@@ -97,31 +147,13 @@ export const atDotCss=<S extends string>(
         if(!n || style[n]){
             return className;
         }
-
-        const prop=(
-            flags?:Record<string,any>,
-            opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
-        )=>{
-            if(!inserted && !disableAutoInsert){
-                insertStyleSheet();
-            }
-            let c=n?prefix+n:name;
-            if(flags){
-                for(const e in flags){
-                    if(flags[e]){
-                        c+=' '+e;
-                    }
-                }
-            }
-            if(opts){
-                if(opts.baseLayout){
-                    c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
-                }else if(opts.classNameValues){
-                    c=cn(c,opts.classNameValues);
-                }
-            }
-            return c;
+        const ref:PropRef={
+            name:n,
+            ctrl,
+            disableAutoInsert,
+            prefix
         }
+        const prop=propDef.bind(ref);
         prop.toString=prop;
         style[n]=prop;
 

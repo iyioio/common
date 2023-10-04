@@ -38,7 +38,7 @@ describe('at-css',()=>{
         const ctrl=getAtDotCtrl(style);
         expect(ctrl).toBeTruthy();
 
-        expect(ctrl.isStyleSheetInserted()).toBe(false);
+        expect(ctrl.isInserted).toBe(false);
 
         expect(style.eggs()).toBe('ExampleComp-eggs');
         expect(style.eggs({active:true})).toBe('ExampleComp-eggs active');
@@ -57,7 +57,7 @@ describe('at-css',()=>{
         expect(style.fruit({seeds:'yes'},{classNameValues:'foo'})).toBe('ExampleComp-fruit seeds foo');
         expect(style.fruit({seeds:'yes'},{classNameValues:'foo',baseLayout:{p1:true}})).toBe('ExampleComp-fruit seeds foo ioP1');
 
-        expect(ctrl.isStyleSheetInserted()).toBe(true);
+        expect(ctrl.isInserted).toBe(true);
 
     })
 

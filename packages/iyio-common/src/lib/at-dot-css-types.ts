@@ -92,7 +92,7 @@ export interface AtDotStyleCtrl
 {
     insertStyleSheet():void;
     removeStyleSheet():void;
-    isStyleSheetInserted():boolean;
+    isInserted:boolean;
 }
 
 export interface AtDotVars<T=any>
