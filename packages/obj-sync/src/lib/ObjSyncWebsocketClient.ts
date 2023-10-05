@@ -31,39 +31,41 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
         ...options
     }:ObjSyncWebsocketClientOptions & ObjSyncClientOptions){
         super({
-            pingIntervalMs:40000,
+            pingIntervalMs:30000,
             ...options
         });
         this.endpoint=endpoint;
         this.webSocketFactory=webSocketFactory;
     }
 
-    public override dispose(): void {
-        if(this.isDisposed){
-            return;
-        }
-        super.dispose();
+    protected override _dispose():void{
         this.socket?.close();
     }
 
     protected _connectAsync():Promise<void>{
+
+        let opened=false;
 
         return new Promise((resolve,reject)=>{
             const socket=this.webSocketFactory(this.endpoint);
             this.socket=socket;
 
             socket.addEventListener('open',()=>{
-                //
+                opened=true;
                 resolve();
             })
 
             socket.addEventListener('close',()=>{
-                //
+                if(opened){
+                    this.onDisconnected();
+                }
                 reject();
             })
 
             socket.addEventListener('error',(err)=>{
-                //
+                if(opened){
+                    this.onDisconnected();
+                }
                 reject(err);
             })
 

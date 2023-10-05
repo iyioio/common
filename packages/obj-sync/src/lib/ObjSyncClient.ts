@@ -1,6 +1,6 @@
-import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, asArray, createPromiseSource, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
-import { BehaviorSubject } from "rxjs";
-import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
+import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, asArray, createPromiseSource, delayAsync, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncConnectionState, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
 
 const objEvtSource=Symbol('objEvtSource');
 
@@ -14,6 +14,7 @@ export interface ObjSyncClientOptions
     clientMapProp?:string;
     autoDeleteClientObjects?:boolean;
     pingIntervalMs?:number;
+    reconnectTimeoutMs?:number;
 }
 
 export abstract class ObjSyncClient
@@ -40,12 +41,20 @@ export abstract class ObjSyncClient
     public logCommands=false;
 
     private readonly maxCommandQueueSize:number;
+    private readonly reconnectTimeoutMs:number;
     private readonly clientMapProp?:string;
     private readonly autoDeleteClientObjects?:boolean;
 
     private readonly _isReady:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
     public get isReadySubject():ReadonlySubject<boolean>{return this._isReady}
     public get isReady(){return this._isReady.value}
+
+    private readonly _connectionState:BehaviorSubject<ObjSyncConnectionState>=new BehaviorSubject<ObjSyncConnectionState>('waiting');
+    public get connectionStateSubject():ReadonlySubject<ObjSyncConnectionState>{return this._connectionState}
+    public get connectionState(){return this._connectionState.value}
+
+    private readonly _onReconnected=new Subject<void>();
+    public get onReconnected():Observable<void>{return this._onReconnected}
 
     private readySource:PromiseSource<void>=createPromiseSource<void>();
 
@@ -55,6 +64,7 @@ export abstract class ObjSyncClient
         state,
         maxCommandQueueSeconds=20,
         maxCommandQueueSize=100,
+        reconnectTimeoutMs=30000,
         clientMapProp,
         autoDeleteClientObjects,
         pingIntervalMs,
@@ -64,6 +74,7 @@ export abstract class ObjSyncClient
         this.state=state;
         this.maxCommandQueueSeconds=maxCommandQueueSeconds;
         this.maxCommandQueueSize=maxCommandQueueSize;
+        this.reconnectTimeoutMs=reconnectTimeoutMs;
         this.clientMapProp=clientMapProp;
         this.autoDeleteClientObjects=autoDeleteClientObjects;
         this.pingIntervalMs=pingIntervalMs;
@@ -89,6 +100,7 @@ export abstract class ObjSyncClient
         stopWatchingObj(this.state);
         this.mirror.dispose();
         this._dispose();
+        this._connectionState.next('closed');
     }
 
     protected _dispose(){
@@ -168,7 +180,9 @@ export abstract class ObjSyncClient
 
     private async connectInitAsync(connectWithDefaultState?:boolean)
     {
+        this._connectionState.next('connecting');
         await this._connectAsync();
+        this._connectionState.next('connected');
         this.send([{type:'createClient'},{
             type:'get',
             defaultState:connectWithDefaultState?this.state:undefined,
@@ -179,6 +193,55 @@ export abstract class ObjSyncClient
     }
 
     protected abstract _connectAsync():Promise<void>;
+
+    protected onDisconnected()
+    {
+        this.tryReconnectAsync();
+    }
+
+    private async tryReconnectAsync()
+    {
+        if(this._connectionState.value==='reconnecting'){
+            return;
+        }
+        this._connectionState.next('reconnecting');
+        await delayAsync(1000);
+        if(this.isDisposed){
+            return;
+        }
+        let connected=false;
+        let end=false;
+        await Promise.race([
+            (async ()=>{
+                while(!end){
+                    try{
+                        await this._connectAsync();
+                        connected=true;
+                        break;
+                    }catch(ex){
+                        console.warn('ObjSyncClient reconnect failed',ex);
+                        await delayAsync(500);
+                    }
+                }
+            })(),
+            delayAsync(this.reconnectTimeoutMs),
+        ])
+        end=true;
+        if(this.isDisposed){
+            return;
+        }
+        if(!connected){
+            this.dispose();
+            return;
+        }
+        this._connectionState.next('connected');
+        this.finishReconnectOnNextSet=true;
+        this.send([{type:'createClient'},{
+            type:'get',
+        }]);
+    }
+
+    private finishReconnectOnNextSet=false;
 
     protected pingLoop()
     {
@@ -339,6 +402,10 @@ export abstract class ObjSyncClient
                     }
                     this._changeIndex=command.changeIndex;
                     this.setStateWithLogs(command.state.state,command.state.log as RecursiveObjWatchEvt<any>[]);
+                    if(this.finishReconnectOnNextSet){
+                        this.finishReconnectOnNextSet=false;
+                        this._onReconnected.next();
+                    }
                 }
                 break;
 

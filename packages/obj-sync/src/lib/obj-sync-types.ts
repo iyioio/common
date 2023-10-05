@@ -171,3 +171,5 @@ export const ObjSyncClientCommandScheme=z.object({
 export type ObjSyncClientCommand=z.infer<typeof ObjSyncClientCommandScheme> & {
     evts?:RecursiveObjWatchEvt<any>[];
 }
+
+export type ObjSyncConnectionState='waiting'|'connecting'|'connected'|'disconnected'|'reconnecting'|'closed';
