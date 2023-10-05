@@ -51,6 +51,23 @@ export const defaultBreakpoints:Readonly<Breakpoints>=Object.freeze({
 })
 export const currentBreakpoints=new BehaviorSubject<Readonly<Breakpoints>>(defaultBreakpoints);
 
+export const getSizeQueryForBreakpoint=(bp:DirectionalBreakpoint,breakpoints=currentBreakpoints.value)=>{
+    switch(bp){
+        case 'mobileUp': return `min-width:${breakpoints.mobileSm+1}px`;
+        case 'tabletSmUp': return `min-width:${breakpoints.mobile+1}px`;
+        case 'tabletUp': return `min-width:${breakpoints.tabletSm+1}px`;
+        case 'desktopSmUp': return `min-width:${breakpoints.tablet+1}px`;
+        case 'desktopUp': return `min-width:${breakpoints.desktopSm+1}px`;
+        case 'mobileSmDown': return `max-width:${breakpoints.mobileSm}px`;
+        case 'mobileDown': return `max-width:${breakpoints.mobile}px`;
+        case 'tabletSmDown': return `max-width:${breakpoints.tabletSm}px`;
+        case 'tabletDown': return `max-width:${breakpoints.tablet}px`;
+        case 'desktopSmDown': return `max-width:${breakpoints.desktopSm}px`;
+        case 'desktopDown': return `max-width:${breakpoints.desktop}px`;
+        default: return `min-width:0px`;
+    }
+}
+
 export enum BreakpointIndex{
     mobileSm=0,
     mobile=1,

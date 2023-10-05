@@ -30,6 +30,9 @@ describe('at-css',()=>{
                 @.fruit.seeds{
                     color:red;
                 }
+                @mobileUp{
+
+                }
             `
         });
 

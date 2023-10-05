@@ -1,7 +1,12 @@
-import { AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotStyle, bcn, cn } from "@iyio/common";
+import { AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint } from "@iyio/common";
 import { atDotCssRenderer } from "./at-dot-css.deps";
 
 const ctrlKey=Symbol('ctrlKey');
+
+const selectorReg=/@\.([\w-]+)/g;
+const varReg=/@@\w+/g;
+const breakPointReg=/@(mobileSmUp|mobileUp|tabletSmUp|tabletUp|desktopSmUp|desktopUp|mobileSmDown|mobileDown|tabletSmDown|tabletDown|desktopSmDown|desktopDown)/g;
+const prefixReg=/\W(backdrop-filter)\s*:([^;}:]*)/gim;
 
 interface PropRef
 {
@@ -95,11 +100,26 @@ export const atDotCss=<S extends string>(
     }
     const id=options.id;
 
+    let processed=false;
     const insertStyleSheet=()=>{
         if(ctrl.isInserted){
             return;
         }
         ctrl.isInserted=true;
+
+        if(!processed){
+            processed=true;
+            options.css=(
+                options.css
+                .replace(varReg,varName=>`var(--${name}-${varName.substring(2)})`)
+                .replace(breakPointReg,(_,bp)=>`@media(${getSizeQueryForBreakpoint(bp)})`)
+                .replace(prefixReg,(match,prop,value)=>`${match};-webkit-${prop}:${value}`)
+            ) as any;
+        }
+
+        if(options.debug){
+            console.info('atDotCss insert',options,options.css);
+        }
 
         const renderer=atDotCssRenderer();
 
@@ -163,16 +183,8 @@ export const atDotCss=<S extends string>(
     if(!options.disableParsing){
         options.css=(
             options.css
-            .replace(/@\.([\w-]+)/g,replacer)
-            .replace(/@@\w+/g,varName=>`var(--${name}-${varName.substring(2)})`)
-            .replace(
-                /\W(backdrop-filter)\s*:([^;}:]*)/gim,
-                (match,prop,value)=>`${match};-webkit-${prop}:${value}`)
+            .replace(selectorReg,replacer)
         ) as any;
-    }
-
-    if(options.debug){
-        console.info('atDotCss',options,options.css);
     }
 
     return style;
