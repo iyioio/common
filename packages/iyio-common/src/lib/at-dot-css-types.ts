@@ -111,7 +111,7 @@ export type ParseAtDotStyle<
     },
     VMap={
         readonly [K in keyof P as P[K] extends string?GetVarName<P[K]>:never]:any
-    },
+    }
 >=M & AtDotVars<VMap> & ({root:()=>string});
 
 export interface AtDotStyle<S extends string>
