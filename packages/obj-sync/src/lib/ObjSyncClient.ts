@@ -104,7 +104,11 @@ export abstract class ObjSyncClient
     }
 
     protected _dispose(){
-        //
+        // do nothing
+    }
+
+    protected _pingLost(){
+        // do nothing
     }
 
     private onWatcherEvent=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>{
@@ -235,6 +239,8 @@ export abstract class ObjSyncClient
             return;
         }
         this._connectionState.next('connected');
+        this.lastPing=0;
+        this.lastPong=0;
         this.finishReconnectOnNextSet=true;
         this.send([{type:'createClient'},{
             type:'get',
@@ -243,16 +249,36 @@ export abstract class ObjSyncClient
 
     private finishReconnectOnNextSet=false;
 
+    private lastPing=0;
+    private lastPong=0;
     protected pingLoop()
     {
         if(this.pingIntervalMs===undefined){
             return;
         }
+        this.lastPing=0;
+        this.lastPong=0;
         const iv=setInterval(()=>{
             if(this.isDisposed){
                 clearInterval(iv);
                 return;
             }
+
+            if(this._connectionState.value==='reconnecting'){
+                this.lastPing=0;
+                this.lastPong=0;
+                return;
+            }
+
+            if(this.lastPong && this.lastPing && this.lastPing>this.lastPong){
+                console.warn('ObjSyncClient ping lost');
+                this.lastPing=0;
+                this.lastPong=0;
+                this._pingLost();
+                this.tryReconnectAsync();
+            }
+
+            this.lastPing=Date.now();
             this.send({type:'ping'})
         },this.pingIntervalMs)
     }
@@ -349,6 +375,7 @@ export abstract class ObjSyncClient
             this.dispose();
             return;
         }else if(command.type==='pong'){
+            this.lastPong=Date.now();
             return;
         }
 

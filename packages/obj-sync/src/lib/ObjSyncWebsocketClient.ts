@@ -31,7 +31,7 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
         ...options
     }:ObjSyncWebsocketClientOptions & ObjSyncClientOptions){
         super({
-            pingIntervalMs:30000,
+            pingIntervalMs:10000,
             ...options
         });
         this.endpoint=endpoint;
@@ -56,27 +56,34 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
             })
 
             socket.addEventListener('close',()=>{
-                if(opened){
+                if(opened && socket===this.socket){
                     this.onDisconnected();
                 }
                 reject();
             })
 
             socket.addEventListener('error',(err)=>{
-                if(opened){
+                if(opened && socket===this.socket){
                     this.onDisconnected();
                 }
                 reject(err);
             })
 
             socket.addEventListener('message',(evt)=>{
-                this.handleCommand(JSON.parse(evt.data))
+                if(socket===this.socket){
+                    this.handleCommand(JSON.parse(evt.data))
+                }
             })
         });
     }
 
     protected _send(cmds:ObjSyncRemoteCommand[]):void{
         this.socket?.send(JSON.stringify(cmds));
+    }
+
+    protected override _pingLost(){
+        this.socket?.close();
+        this.socket=null;
     }
 
 }
