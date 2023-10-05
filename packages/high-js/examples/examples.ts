@@ -18,9 +18,16 @@ const value='red';
 `
 const css=/*css*/`
 
+@keyframes @@@mover{
+    0%{
+        opacity:1;
+    }
+}
+
 .body{
     color:${value};
     font:@@font;
+    animation:@@@mover;
 }
 html{
     color:orange;
@@ -68,3 +75,20 @@ const obj={
 const str=/*cxss*/`.body{asdflkjsdf}`
 
 export interface x{}
+
+/*css*/`
+@keyframes @@@frames{
+
+}
+@.root{
+    color:@@color;
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    animation:@@@frames;
+}
+@tabletDown{
+    @.root{
+        color:@@mobileColor;
+    }
+}`

@@ -4,7 +4,7 @@ import { atDotCssRenderer } from "./at-dot-css.deps";
 const ctrlKey=Symbol('ctrlKey');
 
 const selectorReg=/@\.([\w-]+)/g;
-const varReg=/@@\w+/g;
+const varReg=/(@@@?)([\w-]+)/g;
 const breakPointReg=/@(mobileSmUp|mobileUp|tabletSmUp|tabletUp|desktopSmUp|desktopUp|mobileSmDown|mobileDown|tabletSmDown|tabletDown|desktopSmDown|desktopDown)/g;
 const prefixReg=/\W(backdrop-filter)\s*:([^;}:]*)/gim;
 
@@ -111,7 +111,9 @@ export const atDotCss=<S extends string>(
             processed=true;
             options.css=(
                 options.css
-                .replace(varReg,varName=>`var(--${name}-${varName.substring(2)})`)
+                .replace(varReg,(_,ats:string,varName:string)=>ats.length===3?
+                    `${name}-${varName}`:
+                    `var(--${name}-${varName})`)
                 .replace(breakPointReg,(_,bp)=>`@media(${getSizeQueryForBreakpoint(bp)})`)
                 .replace(prefixReg,(match,prop,value)=>`${match};-webkit-${prop}:${value}`)
             ) as any;

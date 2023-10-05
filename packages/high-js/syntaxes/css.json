@@ -27,34 +27,48 @@
         },
         {
             "include": "#interpolation"
+        },
+        {
+            "include": "#at-triple-dot"
         }
     ],
     "repository": {
+        "at-triple-dot":{
+            "match": "@@@[\\w-]+",
+            "name":"support.type"
+        },
         "at-dot":{
-            "match": "@@\\w+",
+            "match": "@@[\\w-]+",
             "name":"variable.other.constant.object.ts"
         },
         "interpolation": {
-            "contentName": "meta.embedded.line.ts",
-            "begin": "\\${",
-            "beginCaptures": {
-                "0": {
-                    "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
-                }
-            },
-            "end": "}",
-            "endCaptures": {
-                "0": {
-                    "name": "punctuation.definition.interpolation.end.bracket.curly.scss punctuation.definition.template-expression.end.js"
-                }
-            },
-            "name": "variable.interpolation.scss",
-            "patterns": [
+            "patterns":[
                 {
-                    "include": "source.ts#expression"
+                    "include":"#at-triple-dot"
                 },
                 {
-                    "include": "#interpolation"
+                    "contentName": "meta.embedded.line.ts",
+                    "begin": "\\${",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
+                        }
+                    },
+                    "end": "}",
+                    "endCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.interpolation.end.bracket.curly.scss punctuation.definition.template-expression.end.js"
+                        }
+                    },
+                    "name": "variable.interpolation.scss",
+                    "patterns": [
+                        {
+                            "include": "source.ts#expression"
+                        },
+                        {
+                            "include": "#interpolation"
+                        }
+                    ]
                 }
             ]
         },
