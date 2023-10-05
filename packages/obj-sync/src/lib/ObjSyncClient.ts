@@ -356,6 +356,7 @@ export abstract class ObjSyncClient
         }
         const queue=this.cmdQueue;
         this.cmdQueue=[];
+        this.cmdQueueTTL=null;
 
         queue.sort((a,b)=>a.changeIndex-b.changeIndex);
         if(queue[0]?.changeIndex!==(this._changeIndex??0)+1){
