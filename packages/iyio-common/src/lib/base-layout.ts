@@ -701,7 +701,7 @@ export const baseLayoutCn=(props:Partial<AllBaseLayoutProps>):string|undefined=>
 }
 
 export const bcn=(
-    props:Partial<BaseLayoutProps>,
+    props:Partial<AllBaseLayoutProps>,
     ...classNames:ClassNameValue[]
 ):string|undefined=>{
     if(classNames.length){

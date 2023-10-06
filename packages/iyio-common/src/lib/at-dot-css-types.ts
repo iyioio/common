@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BaseLayoutProps } from "./base-layout";
+import { AllBaseLayoutProps } from "./base-layout";
 import { ClassNameValue } from "./css";
 import type { StyleSheetOrder } from "./css-order";
 import { Trim, WhiteSpace } from "./typescript-util-types";
@@ -80,8 +80,11 @@ type SplitLargeSection<S extends string>=string extends S?
         S;
 
 
-export type GetAtDotClassName<T>=
-    ((selectors?:T|null,options?:{classNameValues?:ClassNameValue,baseLayout?:BaseLayoutProps})=>string);
+export type GetAtDotClassName<T>=(
+    selectors?:T|null,
+    classNameValues?:ClassNameValue|null,
+    baseLayout?:AllBaseLayoutProps|null
+)=>string;
 
 type RemoveSuffix<S>=S extends string?S extends `${infer Name}@${infer _Rest}`?Name:S:never;
 

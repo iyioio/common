@@ -1,4 +1,4 @@
-import { AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, BaseLayoutProps, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint } from "@iyio/common";
+import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint } from "@iyio/common";
 import { atDotCssRenderer } from "./at-dot-css.deps";
 
 const ctrlKey=Symbol('ctrlKey');
@@ -19,7 +19,8 @@ interface PropRef
 function propDef(
     this:PropRef,
     flags?:Record<string,any>,
-    opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
+    classNameValues?:ClassNameValue|null,
+    baseLayout?:AllBaseLayoutProps|null
 ):string{
     if(!this.ctrl.isInserted && !this.disableAutoInsert){
         this.ctrl.insertStyleSheet();
@@ -32,12 +33,10 @@ function propDef(
             }
         }
     }
-    if(opts){
-        if(opts.baseLayout){
-            c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
-        }else if(opts.classNameValues){
-            c=cn(c,opts.classNameValues);
-        }
+    if(baseLayout){
+        c=bcn(baseLayout,c,classNameValues)??'';
+    }else if(classNameValues){
+        c=cn(c,classNameValues);
     }
     return c;
 }
@@ -45,7 +44,8 @@ function propDef(
 function rootDef(
     this:PropRef,
     flags?:Record<string,any>,
-    opts?:{classNameValues?:ClassNameValue[],baseLayout?:BaseLayoutProps}
+    classNameValues?:ClassNameValue|null,
+    baseLayout?:AllBaseLayoutProps|null
 ):string{
     if(!this.ctrl.isInserted && !this.disableAutoInsert){
         this.ctrl.insertStyleSheet();
@@ -58,12 +58,10 @@ function rootDef(
             }
         }
     }
-    if(opts){
-        if(opts.baseLayout){
-            c=bcn(opts.baseLayout,c,opts.classNameValues)??'';
-        }else if(opts.classNameValues){
-            c=cn(c,opts.classNameValues);
-        }
+    if(baseLayout){
+        c=bcn(baseLayout,c,classNameValues)??'';
+    }else if(classNameValues){
+        c=cn(c,classNameValues);
     }
     return c;
 }
