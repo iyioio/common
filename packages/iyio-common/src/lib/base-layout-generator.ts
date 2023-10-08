@@ -427,6 +427,8 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     const len=c.length;
 
     if(!mediaQuery){
+        c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
+        c.push(`.SlimButton[disabled]{cursor:default}`)
         c.push(`body{${generateFontFaceCss(fc.faceDefault)}}`)
         c.push(`a{text-decoration:${fc.linkDecoration};display:${fc.linkDisplay}}`)
         if(boxSizing){
@@ -436,8 +438,6 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
             c.push('h1,h2,h3,h4,h5,h6,p{margin:0;font-weight:400}')
         }
         c.push('.Text{display:inline-block}')
-        c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
-        c.push(`.SlimButton[disabled]{cursor:default}`)
     }
     add('unsetAll',`unsetAll`);
     addWithAlias('face20',fc,generateFontFaceCss(fc.face20))

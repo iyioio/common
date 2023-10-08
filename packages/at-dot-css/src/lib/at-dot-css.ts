@@ -1,5 +1,4 @@
-import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint } from "@iyio/common";
-import { atDotCssRenderer } from "./at-dot-css.deps";
+import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint, styleSheetRenderer } from "@iyio/common";
 
 const ctrlKey=Symbol('ctrlKey');
 
@@ -121,10 +120,10 @@ export const atDotCss=<S extends string>(
             console.info('atDotCss insert',options,options.css);
         }
 
-        const renderer=atDotCssRenderer();
+        const renderer=styleSheetRenderer();
 
         renderer.removeSheet(id);
-        renderer.addSheet(id,options);
+        renderer.addSheet(options as any);
 
     }
 
@@ -133,7 +132,7 @@ export const atDotCss=<S extends string>(
             return;
         }
         ctrl.isInserted=false;
-        atDotCssRenderer().removeSheet(id);
+        styleSheetRenderer().removeSheet(id);
     }
 
     const ctrl:AtDotStyleCtrl={

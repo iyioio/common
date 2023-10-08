@@ -1,14 +1,16 @@
-import { IAtDotCssRenderer } from "@iyio/at-dot-css";
-import { AtDotStyle, aryRemoveFirst, getStyleSheetOrder } from "@iyio/common";
-import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "./useSharedStyleSheets.internal";
+import { aryRemoveFirst } from "./array";
+import { getStyleSheetOrder } from "./css-order";
+import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "./shared-style-sheets";
+import { ISharedStyleSheetRenderer, SharedStyleSheet } from "./shared-style-sheets-types";
 
-export class NextJsAtDotCssRenderer implements IAtDotCssRenderer
+export class SharedStyleSheetRenderer implements ISharedStyleSheetRenderer
 {
-    public addSheet(id:string,options:AtDotStyle<string>):void
+
+    public addSheet(options:SharedStyleSheet):void
     {
         const order=getStyleSheetOrder(options.order);
 
-        const styles=sharedStyleSheets as AtDotStyle<string>[];
+        const styles=sharedStyleSheets;
 
         let inserted=false;
 
@@ -43,4 +45,3 @@ export class NextJsAtDotCssRenderer implements IAtDotCssRenderer
         }
     }
 }
-

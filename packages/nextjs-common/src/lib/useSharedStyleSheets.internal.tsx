@@ -1,10 +1,6 @@
-import { AtDotStyle } from "@iyio/common";
+import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { BehaviorSubject } from "rxjs";
 
-export const sharedStyleSheets:AtDotStyle<string>[]=[];
-
-export const sharedStyleSheetsUpdateSubject=new BehaviorSubject<number>(0);
 
 const getSheets=()=>{
     const ary:any[]=[];

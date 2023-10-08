@@ -1,11 +1,8 @@
-import { BaseLayoutCssOptions, baseLayoutIncrementalMap, currentBreakpoints, generateBaseLayoutCss, isServerSide } from '@iyio/common';
-import { useEffect, useMemo } from 'react';
-import Style from 'styled-jsx/style';
+import { BaseLayoutCssOptions, baseLayoutIncrementalMap, currentBreakpoints, generateBaseLayoutCss, isServerSide, styleSheetRenderer } from '@iyio/common';
+import { useMemo } from 'react';
 import { useSubject } from './rxjs-hooks';
 
-const styleBaseId='__AoRD5JpZOl3Lg2RcD98y__';
-
-
+const sheetId=`iyio-common-BaseLayout`;
 
 export interface BaseLayoutStyleSheetProps extends Omit<BaseLayoutCssOptions,'lines'>
 {
@@ -66,48 +63,31 @@ export function BaseLayoutStyleSheet({
             semiTransparency,
             boxSizing
         })
+
+        const id=sheetId;
+        const renderer=styleSheetRenderer();
+        renderer.removeSheet(id);
+        renderer.addSheet({
+            id:id,
+            order:'base',
+            css:lines.join('\n'),
+        })
+
         return lines;
-    },[bp,spacing,filter,lineSeparator,appendCss,columnWidths,animationSpeeds]);
+    },[
+        bp,
+        spacing,
+        filter,
+        lineSeparator,
+        appendCss,
+        columnWidths,
+        animationSpeeds,
+        boxSizing,
+        fontConfig,
+        colors,
+        semiTransparency,
+    ]);
 
-    useEffect(()=>{
-        if(!directInsert || isServerSide){
-            return;
-        }
-
-        const id=`iyio-BaseLayout-direct-insert-5hbXsuqdCBVwRvFxRTYw`;
-
-        if(globalThis.document.getElementById(id)){
-            return;
-        }
-
-        const allStyles=globalThis.document.getElementsByTagName('style');
-        let firstStyle:HTMLElement|null=null;
-        for(let i=0;i<allStyles.length;i++){
-            const style=allStyles.item(i);
-            if(style?.id?.endsWith(styleBaseId)){
-                style.innerHTML='';
-                if(!firstStyle){
-                    firstStyle=style;
-                }
-            }
-        }
-
-        const style=globalThis.document.createElement('style');
-        style.id=id;
-        style.innerHTML=lines.join('\n');
-        if(firstStyle){
-            globalThis.document.head.insertBefore(style,firstStyle);
-        }else{
-            globalThis.document.head.appendChild(style);
-        }
-
-        return ()=>{
-            style.remove();
-        }
-
-    },[lines,directInsert])
-
-    const id=`iyio-BaseLayout-${incremental?'incremental-':''}${styleBaseId}`;
 
     if(debugOptimizations && optimizeForHybridRendering && !directInsert){
         console.info('--- Optimized BaseLayoutStyleSheet CSS ---');
@@ -118,7 +98,7 @@ export function BaseLayoutStyleSheet({
     }
 
     return (
-        <Style key={id} id={id} global jsx>{directInsert?'':lines.join('\n')}</Style>
+        null
     )
 
 }
