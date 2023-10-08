@@ -1,8 +1,9 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { tscExecutor } from '@nrwl/js/src/executors/tsc/tsc.impl';
 import type { ExecutorOptions } from '@nrwl/js/src/utils/schema';
-import { access, readFile, writeFile } from 'fs/promises';
-import { LibBuilderExecutorSchema } from './schema';
+import { build as buildWithEsbuild } from 'esbuild';
+import { access, readFile, readdir, realpath, stat, writeFile } from 'fs/promises';
+import { EsbuildTarget, LibBuilderExecutorSchema } from './schema';
 import Path = require('path');
 
 const autoConfig='auto';
@@ -46,6 +47,8 @@ export default async function runExecutor(
         esmModuleType='ES2015',
         autoCreateEsmConfig=true,
 
+        esbuildTargets,
+
         ...tscOptions
 
     }: LibBuilderExecutorSchema,
@@ -75,7 +78,7 @@ export default async function runExecutor(
     }
 
     results.push(await (async ()=>{
-        console.info(`building CommonJs - ${outputPath}`)
+        console.info(`building CommonJsx - ${outputPath}`)
         const r=await buildAsync({
             ...tscOptions,
             outputPath,
@@ -185,6 +188,10 @@ export default async function runExecutor(
         })());
     }
 
+    if(esbuildTargets){
+        results.push(await esbuildAsync(esbuildTargets));
+    }
+
     return {
         success: results.every(r=>r.success),
     };
@@ -241,6 +248,64 @@ const buildAsync=async (options:ExecutorOptions,context:ExecutorContext):Promise
     }
 }
 
+const esbuildAsync=async (targets:EsbuildTarget[]):Promise<BuildResult>=>{
+
+    const outputs:string[]=[];
+
+    try{
+
+        for(const target of targets){
+            const out=await buildEsTargetAsync(target);
+            for(const o of out){
+                if(!outputs.includes(o)){
+                    outputs.push(o);
+                }
+            }
+        }
+
+        return {
+            success:true,
+            outputs,
+        }
+
+    }catch(ex){
+        console.error('tscExecutor failed',ex);
+        return {
+            success:false,
+            outputs,
+        }
+    }
+}
+
+const buildEsTargetAsync=async (target:EsbuildTarget):Promise<string[]>=>{
+
+    console.info('Building esbuild target - '+target.srcDir);
+
+    const filter=target.filterReg?new RegExp(target.filterReg,target.filterRegFlags??'i'):/\.ts$/i;
+
+    const entryPoints=await readDirAsync({
+        path:target.srcDir,
+        include:'file',
+        filter,
+        recursive:target.recursive
+    })
+
+    await buildWithEsbuild({
+        ...target.options,
+        entryPoints,
+        outdir:target.outDir,
+    });
+
+    return await readDirAsync({
+        path:target.outDir,
+        recursive:true,
+        include:'file',
+        fullPath:true,
+        filter:/\.js$/i,
+    });
+
+}
+
 const existsAsync=async (path:string)=>{
     try{
         await access(path);
@@ -248,4 +313,56 @@ const existsAsync=async (path:string)=>{
     }catch{
         return false;
     }
+}
+
+
+export type ReadDirInclude='file'|'dir'|'both';
+export interface ReadDirOptions
+{
+    path:string;
+    recursive?:boolean;
+    test?:(path:string)=>boolean;
+    filter?:RegExp;
+    outputs?:string[];
+    include?:ReadDirInclude;
+    fullPath?:boolean;
+}
+
+export const readDirAsync=async (options:ReadDirOptions):Promise<string[]>=>{
+
+    const {
+        path,
+        recursive,
+        test,
+        outputs=[],
+        include='both',
+        filter,
+        fullPath
+    }=options;
+
+    const result=await readdir(path);
+
+    for(const r of result){
+        const rPath=Path.join(path,r);
+        let type:ReadDirInclude='both';
+        if(recursive || include!=='both'){
+            const s=await stat(rPath);
+            type=s.isDirectory()?'dir':'file';
+        }
+
+        if((include==='both' || type===include) && (!filter || filter.test(rPath)) && (!test || test(rPath))){
+            outputs.push(fullPath?await realpath(rPath):rPath);
+        }
+
+        if(recursive && type==='dir'){
+            await readDirAsync({
+                ...options,
+                path:rPath,
+                outputs,
+            });
+        }
+    }
+
+    return outputs;
+
 }
