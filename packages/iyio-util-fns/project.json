@@ -11,7 +11,21 @@
                 "outputPath": "dist/packages/iyio-util-fns",
                 "main": "packages/iyio-util-fns/src/index.ts",
                 "tsConfig": "packages/iyio-util-fns/tsconfig.lib.json",
-                "assets": ["packages/iyio-util-fns/*.md"]
+                "assets": ["packages/iyio-util-fns/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/iyio-util-fns/src/lib/handlers",
+                        "outDir":"dist/packages/iyio-util-fns/handlers",
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":true,
+                            "sourcemap":"external",
+                            "external": ["@aws-sdk/*"]
+                        }
+                    }
+                ]
             }
         },
         "publish": {

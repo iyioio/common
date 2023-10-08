@@ -104,7 +104,7 @@ class SqlDbMigratorFunctionProvider extends Construct
             timeout:Duration.minutes(15),
             memorySize:1024,
             // todo - handle path to fn when packaged in lib
-            handlerFileName:'../../packages/iyio-util-fns/src/lib/SqlDbMigratorFn.ts',
+            handlerFileName:'../../packages/iyio-util-fns/src/lib/handler/SqlDbMigratorFn.ts',
         });
 
         this.provider=new cr.Provider(this,'SqlDbMigratorFunctionProviderHandler', {

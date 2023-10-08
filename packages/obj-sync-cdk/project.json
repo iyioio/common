@@ -21,7 +21,8 @@
                             "platform":"node",
                             "target":"node18",
                             "minify":true,
-                            "sourcemap":"external"
+                            "sourcemap":"external",
+                            "external": ["@aws-sdk/*"]
                         }
                     }
                 ]
