@@ -78,7 +78,7 @@ export default async function runExecutor(
     }
 
     results.push(await (async ()=>{
-        console.info(`building CommonJsx - ${outputPath}`)
+        console.info(`building CommonJs - ${outputPath}`)
         const r=await buildAsync({
             ...tscOptions,
             outputPath,
