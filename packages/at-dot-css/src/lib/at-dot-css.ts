@@ -163,7 +163,7 @@ export const atDotCss=<S extends string>(
 
     const replacer=(_:string|undefined,n:string|undefined)=>{
 
-        const className=(n && n!=='root')?`.${name} .${prefix}${n}`:'.'+name;
+        const className=(n && n!=='root')?`.${prefix}${n}`:'.'+name;
         if(!n || style[n]){
             return className;
         }
