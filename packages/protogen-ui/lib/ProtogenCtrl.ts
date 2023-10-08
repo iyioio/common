@@ -1,6 +1,9 @@
-import { delayAsync, ReadonlySubject, uuid } from "@iyio/common";
+import { delayAsync, Point, ReadonlySubject, uuid } from "@iyio/common";
 import { ProtoAddressMap, protoGetNodeAtPath, ProtoLayout, protoMarkdownParseNodes, ProtoNode, ProtoPosScale } from "@iyio/protogen";
+import { PanZoomCtrl } from "@iyio/react-common";
 import { BehaviorSubject } from "rxjs";
+import { Assistant } from "../components/Assistant";
+import { CommandLineInterface } from "./CommandLineInterface";
 import { LineCtrl } from "./LineCtrl";
 import { NodeCtrl } from "./NodeCtrl";
 import { ProtoAnchor, ProtoUiLengthStyle, SaveRequest } from "./protogen-ui-lib";
@@ -12,7 +15,13 @@ export class ProtogenCtrl
     public readonly lineCtrl:LineCtrl;
     public readonly keyListener:ProtoKeyListener;
 
+    public readonly cli:CommandLineInterface;
+
+    public readonly assistant:Assistant;
+
     public readonly nodes:BehaviorSubject<NodeCtrl[]>;
+
+    public panZoom:PanZoomCtrl|null=null;
 
     public readonly pos:BehaviorSubject<ProtoPosScale>=new BehaviorSubject<ProtoPosScale>({
         x:0,
@@ -35,9 +44,19 @@ export class ProtogenCtrl
         this.updateViewMode();
     }
 
-    private readonly _apiOutput:BehaviorSubject<string>=new BehaviorSubject<string>('');
-    public get apiOutputSubject():ReadonlySubject<string>{return this._apiOutput}
-    public get apiOutput(){return this._apiOutput.value}
+    private readonly _showOutput:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
+    public get showOutputSubject():ReadonlySubject<boolean>{return this._showOutput}
+    public get showOutput(){return this._showOutput.value}
+    public set showOutput(value:boolean){
+        if(value==this._showOutput.value){
+            return;
+        }
+        this._showOutput.next(value);
+    }
+
+    private readonly _output:BehaviorSubject<string>=new BehaviorSubject<string>('');
+    public get outputSubject():ReadonlySubject<string>{return this._output}
+    public get output(){return this._output.value}
 
     private readonly _lineDistances:BehaviorSubject<ProtoUiLengthStyle>=new BehaviorSubject<ProtoUiLengthStyle>({
         min:1000,
@@ -63,6 +82,8 @@ export class ProtogenCtrl
 
         this.lineCtrl=new LineCtrl(this);
         this.keyListener=new ProtoKeyListener(this);
+        this.cli=new CommandLineInterface(this);
+        this.assistant=new Assistant(this);
 
         window.addEventListener('mouseup',this.mouseUpListener);
 
@@ -86,6 +107,8 @@ export class ProtogenCtrl
         for(const e of this.nodes.value){
             e.dispose();
         }
+
+        this.cli.dispose();
     }
 
     private readonly mouseUpListener=()=>{
@@ -178,8 +201,15 @@ export class ProtogenCtrl
         this.lineCtrl.updateLines();
     }
 
-    public clearApiOutput(){
-        this._apiOutput.next('');
+    public appendOutput(value:string,show=true){
+        this._output.next(this._output.value+value);
+        if(show && !this.showOutput){
+            this.showOutput=true;
+        }
+    }
+
+    public clearOutput(){
+        this._output.next('');
     }
 
     private exporting=false;
@@ -213,7 +243,7 @@ export class ProtogenCtrl
                         const response=await fetch(`/api/protogen/output/${outputId}`);
                         const out:string|null=await response.json();
                         if(out!==null){
-                            this._apiOutput.next(this._apiOutput.value+out);
+                            this.appendOutput(out);
                         }
                         if(complete){
                             _continue--;
@@ -296,6 +326,106 @@ export class ProtogenCtrl
             node.addToAddressMap(map);
         }
         return map;
+    }
+
+    public getViewCenter():Point
+    {
+        if(!this.panZoom){
+            return {x:0,y:0};
+        }
+
+        const w=globalThis.window?.innerWidth??0;
+        const h=globalThis.window?.innerHeight??0;
+
+        return this.panZoom.transformClientPointToPlane({x:w/2,y:h/2});
+
+    }
+
+    public getViewTopLeft():Point
+    {
+        if(!this.panZoom){
+            return {x:0,y:0};
+        }
+
+        return this.panZoom.transformClientPointToPlane({x:0,y:0});
+
+    }
+
+    public async addNewMarkdownNodesInViewportAsync(markdown:string):Promise<NodeCtrl[]>
+    {
+        let ary=markdown
+            .replace(/-\s*\$layout.*?(\n\n?|$)/gim,'')
+            .replace(/\?\?/g,'')
+            .replace(/(\n|^)(\s*)([^-#\s].{35,})/g,(_:string,start:string,space:string,v:string)=>{
+                const words=v.split(' ');
+                let line='';
+                const lines:string[]=[];
+                for(const w of words){
+                    if(!w){
+                        continue;
+                    }
+                    line+=(line?' ':'')+w;
+                    if(line.length>=35){
+                        lines.push(line);
+                        line='';
+                    }
+                }
+                if(line){
+                    lines.push(line);
+                }
+
+                space=space.replace(/\n/g,'');
+
+                return start+space+lines.join('\n'+space);
+            })
+            .split('##');
+        ary.shift();
+
+        const origin=this.getViewTopLeft();
+
+        ary=ary.map(a=>{
+            origin.x+=400;
+            origin.y+=400;
+            return `${a}\n\n- $layout:${Math.round(origin.x)} ${Math.round(origin.y)} ${300}`
+        });
+
+        const parsingResult=protoMarkdownParseNodes('## '+ary.join('\n## ').trim());
+        const nodes=parsingResult.rootNodes;
+        const ctrls=nodes.map(n=>this.addNode(n));
+        const first=ctrls[0];
+        if(first){
+            let pos:Point=await first.getViewBoundAsync();
+            let bottom=0;
+            const left=pos.x;
+            const cols=Math.floor(Math.sqrt(ctrls.length));
+            let col=0;
+            for(const ctrl of ctrls){
+                ctrl.updateCodeLayout({
+                    x:pos.x,
+                    y:pos.y,
+                })
+                const bounds=await ctrl.getViewBoundAsync();
+                pos={
+                    x:Math.round(pos.x+100+bounds.width),
+                    y:pos.y
+                }
+
+                if(bounds.y+bounds.height>bottom){
+                    bottom=bounds.y+bounds.height;
+                }
+
+                col++;
+                if(col>=cols){
+                    pos={
+                        x:left,
+                        y:bottom+100,
+                    }
+                    col=0;
+                }
+            }
+        }
+
+        return ctrls;
     }
 
 }

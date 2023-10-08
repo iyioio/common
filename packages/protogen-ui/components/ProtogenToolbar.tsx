@@ -1,9 +1,11 @@
+import { atDotCss } from "@iyio/at-dot-css";
 import { delayAsync } from "@iyio/common";
 import { useSubject, View } from "@iyio/react-common";
 import { useCallback, useState } from "react";
 import { dt } from "../lib/lib-design-tokens";
 import { UiState } from "../lib/protogen-ui-lib";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
+import { CommandInput } from "./CommandInput";
 import { ProtoButton } from "./ProtoButton";
 
 const depths=[0,1,2,3]
@@ -58,14 +60,23 @@ export function ProtogenToolbar({
     },[ctrl,executeState]);
 
     return (
-        <div className="ProtogenToolbar node-container">
-            <View flex1 g1>
+        <div className={style.root(null,"node-container")}>
+            <View flex1 row>
+                <CommandInput ctrl={ctrl}/>
+            </View>
+            <View g1>
                 <ProtoButton active={mode===null} text="-" onClick={()=>ctrl.viewDepth=null}/>
                 {depths.map(d=>(
                     <ProtoButton key={d} success={mode===d} text={d.toString()} onClick={()=>ctrl.viewDepth=ctrl.viewDepth===d?null:d}/>
                 ))}
             </View>
-            <View row justifyCenter alignCenter flex1 g1 className="ProtogenToolbar-message">
+            <View row justifyEnd g1>
+                <ProtoButton state={executeState} text="execute" onClick={execute}/>
+                <ProtoButton state={saveState} text="save" onClick={save}/>
+            </View>
+
+
+            <View row justifyCenter alignCenter  g1 className={style.message()}>
                 {activeAnchor?
                     '( Select a connecting point )'
                 :mode===null?
@@ -74,27 +85,29 @@ export function ProtogenToolbar({
                     `( View depth = ${mode}, View only )`
                 }
             </View>
-            <View row flex1 justifyEnd g1>
-                <ProtoButton state={executeState} text="execute" onClick={execute}/>
-                <ProtoButton state={saveState} text="save" onClick={save}/>
-            </View>
 
-
-            <style global jsx>{`
-                .ProtogenToolbar{
-                    position:absolute;
-                    left:0;
-                    right:0;
-                    bottom:0;
-                    display:flex;
-                    padding:4px ${dt().containerPadding};
-                }
-                .ProtogenToolbar-message{
-                    opacity:0.5;
-                    font-size:12px;
-                }
-            `}</style>
         </div>
     )
 
 }
+
+
+const style=atDotCss({name:'ProtogenToolbar',css:`
+    @.root{
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:0;
+        display:flex;
+        padding:4px ${dt().containerPadding};
+        gap:1rem;
+    }
+    @.message{
+        position:absolute;
+        right:1rem;
+        top:-1.5rem;
+        opacity:0.2;
+        font-size:12px;
+        pointer-events:none;
+    }
+`});

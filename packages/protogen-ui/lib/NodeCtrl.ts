@@ -1,13 +1,9 @@
-import { aiComplete } from "@iyio/ai-complete";
-import { DisposeCallback, getSubstringCount, Point, ReadonlySubject, shortUuid } from "@iyio/common";
+import { DisposeCallback, getSubstringCount, Point, ReadonlySubject, Rect, shortUuid } from "@iyio/common";
 import { protoAddChild, ProtoAddressMap, protoClearRevLinks, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownGetIndent, protoMarkdownParseNodes, protoMarkdownRenderer, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetNodeCtrl, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { dt } from "./lib-design-tokens";
 import { getElemProtoLayout } from "./protogen-ui-lib";
 import { ProtogenCtrl } from "./ProtogenCtrl";
-
-const completeReg=/\?\?(([^?]|\n)+)\?\?/g;
-const completeTestReg=/\?\?(([^?]|\n)+)\?\?/;
 
 export class NodeCtrl
 {
@@ -66,10 +62,6 @@ export class NodeCtrl
                 this._updateViewMode();
             }
             this.update(lc!==lineCount?0:700);
-
-            if(completeTestReg.test(code)){
-                this.completeAsync(code);
-            }
         })
         this.codeElem.subscribe(this.updateBound);
 
@@ -111,60 +103,6 @@ export class NodeCtrl
         this._isDisposed=true;
         this.removeResizeListener?.();
         this.parent.removeNode(this);
-    }
-
-    private async completeAsync(code:string){
-        if(this._completing.value){
-            return;
-        }
-        const matches=[...code.matchAll(completeReg)].map(s=>s[1]);
-
-        if(!matches.length){
-            return;
-        }
-
-        this._completing.next(true);
-        try{
-
-            const results=await Promise.all(matches.map(v=>aiComplete().completeAsync({
-                messages:[
-                    {
-                        id:shortUuid(),
-                        type:'text',
-                        role:'system',
-                        content:
-`You are an expert programer writing documentation for an application in a language based on markdown.
-The documentation defines each part of the application using a markdown header using 2 hash symbols ( ## ) followed by properties specific to that part of the application.
-The header first defines the name of the application part starting with an uppercase letter.
-Following the name of the part of the application is the type of the application part.
-Application part types are as follows:
-- struct - A data structure
-- table - A database table
-- action - A workflow action
-- workerGroup - A group of users
-- serverFn - A server function
-- function - A javascript function
-
-The current documentation is as follows:
-${this.parent.nodes.value.map((e,i)=>e===this || i>20?'':e.getFullCode()).join('\n\n')}`,
-                    },
-                    {
-                        id:shortUuid(),
-                        type:'text',
-                        role:'user',
-                        content:v
-                    }
-                ]
-            })));
-
-            let i=0;
-            //const newCode=results[i++]?.options?.[0]?.message?.content??'_';
-            this._parse(code.replace(completeReg,(a)=>results[i++]?.options?.[0]?.message?.content??'_').replace('??',''));
-            //this.dispose();
-
-        }finally{
-            this._completing.next(false);
-        }
     }
 
     private setNode(node:ProtoNode,parsingResult:ProtoParsingResult)
@@ -434,6 +372,46 @@ ${this.parent.nodes.value.map((e,i)=>e===this || i>20?'':e.getFullCode()).join('
         this.pushNodeToCode();
         return true;
     }
+
+    public getViewBounds():Rect
+    {
+        const view=this.viewElem.value;
+        if(!view){
+            return {
+                x:this.pos.value.x,
+                y:this.pos.value.y,
+                width:0,
+                height:0,
+            };
+        }
+
+        return {
+            x:this.pos.value.x,
+            y:this.pos.value.y,
+            width:view.clientWidth,
+            height:view.clientHeight,
+        };
+    }
+
+    public async getViewBoundAsync():Promise<Rect>
+    {
+        if(this.viewElem.value){
+            return this.getViewBounds();
+        }
+
+        return await new Promise((r)=>{
+            const sub=this.viewElem.subscribe(v=>{
+                if(v){
+                    r(this.getViewBounds());
+                    setTimeout(()=>{
+                        sub.unsubscribe();
+                    },0);
+                }
+            })
+        })
+    }
+
+
 
 }
 

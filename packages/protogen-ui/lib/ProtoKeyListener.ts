@@ -1,4 +1,5 @@
 import { DisposeCallback } from "@iyio/common";
+import { Observable, Subject } from "rxjs";
 import { ProtogenCtrl } from "./ProtogenCtrl";
 
 export class ProtoKeyListener
@@ -7,15 +8,18 @@ export class ProtoKeyListener
     private readonly removeCallbacks:DisposeCallback;
     private readonly ctrl:ProtogenCtrl;
 
+    private readonly _focusCmdRequested=new Subject<void>();
+    public get focusCmdRequested():Observable<void>{return this._focusCmdRequested}
+
     public constructor(ctrl:ProtogenCtrl)
     {
         this.ctrl=ctrl;
-        window.addEventListener('keypress',this.onKeyPress);
-        window.addEventListener('keydown',this.onKeyDown);
+        window.addEventListener('keypress',this.onKeyPress,true);
+        window.addEventListener('keydown',this.onKeyDown,true);
 
         this.removeCallbacks=()=>{
-            window.removeEventListener('keypress',this.onKeyPress);
-            window.removeEventListener('keydown',this.onKeyDown);
+            window.removeEventListener('keypress',this.onKeyPress,true);
+            window.removeEventListener('keydown',this.onKeyDown,true);
         }
     }
 
@@ -68,9 +72,16 @@ export class ProtoKeyListener
                 this.ctrl.saveAsync({executePipeline:true});
                 break;
 
-            case 'c:k':
             case 'escape':
-                this.ctrl.clearApiOutput();
+                this.ctrl.showOutput=!this.ctrl.showOutput;
+                break;
+
+            case 'c:k':
+                this.ctrl.clearOutput();
+                break;
+
+            case 'c:p':
+                this._focusCmdRequested.next();
                 break;
 
             default:

@@ -46,6 +46,13 @@ export default function ProtogenView({
     },[code,url,ctrl])
 
     const [panZoom,setPanZoom]=useState<PanZoomCtrl|null>(null);
+
+    useEffect(()=>{
+        if(ctrl){
+            ctrl.panZoom=panZoom;
+        }
+    },[panZoom,ctrl]);
+
     const onContextMenu=useCallback((e:MouseEvent)=>{
 
         if(!panZoom || !ctrl || !(e.target as Element).classList?.contains('PanZoomView')){
