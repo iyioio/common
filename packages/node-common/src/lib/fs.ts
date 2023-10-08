@@ -1,6 +1,6 @@
-import { isRooted } from '@iyio/common';
+import { CancelToken, isRooted } from '@iyio/common';
 import { accessSync } from 'node:fs';
-import { access } from 'node:fs/promises';
+import { access, readdir, realpath, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export const pathExistsAsync=async (path:string):Promise<boolean>=>
@@ -29,4 +29,68 @@ export const getFullPath=(path:string)=>{
     }else{
         return join(process.cwd(),path);
     }
+}
+
+export type ReadDirInclude='file'|'dir'|'both';
+export interface ReadDirOptions
+{
+    path:string;
+    recursive?:boolean;
+    test?:(path:string)=>boolean;
+    filter?:RegExp;
+    outputs?:string[];
+    include?:ReadDirInclude;
+    forEach?:(path:string)=>void|Promise<void>
+    /**
+     * If true full absolute paths are returned, otherwise paths are relative to the path supplied.
+     */
+    fullPath?:boolean;
+}
+
+export const readDirAsync=async (options:ReadDirOptions,cancel?:CancelToken):Promise<string[]>=>{
+
+    const {
+        path,
+        recursive,
+        test,
+        outputs=[],
+        include='both',
+        filter,
+        fullPath,
+        forEach,
+    }=options;
+
+    const result=await readdir(path);
+    cancel?.throwIfCanceled();
+
+    for(const r of result){
+        const rPath=fullPath?await realpath(join(path,r)):join(path,r);
+        let type:ReadDirInclude='both';
+        if(recursive || include!=='both'){
+            const s=await stat(rPath);
+            cancel?.throwIfCanceled();
+            type=s.isDirectory()?'dir':'file';
+        }
+
+        if((include==='both' || type===include) && (!filter || filter.test(rPath)) && (!test || test(rPath))){
+            outputs.push(rPath);
+        }
+
+        if(forEach){
+            await forEach(rPath);
+        }
+
+        if(recursive && type==='dir'){
+            await readDirAsync({
+                ...options,
+                fullPath:false,
+                path:rPath,
+                outputs,
+            },cancel);
+            cancel?.throwIfCanceled();
+        }
+    }
+
+    return outputs;
+
 }
