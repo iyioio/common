@@ -81,6 +81,7 @@
         "babel-jest": "28.1.1",
         "babel-loader": "8.1.0",
         "cypress": "^10.7.0",
+        "esbuild": "^0.19.4",
         "eslint": "~8.15.0",
         "eslint-config-next": "13.1.1",
         "eslint-config-prettier": "8.1.0",
