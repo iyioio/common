@@ -11,7 +11,20 @@
                 "outputPath": "dist/packages/obj-sync-cdk",
                 "main": "packages/obj-sync-cdk/src/index.ts",
                 "tsConfig": "packages/obj-sync-cdk/tsconfig.lib.json",
-                "assets": ["packages/obj-sync-cdk/*.md"]
+                "assets": ["packages/obj-sync-cdk/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/obj-sync-cdk/src/lib/handlers",
+                        "outDir":"dist/packages/obj-sync-cdk/handlers",
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":true,
+                            "sourcemap":"external"
+                        }
+                    }
+                ]
             }
         },
         "publish": {
