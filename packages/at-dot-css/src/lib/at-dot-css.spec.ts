@@ -57,8 +57,8 @@ describe('at-css',()=>{
         expect(`${style}`).toBe('ExampleComp');
 
         expect(style.fruit({seeds:'yes'})).toBe('ExampleComp-fruit seeds');
-        expect(style.fruit({seeds:'yes'},{classNameValues:'foo'})).toBe('ExampleComp-fruit seeds foo');
-        expect(style.fruit({seeds:'yes'},{classNameValues:'foo',baseLayout:{p1:true}})).toBe('ExampleComp-fruit seeds foo ioP1');
+        expect(style.fruit({seeds:'yes'},'foo')).toBe('ExampleComp-fruit seeds foo');
+        expect(style.fruit({seeds:'yes'},'foo',{p1:true})).toBe('ExampleComp-fruit seeds foo ioP1');
 
         expect(ctrl.isInserted).toBe(true);
 
