@@ -1,6 +1,6 @@
 {
     "name": "@iyio/ai-complete-lambda",
-    "version": "0.0.1",
+    "version": "0.3.0",
     "type": "commonjs",
     "sideEffects": false
 }
