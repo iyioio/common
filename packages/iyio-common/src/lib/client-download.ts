@@ -41,8 +41,8 @@ export const downloadBlob=(name:string, blob:Blob)=>{
     return true;
 }
 
-export const downloadObject=(name:string, obj:any)=>{
-    const blob=new Blob([JSON.stringify(obj)]);
+export const downloadObject=(name:string,obj:any,format?:boolean|string|number)=>{
+    const blob=new Blob([format?JSON.stringify(obj,null,format===true?4:format):JSON.stringify(obj)]);
     return downloadBlob(name,blob);
 }
 
