@@ -1,7 +1,7 @@
-import * as targets from "@aws-cdk/aws-elasticloadbalancingv2-targets";
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as targets from "aws-cdk-lib/aws-elasticloadbalancingv2-targets";
 import * as ga from "aws-cdk-lib/aws-globalaccelerator";
 import * as gaEndpoints from "aws-cdk-lib/aws-globalaccelerator-endpoints";
 import * as lambda from "aws-cdk-lib/aws-lambda";
