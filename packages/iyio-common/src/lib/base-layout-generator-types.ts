@@ -1,5 +1,7 @@
 import { baseLayoutColorBaseProps, baseLayoutColorMappedProps } from "./base-layout";
+import { BaseLayoutBreakpointOptions } from "./base-layout-generator";
 import { HashMap } from "./common-types";
+import { RequiredRecursive } from "./typescript-util-types";
 import { Breakpoints } from "./window-size-lib";
 
 export interface BaseLayoutSpacings
@@ -155,7 +157,27 @@ export interface BaseLayoutCssGenerationOptions
     colors?:LayoutColorConfig;
 
     boxSizing?:string|null;
+
+    /**
+     * do not the -- as part of the var names.
+     */
+    vars?:BaseLayoutVarContainer[];
 }
+
+export interface BaseLayoutVarContainer
+{
+    /**
+     * do not the -- as part of the var names.
+     */
+    vars:Record<string,string>;
+
+    selector?:string;
+}
+
+export type BaseLayoutBreakpointOptionsDefaults=BaseLayoutBreakpointOptions & RequiredRecursive<Pick<BaseLayoutBreakpointOptions,
+    'spacing'|'columnWidths'|'animationSpeeds'|'containerMargin'|
+    'semiTransparency'|'animationSpeeds'
+>>
 
 export interface BaseLayoutCssOptions extends BaseLayoutCssGenerationOptions
 {
@@ -163,4 +185,8 @@ export interface BaseLayoutCssOptions extends BaseLayoutCssGenerationOptions
     appendCss?:string|((pushTo:string[],options:BaseLayoutCssOptions)=>void);
 
     breakpoints?:Breakpoints;
+
+    defaultTheme?:string;
+
+    themes?:Record<string,BaseLayoutCssGenerationOptions>;
 }

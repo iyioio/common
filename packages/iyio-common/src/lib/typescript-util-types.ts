@@ -15,3 +15,7 @@ export type Trim<Str extends string>=string extends Str?
     TrimRight<TrimLeft<Str>>;
 
 export type WhiteSpace=' '|'\n'|'\r'|'\t';
+
+export type RequiredRecursive<T>=T extends object?{
+    [K in keyof Required<T>]:RequiredRecursive<Required<T>[K]>;
+}:T;

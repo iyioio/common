@@ -29,6 +29,7 @@ export function BaseLayoutStyleSheet({
     fontConfig,
     semiTransparency,
     boxSizing,
+    vars,
 }:BaseLayoutStyleSheetProps){
 
     if(optimizeForHybridRendering){
@@ -61,7 +62,8 @@ export function BaseLayoutStyleSheet({
             colors,
             fontConfig,
             semiTransparency,
-            boxSizing
+            boxSizing,
+            vars,
         })
 
         const id=sheetId;
@@ -86,6 +88,7 @@ export function BaseLayoutStyleSheet({
         fontConfig,
         colors,
         semiTransparency,
+        vars,
     ]);
 
 

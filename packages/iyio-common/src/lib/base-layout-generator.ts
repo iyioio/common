@@ -1,4 +1,5 @@
 import { AllBaseLayoutProps, BaseLayoutAnimationProps } from "./base-layout";
+import { getBaseLayoutDefaults } from "./base-layout-defaults";
 import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions, FontFace } from "./base-layout-generator-types";
 import { currentBreakpoints } from "./window-size-lib";
 
@@ -160,39 +161,39 @@ export const generateFontFaceCss=(f:FontFace={}):string=>(
     `${f.family?'font-family:'+f.family+';':''}${f.size?'font-size:'+f.size+';':''}${f.color?'color:'+f.color+';':''}${f.weight?'font-weight:'+f.weight+';':''}${f.style?'font-style:'+f.style+';':''}${f.lineHeight?'line-height:'+f.lineHeight+';':''}${f.stretch?'font-stretch:'+f.stretch+';':''}${f.kerning?'font-kerning:'+f.kerning+';':''}${f.transform?'text-transform:'+f.transform+';':''}${f.variation?'font-variation:'+f.variation+';':''}${f.spacing?'letter-spacing:'+f.spacing+';':''}${f.css??''}`
 )
 
-export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOptions={}):string=>
+export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={}):string=>
 {
-
+    const options=getBaseLayoutDefaults(opts);
     const {
         spacing:{
-            space0:s0='0',
-            space025:s025='0.25rem',
-            space050:s050='0.50rem',
-            space075:s075='0.75rem',
-            space1:s1='1rem',
-            space2:s2='2rem',
-            space3:s3='3rem',
-            space4:s4='4rem',
-            space5:s5='5rem',
-            space6:s6='6rem',
-            space7:s7='8rem',
-            space8:s8='10rem',
-            space9:s9='15rem',
-            space10:s10='20rem',
-        }={},
+            space0:s0,
+            space025:s025,
+            space050:s050,
+            space075:s075,
+            space1:s1,
+            space2:s2,
+            space3:s3,
+            space4:s4,
+            space5:s5,
+            space6:s6,
+            space7:s7,
+            space8:s8,
+            space9:s9,
+            space10:s10,
+        },
         columnWidths:{
-            xs='8rem',
-            sm='12rem',
-            md='16rem',
-            lg='24rem',
-            xl='32rem',
-        }={},
+            xs,
+            sm,
+            md,
+            lg,
+            xl,
+        },
         animationSpeeds:{
-            fast='0.1s',
-            quick='0.2s',
-            slow='0.5s',
-            extraSlow='1.5s'
-        }={},
+            fast,
+            quick,
+            slow,
+            extraSlow,
+        },
         fontConfig: fc={},
         colors: cl={},
         classNameAppend:a='',
@@ -202,8 +203,10 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
         lines:c=[],
         lineSeparator='\n',
         includeAnimations,
-        semiTransparency=0.5,
+        semiTransparency,
         boxSizing='border-box',
+        containerMargin,
+        vars,
     }=options;
 
     if(fc.normalize===undefined){fc.normalize=true}
@@ -235,8 +238,6 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     if(!cl.colorInput){cl.colorInput='color15'}
     if(!cl.frontColorPrimary){cl.frontColorPrimary='frontColor1'}
     if(!cl.frontColorSecondary){cl.frontColorSecondary='frontColor2'}
-
-    const containerMargin=options.containerMargin??s3;
 
     const forCols=(n:string,p:string)=>{
         const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
@@ -427,6 +428,17 @@ export const generateBaseLayoutBreakpointCss=(options:BaseLayoutBreakpointOption
     const len=c.length;
 
     if(!mediaQuery){
+
+        if(vars){
+            for(const v of vars){
+                c.push(`${v.selector??':root'}{`)
+                for(const e in v.vars){
+                    c.push(`--${e}:${v.vars[e]};`)
+                }
+                c.push('}')
+            }
+        }
+
         c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
         c.push(`.SlimButton[disabled]{cursor:default}`)
         c.push(`body{${generateFontFaceCss(fc.faceDefault)}}`)
