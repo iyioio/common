@@ -1,7 +1,7 @@
-import { cn, css, RouteInfo } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { cn, RouteInfo } from "@iyio/common";
 import { AnimatedPageTransition, PageTransitionOptions } from "@iyio/react-common";
 import { FunctionComponent } from "react";
-import Style from "styled-jsx/style";
 
 export interface DefaultLayoutProps
 {
@@ -55,21 +55,22 @@ export function DefaultLayout({
         content=<LayoutWrapper routeInfo={routeInfo}>{content}</LayoutWrapper>
     }
 
+    style.root();
+
     return (
         <div className={cn(unstyled?null:"DefaultLayout",className)}>
-
             {content}
-
-            <Style id="iyio-DefaultLayout-99KqiNjnv0uTW28xxQvO" global jsx>{css`
-                .DefaultLayout{
-                    display:flex;
-                    flex-direction:column;
-                    position:relative;
-                    width:100%;
-                    height:100%;
-                }
-            `}</Style>
         </div>
     )
 
 }
+
+const style=atDotCss({name:'DefaultLayout',order:'frameworkHigh',css:`
+    .DefaultLayout{
+        display:flex;
+        flex-direction:column;
+        position:relative;
+        width:100%;
+        height:100%;
+    }
+`});

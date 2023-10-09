@@ -1,6 +1,6 @@
+import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps, bcn } from "@iyio/common";
 import { useMemo } from "react";
-import Style from "styled-jsx/style";
 
 interface JsonViewProps
 {
@@ -26,12 +26,16 @@ export function JsonView({
         }
     },[value,whitespace,replacer]);
 
+    style.root();
+
     return (
-        <div className={bcn(props,"JsonView")}>{json}<Style global id="JsonView-aIKx1HyuEz36zzr1vYX0" jsx>{`
-            .JsonView{
-                white-space:pre;
-            }
-        `}</Style></div>
+        <div className={bcn(props,"JsonView")}>{json}</div>
     )
 
 }
+
+const style=atDotCss({name:'JsonView',order:'frameworkHigh',css:`
+    .JsonView{
+        white-space:pre;
+    }
+`});

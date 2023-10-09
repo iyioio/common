@@ -1,6 +1,6 @@
-import { BaseLayoutOuterProps, BaseLayoutProps, bcn, cn, css, strFirstToUpper } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { BaseLayoutOuterProps, BaseLayoutProps, bcn, cn, strFirstToUpper } from "@iyio/common";
 import { Children, useCallback, useEffect, useRef, useState } from "react";
-import Style from "styled-jsx/style";
 import { BasicIcon } from "./icon/BasicIcon";
 import { SwipeDirection, useSwipe } from "./useSwipe";
 
@@ -196,6 +196,8 @@ export function Carousel({
         (indicatorsPosition==='start'?'left':'right'):
         (indicatorsPosition==='start'?'top':'bottom');
 
+    style.root();
+
     return (
         <div ref={setSwipeRoot} className={bcn(props,"Carousel",{vertical,horizontal:!vertical,fill},indicatorsPosition)}>
 
@@ -256,133 +258,6 @@ export function Carousel({
             </>}
 
             {overlay}
-
-            <Style global id="Carousel-ttFB0Is4geE41tWXLeBK" jsx>{css`
-                .Carousel{
-                    display:flex;
-                    flex-direction:column;
-                    position:relative;
-                }
-                .Carousel.horizontal{
-                    overflow-x:hidden;
-                    overflow-x:clip;
-                }
-                .Carousel.fill{
-                    flex:1;
-                }
-                .Carousel.vertical{
-                    overflow-y:hidden;
-                    overflow-y:clip;
-                }
-                .Carousel-plane{
-                    transition:transform 0.2s ease-in-out;
-                }
-                .Carousel.horizontal.fill .Carousel-plane{
-                    height:100%;
-                }
-                .Carousel.vertical.fill .Carousel-plane{
-                    width:100%;
-                }
-                .Carousel.horizontal .Carousel-plane{
-                    display:flex;
-                    flex-direction:row;
-                }
-                .Carousel.vertical .Carousel-plane{
-                    display:flex;
-                    flex-direction:column;
-                }
-                .Carousel-itemWrapper{
-                    display:flex;
-                    position:relative;
-                }
-                .Carousel.horizontal .Carousel-itemWrapper{
-                    flex-direction:column;
-                }
-                .Carousel-indicators{
-                    gap:0.5rem;
-                    position:absolute;
-                    justify-content:center;
-                }
-                .Carousel.horizontal .Carousel-indicators{
-                    display:flex;
-                    flex-direction:row;
-                    width:100%;
-                }
-                .Carousel.horizontal.start .Carousel-indicators{
-                    top:0;
-                }
-                .Carousel.horizontal.end .Carousel-indicators{
-                    bottom:0;
-                }
-                .Carousel.vertical .Carousel-indicators{
-                    display:flex;
-                    flex-direction:column;
-                    height:100%;
-                }
-                .Carousel.vertical.start .Carousel-indicators{
-                    left:0;
-                }
-                .Carousel.vertical.end .Carousel-indicators{
-                    right:0;
-                }
-                .Carousel-indicatorButton{
-                    border:none;
-                    background:none;
-                    padding:0;
-                    margin:0;
-                    cursor:pointer;
-                }
-                .Carousel-indicator{
-                    background-color:#fff;
-                    border-radius:50%;
-                    box-shadow:2px 2px 3px #00000044;
-                    opacity:0.7;
-                    transition:opacity 0.2s ease-in-out;
-                }
-                .Carousel-indicatorButton.active .Carousel-indicator{
-                    opacity:1;
-                }
-                .Carousel-arrow{
-                    border:none;
-                    background:none;
-                    padding:0;
-                    margin:0;
-                    cursor:pointer;
-                    position:absolute;
-                }
-                .Carousel.horizontal .Carousel-arrow.start{
-                    left:0;
-                    top:50%;
-                    transform:translateY(-50%);
-                }
-                .Carousel.horizontal .Carousel-arrow.end{
-                    right:0;
-                    top:50%;
-                    transform:translateY(-50%);
-                }
-                .Carousel.vertical .Carousel-arrow.start{
-                    top:0;
-                    left:50%;
-                    transform:translateX(-50%);
-                }
-                .Carousel.vertical .Carousel-arrow.end{
-                    bottom:0;
-                    left:50%;
-                    transform:translateX(-50%);
-                }
-                .Carousel-defaultArrows{
-                    opacity:1;
-                    transition:opacity 0.2s ease-in-out;
-                    filter:drop-shadow(2px 2px 4px #000000);
-                }
-                .Carousel-defaultArrows.disabled{
-                    opacity:0;
-                    pointer-events:none;
-                }
-                .Carousel-defaultArrows path{
-                    fill:#fff;
-                }
-            `}</Style>
         </div>
     )
 
@@ -396,3 +271,130 @@ const defaultArrowRenderer=(vertical:boolean,start:boolean,disabled:boolean,size
         } />
     </>
 )
+
+const style=atDotCss({name:'Carousel',order:'frameworkHigh',css:`
+    .Carousel{
+        display:flex;
+        flex-direction:column;
+        position:relative;
+    }
+    .Carousel.horizontal{
+        overflow-x:hidden;
+        overflow-x:clip;
+    }
+    .Carousel.fill{
+        flex:1;
+    }
+    .Carousel.vertical{
+        overflow-y:hidden;
+        overflow-y:clip;
+    }
+    .Carousel-plane{
+        transition:transform 0.2s ease-in-out;
+    }
+    .Carousel.horizontal.fill .Carousel-plane{
+        height:100%;
+    }
+    .Carousel.vertical.fill .Carousel-plane{
+        width:100%;
+    }
+    .Carousel.horizontal .Carousel-plane{
+        display:flex;
+        flex-direction:row;
+    }
+    .Carousel.vertical .Carousel-plane{
+        display:flex;
+        flex-direction:column;
+    }
+    .Carousel-itemWrapper{
+        display:flex;
+        position:relative;
+    }
+    .Carousel.horizontal .Carousel-itemWrapper{
+        flex-direction:column;
+    }
+    .Carousel-indicators{
+        gap:0.5rem;
+        position:absolute;
+        justify-content:center;
+    }
+    .Carousel.horizontal .Carousel-indicators{
+        display:flex;
+        flex-direction:row;
+        width:100%;
+    }
+    .Carousel.horizontal.start .Carousel-indicators{
+        top:0;
+    }
+    .Carousel.horizontal.end .Carousel-indicators{
+        bottom:0;
+    }
+    .Carousel.vertical .Carousel-indicators{
+        display:flex;
+        flex-direction:column;
+        height:100%;
+    }
+    .Carousel.vertical.start .Carousel-indicators{
+        left:0;
+    }
+    .Carousel.vertical.end .Carousel-indicators{
+        right:0;
+    }
+    .Carousel-indicatorButton{
+        border:none;
+        background:none;
+        padding:0;
+        margin:0;
+        cursor:pointer;
+    }
+    .Carousel-indicator{
+        background-color:#fff;
+        border-radius:50%;
+        box-shadow:2px 2px 3px #00000044;
+        opacity:0.7;
+        transition:opacity 0.2s ease-in-out;
+    }
+    .Carousel-indicatorButton.active .Carousel-indicator{
+        opacity:1;
+    }
+    .Carousel-arrow{
+        border:none;
+        background:none;
+        padding:0;
+        margin:0;
+        cursor:pointer;
+        position:absolute;
+    }
+    .Carousel.horizontal .Carousel-arrow.start{
+        left:0;
+        top:50%;
+        transform:translateY(-50%);
+    }
+    .Carousel.horizontal .Carousel-arrow.end{
+        right:0;
+        top:50%;
+        transform:translateY(-50%);
+    }
+    .Carousel.vertical .Carousel-arrow.start{
+        top:0;
+        left:50%;
+        transform:translateX(-50%);
+    }
+    .Carousel.vertical .Carousel-arrow.end{
+        bottom:0;
+        left:50%;
+        transform:translateX(-50%);
+    }
+    .Carousel-defaultArrows{
+        opacity:1;
+        transition:opacity 0.2s ease-in-out;
+        filter:drop-shadow(2px 2px 4px #000000);
+    }
+    .Carousel-defaultArrows.disabled{
+        opacity:0;
+        pointer-events:none;
+    }
+    .Carousel-defaultArrows path{
+        fill:#fff;
+    }
+`});

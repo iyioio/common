@@ -1,6 +1,6 @@
-import { cn, css, uiRouterService } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { cn, uiRouterService } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
-import Style from "styled-jsx/style";
 import { View } from "./View";
 import { useSubject } from "./rxjs-hooks";
 import { useDelayedValue } from "./useDelayedValue";
@@ -86,6 +86,8 @@ export function RouteLoadingIndicator({
     const showOverlayIndicator=(showOverlay || enableDebugging) && !closeOverlay;
     const showOverlayIndicatorDelayed=useDelayedValue(showOverlayIndicator,unmountChildrenDelayMs,true);
 
+    style.root();
+
     return (
         <>
 
@@ -118,43 +120,43 @@ export function RouteLoadingIndicator({
                     }}
                 />
             </div>
-
-            <Style id="RouteLoadingIndicator-VVCH9Q2aQCTKuSeB2zSq" global jsx>{css`
-                .RouteLoadingIndicator{
-                    position:absolute;
-                    left:0;
-                    right:0;
-                    top:0;
-                    pointer-events:none;
-                    opacity:1;
-                }
-                .RouteLoadingIndicator.isLoading{
-                    opacity:1;
-                }
-                .RouteLoadingIndicator-bar{
-                    position:absolute;
-                    left:0;
-                    top:0;
-                    width:100%;
-                    transform-origin:0 0;
-                    transform:translateX(0) scaleX(0);
-                }
-                .RouteLoadingIndicator-overlay{
-                    position:absolute;
-                    left:0;
-                    right:0;
-                    width:100%;
-                    height:100%;
-                    z-index:20;
-                    pointer-events:none;
-                    opacity:0;
-                }
-                .RouteLoadingIndicator-overlay.isLoading{
-                    opacity:1;
-                    pointer-events:auto;
-                }
-            `}</Style>
         </>
     )
 
 }
+
+const style=atDotCss({name:'RouteLoadingIndicator',order:'frameworkHigh',css:`
+    .RouteLoadingIndicator{
+        position:absolute;
+        left:0;
+        right:0;
+        top:0;
+        pointer-events:none;
+        opacity:1;
+    }
+    .RouteLoadingIndicator.isLoading{
+        opacity:1;
+    }
+    .RouteLoadingIndicator-bar{
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        transform-origin:0 0;
+        transform:translateX(0) scaleX(0);
+    }
+    .RouteLoadingIndicator-overlay{
+        position:absolute;
+        left:0;
+        right:0;
+        width:100%;
+        height:100%;
+        z-index:20;
+        pointer-events:none;
+        opacity:0;
+    }
+    .RouteLoadingIndicator-overlay.isLoading{
+        opacity:1;
+        pointer-events:auto;
+    }
+`});

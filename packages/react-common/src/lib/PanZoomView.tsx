@@ -1,7 +1,7 @@
-import { css, isDomNodeDescendantOf, Point } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { isDomNodeDescendantOf, Point } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
-import Style from "styled-jsx/style";
 
 export interface DragTarget{
     selector?:(elem:Element)=>boolean;
@@ -458,6 +458,7 @@ export function PanZoomView({
         }
     },[dragCover])
 
+    style.root();
 
     return (
         <PanZoomContext.Provider value={ctrl}>
@@ -479,41 +480,40 @@ export function PanZoomView({
                 </div>
 
                 <div ref={setDragCover} className="PanZoomView-dragCover"/>
-
-                <Style id="iyio-PanZoomView-SNyz9F0LKoBIjqY6DAXi" global jsx>{css`
-                    .PanZoomView{
-                        position:absolute;
-                        left:0;
-                        top:0;
-                        right:0;
-                        bottom:0;
-                        overflow:visible;
-                        touch-action:none;
-                    }
-                    .PanZoomView-plane{
-                        position:absolute;
-                        left:0;
-                        top:0;
-                        width:0;
-                        height:0;
-                        overflow:visible;
-                    }
-                    .PanZoomView-dragCover{
-                        position:absolute;
-                        left:0;
-                        top:0;
-                        right:0;
-                        bottom:0;
-                        display:none;
-                        cursor:move;
-                        background:transparent;
-                    }
-                `}</Style>
             </div>
         </PanZoomContext.Provider>
     )
-
 }
+
+const style=atDotCss({name:'PanZoomView',order:'frameworkHigh',css:`
+    .PanZoomView{
+        position:absolute;
+        left:0;
+        top:0;
+        right:0;
+        bottom:0;
+        overflow:visible;
+        touch-action:none;
+    }
+    .PanZoomView-plane{
+        position:absolute;
+        left:0;
+        top:0;
+        width:0;
+        height:0;
+        overflow:visible;
+    }
+    .PanZoomView-dragCover{
+        position:absolute;
+        left:0;
+        top:0;
+        right:0;
+        bottom:0;
+        display:none;
+        cursor:move;
+        background:transparent;
+    }
+`});
 
 interface TouchPoint{
     target:EventTarget;

@@ -1,5 +1,5 @@
-import { BaseLayoutProps, bcn, css } from "@iyio/common";
-import Style from "styled-jsx/style";
+import { atDotCss } from "@iyio/at-dot-css";
+import { BaseLayoutProps, bcn } from "@iyio/common";
 
 export interface ImageContainerProps extends BaseLayoutProps
 {
@@ -14,23 +14,24 @@ export function ImageContainer({
     fill="width",
     ...props
 }:ImageContainerProps){
-
+    style.root();
     return (
         <div className={bcn(props,"ImageContainer",fill===true?'fill':fill===false?null:'fill-'+fill)}>
             <img src={src} alt={alt} />
-            <Style id="iyio-ImageContainer-WVnL0qooKQHUAFcIrxv7" global jsx>{css`
-                .ImageContainer.fill img{
-                    width:100%;
-                    height:100%;
-                }
-                .ImageContainer.fill-height img{
-                    height:100%;
-                }
-                .ImageContainer.fill-width img{
-                    width:100%;
-                }
-            `}</Style>
         </div>
     )
 
 }
+
+const style=atDotCss({name:'ImageContainer',order:'frameworkHigh',css:`
+    .ImageContainer.fill img{
+        width:100%;
+        height:100%;
+    }
+    .ImageContainer.fill-height img{
+        height:100%;
+    }
+    .ImageContainer.fill-width img{
+        width:100%;
+    }
+`});

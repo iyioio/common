@@ -1,5 +1,5 @@
+import { atDotCss } from "@iyio/at-dot-css";
 import { BehaviorSubject } from "rxjs";
-import Style from "styled-jsx/style";
 import { useSubject } from "./rxjs-hooks";
 
 export const loadingIndicatorRendererSubject=new BehaviorSubject<((props:LoadingIndicatorProps)=>any)|null>(null);
@@ -25,6 +25,8 @@ export function LoadingIndicator(props:LoadingIndicatorProps){
         className,
     }=props;
 
+    style.root();
+
     return (
         <>
             <svg width={size} height={size} viewBox="0 0 500 500" fill="none" className={"LoadingIndicator"+(className?' '+className:'')}>
@@ -38,12 +40,13 @@ export function LoadingIndicator(props:LoadingIndicatorProps){
                         repeatCount="indefinite"/>
                 </path>
             </svg>
-            <Style id="iyio-LoadingIndicator-fn6PoEKTZGYAc34boJdg" global jsx>{`
-                .LoadingIndicator path{
-                    fill:#ffffff;
-                }
-            `}</Style>
         </>
     )
 
 }
+
+const style=atDotCss({name:'LoadingIndicator',order:'frameworkHigh',css:`
+    .LoadingIndicator path{
+        fill:#ffffff;
+    }
+`});

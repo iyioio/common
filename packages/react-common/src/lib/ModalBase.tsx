@@ -1,6 +1,6 @@
-import { BaseLayoutInnerProps, bcn, cn, css } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { BaseLayoutInnerProps, bcn, cn } from "@iyio/common";
 import { useEffect, useState } from "react";
-import Style from 'styled-jsx/style';
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
 
@@ -75,6 +75,8 @@ export function ModalBase({
         }
     },[renderTimeoutMs,open])
 
+    style.root();
+
     if(!show && !keepMounted){
         return null;
     }
@@ -98,70 +100,71 @@ export function ModalBase({
                     </div>
                 </div>
             </Portal>
-
-            <Style id="iyio-ModalBase-tyEOMxC0RWXJwy3bzQEI" global jsx>{css`
-                .ModelBase, .ModelBase-bg{
-                    position:absolute;
-                    left:0;
-                    right:0;
-                    top:0;
-                    bottom:0;
-                }
-                .ModelBase-content{
-                    position:relative;
-                    display:flex;
-                    flex-direction:column;
-                    height:100%;
-                }
-                .ModelBase.center .ModelBase-content{
-                    justify-content:center;
-                    align-items:center;
-                }
-                .ModelBase.scrollable .ModelBase-content{
-                    overflow-y:auto;
-                    overflow-y:overlay;
-                }
-                .ModelBase-closed.hideScrollBarOnOut.scrollable .ModelBase-content{
-                    overflow-y:hidden;
-                    overflow-y:clip;
-                }
-                .ModelBase.hidden{
-                    display:none;
-                }
-
-
-                @keyframes ModelBase-defaultIn{
-                    0%{opacity:0;}
-                    100%{opacity:1;}
-                }
-                @keyframes ModelBase-defaultOut{
-                    0%{opacity:1;}
-                    100%{opacity:0;}
-                }
-                @keyframes ModelBase-defaultIn-content{
-                    0%{transform:scale(1.1);}
-                    100%{transform:scale(1);}
-                }
-                @keyframes ModelBase-defaultOut-content{
-                    0%{transform:scale(1);}
-                    100%{transform:scale(0.9);}
-                }
-
-                .ModelBase-defaultIn{
-                    animation:ModelBase-defaultIn 0.5s forwards;
-                }
-                .ModelBase-defaultOut{
-                    animation:ModelBase-defaultOut 0.5s forwards;
-                }
-
-                .ModelBase-defaultIn .ModelBase-content{
-                    animation:ModelBase-defaultIn-content 0.5s forwards;
-                }
-                .ModelBase-defaultOut .ModelBase-content{
-                    animation:ModelBase-defaultOut-content 0.5s forwards;
-                }
-            `}</Style>
         </>
     )
 
 }
+
+const style=atDotCss({name:'ModalBase',order:'frameworkHigh',css:`
+    .ModelBase, .ModelBase-bg{
+        position:absolute;
+        left:0;
+        right:0;
+        top:0;
+        bottom:0;
+    }
+    .ModelBase-content{
+        position:relative;
+        display:flex;
+        flex-direction:column;
+        height:100%;
+    }
+    .ModelBase.center .ModelBase-content{
+        justify-content:center;
+        align-items:center;
+    }
+    .ModelBase.scrollable .ModelBase-content{
+        overflow-y:auto;
+        overflow-y:overlay;
+    }
+    .ModelBase-closed.hideScrollBarOnOut.scrollable .ModelBase-content{
+        overflow-y:hidden;
+        overflow-y:clip;
+    }
+    .ModelBase.hidden{
+        display:none;
+    }
+
+
+    @keyframes ModelBase-defaultIn{
+        0%{opacity:0;}
+        100%{opacity:1;}
+    }
+    @keyframes ModelBase-defaultOut{
+        0%{opacity:1;}
+        100%{opacity:0;}
+    }
+    @keyframes ModelBase-defaultIn-content{
+        0%{transform:scale(1.1);}
+        100%{transform:scale(1);}
+    }
+    @keyframes ModelBase-defaultOut-content{
+        0%{transform:scale(1);}
+        100%{transform:scale(0.9);}
+    }
+
+    .ModelBase-defaultIn{
+        animation:ModelBase-defaultIn 0.5s forwards;
+    }
+    .ModelBase-defaultOut{
+        animation:ModelBase-defaultOut 0.5s forwards;
+    }
+
+    .ModelBase-defaultIn .ModelBase-content{
+        animation:ModelBase-defaultIn-content 0.5s forwards;
+    }
+    .ModelBase-defaultOut .ModelBase-content{
+        animation:ModelBase-defaultOut-content 0.5s forwards;
+    }
+
+`});

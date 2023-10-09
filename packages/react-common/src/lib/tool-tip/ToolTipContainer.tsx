@@ -1,6 +1,5 @@
-import { css } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
 import { useEffect, useState } from "react";
-import Style from "styled-jsx/style";
 import type { ToolTipStateSubject } from "./tool-tip-lib";
 
 export interface ToolTipContainerProps
@@ -49,27 +48,31 @@ export default function ToolTipContainer({
 
     },[elem,state,inner]);
 
+    style.root();
+
     return (
         <div ref={setElem} className="ToolTipContainer">
             <div ref={setInner}>
                 {children}
             </div>
-            <Style id="iyio-ToolTipContainer-pFyNcGBxgtcbapEYvrGZ" global jsx>{css`
-                .ToolTipContainer{
-                    pointer-events:none;
-                    opacity:0;
-                    transition:opacity 0.2s ease-in-out;
-                    position:fixed;
-                    left:0;
-                    top:0;
-                    overflow:visible;
-                    z-index:10000;
-                }
-                .ToolTipContainer.active{
-                    opacity:1;
-                }
-            `}</Style>
         </div>
     )
 
 }
+
+
+const style=atDotCss({name:'ToolTipContainer',order:'frameworkHigh',css:`
+    .ToolTipContainer{
+        pointer-events:none;
+        opacity:0;
+        transition:opacity 0.2s ease-in-out;
+        position:fixed;
+        left:0;
+        top:0;
+        overflow:visible;
+        z-index:10000;
+    }
+    .ToolTipContainer.active{
+        opacity:1;
+    }
+`});

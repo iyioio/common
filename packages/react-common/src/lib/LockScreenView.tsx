@@ -1,7 +1,7 @@
-import { UiLock, cn, css } from '@iyio/common';
+import { atDotCss } from '@iyio/at-dot-css';
+import { UiLock, cn } from '@iyio/common';
 import { useEffect, useMemo, useState } from 'react';
 import { BehaviorSubject } from 'rxjs';
-import Style from 'styled-jsx/style';
 import { JsonView } from './JsonView';
 import { LoadingIndicator } from './LoadingIndicator';
 import { Portal } from './Portal';
@@ -66,6 +66,8 @@ export function LockScreenView({
         }
     },[show]);
 
+    style.root();
+
     return (
         <Portal>
             <div className={cn("LockScreenView",{show})}>
@@ -97,33 +99,34 @@ export function LockScreenView({
                     </View>
                 }
 
-                <Style id="iyio-LockScreenView-ypYlv97yWpmo1zpkHS1i" global jsx>{css`
-                    .LockScreenView{
-                        display:flex;
-                        flex-direction:column;
-                        justify-content:center;
-                        position:absolute;
-                        left:0;
-                        right:0;
-                        top:0;
-                        bottom:0;
-                        background-color:#000000cc;
-                        opacity:0;
-                        transition:opacity 0.2s ease-in-out;
-                        pointer-events:none;
-                        z-index:9999;
-                    }
-                    .LockScreenView.show{
-                        opacity:1;
-                        pointer-events:auto;
-                    }
-                    .LockScreenView-errorContinue{
-                        font-size:24px;
-                        font-weight:bold;
-                    }
-                `}</Style>
             </div>
         </Portal>
     )
 
 }
+
+const style=atDotCss({name:'LockScreenView',order:'frameworkHigh',css:`
+    .LockScreenView{
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        position:absolute;
+        left:0;
+        right:0;
+        top:0;
+        bottom:0;
+        background-color:#000000cc;
+        opacity:0;
+        transition:opacity 0.2s ease-in-out;
+        pointer-events:none;
+        z-index:9999;
+    }
+    .LockScreenView.show{
+        opacity:1;
+        pointer-events:auto;
+    }
+    .LockScreenView-errorContinue{
+        font-size:24px;
+        font-weight:bold;
+    }
+`});
