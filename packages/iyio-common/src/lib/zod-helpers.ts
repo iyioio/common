@@ -60,9 +60,12 @@ export const getZodEnumPrimitiveType=(type:ZodEnum<any>):TsPrimitiveType|undefin
     return tsType as TsPrimitiveType;
 
 }
+const isObj=(value:any): value is ZodObject<any>=>{
+    return typeof value?.shape === 'object';
+}
 
 export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{result?:T,error?:ZodError}=>{
-    if(!(scheme instanceof ZodObject)){
+    if(!isObj(scheme)){
         const fallback=scheme.safeParse(obj);
         return fallback.success?{result:fallback.data}:{error:fallback.error}
     }
@@ -101,7 +104,7 @@ export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{re
 
     const parsedResult=scheme.safeParse(output);
     if(parsedResult.success){
-        return parsedResult.data;
+        return {result:parsedResult.data};
     }else{
         return {error:parsedResult.error}
     }
