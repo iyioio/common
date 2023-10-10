@@ -5,7 +5,7 @@ import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonRe
 import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
-import { queryParamsToObject } from './object';
+import { getObjKeyCount, queryParamsToObject } from './object';
 import { zodCoerceObject } from './zod-helpers';
 
 export const fnHandler=async ({
@@ -34,8 +34,7 @@ export const fnHandler=async ({
     const requestContextPath=evt?.requestContext?.path??defaultHttpPath;
     const requestContextMethod=evt?.requestContext?.httpMethod??defaultHttpMethod;
 
-    const queryString=evt?.rawQueryString??defaultQueryString;
-    const query=queryString?queryParamsToObject(queryString):{}
+    const query=getQuery(evt,defaultQueryString);
 
     let path=(
         (requestContextHttpPath)??
@@ -69,7 +68,7 @@ export const fnHandler=async ({
         :fnInvokeEvent?
             fnInvokeEvent.input
         :isHttp?
-            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:(method==='GET' && inputScheme)?zodCoerceObject(inputScheme,query):undefined)
+            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:((method==='GET' || getObjKeyCount(query)) && inputScheme)?zodCoerceObject(inputScheme,query)?.result:undefined)
         :
             evt
     );
@@ -79,6 +78,9 @@ export const fnHandler=async ({
         if(parsed.success){
             input=parsed.data;
         }else if(parsed.success===false){
+            if(logRequest){
+                console.error('serverlessHandler - Invalid input',input);
+            }
             if(isHttp){
                 return createHttpBadRequestResponse(parsed.error.message);
             }else{
@@ -188,6 +190,11 @@ export const fnHandler=async ({
             return createFnError(code,message);
         }
     }
+}
+
+const getQuery=(evt?:any,defaultQueryString?:string):Record<string,string>=>{
+    const _queryString=evt?.rawQueryString??defaultQueryString;
+    return evt?.queryStringParameters??_queryString?queryParamsToObject(_queryString):{}
 }
 
 export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={}):((evt:any,context:any)=>Promise<any>) & {rawHandler:FnHandler}=>{
