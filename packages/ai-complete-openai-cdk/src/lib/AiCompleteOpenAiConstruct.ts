@@ -37,7 +37,10 @@ export class AiCompleteOpenAiConstruct extends Construct
                     arnParam:aiCompletionFnArnParam,
                     grantAccess,
                     createProps:{
-                        handlerFileName:'../../packages/ai-complete-openai-cdk/src/lib/handlers/CompleteOpenAiPrompt.ts',
+                        bundledHandlerFileNames:[
+                            '../../dist/packages/ai-complete-openai-cdk/handlers/CompleteOpenAiPrompt',
+                            '../../node_modules/@iyio/ai-complete-openai-cdk/handlers/CompleteOpenAiPrompt',
+                        ],
                         timeoutMs:1000*60*5,
                         ...defaultFnProps,
                     },

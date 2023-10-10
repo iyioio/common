@@ -5,6 +5,7 @@ export interface EsbuildTarget
 {
     srcDir:string;
     outDir:string;
+    outputIndexAsIndex?:boolean;
     recursive?:boolean;
     filterReg?:string;
     filterRegFlags?:string;

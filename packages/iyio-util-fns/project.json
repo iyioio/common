@@ -16,6 +16,7 @@
                     {
                         "srcDir":"packages/iyio-util-fns/src/lib/handlers",
                         "outDir":"dist/packages/iyio-util-fns/handlers",
+                        "outputIndexAsIndex":true,
                         "options":{
                             "bundle":true,
                             "platform":"node",

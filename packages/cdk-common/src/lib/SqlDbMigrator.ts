@@ -103,8 +103,10 @@ class SqlDbMigratorFunctionProvider extends Construct
         this.func=new NodeFn(this,'SqlDbMigratorFn',{
             timeout:Duration.minutes(15),
             memorySize:1024,
-            // todo - handle path to fn when packaged in lib
-            handlerFileName:'../../packages/iyio-util-fns/src/lib/handler/SqlDbMigratorFn.ts',
+            bundledHandlerFileNames:[
+                '../../dist/packages/iyio-util-fns/handlers/SqlDbMigratorFn',
+                '../../node_modules/@iyio/iyio-util-fns/handlers/SqlDbMigratorFn',
+            ]
         });
 
         this.provider=new cr.Provider(this,'SqlDbMigratorFunctionProviderHandler', {

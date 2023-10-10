@@ -83,5 +83,8 @@
         }
     },
     "tags": [],
-    "implicitDependencies": []
+    "implicitDependencies": [
+        "iyio-util-fns",
+        "obj-sync-cdk"
+    ]
 }

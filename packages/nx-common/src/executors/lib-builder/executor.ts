@@ -277,18 +277,23 @@ const esbuildAsync=async (targets:EsbuildTarget[]):Promise<BuildResult>=>{
     }
 }
 
+const tsEndReg=/\.ts$/i;
+
 const buildEsTargetAsync=async (target:EsbuildTarget):Promise<string[]>=>{
 
     console.info('Building esbuild target - '+target.srcDir);
 
-    const filter=target.filterReg?new RegExp(target.filterReg,target.filterRegFlags??'i'):/\.ts$/i;
+    const filter=target.filterReg?new RegExp(target.filterReg,target.filterRegFlags??'i'):tsEndReg;
 
-    const entryPoints=await readDirAsync({
+    const entryPoints=(await readDirAsync({
         path:target.srcDir,
         include:'file',
         filter,
         recursive:target.recursive
-    })
+    })).map(f=>({
+        in:f,
+        out:Path.basename(f).replace(tsEndReg,target.outputIndexAsIndex?'/index':''),
+    }))
 
     await buildWithEsbuild({
         ...target.options,

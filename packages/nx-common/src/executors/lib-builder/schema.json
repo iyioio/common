@@ -79,6 +79,9 @@
                 "outDir":{
                     "type":"string"
                 },
+                "outputIndexAsIndex":{
+                    "type":"boolean"
+                },
                 "recursive":{
                     "type":"boolean"
                 },

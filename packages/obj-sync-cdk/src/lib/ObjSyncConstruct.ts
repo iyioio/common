@@ -39,8 +39,10 @@ export class ObjSyncConstruct extends Construct
         }=managed;
 
         const handlerFn=new NodeFn(this,'Default',{
-            // todo - handle path to fn when packaged in lib
-            handlerFileName:'../../packages/obj-sync-cdk/src/lib/handlers/objSyncSocketDefault.ts',
+            bundledHandlerFileNames:[
+                 '../../dist/packages/obj-sync-cdk/handlers/objSyncSocketDefault',
+                '../../node_modules/@iyio/obj-sync-cdk/handlers/objSyncSocketDefault',
+            ],
             minify:true,
             timeoutMs:30*1000,
             ...defaultFnProps,

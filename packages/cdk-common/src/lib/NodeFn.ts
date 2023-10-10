@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from "constructs";
+import { existsSync } from "fs";
 import * as Path from "path";
 
 export type NodeFnProps=Partial<lambdaNodeJs.NodejsFunctionProps> & AdditionalFuncOptions;
@@ -24,6 +25,8 @@ interface AdditionalFuncOptions
      */
     publicUrlAccessors?:iam.IGrantable[]|false;
 
+    bundledHandlerFileNames?:string[];
+
     handlerFileName?:string;
 
     minify?:boolean;
@@ -37,27 +40,28 @@ interface AdditionalFuncOptions
 export interface CreateNodeFnResult
 {
     name:string;
-    func:lambdaNodeJs.NodejsFunction;
+    func:lambda.Function;
     url?:lambda.FunctionUrl;
 }
 
 export class NodeFn extends Construct{
 
     public readonly funcName:string;
-    public readonly func:lambdaNodeJs.NodejsFunction;
+    public readonly func:lambda.Function;
     public readonly url?:lambda.FunctionUrl;
 
     public constructor(scope:Construct, name: string,{
         createPublicUrl,
         publicUrlAccessors,
         handlerFileName,
+        bundledHandlerFileNames,
         minify=true,
         urlCors,
         timeoutMs,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
         bundling={minify,sourceMap:true,target:'node18'},
-        handler='handler',
+        handler,
         logRetention=logs.RetentionDays.ONE_WEEK,
         runtime=lambda.Runtime.NODEJS_18_X,
         architecture=lambda.Architecture.ARM_64,
@@ -72,17 +76,44 @@ export class NodeFn extends Construct{
             entry=joinPaths(process.cwd(),entry??'');
         }
 
-        const func=new lambdaNodeJs.NodejsFunction(this,name,{
-            entry,
-            bundling,
-            handler,
+        let func:lambda.Function|null=null;
+
+        const options:Omit<lambda.FunctionProps,'code'|'handler'>={
             logRetention,
-            runtime,
             architecture,
             memorySize,
             timeout,
-            ...props
-        });
+            runtime,
+            ...props,
+
+        }
+
+        if(bundledHandlerFileNames){
+            for(const fName of bundledHandlerFileNames){
+                if(!existsSync(fName)){
+                    continue;
+                }
+
+                func=new lambda.Function(this,name,{
+                    code:lambda.Code.fromAsset(fName),
+                    handler:handler??'index.handler',
+                    environment:{
+                        AWS_NODEJS_CONNECTION_REUSE_ENABLED:'1',
+                        ...options.environment,
+                    },
+                    ...options,
+                })
+            }
+        }
+
+        if(!func){
+            func=new lambdaNodeJs.NodejsFunction(this,name,{
+                entry,
+                bundling,
+                handler:handler??'handler',
+                ...options,
+            });
+        }
 
         let url:lambda.FunctionUrl|undefined=undefined;
 

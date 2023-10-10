@@ -16,6 +16,7 @@
                     {
                         "srcDir":"packages/obj-sync-cdk/src/lib/handlers",
                         "outDir":"dist/packages/obj-sync-cdk/handlers",
+                        "outputIndexAsIndex":true,
                         "options":{
                             "bundle":true,
                             "platform":"node",

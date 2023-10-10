@@ -11,7 +11,22 @@
                 "outputPath": "dist/packages/ai-complete-openai-cdk",
                 "main": "packages/ai-complete-openai-cdk/src/index.ts",
                 "tsConfig": "packages/ai-complete-openai-cdk/tsconfig.lib.json",
-                "assets": ["packages/ai-complete-openai-cdk/*.md"]
+                "assets": ["packages/ai-complete-openai-cdk/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/ai-complete-openai-cdk/src/lib/handlers",
+                        "outDir":"dist/packages/ai-complete-openai-cdk/handlers",
+                        "outputIndexAsIndex":true,
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":true,
+                            "sourcemap":"external",
+                            "external": ["@aws-sdk/*"]
+                        }
+                    }
+                ]
             }
         },
         "publish": {
