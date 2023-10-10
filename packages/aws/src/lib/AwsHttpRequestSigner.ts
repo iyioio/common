@@ -1,7 +1,7 @@
 import { Sha256 } from '@aws-crypto/sha256-browser';
-import { HttpRequest } from '@aws-sdk/protocol-http';
-import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { BaseHttpRequest, HttpRequestSigner, Scope, TypeDef } from '@iyio/common';
+import { HttpRequest } from '@smithy/protocol-http';
+import { SignatureV4 } from "@smithy/signature-v4";
 import { AwsAuthProviders, awsHttpSignerServiceParam, awsRegionParam } from './_types.aws';
 import { AwsAuthProvider } from './aws-auth';
 
