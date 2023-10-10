@@ -1,5 +1,5 @@
 {
-    "name": "common",
+    "name": "iyio-common",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/iyio-common/src",
     "projectType": "library",
@@ -17,7 +17,7 @@
         "publish": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "node tools/scripts/publish.mjs common {args.ver} {args.tag}"
+                "command": "node tools/scripts/publish.mjs iyio-common {args.ver} {args.tag}"
             },
             "dependsOn": [
                 {
