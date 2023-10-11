@@ -60,6 +60,7 @@ export function CodeInput({
             return;
         }
         code.innerHTML=escapeHtml((valueOverride??value)||' ')+'&nbsp;';
+        code.removeAttribute('data-highlighted');
         hljs.highlightElement(code);
     },[code,valueOverride,value,language]);
 

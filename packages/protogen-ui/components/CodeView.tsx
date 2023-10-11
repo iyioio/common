@@ -25,12 +25,9 @@ export function CodeView({
 
     const code=value||children||'';
 
-    const html=useMemo(
-        ()=>code?{
-            __html:(language==='auto'?hljs.highlightAuto(code):hljs.highlight(language,code)).value
-            }:undefined,
-        [code,language]
-    )
+    const html=useMemo(()=>code?{
+        __html:(language==='auto'?hljs.highlightAuto(code):hljs.highlight(language,code)).value
+    }:undefined,[code,language]);
 
     return (
         <>
