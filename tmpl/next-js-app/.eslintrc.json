@@ -12,7 +12,7 @@
             "rules": {
                 "@next/next/no-html-link-for-pages": [
                     "error",
-                    "packages/web-app/pages"
+                    "packages/___$projectName___/pages"
                 ]
             }
         },
