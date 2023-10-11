@@ -45,7 +45,7 @@ export const protoParseConfig=(configScheme:ZodSchema,args:HashMap<any>):any=>{
         const parsed=prop.safeParse(value)
         if(parsed.success){
             config[e]=parsed.data;
-        }else{
+        }else if(parsed.success===false){
             let fixed=false;
             if(Array.isArray(value) && value.length && value.every(s=>typeof s === 'string')){
                 for(const issue of parsed.error.issues){

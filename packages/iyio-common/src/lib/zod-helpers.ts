@@ -67,7 +67,7 @@ const isObj=(value:any): value is ZodObject<any>=>{
 export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{result?:T,error?:ZodError}=>{
     if(!isObj(scheme)){
         const fallback=scheme.safeParse(obj);
-        return fallback.success?{result:fallback.data}:{error:fallback.error}
+        return fallback.success?{result:fallback.data}:fallback.success===false?{error:fallback.error}:{}
     }
     const output:Record<string,any>={};
     for(const e in scheme.shape){
@@ -105,8 +105,10 @@ export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{re
     const parsedResult=scheme.safeParse(output);
     if(parsedResult.success){
         return {result:parsedResult.data};
-    }else{
+    }else if(parsedResult.success===false){
         return {error:parsedResult.error}
+    }else{
+        return {}
     }
 }
 

@@ -301,7 +301,7 @@ export abstract class ObjSyncClient
         if(Array.isArray(command)){
             for(const cmd of command){
                 const parseResult=ObjSyncClientCommandScheme.safeParse(cmd);
-                if(!parseResult.success){
+                if(parseResult.success===false){
                     this.handleError(parseResult.error);
                     return;
                 }
@@ -318,7 +318,7 @@ export abstract class ObjSyncClient
         }else{
 
             const parseResult=ObjSyncClientCommandScheme.safeParse(command);
-            if(!parseResult.success){
+            if(parseResult.success===false){
                 this.handleError(parseResult.error);
                 return;
             }

@@ -60,10 +60,12 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
 
         if(inputScheme){
             const parsed=inputScheme.safeParse(input);
-            if(parsed.success){
+            if(parsed.success===true){
                 input=parsed.data;
-            }else{
+            }else if(parsed.success===false){
                 throw new Error(getZodErrorMessage(parsed.error));
+            }else{
+                throw new Error('Invalid zod parse result');
             }
         }
 
@@ -98,10 +100,12 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
 
         if(outputScheme){
             const parsed=outputScheme.safeParse(output);
-            if(parsed.success){
+            if(parsed.success===true){
                 output=parsed.data;
-            }else{
+            }else if(parsed.success===false){
                 throw new Error(getZodErrorMessage(parsed.error));
+            }else{
+                throw new Error('Invalid zod parse result');
             }
         }
 
