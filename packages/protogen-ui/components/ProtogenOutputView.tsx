@@ -51,7 +51,7 @@ export function ProtogenOutputView({
             <div ref={setOutputElem} className={style.output()}>{output}</div>
 
             <View className={style.bottom()} row justifyEnd p1>
-                <ProtoButton text="( clear - ctrl+k )" onClick={()=>ctrl.clearOutput()}/>
+                <ProtoButton text="( clear - ctrl+k )" onClick={()=>{ctrl.showOutput=false;ctrl.clearOutput()}}/>
                 <ProtoButton text="( close - esc )" onClick={()=>ctrl.showOutput=false}/>
             </View>
 

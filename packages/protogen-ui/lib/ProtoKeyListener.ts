@@ -77,6 +77,7 @@ export class ProtoKeyListener
                 break;
 
             case 'c:k':
+                this.ctrl.showOutput=false;
                 this.ctrl.clearOutput();
                 break;
 
