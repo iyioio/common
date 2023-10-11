@@ -1,4 +1,5 @@
-import { cn, formatNumberWithBases } from "@iyio/common";
+import { atDotCss } from "@iyio/at-dot-css";
+import { formatNumberWithBases } from "@iyio/common";
 import { Portal } from "@iyio/react-common";
 import { SvgBaseChartCtrl, classNamePrefix } from "@iyio/svg-charts";
 import { useEffect, useState } from "react";
@@ -54,28 +55,29 @@ export function SvgChartOverlay({
         <>
 
             <Portal active>
-                <div className={cn("SvgChartOverlay")} ref={setElem} id={ctrl?ctrl.id:undefined}>
-                    <div className={cn("SvgChartOverlay-body",classNamePrefix+'overlay-body')}>
+                <div className={style.root()} ref={setElem} id={ctrl?ctrl.id:undefined}>
+                    <div className={style.body(null,classNamePrefix+'overlay-body')}>
                         {!!title && <div className={classNamePrefix+'overlay-title'}>{title}</div>}
                         <div ref={setItemsElem} className={classNamePrefix+'overlay-items'}/>
                     </div>
                 </div>
             </Portal>
-
-            <style global jsx>{`
-                .SvgChartOverlay{
-                    position:absolute;
-                    left:0;
-                    top:0;
-                    pointer-events:none;
-                    display:none;
-                    z-index:1000;
-                }
-                .SvgChartOverlay-body{
-                    transform:translate(-50%,calc(-100% - 20px))
-                }
-            `}</style>
         </>
     )
 
 }
+
+
+const style=atDotCss({name:'SvgChartOverlay',css:`
+    @.root{
+        position:absolute;
+        left:0;
+        top:0;
+        pointer-events:none;
+        display:none;
+        z-index:1000;
+    }
+    @.body{
+        transform:translate(-50%,calc(-100% - 20px))
+    }
+`});
