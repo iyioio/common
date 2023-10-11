@@ -1,0 +1,6 @@
+{
+    "name": "@___$namespace___/___$name___",
+    "version": "0.0.1",
+    "type": "commonjs",
+    "sideEffects": false
+}
