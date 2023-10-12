@@ -1,6 +1,6 @@
 import { asArray, joinPaths, parseCliArgsT } from "@iyio/common";
 import { readFile, readdir, stat, writeFile } from "fs/promises";
-import { GenerateObjectFileSystemTemplateOptions, GenerateObjectFileSystemTemplateOptionsScheme, generateObjectFileSystemTemplateAsync } from "../lib/templateGenerator";
+import { GenerateObjectFileSystemTemplateOptions, GenerateObjectFileSystemTemplateOptionsScheme, evalTmplLines, generateObjectFileSystemTemplateAsync, writeTmplAsync } from "../lib/templateGenerator";
 
 interface TemplateItem extends Omit<GenerateObjectFileSystemTemplateOptions,'output'>
 {
@@ -10,6 +10,10 @@ interface TemplateItem extends Omit<GenerateObjectFileSystemTemplateOptions,'out
 interface Args
 {
     templateDir:string;
+    template?:string;
+    invoke?:string;
+    out?:string;
+    dryRun?:boolean;
 }
 
 const args=parseCliArgsT<Args>({
@@ -17,6 +21,10 @@ const args=parseCliArgsT<Args>({
     startIndex:2,
     converter:{
         templateDir:args=>args[0],
+        template:args=>args[0],
+        invoke:args=>args[0],
+        out:args=>args[0],
+        dryRun:args=>args.length?true:false,
 
     }
 }).parsed as Args
@@ -26,12 +34,19 @@ if(!args.templateDir){
 }
 
 const main=async ({
-    templateDir
+    templateDir,
+    template,
+    invoke,
+    out:outArg,
+    dryRun,
 }:Args)=>{
 
     const files=await readdir(templateDir);
 
     await Promise.all(files.filter(f=>f.endsWith('.json')).map(async file=>{
+        if(template && template.toLowerCase()+'.json'!==file.toLowerCase()){
+            return;
+        }
         try{
             const dirName=file.substring(0,file.length-'.json'.length);
             if(!files.some(f=>f===dirName)){
@@ -47,9 +62,15 @@ const main=async ({
             }
 
             const {
-                out,
+                out:_out,
                 ...options
             }:TemplateItem=JSON.parse((await readFile(jsonPath)).toString());
+
+            const out=outArg??_out;
+
+            if(invoke){
+                options.bodyOnly=true;
+            }
 
             options.sourceDir=fullDir;
 
@@ -60,12 +81,22 @@ const main=async ({
             }
 
 
-            const output=(await generateObjectFileSystemTemplateAsync(options)).join('\n');
+            const output=await generateObjectFileSystemTemplateAsync(options);
 
             const outAry=asArray(out);
             for(const o of outAry){
-                await writeFile(o,output);
-                console.log(`${fullDir} > ${o}`)
+                if(invoke){
+                    await writeTmplAsync({
+                        outDir:o,
+                        files:evalTmplLines(output,invoke),
+                        dryRun,
+                    })
+                }else{
+                    if(!dryRun){
+                        await writeFile(o,output.join('\n'));
+                    }
+                    console.log(`${fullDir} > ${o}`);
+                }
             }
 
         }catch(ex){

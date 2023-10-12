@@ -1,15 +1,15 @@
-import { getFileExt, joinPaths, strFirstToUpper } from "@iyio/common";
-import { readFile, readdir, stat } from "fs/promises";
+import { getDirectoryName, getFileExt, joinPaths, strFirstToUpper } from "@iyio/common";
+import { mkdir, readFile, readdir, stat, writeFile } from "fs/promises";
 import { z } from "zod";
 
-const defaultIgnore=['node_modules'];
+const defaultIgnore=['node_modules','.DS_Store'];
 
 export const GenerateObjectFileSystemTemplateOptionsScheme=z.object({
     sourceDir:z.string(),
     baseName:z.string().optional(),
     /**
      * Filenames to ignore.
-     * @default ['node_modules']
+     * @default ['node_modules','.DS_Store']
      */
     ignore:z.string().or(z.custom<RegExp>()).array().optional(),
 
@@ -176,4 +176,66 @@ export const generateFileLiteralStringAsync=async (path:string,output:string[],n
     for(let i=0;i<lines.length;i++){
         output.push(lines[i]);
     }
+}
+
+export const evalTmplLines=(lines:string[],args:string|Record<string,string>):Record<string,string>=>{
+    if(typeof args === 'string'){
+        const parts=args.split(',');
+        args={};
+        for(const p of parts){
+            const [n,v]=p.split(':');
+            args[n?.trim()??'']=v?.trim()??'';
+        }
+    }
+    let argsExp='';
+    for(const e in args){
+        argsExp+=`const ${e}=${JSON.stringify(args[e])};\n`;
+    }
+    const invoker=new Invoker();
+    invoker.invoke(`
+        ${argsExp}
+        this.value={${lines.join('\n')}}
+    `);
+    return invoker.value;
+}
+
+class Invoker
+{
+    public value:any;
+
+    public args:Record<string,string>={}
+
+    public invoke(code:string){
+        eval(code);
+    }
+}
+
+export interface WriteTmplOptions
+{
+    outDir:string;
+    files:Record<string,string>;
+    dryRun?:boolean;
+}
+
+export const writeTmplAsync=async ({
+    outDir,
+    files,
+    dryRun
+}:WriteTmplOptions):Promise<void>=>{
+    const promises:Promise<void>[]=[];
+
+    for(const e in files){
+        promises.push((async ()=>{
+            const path=joinPaths(outDir,e);
+            const dir=getDirectoryName(path);
+            const content=files[e];
+            console.info(`${path} - ${Math.ceil(content.length/1000)}KB`)
+            if(!dryRun){
+                await mkdir(dir,{recursive:true});
+                await writeFile(path,content);
+            }
+        })())
+    }
+
+    await Promise.all(promises);
 }
