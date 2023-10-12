@@ -2,25 +2,25 @@ import { protoFileMapToOutput as __transformer__ } from "@iyio/protogen";
 
 export interface NextJsAppTemplateOptions{
     mapOptions:Parameters<typeof __transformer__>[1];
+    projectName:string;
     namespace:string;
     compLib:string;
     frontendModule:string;
     frontendLib:string;
     siteTitle:string;
     siteDescription:string;
-    projectName:string;
     devPort:string;
 }
 
 export const nextJsAppTemplate=({
     mapOptions:__transformerParam__,
+    projectName,
     namespace,
     compLib,
     frontendModule,
     frontendLib,
     siteTitle,
     siteDescription,
-    projectName,
     devPort,
 }:NextJsAppTemplateOptions)=>{
     const files={
@@ -45,7 +45,7 @@ export const nextJsAppTemplate=({
             "rules": {
                 "@next/next/no-html-link-for-pages": [
                     "error",
-                    "packages/web-app/pages"
+                    "packages/${projectName}/pages"
                 ]
             }
         },
@@ -95,14 +95,14 @@ declare module '*.svg' {
 "jest.config.ts":
 /*ts*/`/* eslint-disable */
 export default {
-    displayName: 'web-app',
+    displayName: '${projectName}',
     preset: '../../jest.preset.js',
     transform: {
         '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
         '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-    coverageDirectory: '../../coverage/packages/web-app',
+    coverageDirectory: '../../coverage/packages/${projectName}',
 };
 `,
 "next-env.d.ts":
