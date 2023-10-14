@@ -63,7 +63,7 @@ export abstract class ObjSyncClient
         clientId,
         state,
         maxCommandQueueSeconds=20,
-        maxCommandQueueSize=100,
+        maxCommandQueueSize=300,
         reconnectTimeoutMs=30000,
         clientMapProp,
         autoDeleteClientObjects,
@@ -338,7 +338,7 @@ export abstract class ObjSyncClient
     {
         if(this.cmdQueueTTL===null){
             this.cmdQueueTTL=Date.now()+(this.maxCommandQueueSeconds*1000);
-        }else if(this.cmdQueueTTL>Date.now()){
+        }else if(this.cmdQueueTTL<Date.now()){
             this.handleError('command queue ttl reached');
             return;
         }else if(this.cmdQueue.length>this.maxCommandQueueSize){
