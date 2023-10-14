@@ -15,5 +15,5 @@ npx ts-node \
     --template pkg \
     --template-dir tmpl \
     --out "packages/$NAME" \
-    --invoke "name:$NAME,namespace:@iyio"
+    --invoke "name:$NAME,namespace:iyio"
 
