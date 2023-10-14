@@ -5,6 +5,7 @@ export * from "./lib/BaseLayoutStyleSheet";
 export * from "./lib/BasePage";
 export * from "./lib/ButtonBase";
 export * from "./lib/Carousel";
+export * from "./lib/ErrorBoundary";
 export * from "./lib/Form";
 export * from "./lib/GradientView";
 export * from "./lib/HashBlurImage";
