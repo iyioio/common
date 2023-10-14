@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export interface LatLng
 {
     lat:number;
@@ -124,3 +125,19 @@ export type RecursiveKeyOf<T>={
             ?`${TKey}`|`${TKey}.${RecursiveKeyOf<Required<NonNullable<T>>[TKey]>}`
             :`${TKey}`;
 }[keyof Required<NonNullable<T>>&(string|number)];
+
+export type FirstNameInPath<T extends string>=T extends `${infer Name}.${infer _Rest}`?Name:T;
+
+export type PathAfterDot<T extends string>=T extends `${infer _Name}.${infer Rest}`?Rest:never;
+
+export type PathValue<
+    T,
+    Path extends string,
+>=(
+    Path extends keyof T?
+        T[Path]
+    :FirstNameInPath<Path> extends keyof T?
+        PathValue<Required<T>[FirstNameInPath<Path>],PathAfterDot<Path>>
+    :
+        never
+)
