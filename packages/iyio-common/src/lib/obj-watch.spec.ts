@@ -1,5 +1,5 @@
-import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib";
-import { ObjWatchEvt, ObjWatchEvtType } from "./obj-watch-types";
+import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, watchObjAtDeepPath, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib";
+import { anyProp, ObjWatchEvt, ObjWatchEvtType } from "./obj-watch-types";
 import { deepCompare } from "./object";
 import { ObjMirror } from './ObjMirror';
 
@@ -144,4 +144,245 @@ describe('obj-watch',()=>{
 
     })
 
+    it('should filter path',()=>{
+
+        const dude:Dude={
+            name:'Bob',
+            car:{
+                color:'red',
+                name:'Jac',
+                engine:{
+                    type:'gas',
+                    hp:550,
+                    torque:550
+                }
+            }
+        };
+
+
+        let nameCallAll=0;
+        watchObjAtDeepPath(dude,{
+            name:true,
+            car:'*'
+        },()=>{
+            nameCallAll++;
+        })
+
+
+        let jobs=0;
+        watchObjAtDeepPath(dude,{
+            jobs:'*'
+        },()=>{
+            jobs++;
+        })
+
+
+        let notAgeAll=0;
+        watchObjAtDeepPath(dude,{
+            age:false,
+            [anyProp]:'*',
+        },()=>{
+            notAgeAll++;
+        })
+
+
+        let notAge=0;
+        watchObjAtDeepPath(dude,{
+            age:false,
+            [anyProp]:true,
+        },()=>{
+            notAge++;
+        })
+
+
+        let jobMap=0;
+        watchObjAtDeepPath(dude,{
+            jobMap:{
+                [anyProp]:{
+                    pay:'*',
+                    startTime:true,
+                },
+            }
+        },()=>{
+            jobMap++;
+        })
+
+
+        let deepSet=0;
+        watchObjAtDeepPath(dude,{
+            mainJob:{
+                subJob:{
+                    subJob:{
+                        pay:true,
+
+                    }
+                }
+            }
+        },()=>{
+            deepSet++;
+        })
+
+
+        let jobsStartTime=0;
+        watchObjAtDeepPath(dude,{
+            jobs:{
+                [anyProp]:{
+                    startTime:true
+                }
+            },
+        },()=>{
+            jobsStartTime++;
+        },{debug:true})
+
+
+        let count=0;
+        let countValue=0;
+        watchObjAtDeepPath(dude,null,()=>{
+            count++;
+        })
+
+
+        let notAgeAllValue=0;
+        let notAgeValue=0;
+
+        //evtPath: [ 'age' ]
+        wSetProp(dude,'age',33);
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(0);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(0);
+        expect(notAge).toBe(0);
+        expect(jobMap).toBe(0);
+        expect(deepSet).toBe(0);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'name', 'car' ]
+        wSetProp(dude.car,'name','Jeff');
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(1);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(0);
+        expect(jobMap).toBe(0);
+        expect(deepSet).toBe(0);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'name' ]
+        wSetProp(dude,'name','tom');
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(++notAgeValue);
+        expect(jobMap).toBe(0);
+        expect(deepSet).toBe(0);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'jobMap' ]
+        const job1:Job={
+            pay:1,
+            startTime:'too early'
+        }
+        wSetProp(dude,'jobMap',{job1});
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(++notAgeValue);
+        expect(jobMap).toBe(1);
+        expect(deepSet).toBe(0);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'mainJob' ]
+        const mainJob:Job={
+            pay:100,
+            startTime:'morning, not too early',
+            subJob:{
+                pay:10
+            }
+        }
+        wSetProp(dude,'mainJob',mainJob);
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(++notAgeValue);
+        expect(jobMap).toBe(1);
+        expect(deepSet).toBe(0);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'subJob', 'subJob', 'mainJob' ]
+        const mainJobSubSub:Job={
+            pay:44,
+        }
+        wSetProp(dude.mainJob?.subJob,'subJob',mainJobSubSub);
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(0);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(notAgeValue);
+        expect(jobMap).toBe(1);
+        expect(deepSet).toBe(1);
+        expect(jobsStartTime).toBe(0);
+
+        //evtPath: [ 'jobs' ]
+        const aryJob1:Job={
+            pay:222,
+            startTime:'mid day'
+        }
+        wSetProp(dude,'jobs',[aryJob1]);
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(1);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(++notAgeValue);
+        expect(jobMap).toBe(1);
+        expect(deepSet).toBe(1);
+        expect(jobsStartTime).toBe(1);
+
+        //evtPath: [ 'startTime', '0', 'jobs' ]
+        wSetProp(dude.jobs?.[0],'startTime','later in the day');
+        expect(count).toBe(++countValue);
+        expect(nameCallAll).toBe(2);
+        expect(jobs).toBe(2);
+        expect(notAgeAll).toBe(++notAgeAllValue);
+        expect(notAge).toBe(notAgeValue);
+        expect(jobMap).toBe(1);
+        expect(deepSet).toBe(1);
+        expect(jobsStartTime).toBe(2);
+
+    });
+
 })
+
+
+interface Dude
+{
+    name:string;
+    age?:number;
+    car?:Car;
+    jobs?:Job[];
+    jobMap?:Record<string,Job>;
+    mainJob?:Job;
+}
+
+interface Job
+{
+    pay?:number;
+    startTime?:string;
+    subJob?:Job;
+}
+
+interface Car
+{
+    name:string;
+    color:string;
+    engine?:Engine;
+}
+
+interface Engine{
+    type:string;
+    hp:number;
+    torque:number;
+}
+

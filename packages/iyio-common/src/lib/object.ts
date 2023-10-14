@@ -224,6 +224,27 @@ export const getValueByAryPath=(value:any,path:(string|number|null)[],defaultVal
 
     return value===undefined?defaultValue:value;
 }
+export const getValueByReverseAryPath=(value:any,path:(string|number|null)[],defaultValue:any=undefined,pathLength=path.length,rootGetter?:(key:string|number)=>any):any=>{
+
+    for(let i=path.length-1;i>=path.length-pathLength;i--){
+        const p=path[i];
+        if(p===undefined){
+            return defaultValue;
+        }else if(p===null){
+            continue;
+        }
+        if(i===0 && rootGetter && value?.[p]===undefined){
+            value=rootGetter(p);
+        }else{
+            value=value?.[p];
+        }
+        if(value===undefined){
+            return defaultValue;
+        }
+    }
+
+    return value===undefined?defaultValue:value;
+}
 
 export const getNextEmptyAlphaKey=(obj:HashMap):string=>
 {

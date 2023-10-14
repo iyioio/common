@@ -1,7 +1,6 @@
 import { ObjWatcher } from "./ObjWatcher";
-import { RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjWatchEvt, ObjWatchEvtType, RecursiveObjWatchEvt, Watchable, WatchedPath, objWatchEvtSourceKey } from "./obj-watch-types";
+import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathListenerOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
 import { deepClone } from "./object";
 
 const watcherProp=Symbol('watcher');
@@ -62,11 +61,21 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
 }
 
-export const watchObjAtPath=<T extends Watchable>(obj:T,path:(string|number)[]|RecursiveKeyOf<T>,listener:(value:any)=>void):WatchedPath=>{
-    return watchObj(obj).watchPath(path,listener);
+export const watchObjAtPath=<T extends Watchable>(
+    obj:T,
+    path:(string|number)[]|string|null,
+    listener:ObjRecursiveListenerOptionalEvt,
+    options?:PathListenerOptions
+):WatchedPath=>{
+    return watchObj(obj).watchPath(path,listener,options);
 }
-export const watchObjAtDeepPath=<T extends Watchable>(obj:T,path:(string|number)[]|RecursiveKeyOf<T>,listener:(value:any)=>void):WatchedPath=>{
-    return watchObj(obj).watchDeepPath(path,listener);
+export const watchObjAtDeepPath=<T extends Watchable>(
+    obj:T,
+    path:(string|number)[]|ObjWatchFilter<T>|string|null,
+    listener:ObjRecursiveListenerOptionalEvt,
+    options?:PathListenerOptions
+):WatchedPath=>{
+    return watchObj(obj).watchDeepPath(path,listener,options);
 }
 
 export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
@@ -328,4 +337,33 @@ export const objWatchEvtToRecursiveObjWatchEvt=(evt:ObjWatchEvt<any>,path?:(stri
         }
     }
     return evt;
+}
+
+export const isObjWatcherExplicitFilterMatch=(filter:ObjWatchFilter<any>,value:any,maxDepth=100):boolean=>{
+    if(!value || !(typeof value === 'object') || maxDepth<0){
+        return false;
+    }
+
+    for(const e in value){
+
+        let f:ObjWatchFilterValue<any>=(filter as any)[e]??(filter as any)[anyProp];
+        const subValue=value[e];
+        if(subValue===undefined || !f){
+            continue;
+        }
+
+        if(typeof f === 'function'){
+            f=f(value,e);
+        }
+
+        if( f==='*' ||
+            f===true ||
+            (typeof f === 'object') && isObjWatcherExplicitFilterMatch(f,subValue,maxDepth-1)
+        ){
+            return true;
+        }
+    }
+
+    return false;
+
 }
