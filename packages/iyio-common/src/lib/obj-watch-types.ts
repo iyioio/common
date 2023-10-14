@@ -139,7 +139,8 @@ export interface WatchedPath
 export interface PathListenerOptions
 {
     /**
-     * If true descendants of the watched path will also trigger change callbacks.
+     * When used with a property path and true descendants of the watched path will also trigger
+     * change callbacks. When used with a filter deep has no effect.
      */
     deep?:boolean;
 

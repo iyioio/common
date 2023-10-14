@@ -1,4 +1,4 @@
-import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, watchObjAtDeepPath, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib";
+import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, watchObjDeep, watchObjWithFilter, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib";
 import { anyProp, ObjWatchEvt, ObjWatchEvtType } from "./obj-watch-types";
 import { deepCompare } from "./object";
 import { ObjMirror } from './ObjMirror';
@@ -161,7 +161,7 @@ describe('obj-watch',()=>{
 
 
         let nameCallAll=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             name:true,
             car:'*'
         },()=>{
@@ -170,7 +170,7 @@ describe('obj-watch',()=>{
 
 
         let jobs=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             jobs:'*'
         },()=>{
             jobs++;
@@ -178,7 +178,7 @@ describe('obj-watch',()=>{
 
 
         let notAgeAll=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             age:false,
             [anyProp]:'*',
         },()=>{
@@ -187,7 +187,7 @@ describe('obj-watch',()=>{
 
 
         let notAge=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             age:false,
             [anyProp]:true,
         },()=>{
@@ -196,7 +196,7 @@ describe('obj-watch',()=>{
 
 
         let jobMap=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             jobMap:{
                 [anyProp]:{
                     pay:'*',
@@ -209,7 +209,7 @@ describe('obj-watch',()=>{
 
 
         let deepSet=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             mainJob:{
                 subJob:{
                     subJob:{
@@ -224,7 +224,7 @@ describe('obj-watch',()=>{
 
 
         let jobsStartTime=0;
-        watchObjAtDeepPath(dude,{
+        watchObjWithFilter(dude,{
             jobs:{
                 [anyProp]:{
                     startTime:true
@@ -232,12 +232,12 @@ describe('obj-watch',()=>{
             },
         },()=>{
             jobsStartTime++;
-        },{debug:true})
+        })
 
 
         let count=0;
         let countValue=0;
-        watchObjAtDeepPath(dude,null,()=>{
+        watchObjDeep(dude,()=>{
             count++;
         })
 

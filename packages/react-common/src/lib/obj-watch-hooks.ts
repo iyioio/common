@@ -1,4 +1,4 @@
-import { ObjWatchEvt, ObjWatcher, RecursiveKeyOf, isWatcherValueChangeEvent, stopWatchingObj, watchObj, watchObjAtDeepPath } from "@iyio/common";
+import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchFilter, ObjWatcher, PathValue, RecursiveKeyOf, Watchable, isWatcherValueChangeEvent, stopWatchingObj, watchObj, watchObjAtPath, watchObjDeep, watchObjWithFilter } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 
 export interface UseWObjOptions<T>
@@ -13,19 +13,72 @@ export interface UseWObjOptions<T>
 
 }
 
-export const useWatchPath=<T>(obj:T,path:RecursiveKeyOf<T>)=>{
-    const [update,setUpdate]=useState(0);
+export const useWatchPath=<
+    T extends Watchable,
+    P=RecursiveKeyOf<T>|null|undefined,
+    R=P extends string?PathValue<T,P>:never
+>(obj:T,path:P):R|undefined=>{
+    const [update,setUpdate]=useState<R|undefined>(undefined);
     useEffect(()=>{
-        if(!obj){
+        if(!obj || !path){
             return;
         }
-        const watchedPath=watchObjAtDeepPath(obj,path.split('.'),()=>{
-            setUpdate(v=>v+1);
+        const watchedPath=watchObjAtPath<T>(obj,path as any,(obj)=>{
+            setUpdate(obj);
         })
 
         return watchedPath.dispose;
 
     },[obj,path]);
+    return update;
+}
+
+export const useWatchDeep=<T>(obj:T)=>{
+    const [update,setUpdate]=useState(0);
+    useEffect(()=>{
+        if(!obj){
+            return;
+        }
+        const watchedPath=watchObjDeep(obj,()=>{
+            setUpdate(v=>v+1);
+        })
+
+        return watchedPath.dispose;
+
+    },[obj]);
+    return update;
+}
+
+export interface UseWatchFilterOptions<T>
+{
+    filter:ObjWatchFilter<T>|null|undefined;
+    filterChangeTrigger?:any;
+    callback?:ObjRecursiveListenerOptionalEvt;
+    rerenderOnChange?:boolean;
+}
+
+export const useWatchFilter=<T extends Watchable>(
+    obj:T,
+    options:UseWatchFilterOptions<T>,
+)=>{
+    const [update,setUpdate]=useState(0);
+    const optionsRef=useRef(options);
+    optionsRef.current=options;
+    useEffect(()=>{
+        const filter=optionsRef.current.filter;
+        if(!obj || !filter){
+            return;
+        }
+        const watchedPath=watchObjWithFilter<T>(obj,filter,(obj,evt,reversePath)=>{
+            optionsRef.current.callback?.(obj,evt,reversePath);
+            if(optionsRef.current.rerenderOnChange){
+                setUpdate(v=>v+1);
+            }
+        },{skipInitCall:true})
+
+        return watchedPath.dispose;
+
+    },[obj,options.filterChangeTrigger]);
     return update;
 }
 

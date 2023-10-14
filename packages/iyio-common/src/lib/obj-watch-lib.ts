@@ -1,6 +1,7 @@
 import { ObjWatcher } from "./ObjWatcher";
+import { RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathListenerOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
+import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathWatchOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
 import { deepClone } from "./object";
 
 const watcherProp=Symbol('watcher');
@@ -61,21 +62,30 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
 }
 
+export const watchObjDeep=<T extends Watchable>(
+    obj:T,
+    listener:ObjRecursiveListenerOptionalEvt,
+    options?:PathWatchOptions
+):WatchedPath=>{
+    return watchObj(obj).watchPath(null,listener,{deep:true,...options});
+}
+
 export const watchObjAtPath=<T extends Watchable>(
     obj:T,
-    path:(string|number)[]|string|null,
+    path:RecursiveKeyOf<T>,
     listener:ObjRecursiveListenerOptionalEvt,
-    options?:PathListenerOptions
+    options?:PathWatchOptions
 ):WatchedPath=>{
-    return watchObj(obj).watchPath(path,listener,options);
+    return watchObj(obj).watchPath(path as any,listener,options);
 }
-export const watchObjAtDeepPath=<T extends Watchable>(
+
+export const watchObjWithFilter=<T extends Watchable>(
     obj:T,
-    path:(string|number)[]|ObjWatchFilter<T>|string|null,
+    filter:ObjWatchFilter<T>,
     listener:ObjRecursiveListenerOptionalEvt,
-    options?:PathListenerOptions
+    options?:PathWatchOptions
 ):WatchedPath=>{
-    return watchObj(obj).watchDeepPath(path,listener,options);
+    return watchObj(obj).watchDeepPath(filter,listener,options);
 }
 
 export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{

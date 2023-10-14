@@ -1,4 +1,4 @@
-import { DisposeCallback } from "./common-types";
+import { DisposeCallback, RecursiveKeyOf } from "./common-types";
 import { objWatchAryMove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
 import { getObjWatcher, isObjWatcherExplicitFilterMatch, stopWatchingObj, wDeleteProp, wSetProp } from "./obj-watch-lib";
 import { ObjRecursiveListener, ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchFilter, ObjWatchFilterValue, ObjWatchListener, PathListenerOptions, PathWatchOptions, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
@@ -152,40 +152,49 @@ export class ObjWatcher<
     /**
      * Adds a recursive listener that is only triggered when a change to the target path occurs.
      * Changes to the path of the returned WatchedPath object can be made without issue
+     * @param pathOrFIlter Either a path to a property to listen to or a filter that can be listen
+     *                     to specified properties
+     * @param onChange If pathOrFIlter is a path ( string or array ) the value passed to onChange
+     *                 will be the value pointed to by the path, otherwise the value will be the
+     *                 value that caused the onChange to be called.
      */
-    public addPathListener(path:(string|number)[]|ObjWatchFilter<T>|string|null,onChange:ObjRecursiveListener<any>,options?:PathListenerOptions):WatchedPath
-    {
-        if(path===null){
-            path=[];
+    public addPathListener(
+        pathOrFilter:(string|number)[]|ObjWatchFilter<T>|string|null,
+        onChange:ObjRecursiveListener<any>,
+        options?:PathListenerOptions
+    ):WatchedPath{
+
+        if(pathOrFilter===null){
+            pathOrFilter=[];
         }
-        if(typeof path === 'string'){
-            path=path.split('.');
+        if(typeof pathOrFilter === 'string'){
+            pathOrFilter=pathOrFilter.split('.');
         }
 
         const watchedPath:WatchedPath={
-            path,
+            path: pathOrFilter,
             listener:(obj,evt,evtPath)=>{
                 if(this.debug || options?.debug){
                     console.info('path listener',JSON.stringify({
                         evtPath,
-                        path,
+                        path: pathOrFilter,
                         thisObj:this.obj,
                         obj,
                     },null,4));
                 }
                 let value:any=undefined;
-                if(Array.isArray(path)){
-                    if(!evtPath.length || options?.deep?path.length>evtPath.length:evtPath.length>path.length){
+                if(Array.isArray(pathOrFilter)){
+                    if(!evtPath.length || options?.deep?pathOrFilter.length>evtPath.length:evtPath.length>pathOrFilter.length){
                         return;
                     }
-                    for(let i=0;i<evtPath.length && i<path.length;i++){
-                        if(evtPath[evtPath.length-1-i]!==path[i]){
+                    for(let i=0;i<evtPath.length && i<pathOrFilter.length;i++){
+                        if(evtPath[evtPath.length-1-i]!==pathOrFilter[i]){
                             return;
                         }
                     }
-                    value=getValueByAryPath(this.obj,path);
+                    value=getValueByAryPath(this.obj,pathOrFilter);
                 }else{
-                    let filter:any=path;
+                    let filter:any=pathOrFilter;
                     value=this.obj;
                     for(let i=evtPath.length-1;i>=0;i--){
                         const key=evtPath[i]?.toString();
@@ -237,6 +246,7 @@ export class ObjWatcher<
      */
     private _watchPath(path:(string|number)[]|ObjWatchFilter<T>|string|null,onChange:ObjRecursiveListenerOptionalEvt<any>,options?:PathWatchOptions):WatchedPath
     {
+
         const watchedPath=this.addPathListener(path,onChange,options);
 
         if(!options?.skipInitCall && Array.isArray(watchedPath.path) && path!==null){
@@ -250,7 +260,7 @@ export class ObjWatcher<
     /**
      * Functions the same as addPathListener with the exception that onChange is immediately called
      */
-    public watchPath(path:(string|number)[]|string|null,onChange:ObjRecursiveListenerOptionalEvt<any>,options?:PathWatchOptions):WatchedPath
+    public watchPath(path:(string|number)[]|RecursiveKeyOf<T>|null,onChange:ObjRecursiveListenerOptionalEvt<any>,options?:PathWatchOptions):WatchedPath
     {
         return this._watchPath(path,onChange,options);
     }
