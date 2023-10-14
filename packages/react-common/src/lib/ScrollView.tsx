@@ -1,4 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
+import { cn } from "@iyio/common";
 import { useEffect, useState } from "react";
 import { View, ViewProps } from "./View";
 import { useElementSize } from "./useElementSize";
@@ -8,6 +9,7 @@ export type ScrollViewDirection='y'|'x'|'both';
 export interface ScrollViewProps extends ViewProps
 {
     containerProps?:ViewProps;
+    containerClassName?:string;
     children?:any;
     direction?:ScrollViewDirection;
     overflowRef?:(elem:HTMLElement|null)=>void;
@@ -17,6 +19,7 @@ export interface ScrollViewProps extends ViewProps
 export function ScrollView({
     children,
     containerProps,
+    containerClassName,
     className,
     direction='y',
     row,
@@ -52,6 +55,7 @@ export function ScrollView({
                 <View
                     row={row}
                     col={col}
+                    className={cn(containerClassName,containerProps?.className)}
                     {...containerProps}
                     elemRef={(fitToMaxSize || containerProps?.elemRef)?setContainer:undefined}
                 >
