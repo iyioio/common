@@ -99,6 +99,12 @@ export const aryCount=<T>(ary:T[]|null|undefined,check:((item:T)=>boolean|null|u
     return count;
 }
 
+export const sortStringsCallback=(a:string,b:string)=>a.localeCompare(b);
+export const sortStringsReverseCallback=(a:string,b:string)=>b.localeCompare(a);
+
+export const aryOrderByStrings=(ary:string[])=>ary.sort(sortStringsCallback);
+export const aryReverseOrderByStrings=(ary:string[])=>ary.sort(sortStringsReverseCallback);
+
 export const sortNumbersCallback=(a:number,b:number)=>a-b;
 export const sortNumbersReverseCallback=(a:number,b:number)=>b-a;
 
