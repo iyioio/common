@@ -1,0 +1,59 @@
+{
+    "name": "any-comp-cli",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/any-comp-cli/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@iyio/nx-common:lib-builder",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/any-comp-cli",
+                "main": "packages/any-comp-cli/src/index.ts",
+                "tsConfig": "packages/any-comp-cli/tsconfig.lib.json",
+                "assets": ["packages/any-comp-cli/*.md"]
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs any-comp-cli {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/any-comp-cli/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "packages/any-comp-cli/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
+        },
+        "watch": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/react-common/src/lib --outDir packages/react-common/src/any"
+            }
+        },
+        "watch-h": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/components/src/lib --outDir packages/web-app/any"
+            }
+        }
+    },
+    "tags": []
+}

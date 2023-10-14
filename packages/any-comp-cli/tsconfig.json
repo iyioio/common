@@ -3,14 +3,14 @@
     "compilerOptions": {
         "module": "commonjs",
         "jsx": "react-jsx",
-        "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "noUncheckedIndexedAccess": true,
         "noImplicitOverride": true,
         "noPropertyAccessFromIndexSignature": true,
         "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "types":["node"]
     },
     "files": [],
     "include": [],
