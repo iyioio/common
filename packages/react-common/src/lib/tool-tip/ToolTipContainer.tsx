@@ -8,7 +8,7 @@ export interface ToolTipContainerProps
     children:any;
 }
 
-export default function ToolTipContainer({
+export function ToolTipContainer({
     state,
     children,
 }:ToolTipContainerProps){

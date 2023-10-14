@@ -2,7 +2,7 @@ import { asArray, Point } from "@iyio/common";
 import { useEffect, useId, useMemo } from "react";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { PortalProps, usePortal } from "../portal-lib";
-import ToolTipContainer from "./ToolTipContainer";
+import { ToolTipContainer } from "./ToolTipContainer";
 
 export type ToolTipAlignment='start'|'center'|'end';
 
