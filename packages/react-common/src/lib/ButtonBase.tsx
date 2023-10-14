@@ -24,6 +24,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     style?:CSSProperties;
     description?:string;
     title?:string;
+    extraProps?:Record<string,string>
 }
 
 export interface ButtonBaseInternalProps extends ButtonBaseProps
@@ -53,6 +54,7 @@ export function ButtonBase({
     style,
     description,
     title,
+    extraProps,
     ...props
 }:ButtonBaseInternalProps){
 
@@ -121,6 +123,7 @@ export function ButtonBase({
         title,
         'aria-label':description,
         'data-href':elem==='a'?undefined:to,
+        ...extraProps,
     },children);
 
 }
