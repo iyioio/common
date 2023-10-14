@@ -64,6 +64,8 @@ export type FirstArg<T> = T extends (arg: infer A) => any ? A : never;
 
 export type NoId<T>=Omit<T,'id'>;
 
+export type OptionalId<T extends {id:any}>=(Omit<T,'id'> & Partial<Pick<T,'id'>>);
+
 export type ValueKeyProvider<T>=(keyof T)|((value:T)=>string|number);
 
 export type StringOrEmpty=string|null|undefined;
