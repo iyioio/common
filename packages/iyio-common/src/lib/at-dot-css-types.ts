@@ -100,7 +100,8 @@ export interface AtDotStyleCtrl
 
 export interface AtDotVars<T=any>
 {
-    vars(vars?:Partial<T>,style?:Partial<CSSStyleDeclaration>):Record<string,any>|undefined;
+    vars(vars:Partial<T>,elem:HTMLElement):void;
+    vars(vars?:Partial<T>,style?:Partial<CSSStyleDeclaration>|HTMLElement):Record<string,any>|undefined;
 }
 
 export type ParseAtDotStyle<

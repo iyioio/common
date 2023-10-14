@@ -68,19 +68,34 @@ function rootDef(
 function varsDef(
     this:PropRef,
     vars?:any,
-    style?:Partial<CSSStyleDeclaration>
+    styleOrElem?:Partial<CSSStyleDeclaration>|HTMLElement
 ):Record<string,any>|undefined{
-    if(!vars && !style){
+    if(!vars && !styleOrElem){
         return undefined;
     }
-    if(!vars){
-        return style;
+    if(styleOrElem && globalThis.HTMLElement && (styleOrElem instanceof globalThis.HTMLElement)){
+        if(!vars){
+            return undefined;
+        }
+        for(const e in vars){
+            const v=vars[e];
+            if(v===undefined){
+                styleOrElem.style.removeProperty(`--${this.name}-${e}`);
+            }else{
+                styleOrElem.style.setProperty(`--${this.name}-${e}`,v);
+            }
+        }
+        return undefined;
+    }else{
+        if(!vars){
+            return styleOrElem;
+        }
+        const obj:any=styleOrElem?{...styleOrElem}:{};
+        for(const e in vars){
+            obj[`--${this.name}-${e}`]=vars[e];
+        }
+        return obj;
     }
-    const obj:any=style?{...style}:{};
-    for(const e in vars){
-        obj[`--${this.name}-${e}`]=vars[e];
-    }
-    return obj;
 }
 
 export const atDotCss=<S extends string>(
