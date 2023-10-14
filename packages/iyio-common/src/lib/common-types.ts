@@ -71,6 +71,18 @@ export type ValueKeyProvider<T>=(keyof T)|((value:T)=>string|number);
 
 export type StringOrEmpty=string|null|undefined;
 
+export interface MutableRef<T>{
+    /**
+     * A value that can be mutated
+     */
+    mutableRef:T;
+
+    /**
+     * Can be used to indicate that the value has been mutated, but does not have to be used.
+     */
+    mutated?:boolean;
+}
+
 export interface ISubscription
 {
     unsubscribe():void;

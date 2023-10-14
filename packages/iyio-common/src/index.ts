@@ -63,6 +63,7 @@ export * from './lib/csv-lib';
 export * from './lib/csv-types';
 export * from './lib/data-table';
 export * from './lib/data-table-lib';
+export * from './lib/data-url-lib';
 export * from './lib/date';
 export * from './lib/dom';
 export * from './lib/dom-listener-types';

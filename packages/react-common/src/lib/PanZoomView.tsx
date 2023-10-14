@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { isDomNodeDescendantOf, Point } from "@iyio/common";
+import { base64UrlReg, createBase64DataUrl, isDomNodeDescendantOf, MutableRef, Point } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
 
@@ -36,6 +36,34 @@ export interface PanZoomViewProps
     ignore?:(elem:Element)=>boolean;
 
     dragTargets?:DragTarget[];
+
+    /**
+     * A background image url that will be scaled and translated with the pan zoom plane
+     */
+    backgroundUrl?:string;
+
+    /**
+     * An svg that will be used as the background of the PanZoomView. The background will be scaled
+     * and translated with the pan zoom plane. This prop should be the markup of an svg not a URL.
+     * To save memory you can pass the svg as a mutable ref, but be aware that the value of the
+     * mutable ref will be converted into a data URL containing the original svg content as a
+     * base64 string.
+     */
+    backgroundSvg?:string|MutableRef<string>;
+
+    backgroundSize?:string;
+
+    onBgClick?:()=>void;
+
+    /**
+     * Content rendered before the plane element
+     */
+    beforePlane?:any;
+
+    /**
+     * Content rendered after the plane element
+     */
+    afterPlane?:any;
 }
 
 
@@ -48,7 +76,13 @@ export function PanZoomView({
     ignoreClasses,
     ignore,
     dragTargets,
-    mode='default'
+    mode='default',
+    backgroundSvg,
+    backgroundUrl,
+    backgroundSize,
+    onBgClick,
+    beforePlane,
+    afterPlane,
 }:PanZoomViewProps){
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
@@ -57,20 +91,48 @@ export function PanZoomView({
 
     const ctrl=useMemo(()=>new PanZoomCtrl(initRef.current),[]);
     const [plane,setPlane]=useState<HTMLDivElement|null>(null);
+
+    const hasBg=(backgroundUrl || backgroundSvg)?true:false;
+    let bgIsMutableRef=false;
+    if( backgroundSvg &&
+        (bgIsMutableRef=(typeof backgroundSvg === 'object')) &&
+        !backgroundSvg.mutated
+    ){
+        if(!base64UrlReg.test(backgroundSvg.mutableRef??'')){
+            backgroundSvg.mutableRef=`url('${createBase64DataUrl(backgroundSvg.mutableRef,'image/svg+xml')}')`;
+        }
+        backgroundSvg.mutated=true;
+    }
+
     useEffect(()=>{
-        if(!plane){
+        if(!plane || !rootElem){
             return;
+        }
+
+        const updateBg=(pt:PanZoomState)=>{
+            if(hasBg){
+                rootElem.style.backgroundPosition=`${pt.x}px ${pt.y}px`;
+                rootElem.style.backgroundSize=`calc(${backgroundSize??'100px'} * ${pt.scale})`
+            }else{
+                rootElem.style.backgroundPosition='';
+                rootElem.style.backgroundSize='';
+            }
         }
 
         const sub=ctrl.state.subscribe(v=>{
             plane.style.transform=`translate(${v.x}px,${v.y}px) scale(${v.scale})`;
+            if(hasBg){
+                updateBg(v);
+            }
         })
+
+        updateBg({x:0,y:0,scale:1});
 
         return ()=>{
             sub.unsubscribe();
         }
 
-    },[ctrl,plane]);
+    },[ctrl,plane,rootElem,hasBg,backgroundSize]);
 
     useEffect(()=>{
         getCtrl?.(ctrl);
@@ -473,11 +535,28 @@ export function PanZoomView({
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
+                style={{
+                    backgroundImage:backgroundSvg?
+                        bgIsMutableRef?
+                            (backgroundSvg as MutableRef<string>).mutableRef
+                        :
+                            backgroundSvg as string
+                    :backgroundUrl?
+                        `url(${backgroundUrl})`
+                    :
+                        undefined,
+                    backgroundSize:backgroundSize,
+                }}
             >
+                {onBgClick && <div className="PanZoomView-bgClick" onClick={()=>onBgClick?.()}/>}
+
+                {beforePlane}
 
                 <div className="PanZoomView-plane" ref={setPlane}>
                     {children}
                 </div>
+
+                {afterPlane}
 
                 <div ref={setDragCover} className="PanZoomView-dragCover"/>
             </div>
@@ -494,6 +573,14 @@ const style=atDotCss({name:'PanZoomView',order:'frameworkHigh',css:`
         bottom:0;
         overflow:visible;
         touch-action:none;
+    }
+    .PanZoomView-bgClick{
+        position:absolute;
+        left:0;
+        top:0;
+        right:0;
+        bottom:0;
+        background:transparent;
     }
     .PanZoomView-plane{
         position:absolute;
