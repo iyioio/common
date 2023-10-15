@@ -10,12 +10,16 @@ export class DomListener
     private readonly keyDownEvtTrigger=createEvtTrigger<DomKeyEvt>(true);
     public get keyDownEvt(){return this.keyDownEvtTrigger.handle}
 
+    private readonly keyUpEvtTrigger=createEvtTrigger<DomKeyEvt>(true);
+    public get keyUpEvt(){return this.keyUpEvtTrigger.handle}
+
 
     public constructor()
     {
         if(globalThis.window){
             globalThis.window.addEventListener('keypress',this.onKeyPress)
             globalThis.window.addEventListener('keydown',this.onKeyDown)
+            globalThis.window.addEventListener('keyup',this.onKeyUp)
         }
     }
 
@@ -30,6 +34,7 @@ export class DomListener
         if(globalThis.window){
             globalThis.window.removeEventListener('keypress',this.onKeyPress)
             globalThis.window.removeEventListener('keydown',this.onKeyDown)
+            globalThis.window.removeEventListener('keyup',this.onKeyUp)
         }
     }
 
@@ -39,6 +44,10 @@ export class DomListener
 
     private readonly onKeyDown=(nativeEvt:KeyboardEvent)=>{
         this.triggerEvent(nativeEvt,this.keyDownEvtTrigger);
+    }
+
+    private readonly onKeyUp=(nativeEvt:KeyboardEvent)=>{
+        this.triggerEvent(nativeEvt,this.keyUpEvtTrigger);
     }
 
     private triggerEvent=(nativeEvt:KeyboardEvent,handler:EvtHandleTrigger<DomKeyEvt>)=>{
@@ -67,7 +76,14 @@ export class DomListener
         }
 
         const active=globalThis.document?.activeElement;
-        if(active && inputElems.includes(active.tagName.toLowerCase()) && (active instanceof HTMLElement)){
+        if( active &&
+            (
+                inputElems.includes(active.tagName.toLowerCase()) ||
+                (active as HTMLElement)?.isContentEditable
+
+            ) &&
+            (active instanceof HTMLElement)
+        ){
             evt.inputElem=active;
         }
 
