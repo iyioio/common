@@ -1,9 +1,10 @@
 import { PromiseSource, ReadonlySubject, asArray, createPromiseSource, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 
-export const defaultMediaRecorderingKBPerSecond=2;
+export const defaultMediaRecordingAudioKBPerSecond=2;
+export const defaultMediaRecordingVideoKBPerSecond=50;
 
-export interface MediaRecorderingOptions
+export interface MediaRecordingOptions
 {
     recorderOptions?:MediaRecorderOptions;
     stream?:MediaStream;
@@ -14,9 +15,14 @@ export interface MediaRecorderingOptions
     mediaConstraints?:(MediaStreamConstraints|null|undefined)|(MediaStreamConstraints|null|undefined)[];
 
     /**
-     * Default is 2 KB per second
+     * @default 2
      */
-    kBPerSecond?:number;
+    audioKBPerSecond?:number;
+
+    /**
+     * @default 50
+     */
+    videoKBPerSecond?:number;
 
     /**
      * If ture all recored data blobs will be stored in the data property and returned.
@@ -28,6 +34,8 @@ export interface MediaRecorderingOptions
      */
     timesliceMs?:number;
 
+    mimeType?:string;
+
 
 }
 
@@ -38,10 +46,10 @@ export interface MediaRecordingResult
     mimeType:string;
 }
 
-export class MediaRecordering
+export class MediaRecording
 {
 
-    private readonly options:MediaRecorderingOptions;
+    private readonly options:MediaRecordingOptions;
 
     private readonly _recorder:BehaviorSubject<MediaRecorder|null>=new BehaviorSubject<MediaRecorder|null>(null);
     public get recorderSubject():ReadonlySubject<MediaRecorder|null>{return this._recorder}
@@ -59,7 +67,7 @@ export class MediaRecordering
     public get onData():Observable<Blob>{return this._onData}
 
 
-    public constructor(options:MediaRecorderingOptions)
+    public constructor(options:MediaRecordingOptions)
     {
         this.options={...options};
     }
@@ -107,7 +115,9 @@ export class MediaRecordering
 
         const getOptions=()=>{
             const mo:MediaRecorderOptions={
-                bitsPerSecond:(this.options.kBPerSecond??defaultMediaRecorderingKBPerSecond)*8000,
+                audioBitsPerSecond:(this.options.audioKBPerSecond??defaultMediaRecordingAudioKBPerSecond)*8000,
+                videoBitsPerSecond:(this.options.videoKBPerSecond??defaultMediaRecordingVideoKBPerSecond)*8000,
+                mimeType:this.options.mimeType,
                 ...this.options.recorderOptions,
             }
             return mo;
