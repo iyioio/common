@@ -14,7 +14,7 @@ export interface UseWObjOptions<T>
 }
 
 export const useWatchPath=<
-    T extends Watchable,
+    T extends Watchable|null|undefined,
     P=RecursiveKeyOf<T>|null|undefined,
     R=P extends string?PathValue<T,P>:never
 >(obj:T,path:P):R|undefined=>{
@@ -23,7 +23,7 @@ export const useWatchPath=<
         if(!obj || !path){
             return;
         }
-        const watchedPath=watchObjAtPath<T>(obj,path as any,(obj)=>{
+        const watchedPath=watchObjAtPath<Required<T>>(obj as Required<T>,path as any,(obj)=>{
             setUpdate(obj);
         })
 
@@ -57,9 +57,9 @@ export interface UseWatchFilterOptions<T>
     rerenderOnChange?:boolean;
 }
 
-export const useWatchFilter=<T extends Watchable>(
+export const useWatchFilter=<T extends Watchable|undefined|null>(
     obj:T,
-    options:UseWatchFilterOptions<T>,
+    options:UseWatchFilterOptions<Exclude<T,null|undefined>>,
 )=>{
     const [update,setUpdate]=useState(0);
     const optionsRef=useRef(options);
@@ -69,7 +69,7 @@ export const useWatchFilter=<T extends Watchable>(
         if(!obj || !filter){
             return;
         }
-        const watchedPath=watchObjWithFilter<T>(obj,filter,(obj,evt,reversePath)=>{
+        const watchedPath=watchObjWithFilter<Exclude<T,null|undefined>>(obj as Exclude<T,null|undefined>,filter,(obj,evt,reversePath)=>{
             optionsRef.current.callback?.(obj,evt,reversePath);
             if(optionsRef.current.rerenderOnChange){
                 setUpdate(v=>v+1);

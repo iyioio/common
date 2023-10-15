@@ -158,6 +158,7 @@ export interface PathWatchOptions extends PathListenerOptions
 export type ObjWatchFilterCallback<T>=(value:T,key:keyof T)=>boolean|ObjWatchFilter<T[keyof T]>|'*';
 export type ObjWatchFilterValue<T>=boolean|'*'|ObjWatchFilterCallback<T>|ObjWatchFilter<T[keyof T]>;
 
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
 export const anyProp:string='';
 export type ObjWatchFilter<T>={
     [K in keyof T]?:ObjWatchFilterValue<T>

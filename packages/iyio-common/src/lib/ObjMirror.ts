@@ -8,7 +8,7 @@ export class ObjMirror{
 
     public readonly mergeValues:boolean;
 
-    public constructor(obj:any,mergeValues:boolean=false)
+    public constructor(obj:any,mergeValues=false)
     {
         this.obj=obj;
         this.mergeValues=mergeValues;

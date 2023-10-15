@@ -219,7 +219,7 @@ export class ObjWatcher<
                         }else if(pathF==='*'){
                             break;
                         }else if(typeof pathF==='object'){
-                            if(i===0 && !isObjWatcherExplicitFilterMatch(pathF,value)){
+                            if(i===0 && evt.type==='set' && !isObjWatcherExplicitFilterMatch(pathF,value)){
                                 return;
                             }
                             filter=pathF;

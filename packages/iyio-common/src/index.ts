@@ -91,6 +91,7 @@ export * from './lib/macros';
 export * from './lib/math';
 export * from './lib/mime';
 export * from './lib/numbers';
+export * from './lib/obj-mirror-lib';
 export * from './lib/obj-watch-lib';
 export * from './lib/obj-watch-types';
 export * from './lib/object';

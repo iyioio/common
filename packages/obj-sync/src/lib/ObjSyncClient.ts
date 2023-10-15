@@ -1,8 +1,18 @@
-import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, asArray, createPromiseSource, delayAsync, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, addObjMirroringPauseCallback, asArray, createPromiseSource, delayAsync, getValueByAryPath, isObjPathMirroringPaused, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncConnectionState, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
 
 const objEvtSource=Symbol('objEvtSource');
+
+export enum ObjSyncClientLogLevel{
+    none=0,
+    all=1,
+    commands=2,
+    queue=4,
+}
+
+const logAllOrCommands=ObjSyncClientLogLevel.all|ObjSyncClientLogLevel.commands;
+const logAllOrQueue=ObjSyncClientLogLevel.all|ObjSyncClientLogLevel.queue;
 
 export interface ObjSyncClientOptions
 {
@@ -15,6 +25,17 @@ export interface ObjSyncClientOptions
     autoDeleteClientObjects?:boolean;
     pingIntervalMs?:number;
     reconnectTimeoutMs?:number;
+    /**
+     * How long to delay before sending commands. Delaying sending command allow commands to
+     * be sent together as a group.
+     * @default 1
+     */
+    sendDelayMs?:number;
+
+    /**
+     * If true queued events that set the same prop will be merged
+     */
+    mergeEvents?:boolean;
 }
 
 export abstract class ObjSyncClient
@@ -38,7 +59,11 @@ export abstract class ObjSyncClient
 
     protected readonly pingIntervalMs?:number;
 
-    public logCommands=false;
+    private readonly sendDelayMs:number;
+
+    private readonly mergeEvents:boolean;
+
+    public logCommands:ObjSyncClientLogLevel=ObjSyncClientLogLevel.none;
 
     private readonly maxCommandQueueSize:number;
     private readonly reconnectTimeoutMs:number;
@@ -68,6 +93,8 @@ export abstract class ObjSyncClient
         clientMapProp,
         autoDeleteClientObjects,
         pingIntervalMs,
+        sendDelayMs=1,
+        mergeEvents=false,
     }:ObjSyncClientOptions){
         this.objId=objId;
         this.clientId=clientId;
@@ -78,6 +105,8 @@ export abstract class ObjSyncClient
         this.clientMapProp=clientMapProp;
         this.autoDeleteClientObjects=autoDeleteClientObjects;
         this.pingIntervalMs=pingIntervalMs;
+        this.sendDelayMs=Math.max(0,sendDelayMs);
+        this.mergeEvents=mergeEvents;
         const watcher=watchObj(state);
         if(!watcher){
             throw new Error('Unable to get or create watcher for target state object');
@@ -111,19 +140,36 @@ export abstract class ObjSyncClient
         // do nothing
     }
 
-    private onWatcherEvent=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>{
-        if(evt[objWatchEvtSourceKey]===objEvtSource || evt.type==='load' || this._isDisposed){
+    private readonly onWatcherEvent=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>{
+        if( evt[objWatchEvtSourceKey]===objEvtSource ||
+            evt.type==='load' ||
+            this._isDisposed)
+        {
             return;
         }
         const rEvt=objWatchEvtToRecursiveObjWatchEvt(evt,path) as ObjSyncRecursiveObjWatchEvt;
+        if(rEvt.path && isObjPathMirroringPaused(this.state,rEvt.path)){
+            const target=getValueByAryPath(this.state,rEvt.path);
+            queueObjCmd(target,rEvt);
+            addObjMirroringPauseCallback(target,this.onMirroringResume);
+            return;
+        }
         this.send({type:'evt',evts:[rEvt]});
+    }
+
+    private readonly onMirroringResume=(obj:any)=>{
+        const queue=dequeueObjCmdQueue(obj);
+        if(!queue){
+            return;
+        }
+        this.send({type:'evt',evts:queue});
     }
 
     private sendQueue:ObjSyncRemoteCommand[]=[];
 
     public send(cmd:ScopedObjSyncRemoteCommand|ScopedObjSyncRemoteCommand[])
     {
-        if(this.logCommands){
+        if((this.logCommands&logAllOrCommands)){
             console.info('>> obj-sync SND',...asArray(cmd));
         }
         if(this._isDisposed){
@@ -141,7 +187,14 @@ export abstract class ObjSyncClient
         for(const c of cmd){
             const last=this.sendQueue[this.sendQueue.length-1];
             if(last?.type==='evt' && c.type==='evt' && last.evts && c.evts){
-                last.evts.push(...c.evts);
+                if(this.logCommands&logAllOrQueue){
+                    console.info('>> merge');
+                }
+                if(this.mergeEvents){
+                    mergeEvents(c.evts,last.evts);
+                }else{
+                    last.evts.push(...c.evts);
+                }
             }else{
                 this.sendQueue.push({
                     ...c,
@@ -152,13 +205,16 @@ export abstract class ObjSyncClient
         }
         if(initSend){
             setTimeout(()=>{
-                if(this.isDisposed){
+                if(this.isDisposed && !this.sendQueue.length){
                     return;
                 }
                 const q=this.sendQueue;
                 this.sendQueue=[];
+                if(this.logCommands&logAllOrQueue){
+                    console.info('>> send');
+                }
                 this._send(q);
-            },0);
+            },this.sendDelayMs);
         }
     }
 
@@ -291,7 +347,7 @@ export abstract class ObjSyncClient
 
     protected handleCommand(command:ObjSyncClientCommand|ObjSyncClientCommand[])
     {
-        if(this.logCommands){
+        if(this.logCommands&logAllOrCommands){
             console.info('<< obj-sync RCV',...asArray(command));
         }
         if(this._isDisposed){
@@ -479,4 +535,58 @@ export abstract class ObjSyncClient
             this.watcher.requestDequeueChanges();
         }
     }
+}
+
+const mergeEvents=(src:ObjSyncRecursiveObjWatchEvt[],dest:ObjSyncRecursiveObjWatchEvt[])=>{
+
+    for(let s=0;s<src.length;s++){
+        const evt=src[s];
+        if(!evt){
+            continue;
+        }
+        destLoop: for(let d=dest.length-1;d>=0;d--){
+            const dEvt=dest[d];
+            if( dEvt &&
+                evt.type=='set' &&
+                dEvt.type==='set' &&
+                evt.prop===dEvt.prop &&
+                evt.path &&
+                dEvt.path &&
+                evt.path.length===dEvt.path.length
+            ){
+                for(let l=0;l<evt.path.length;l++){
+                    if(evt.path[l]!==dEvt.path[l]){
+                        continue destLoop;
+                    }
+                }
+                dest.splice(d,1);
+                break;
+
+            }
+        }
+
+        dest.push(evt);
+    }
+}
+
+
+const queueKey=Symbol('queueKey');
+
+const queueObjCmd=(obj:any,cmd:ObjSyncRecursiveObjWatchEvt)=>{
+    if(!obj){
+        return;
+    }
+    const ary:ObjSyncRecursiveObjWatchEvt[]=obj[queueKey]??(obj[queueKey]=[]);
+    mergeEvents([cmd],ary);
+}
+
+const dequeueObjCmdQueue=(obj:any):ObjSyncRecursiveObjWatchEvt[]|undefined=>{
+    if(!obj){
+        return undefined;
+    }
+    const ary=obj[queueKey];
+    if(ary){
+        delete obj[queueKey];
+    }
+    return ary;
 }
