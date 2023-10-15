@@ -153,3 +153,15 @@ export type PathValue<
     :
         never
 )
+
+
+export type RecursiveMap<T extends object,PropType>={
+    [K in keyof T]:Required<T>[K] extends object?
+        RecursiveMap<Required<T>[K],PropType>
+    :
+        PropType
+}
+export type RecursiveOptionalMap<T,PropType>=T extends object?{
+    [K in keyof T]?:RecursiveOptionalMap<Required<T>[K],PropType>
+}:T
+
