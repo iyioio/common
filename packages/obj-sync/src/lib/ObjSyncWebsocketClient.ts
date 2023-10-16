@@ -1,6 +1,6 @@
 import { IWebSocket, Scope, WebSocketFactory, webSocketFactory } from "@iyio/common";
 import { ObjSyncClient, ObjSyncClientOptions } from "./ObjSyncClient";
-import { ObjSyncRemoteCommand } from "./obj-sync-types";
+import { ObjSyncClientCommand, ObjSyncRemoteCommand } from "./obj-sync-types";
 import { objSyncEndpointParam } from "./obj-sync.deps";
 export interface ObjSyncWebsocketClientOptions
 {
@@ -77,7 +77,7 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
         });
     }
 
-    protected _send(cmds:ObjSyncRemoteCommand[]):void{
+    protected _send(cmds:(ObjSyncRemoteCommand|ObjSyncClientCommand)[]):void{
         this.socket?.send(JSON.stringify(cmds));
     }
 

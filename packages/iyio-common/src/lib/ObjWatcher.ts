@@ -164,6 +164,10 @@ export class ObjWatcher<
         options?:PathListenerOptions
     ):WatchedPath{
 
+        if(this.debug || options?.debug){
+            console.info('addPathListener',pathOrFilter,options,this.obj);
+        }
+
         if(pathOrFilter===null){
             pathOrFilter=[];
         }
@@ -234,6 +238,9 @@ export class ObjWatcher<
                 onChange(value,evt,evtPath);
             },
             dispose:()=>{
+                if(this.debug || options?.debug){
+                    console.info('dispose addPathListener',pathOrFilter,options,this.obj);
+                }
                 this.removeRecursiveListener(watchedPath.listener);
             }
         }

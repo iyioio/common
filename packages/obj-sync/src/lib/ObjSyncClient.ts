@@ -1,14 +1,13 @@
-import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, addObjMirroringPauseCallback, asArray, createPromiseSource, delayAsync, getValueByAryPath, isObjPathMirroringPaused, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
+import { ObjMirror, ObjWatchEvt, ObjWatcher, PromiseSource, ReadonlySubject, RecursiveObjWatchEvt, addObjMirroringPauseCallback, asArray, createPromiseSource, deepClone, delayAsync, getValueByAryPath, isObjPathMirroringPaused, objWatchEvtSourceKey, objWatchEvtToRecursiveObjWatchEvt, stopWatchingObj, watchObj } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncConnectionState, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ScopedObjSyncRemoteCommand } from "./obj-sync-types";
-
-const objEvtSource=Symbol('objEvtSource');
+import { ObjSyncClientCommand, ObjSyncClientCommandScheme, ObjSyncConnectionState, ObjSyncObjState, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, ObjSyncRemoteCommandScheme, ScopedObjSyncRemoteCommand, isObjSyncClientCommand, objSyncBroadcastClientId } from "./obj-sync-types";
 
 export enum ObjSyncClientLogLevel{
     none=0,
     all=1,
     commands=2,
     queue=4,
+    ping=8,
 }
 
 const logAllOrCommands=ObjSyncClientLogLevel.all|ObjSyncClientLogLevel.commands;
@@ -36,6 +35,13 @@ export interface ObjSyncClientOptions
      * If true queued events that set the same prop will be merged
      */
     mergeEvents?:boolean;
+
+    /**
+     * If true the client will act as a host and respond to remote commands
+     */
+    isHost?:boolean;
+
+    disabledAutoReconnect?:boolean;
 }
 
 export abstract class ObjSyncClient
@@ -63,10 +69,15 @@ export abstract class ObjSyncClient
 
     private readonly mergeEvents:boolean;
 
+    public readonly isHost:boolean;
+
+    private readonly objEvtSource:symbol;
+
     public logCommands:ObjSyncClientLogLevel=ObjSyncClientLogLevel.none;
 
     private readonly maxCommandQueueSize:number;
     private readonly reconnectTimeoutMs:number;
+    private readonly disabledAutoReconnect:boolean;
     private readonly clientMapProp?:string;
     private readonly autoDeleteClientObjects?:boolean;
 
@@ -81,6 +92,9 @@ export abstract class ObjSyncClient
     private readonly _onReconnected=new Subject<void>();
     public get onReconnected():Observable<void>{return this._onReconnected}
 
+    private readonly _onDisposed=new Subject<void>();
+    public get onDisposed():Observable<void>{return this._onDisposed}
+
     private readySource:PromiseSource<void>=createPromiseSource<void>();
 
     public constructor({
@@ -90,23 +104,34 @@ export abstract class ObjSyncClient
         maxCommandQueueSeconds=20,
         maxCommandQueueSize=300,
         reconnectTimeoutMs=30000,
+        disabledAutoReconnect=false,
         clientMapProp,
         autoDeleteClientObjects,
         pingIntervalMs,
         sendDelayMs=1,
         mergeEvents=false,
+        isHost=false,
     }:ObjSyncClientOptions){
+        this.objEvtSource=Symbol('objEvtSource');
         this.objId=objId;
         this.clientId=clientId;
         this.state=state;
         this.maxCommandQueueSeconds=maxCommandQueueSeconds;
         this.maxCommandQueueSize=maxCommandQueueSize;
         this.reconnectTimeoutMs=reconnectTimeoutMs;
+        this.disabledAutoReconnect=disabledAutoReconnect;
         this.clientMapProp=clientMapProp;
         this.autoDeleteClientObjects=autoDeleteClientObjects;
         this.pingIntervalMs=pingIntervalMs;
         this.sendDelayMs=Math.max(0,sendDelayMs);
         this.mergeEvents=mergeEvents;
+        this.isHost=isHost;
+        this.hostState={
+            objId,
+            changeIndex:0,
+            state,
+            log:[],
+        }
         const watcher=watchObj(state);
         if(!watcher){
             throw new Error('Unable to get or create watcher for target state object');
@@ -130,6 +155,7 @@ export abstract class ObjSyncClient
         this.mirror.dispose();
         this._dispose();
         this._connectionState.next('closed');
+        this._onDisposed.next();
     }
 
     protected _dispose(){
@@ -141,7 +167,7 @@ export abstract class ObjSyncClient
     }
 
     private readonly onWatcherEvent=(obj:any,evt:ObjWatchEvt<any>,path:(string|number|null)[])=>{
-        if( evt[objWatchEvtSourceKey]===objEvtSource ||
+        if( evt[objWatchEvtSourceKey]===this.objEvtSource ||
             evt.type==='load' ||
             this._isDisposed)
         {
@@ -150,7 +176,7 @@ export abstract class ObjSyncClient
         const rEvt=objWatchEvtToRecursiveObjWatchEvt(evt,path) as ObjSyncRecursiveObjWatchEvt;
         if(rEvt.path && isObjPathMirroringPaused(this.state,rEvt.path)){
             const target=getValueByAryPath(this.state,rEvt.path);
-            queueObjCmd(target,rEvt);
+            this.queueObjCmd(target,rEvt);
             addObjMirroringPauseCallback(target,this.onMirroringResume);
             return;
         }
@@ -158,7 +184,7 @@ export abstract class ObjSyncClient
     }
 
     private readonly onMirroringResume=(obj:any)=>{
-        const queue=dequeueObjCmdQueue(obj);
+        const queue=this.dequeueObjCmdQueue(obj);
         if(!queue){
             return;
         }
@@ -169,7 +195,9 @@ export abstract class ObjSyncClient
 
     public send(cmd:ScopedObjSyncRemoteCommand|ScopedObjSyncRemoteCommand[])
     {
-        if((this.logCommands&logAllOrCommands)){
+        if( (this.logCommands&logAllOrCommands) &&
+            ((this.logCommands&ObjSyncClientLogLevel.ping) || !areAllPings(cmd))
+        ){
             console.info('>> obj-sync SND',...asArray(cmd));
         }
         if(this._isDisposed){
@@ -213,7 +241,7 @@ export abstract class ObjSyncClient
                 if(this.logCommands&logAllOrQueue){
                     console.info('>> send');
                 }
-                this._send(q);
+                this.sendRemoteCommands(q);
             },this.sendDelayMs);
         }
     }
@@ -221,7 +249,54 @@ export abstract class ObjSyncClient
     private _sendCount=0;
     public get sendCount(){return this._sendCount}
 
-    protected abstract _send(cmds:ObjSyncRemoteCommand[]):Promise<void>|void;
+    private readonly skipApply=Symbol('skipApply');
+
+    private sendClientCommands(cmds:ObjSyncClientCommand[],handled=false)
+    {
+        if(this.isHost){
+            cmds=deepClone(cmds);
+            const selfCommands:ObjSyncClientCommand[]=[];
+            const clientCommands:ObjSyncClientCommand[]=[];
+            for(const c of cmds){
+                if(c.clientId===this.clientId){
+                    if(handled){
+                        (c as any)[this.skipApply]=true;
+                    }
+                    selfCommands.push(c);
+                }else if(c.clientId===objSyncBroadcastClientId){
+                    if(handled){
+                        (c as any)[this.skipApply]=true;
+                    }
+                    selfCommands.push(c);
+                    clientCommands.push(c);
+                }else{
+                    clientCommands.push(c);
+                }
+            }
+            if(selfCommands.length){
+                this.handleCommand(selfCommands,true);
+            }
+            if(clientCommands.length){
+                this._send(clientCommands);
+            }
+        }else{
+            this._send(cmds);
+        }
+    }
+
+    private sendRemoteCommands(cmds:ObjSyncRemoteCommand[])
+    {
+        if(this.isHost){
+            cmds=deepClone(cmds);
+            setTimeout(()=>{
+                this.handleCommand(cmds,true);
+            },0)
+        }else{
+            this._send(cmds);
+        }
+    }
+
+    protected abstract _send(cmds:(ObjSyncRemoteCommand|ObjSyncClientCommand)[]):Promise<void>|void;
 
     private connectPromise:Promise<void>|null=null;
 
@@ -261,6 +336,10 @@ export abstract class ObjSyncClient
 
     private async tryReconnectAsync()
     {
+        if(this.disabledAutoReconnect){
+            this.dispose();
+            return;
+        }
         if(this._connectionState.value==='reconnecting'){
             return;
         }
@@ -309,7 +388,7 @@ export abstract class ObjSyncClient
     private lastPong=0;
     protected pingLoop()
     {
-        if(this.pingIntervalMs===undefined){
+        if(this.pingIntervalMs===undefined || this.isHost){
             return;
         }
         this.lastPing=0;
@@ -345,47 +424,159 @@ export abstract class ObjSyncClient
         this.dispose();
     }
 
-    protected handleCommand(command:ObjSyncClientCommand|ObjSyncClientCommand[])
-    {
-        if(this.logCommands&logAllOrCommands){
+    protected handleCommand(
+        command:(ObjSyncClientCommand|ObjSyncRemoteCommand)|(ObjSyncClientCommand|ObjSyncRemoteCommand)[],
+        handled=false
+    ){
+        if( (this.logCommands&logAllOrCommands) &&
+            ((this.logCommands&ObjSyncClientLogLevel.ping) || !areAllPings(command))
+        ){
             console.info('<< obj-sync RCV',...asArray(command));
         }
         if(this._isDisposed){
             return;
         }
 
+        let remoteCommands:ObjSyncRemoteCommand[]|null=null;
+
         if(Array.isArray(command)){
+            let handleCount=0;
             for(const cmd of command){
+                if(!isObjSyncClientCommand(cmd)){
+                    if(!remoteCommands){
+                        remoteCommands=[];
+                    }
+                    remoteCommands.push(cmd);
+                    continue;
+                }
                 const parseResult=ObjSyncClientCommandScheme.safeParse(cmd);
                 if(parseResult.success===false){
                     this.handleError(parseResult.error);
                     return;
                 }
-            }
-            this.watcher.requestQueueChanges();
-            try{
-                for(const cmd of command){
-                    this._handleCommand(cmd);
+                if(cmd.clientId===this.clientId || cmd.clientId===objSyncBroadcastClientId){
+                    handleCount++;
                 }
-            }finally{
-                this.watcher.requestDequeueChanges();
             }
-            return;
-        }else{
-
-            const parseResult=ObjSyncClientCommandScheme.safeParse(command);
-            if(parseResult.success===false){
-                this.handleError(parseResult.error);
+            if(handleCount){
+                this.watcher.requestQueueChanges();
+                try{
+                    for(const cmd of command){
+                        if( isObjSyncClientCommand(cmd) &&
+                            (cmd.clientId===this.clientId || cmd.clientId===objSyncBroadcastClientId)
+                        ){
+                            this._handleCommand(cmd);
+                        }
+                    }
+                }finally{
+                    this.watcher.requestDequeueChanges();
+                }
                 return;
             }
-            this.watcher.requestQueueChanges();
-            try{
-                this._handleCommand(command);
-            }finally{
-                this.watcher.requestDequeueChanges();
+        }else{
+            if(isObjSyncClientCommand(command)){
+                const parseResult=ObjSyncClientCommandScheme.safeParse(command);
+                if(parseResult.success===false){
+                    this.handleError(parseResult.error);
+                    return;
+                }
+                if(command.clientId===this.clientId || command.clientId===objSyncBroadcastClientId){
+                    this.watcher.requestQueueChanges();
+                    try{
+                        this._handleCommand(command);
+                    }finally{
+                        this.watcher.requestDequeueChanges();
+                    }
+                }
+            }else{
+                remoteCommands=[command];
+            }
+        }
+        if(remoteCommands){
+            this.handleRemoteCommands(remoteCommands,handled);
+        }
+    }
+
+    private readonly hostState:ObjSyncObjState;
+    private handleRemoteCommands(commands:|ObjSyncRemoteCommand[],handled=false)
+    {
+        if(!this.isHost){
+            this.handleError('Remote command received by non-host client');
+            return;
+        }
+        for(const cmd of commands){
+            const parseResult=ObjSyncRemoteCommandScheme.safeParse(cmd);
+            if(parseResult.success===false){
+                console.error('Invalid remote command',cmd);
+                continue;
+            }
+
+            switch(cmd.type){
+
+                case 'createClient':
+                    //ignore
+                    break;
+
+                case 'get':{
+                    const clientCmd:ObjSyncClientCommand={
+                        type:'set',
+                        clientId:cmd.clientId,
+                        objId:this.hostState.objId,
+                        changeIndex:this.hostState.changeIndex,
+                        state:this.hostState,
+                    }
+                    this.sendClientCommands([clientCmd],handled);
+                    break;
+                }
+
+                case 'evt':{
+                    if(!cmd.evts){
+                        console.error('Evt command must define the evt prop');
+                        break;
+                    }
+
+                    this.hostState.changeIndex++;
+
+                    const clientCmd:ObjSyncClientCommand={
+                        type:'evt',
+                        clientId:objSyncBroadcastClientId,
+                        objId:this.hostState.objId,
+                        changeIndex:this.hostState.changeIndex,
+                        evts:cmd.evts as any
+                    }
+                    this.sendClientCommands([clientCmd],handled);
+                    break;
+                }
+
+                case 'ping':{
+                    const clientCmd:ObjSyncClientCommand={
+                        type:'pong',
+                        clientId:cmd.clientId,
+                        objId:cmd.objId,
+                        changeIndex:0,
+                    }
+                    this.sendClientCommands([clientCmd],handled);
+                    break;
+                }
             }
         }
     }
+
+    private broadcastState()
+    {
+        if(!this.isHost){
+            return;
+        }
+        const clientCmd:ObjSyncClientCommand={
+            type:'set',
+            clientId:objSyncBroadcastClientId,
+            objId:this.hostState.objId,
+            changeIndex:this.hostState.changeIndex,
+            state:this.hostState,
+        }
+        this.sendClientCommands([clientCmd]);
+    }
+
 
     private cmdQueue:ObjSyncClientCommand[]=[];
     private cmdQueueTTL:number|null=null;
@@ -459,13 +650,16 @@ export abstract class ObjSyncClient
         }
 
         this._changeIndex=command.changeIndex;
+        const skipApply=(command as any)[this.skipApply]===true;
 
         switch(command.type){
 
             case 'evt':
                 if(command.evts){
-                    for(const evt of command.evts){
-                        this.mirror.handleEvent(evt,objEvtSource);
+                    if(!skipApply){
+                        for(const evt of command.evts){
+                            this.mirror.handleEvent(evt,this.objEvtSource);
+                        }
                     }
                 }else{
                     this.handleError('command.evts missing');
@@ -474,7 +668,9 @@ export abstract class ObjSyncClient
                 break;
 
             case 'delete':
-                this.deleteState();
+                if(!skipApply){
+                    this.deleteState();
+                }
                 break;
 
 
@@ -485,7 +681,9 @@ export abstract class ObjSyncClient
                         return;
                     }
                     this._changeIndex=command.changeIndex;
-                    this.setStateWithLogs(command.state.state,command.state.log as RecursiveObjWatchEvt<any>[]);
+                    if(!this.isHost && !skipApply){
+                        this.setStateWithLogs(command.state.state,command.state.log as RecursiveObjWatchEvt<any>[]);
+                    }
                     if(this.finishReconnectOnNextSet){
                         this.finishReconnectOnNextSet=false;
                         this._onReconnected.next();
@@ -498,6 +696,9 @@ export abstract class ObjSyncClient
         if(command.type==='set' && !this._isReady.value){
             this._isReady.next(true);
             this.readySource.resolve();
+            if(this.isHost){
+                this.broadcastState();
+            }
         }
     }
 
@@ -511,13 +712,15 @@ export abstract class ObjSyncClient
         this.watcher.requestQueueChanges();
         try{
             for(const e in this.state){
-                this.watcher.deleteProp(e,objEvtSource);
+                if(obj[e]===undefined){
+                    this.watcher.deleteProp(e,this.objEvtSource);
+                }
             }
             for(const e in obj){
-                this.watcher.setProp(e,obj[e],objEvtSource);
+                this.watcher.setOrMergeProp(e,obj[e],this.objEvtSource);
             }
             for(const e of log){
-                this.mirror.handleEvent(e,objEvtSource);
+                this.mirror.handleEvent(e,this.objEvtSource);
             }
         }finally{
             this.watcher.requestDequeueChanges();
@@ -529,11 +732,32 @@ export abstract class ObjSyncClient
         this.watcher.requestQueueChanges();
         try{
             for(const e in this.state){
-                this.watcher.deleteProp(e,objEvtSource);
+                this.watcher.deleteProp(e,this.objEvtSource);
             }
         }finally{
             this.watcher.requestDequeueChanges();
         }
+    }
+
+    private readonly queueKey=Symbol('queueKey');
+
+    private queueObjCmd(obj:any,cmd:ObjSyncRecursiveObjWatchEvt){
+        if(!obj){
+            return;
+        }
+        const ary:ObjSyncRecursiveObjWatchEvt[]=obj[this.queueKey]??(obj[this.queueKey]=[]);
+        mergeEvents([deepClone(cmd)],ary);
+    }
+
+    private dequeueObjCmdQueue(obj:any):ObjSyncRecursiveObjWatchEvt[]|undefined{
+        if(!obj){
+            return undefined;
+        }
+        const ary=obj[this.queueKey];
+        if(ary){
+            delete obj[this.queueKey];
+        }
+        return ary;
     }
 }
 
@@ -570,23 +794,24 @@ const mergeEvents=(src:ObjSyncRecursiveObjWatchEvt[],dest:ObjSyncRecursiveObjWat
 }
 
 
-const queueKey=Symbol('queueKey');
 
-const queueObjCmd=(obj:any,cmd:ObjSyncRecursiveObjWatchEvt)=>{
-    if(!obj){
-        return;
+
+const getPingCount=(cmd:(ObjSyncClientCommand|ObjSyncRemoteCommand|ScopedObjSyncRemoteCommand)|(ObjSyncClientCommand|ObjSyncRemoteCommand|ScopedObjSyncRemoteCommand)[]):number=>{
+    if(Array.isArray(cmd)){
+        let count=0;
+        for(let index=0;index<cmd.length;index++){
+            const c=cmd[index];
+            if(c && (c.type==='pong' || c.type==='ping')){
+                count++;
+            }
+        }
+        return count;
+    }else{
+        return (cmd.type==='pong' || cmd.type==='ping')?1:0;
     }
-    const ary:ObjSyncRecursiveObjWatchEvt[]=obj[queueKey]??(obj[queueKey]=[]);
-    mergeEvents([cmd],ary);
 }
 
-const dequeueObjCmdQueue=(obj:any):ObjSyncRecursiveObjWatchEvt[]|undefined=>{
-    if(!obj){
-        return undefined;
-    }
-    const ary=obj[queueKey];
-    if(ary){
-        delete obj[queueKey];
-    }
-    return ary;
+const areAllPings=(cmd:(ObjSyncClientCommand|ObjSyncRemoteCommand|ScopedObjSyncRemoteCommand)|(ObjSyncClientCommand|ObjSyncRemoteCommand|ScopedObjSyncRemoteCommand)[]):boolean=>{
+    const count=getPingCount(cmd);
+    return Array.isArray(cmd)?count===cmd.length:count===1;
 }

@@ -141,8 +141,6 @@ export type ObjSyncRemoteCommand=z.infer<typeof ObjSyncRemoteCommandScheme>;
 export type ScopedObjSyncRemoteCommand=Omit<ObjSyncRemoteCommand,'clientId'|'objId'>;
 
 
-
-
 export const ObjSyncClientCommandTypeScheme=z.enum(['set','delete','evt','reset','pong']);
 export type ObjSyncClientCommandType=z.infer<typeof ObjSyncClientCommandTypeScheme>;
 
@@ -173,3 +171,9 @@ export type ObjSyncClientCommand=z.infer<typeof ObjSyncClientCommandScheme> & {
 }
 
 export type ObjSyncConnectionState='waiting'|'connecting'|'connected'|'disconnected'|'reconnecting'|'closed';
+
+export const isObjSyncClientCommand=(value:ObjSyncClientCommand|ObjSyncRemoteCommand):value is ObjSyncClientCommand=>{
+    return typeof (value as Partial<ObjSyncClientCommand>)?.changeIndex === 'number';
+}
+
+export const objSyncBroadcastClientId='@all';
