@@ -144,7 +144,7 @@ export type PathAfterDot<T extends string>=T extends `${infer _Name}.${infer Res
 
 export type PathValue<
     T,
-    Path extends string,
+    Path extends string
 >=(
     Path extends keyof T?
         T[Path]
