@@ -2,6 +2,7 @@ export * from './lib/AuthDependentClient';
 export * from './lib/AuthService';
 export * from './lib/BaseStore';
 export * from './lib/BaseUser';
+export * from './lib/Binding';
 export * from './lib/BrowserUiRouter';
 export * from './lib/CancelToken';
 export * from './lib/DisposeContainer';
