@@ -132,6 +132,14 @@ export const isHttp=(path:string|null|undefined):boolean=>
     }
     return httpReg.test(path);
 }
+export const httpUrlReg=/^https?:\/\/[^.]+\.[^.]+/i
+export const isHttpUrl=(path:string|null|undefined):boolean=>
+{
+    if(!path){
+        return false;
+    }
+    return httpUrlReg.test(path);
+}
 
 export const protocolReg=/^(\w+):\/\//
 export const isRooted=(path:string|null|undefined):boolean=>
