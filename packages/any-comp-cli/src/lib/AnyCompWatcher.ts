@@ -1,8 +1,9 @@
 import { AcComp, AcProp, AcType, AcTypeDef } from '@iyio/any-comp';
 import { DisposeContainer, delayAsync, sortStringsCallback, strFirstToUpper } from '@iyio/common';
+import { triggerNodeBreakpoint } from '@iyio/node-common';
 import { access, mkdir, readFile, readdir, stat, watch, writeFile } from 'fs/promises';
 import { basename, join } from 'path';
-import { FunctionLikeDeclaration, Identifier, InterfaceDeclaration, JSDoc, JSDocComment, Node, NodeArray, PropertySignature, ScriptKind, ScriptTarget, SyntaxKind, TypeNode, TypeReferenceNode, createSourceFile, isFunctionDeclaration, isIdentifier, isNumericLiteral, isObjectBindingPattern, isStringLiteralLike } from 'typescript';
+import { FunctionLikeDeclaration, Identifier, InterfaceDeclaration, JSDoc, JSDocComment, Node, NodeArray, PropertySignature, ScriptKind, ScriptTarget, SyntaxKind, TypeNode, TypeReferenceNode, createSourceFile, isFunctionDeclaration, isIdentifier, isIntersectionTypeNode, isNumericLiteral, isObjectBindingPattern, isStringLiteralLike, isTypeReferenceNode, isUnionTypeNode } from 'typescript';
 
 const compBodyPlaceholder='______COMP_BODY________';
 
@@ -15,6 +16,7 @@ export interface AnyCompWatcherOptions
     outDir:string;
     disableLazyLoading?:boolean;
     debug?:boolean|string;
+    breakOnDebug?:boolean;
 }
 
 export class AnyCompWatcher
@@ -34,6 +36,8 @@ export class AnyCompWatcher
 
     public debug:boolean|string;
 
+    public breakOnDebug:boolean;
+
     public constructor({
         watchDirs,
         ignore=['node_modules',/^\..*/],
@@ -42,6 +46,7 @@ export class AnyCompWatcher
         outDir,
         disableLazyLoading=false,
         debug=false,
+        breakOnDebug=false,
     }:AnyCompWatcherOptions)
     {
 
@@ -50,6 +55,7 @@ export class AnyCompWatcher
         }
 
         this.debug=debug;
+        this.breakOnDebug=breakOnDebug;
         this.watchDirs=watchDirs;
         this.ignore=ignore.map(i=>(typeof i === 'string')?i.toLowerCase():i);
         this.match=match.map(i=>(typeof i === 'string')?i.toLowerCase():i);
@@ -243,7 +249,8 @@ export class AnyCompWatcher
                 }
 
                 const param=fn.parameters[0];
-                const propType=((param?.type as TypeReferenceNode)?.typeName as Identifier)?.escapedText;
+                const propTypeNode=getTypeReference(param?.type)
+                const propType=(propTypeNode?.typeName as Identifier)?.escapedText;
                 const props:AcProp[]=[];
 
                 if(fn.parameters.length===1 &&  param?.type && propType){
@@ -354,9 +361,13 @@ export class AnyCompWatcher
                     tags
                 }
 
-                    this.log?.(`<${comp.name}/>`);
+                this.log?.(`<${comp.name}/>`);
+
                 if(debugComp){
                     console.info(`<${comp.name}/>`,comp);
+                    if(this.breakOnDebug){
+                        triggerNodeBreakpoint();
+                    }
                 }
 
                 output.comps.push(comp)
@@ -608,4 +619,27 @@ const nodeToPrimitiveValue=(node:Node|null|undefined)=>{
     }else{
         return undefined;
     }
+}
+
+const getTypeReference=(node:Node|null|undefined,maxDepth=100):TypeReferenceNode|undefined=>{
+    if(maxDepth<1 || !node){
+        return undefined;
+    }
+    if(isTypeReferenceNode(node)){
+        return node;
+    }
+
+    if(isIntersectionTypeNode(node)){
+        for(const t of node.types){
+            return getTypeReference(t,maxDepth-1);
+        }
+    }
+
+    if(isUnionTypeNode(node)){
+        for(const t of node.types){
+            return getTypeReference(t,maxDepth-1);
+        }
+    }
+
+    return undefined;
 }

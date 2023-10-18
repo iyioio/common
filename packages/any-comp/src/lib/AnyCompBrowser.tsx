@@ -120,6 +120,7 @@ const style=atDotCss({name:'AnyCompBrowser',css:`
     @.rightCol{
         padding-top:1rem;
         gap:0.25rem;
+        margin-left:1rem;
     }
     @desktopSmUp{
         @.select{
