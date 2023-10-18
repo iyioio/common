@@ -1,6 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
+import { BaseLayoutOuterProps } from "@iyio/common";
 import { Text, View } from "@iyio/react-common";
 import { useEffect, useState } from "react";
+import { AnyCompComment } from "./AnyCompComment";
 import { AnyCompContainer } from "./AnyCompContainer";
 import { AnyCompTreeSelector } from "./AnyCompTreeSelector";
 import { AcCompRegistry } from "./any-comp-types";
@@ -13,6 +15,8 @@ export interface AnyCompBrowserProps
     reg:AcCompRegistry;
     placeholder?:any;
     treeClassName?:string;
+    foregroundColor?:string;
+    rememberCompId?:boolean;
 }
 
 export function AnyCompBrowser({
@@ -20,7 +24,10 @@ export function AnyCompBrowser({
     onCompIdChange,
     reg,
     placeholder,
-}:AnyCompBrowserProps){
+    foregroundColor='#000000',
+    rememberCompId,
+    ...props
+}:AnyCompBrowserProps & BaseLayoutOuterProps){
 
     const [compId,setCompId]=useState(_compId);
 
@@ -32,8 +39,27 @@ export function AnyCompBrowser({
         }
     },[_compId]);
 
+    useEffect(()=>{
+        if(rememberCompId && compId){
+            globalThis.localStorage?.setItem('AnyCompBrowser.compId',compId);
+        }
+    },[rememberCompId,compId]);
+
+    useEffect(()=>{
+        if(rememberCompId){
+            const id=globalThis.localStorage?.getItem('AnyCompBrowser.compId');
+            if(id){
+                setCompId(id);
+            }
+        }
+    },[rememberCompId]);
+
     return (
-        <div className={style.root()}>
+        <div className={style.root(null,null,props)} style={style.vars({
+            foregroundColor,
+            inputBg:foregroundColor+'33',
+            borderColor:foregroundColor+'33',
+        })}>
 
             <View row flex1>
 
@@ -44,22 +70,23 @@ export function AnyCompBrowser({
                     onCompIdChange={onCompIdChange??setCompId}
                 />
 
-                <View flex1 col g1>
-                    <select className={style.select()} onChange={e=>{
+                <View flex1 col className={style.rightCol()}>
+                    <select className={style.select()} defaultValue={compId} onChange={e=>{
                         if(onCompIdChange){
                             onCompIdChange(e.target.value);
                         }else{
                             setCompId(e.target.value);
                         }
                     }}>
-                        <option value="" selected={!comp}>(none)</option>
+                        <option value="">(none)</option>
                         {reg.comps.map(c=>(
-                            <option key={c.id} value={c.id} selected={comp?.id===c.id}>{c.name} - {c.path}</option>
+                            <option key={c.id} value={c.id}>{c.name} - {c.path}</option>
                         ))}
                     </select>
 
-                    <Text h2 text={comp?.name??'No component selected'} />
-                    <AnyCompContainer comp={comp} placeholder={placeholder} />
+                    <Text lg weightBold text={comp?.name??'No component selected'} />
+                    <AnyCompComment comment={comp?.comment} />
+                    <AnyCompContainer key={comp?.id??''} comp={comp} placeholder={placeholder} foregroundColor={foregroundColor} />
                 </View>
 
             </View>
@@ -74,10 +101,14 @@ const style=atDotCss({name:'AnyCompBrowser',css:`
         display:flex;
         flex-direction:column;
         flex:1;
+        color:@@foregroundColor;
+        --any-comp-foreground-color:@@foregroundColor;
+        --any-comp-input-bg:@@inputBg;
+        --any-comp-border-color:@@borderColor;
     }
     @.select{
         all:unset;
-        border:1px solid #ffff;
+        border:1px solid var(--any-comp-border-color);
         padding:0.5rem;
         border-radius:8px;
         cursor:pointer;
@@ -85,6 +116,10 @@ const style=atDotCss({name:'AnyCompBrowser',css:`
         overflow:hidden;
         width:100%;
         box-sizing:border-box;
+    }
+    @.rightCol{
+        padding-top:1rem;
+        gap:0.25rem;
     }
     @desktopSmUp{
         @.select{

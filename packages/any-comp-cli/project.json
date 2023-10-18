@@ -48,10 +48,10 @@
                 "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/react-common/src/lib --outDir packages/react-common/src/any"
             }
         },
-        "watch-h": {
+        "watch-web-app": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/components/src/lib --outDir packages/web-app/any"
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/components/src/lib --dir packages/web-app/components --outDir packages/web-app/any --disableLazyLoading"
             }
         }
     },

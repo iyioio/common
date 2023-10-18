@@ -8,6 +8,8 @@ export interface AcComp
     props:AcProp[];
     comp?:string|((props:Record<string,any>,placeholder?:any)=>any);
     isDefaultExport?:boolean;
+    comment?:string;
+    tags?:Record<string,string>;
 }
 
 export type AcType="string"|"number"|"bigint"|"boolean"|"symbol"|"undefined"|"object"|"function";
@@ -17,6 +19,11 @@ export interface AcProp{
     defaultType:AcTypeDef;
     types:AcTypeDef[];
     sig:string;
+    defaultValueText?:string;
+    defaultValue?:any;
+    comment?:string;
+    bind?:string;
+    tags?:Record<string,string>;
 }
 
 export interface AcTypeDef

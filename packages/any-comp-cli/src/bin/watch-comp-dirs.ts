@@ -6,6 +6,8 @@ interface Args
 {
     dir:string[];
     outDir:string;
+    debug?:boolean|string;
+    disableLazyLoading:boolean;
 }
 
 const args=parseCliArgsT<Args>({
@@ -14,16 +16,20 @@ const args=parseCliArgsT<Args>({
     converter:{
         dir:args=>args,
         outDir:args=>args[0]??'',
+        debug:args=>args[0]?.length===0?true:args[0],
+        disableLazyLoading:args=>args.length?true:false,
 
     }
 }).parsed as Args
 
 const main=async ({
     dir,
-    outDir
+    outDir,
+    debug,
+    disableLazyLoading
 }:Args)=>{
 
-    const watcher=new AnyCompWatcher({watchDirs:dir,log:console.log,outDir});
+    const watcher=new AnyCompWatcher({watchDirs:dir,log:console.log,outDir,debug,disableLazyLoading});
 
     let shouldExit=false;
     function kill(){

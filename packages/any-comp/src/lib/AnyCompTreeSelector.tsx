@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { getDirectoryName } from "@iyio/common";
 import { ScrollView, SlimButton, Text } from "@iyio/react-common";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { AcCompRegistry } from "./any-comp-types";
 
 export interface AnyCompTreeSelectorProps
@@ -21,11 +21,26 @@ export function AnyCompTreeSelector({
 
     let lastDir:string|null=null;
 
+    const [filter,setFilter]=useState('');
+    const lf=filter.toLowerCase().trim();
+
     return (
         <div className={style.root(null,className)}>
 
+            <input
+                className={style.input()}
+                type="text"
+                value={filter}
+                onChange={e=>setFilter(e.target.value)}
+                placeholder="Search"
+            />
+
             <ScrollView flex1 col containerClassName={style.scrollContainer()}>
                 {reg?.comps.map(c=>{
+
+                    if(lf && !c.name.toLowerCase().includes(lf)){
+                        return null;
+                    }
 
                     const dir=getDirectoryName(c.path);
                     const ld=lastDir;
@@ -64,6 +79,7 @@ const style=atDotCss({name:'AnyCompTreeSelector',css:`
         font-size:12px;
         margin-top:0.2rem;
         position:relative;
+        color:var(--any-comp-foreground-color);
     }
     @.item.selected{
         text-decoration:underline;
@@ -76,5 +92,12 @@ const style=atDotCss({name:'AnyCompTreeSelector',css:`
     }
     @.scrollContainer{
         padding:0.5rem;
+    }
+    @.input{
+        all:unset;
+        background:var(--any-comp-input-bg);
+        border-radius:4px;
+        padding:0.5rem;
+        margin:0.5rem;
     }
 `});
