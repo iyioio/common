@@ -51,8 +51,10 @@ export const AiCompletionFunctionCallErrorScheme=z.object({
 })
 export type AiCompletionFunctionCallError=z.infer<typeof AiCompletionFunctionCallErrorScheme>;
 
-export const AiCompletionRoleScheme=z.enum(['system','user','assistant','function']);
+export const allAiCompletionRoles=['system','user','assistant','function'] as const;
+export const AiCompletionRoleScheme=z.enum(allAiCompletionRoles);
 export type AiCompletionRole=z.infer<typeof AiCompletionRoleScheme>;
+export const isAiCompletionRole=(value:any):value is AiCompletionRole=>allAiCompletionRoles.includes(value);
 
 export const AiComplationMessageTypeScheme=z.enum(['text','image','audio','function','function-error','error']);
 export type AiComplationMessageType=z.infer<typeof AiComplationMessageTypeScheme>;

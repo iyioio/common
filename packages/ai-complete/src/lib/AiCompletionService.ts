@@ -3,6 +3,7 @@ import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
 import { AiComplationMessageType, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
+import { parseAiCompletionMessages } from "./ai-message-converter";
 
 export interface AiCompletionServiceOptions
 {
@@ -43,8 +44,19 @@ export class AiCompletionService
         })
     }
 
-    public async completeAsync(request:AiCompletionRequest,options?:CompletionOptions):Promise<AiCompletionResult>
+    public async completeAsync(requestOrMessages:AiCompletionRequest|string,options?:CompletionOptions):Promise<AiCompletionResult>
     {
+
+        let request:AiCompletionRequest;
+
+        if(typeof requestOrMessages === 'string'){
+            const messages=parseAiCompletionMessages(requestOrMessages);
+            request={
+                messages
+            }
+        }else{
+            request=requestOrMessages;
+        }
 
         request={...request};
         request.messages=[...request.messages];
@@ -162,12 +174,7 @@ export class AiCompletionService
         prompt:string|AiCompletionMessage|AiCompletionMessage[],
     ):Promise<T|undefined>{
         if(typeof prompt === 'string'){
-            prompt=[{
-                id:shortUuid(),
-                type:'text',
-                role:'user',
-                content:prompt
-            }]
+            prompt=parseAiCompletionMessages(prompt);
         }else if(!Array.isArray(prompt)){
             prompt=[prompt];
         }
@@ -227,12 +234,12 @@ export class AiCompletionService
             return undefined;
         }
 
-        const callReulst=await callAiFunctionInterfaceAsync(fi,render,params,this);
+        const callResult=await callAiFunctionInterfaceAsync(fi,render,params,this);
         if(applyToMessage){
-            applyResultToAiMessage(applyToMessage,callReulst);
+            applyResultToAiMessage(applyToMessage,callResult);
         }
 
-        return callReulst;
+        return callResult;
     }
 
     public getMaxTokensForMessageType(messageType:AiComplationMessageType,model?:string):number{
