@@ -40,7 +40,7 @@ export function ButtonBase({
     onClickEvt,
     onKeyPress: onKeyPressProp,
     children,
-    type,
+    type='button',
     to: toProp,
     href,
     pop,
