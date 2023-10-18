@@ -5,13 +5,26 @@
     "projectType": "library",
     "targets": {
         "build": {
-            "executor": "@nrwl/js:tsc",
+            "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/tmpl-gen",
                 "main": "packages/tmpl-gen/src/index.ts",
                 "tsConfig": "packages/tmpl-gen/tsconfig.lib.json",
-                "assets": ["packages/tmpl-gen/*.md"]
+                "assets": ["packages/tmpl-gen/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/tmpl-gen/src/bin",
+                        "outDir":"dist/packages/tmpl-gen/bin",
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":false,
+                            "sourcemap":"external"
+                        }
+                    }
+                ]
             }
         },
         "publish": {
