@@ -11,7 +11,20 @@
                 "outputPath": "dist/packages/any-comp-cli",
                 "main": "packages/any-comp-cli/src/index.ts",
                 "tsConfig": "packages/any-comp-cli/tsconfig.lib.json",
-                "assets": ["packages/any-comp-cli/*.md"]
+                "assets": ["packages/any-comp-cli/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/any-comp-cli/src/bin",
+                        "outDir":"dist/packages/any-comp-cli/bin",
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":false,
+                            "sourcemap":"external"
+                        }
+                    }
+                ]
             }
         },
         "publish": {
