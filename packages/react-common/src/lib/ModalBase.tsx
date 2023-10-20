@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { BaseLayoutInnerProps, bcn, cn } from "@iyio/common";
-import { useEffect, useState } from "react";
+import { BaseLayoutInnerProps, DisposeCallback, aryRemoveItem, bcn, cn, domListener } from "@iyio/common";
+import { useEffect, useId, useRef, useState } from "react";
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
 
@@ -32,6 +32,11 @@ export interface ModalBaseProps extends ModalOpenCloseProps, PortalProps, BaseLa
     zIndex?:number;
     hideScrollBarOnOut?:boolean;
     keepMounted?:boolean;
+
+    /**
+     * Disable to escape key listener that closes the modal when escape is pressed
+     */
+    disableEscapeListener?:boolean;
 }
 
 export function ModalBase({
@@ -51,8 +56,23 @@ export function ModalBase({
     zIndex,
     keepMounted,
     renderInline,
+    disableEscapeListener,
     ...props
 }:ModalBaseProps){
+
+    style.root();
+
+    const modalId=useId();
+
+    const refs=useRef({
+        closeRequested,
+        open,
+        modalId
+    });
+    refs.current.closeRequested=closeRequested;
+    refs.current.open=open;
+
+    const elemRef=useRef<HTMLDivElement|null>(null);
 
     const [show,setShow]=useState(defaultShow);
 
@@ -75,7 +95,15 @@ export function ModalBase({
         }
     },[renderTimeoutMs,open])
 
-    style.root();
+    useEffect(()=>{
+        if(disableEscapeListener || !open){
+            return;
+        }
+        addListener(refs.current);
+        return ()=>{
+            removeListener(refs.current);
+        }
+    },[disableEscapeListener,open]);
 
     if(!show && !keepMounted){
         return null;
@@ -84,7 +112,7 @@ export function ModalBase({
     return (
         <>
             <Portal rendererId={rendererId} renderInline={renderInline}>
-                <div style={{zIndex}} className={bcn(
+                <div ref={elemRef} style={{zIndex}} data-modal-id={modalId} className={bcn(
                     props,
                     'ModelBase',
                     open?'ModelBase-open':'ModelBase-closed',
@@ -168,3 +196,47 @@ const style=atDotCss({name:'ModalBase',order:'frameworkHigh',css:`
     }
 
 `});
+
+
+
+interface ModalRef extends ModalOpenCloseProps
+{
+    modalId:string;
+}
+
+const allRefs:ModalRef[]=[];
+
+let disposeListener:DisposeCallback|null=null;
+
+const addListener=(ref:ModalRef)=>{
+    allRefs.push(ref);
+    if(allRefs.length===1){
+        initListener();
+    }
+}
+
+const removeListener=(ref:ModalRef)=>{
+    aryRemoveItem(allRefs,ref);
+    if(allRefs.length===0){
+        disposeListener?.();
+        disposeListener=null;
+    }
+}
+
+const initListener=()=>{
+    disposeListener=domListener().keyUpEvt.addListenerWithDispose(e=>{
+        if(e.inputElem || e.keyMod!=='escape'){
+            return;
+        }
+        const all=document.querySelectorAll('[data-modal-id].ModelBase-open');
+        const last=all[all.length-1];
+        if(!last){
+            return;
+        }
+        const id=last.getAttribute('data-modal-id');
+        const ref=allRefs.find(r=>r.modalId===id);
+        if(ref?.open){
+            ref.closeRequested?.(false);
+        }
+    })
+}

@@ -110,6 +110,8 @@ export interface PortalProps
      * purposes.
      */
     renderInline?:boolean;
+
+    setPortalItem?:(item:PortalItem|null)=>void
 }
 
 export const usePortal=({
@@ -117,7 +119,8 @@ export const usePortal=({
     renderInline,
     active=true,
     state,
-    children
+    children,
+    setPortalItem
 }:PortalProps)=>
 {
 
@@ -145,6 +148,9 @@ export const usePortal=({
     },[]);
     const ctrl:PortalCtrl|undefined=ctrls[rendererId];
     const item=useMemo(()=>ctrl?createPortalItem():null,[ctrl]);
+    useEffect(()=>{
+        setPortalItem?.(item);
+    },[item,setPortalItem]);
 
     useEffect(()=>{
         if(!item){
@@ -173,4 +179,6 @@ export const usePortal=({
             ctrl.removeState(state);
         }
     },[ctrl,state])
+
+    return item;
 }
