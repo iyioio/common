@@ -5,6 +5,8 @@ import OpenAIApi from 'openai';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
+const defaultTokenCharLength=3.75;
+
 export interface OpenAiCompletionProviderOptions
 {
     apiKey?:string;
@@ -240,7 +242,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     {
         unused(model);
         // todo - check based on model
-        return message.length/3;
+        return message.length/defaultTokenCharLength;
     }
 
 }
