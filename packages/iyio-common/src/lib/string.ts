@@ -169,3 +169,13 @@ export const splitStringWithQuotes=(str:string,{
 
     return ary;
 }
+
+export const strLineCount=(str:string,startIndex=0,endIndex=str.length-1):number=>{
+    let lineNumber=1;
+    for(let i=startIndex;i<=endIndex;i++){
+        if(str[i]==='\n'){
+            lineNumber++;
+        }
+    }
+    return lineNumber;
+}

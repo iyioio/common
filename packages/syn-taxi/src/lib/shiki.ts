@@ -213,14 +213,6 @@ const convo={
                 { "include": "#lineExpression" },
             ]
         },
-        "prop":{
-            "match":"(\\w+)\\s*:",
-            "captures": {
-                "1":{
-                    "name":"entity.name"
-                },
-            }
-        },
         "comment":{
             "match":"#.*",
             "name":"comment"
@@ -248,9 +240,9 @@ const convo={
             }
         },
         "label":{
-            "match":"(\\w+)\\s*:",
+            "match":"(\\w+)\\s*(\\?)?\\s*:",
             "captures":{
-                "0":{
+                "1":{
                     "name":"entity.name"
                 }
             }

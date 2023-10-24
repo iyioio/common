@@ -1,7 +1,9 @@
 import { atDotCss } from '@iyio/at-dot-css';
-import { baseLayoutCn, BaseLayoutOuterProps, cn } from '@iyio/common';
+import { baseLayoutCn, BaseLayoutOuterProps, cn, strLineCount } from '@iyio/common';
+import { parseConvoCode } from '@iyio/convo';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { dt } from '../lib/lib-design-tokens';
+import { LineNumbers } from './LineNumbers';
 import { useShiki } from './shiki';
 
 export const defaultCodeLineStartReg=/^(\s*)/;
@@ -27,6 +29,8 @@ interface CodeInputProps extends BaseLayoutOuterProps
     onTextarea?:(elem:HTMLTextAreaElement|null)=>void;
     lineStartReg?:RegExp|null;
     lineStartRegIndex?:number;
+    lineNumbers?:boolean;
+    lineErrors?:number[]|number;
 }
 
 export function CodeInput({
@@ -45,6 +49,8 @@ export function CodeInput({
     tall,
     lineStartReg=defaultCodeLineStartReg,
     lineStartRegIndex=1,
+    lineNumbers,
+    lineErrors,
     ...props
 }:CodeInputProps){
 
@@ -52,21 +58,46 @@ export function CodeInput({
 
     const sh=useShiki(language);
 
+    const [parsingLineErrors,setParsingLineErrors]=useState<number[]|number|undefined>(undefined);
+
     const [code,setCode]=useState<HTMLElement|null>(null);
+    const [textArea,setTextArea]=useState<HTMLTextAreaElement|null>(null);
+
     useEffect(()=>{
-        if(!code || !sh){
+
+        if(!code || !sh || !textArea){
+            setParsingLineErrors(undefined);
             return;
         }
-        console.log('hio 👋 👋 👋 TOKENS',sh.codeToThemedTokens(value,language));
+
+        const r=parseConvoCode(value)
+        console.log('hio 👋 👋 👋 parsing result',r.error,r);
+        console.log(r.error?.near)
+
+        setParsingLineErrors(r.error?.lineNumber);
 
         code.innerHTML=sh.codeToHtml(value,{lang:language});
-    },[code,valueOverride,value,language,sh]);
+        let minWidth=0;
+        const codeElem=code.querySelector('code');
+        if(codeElem){
+            for(let i=0;i<codeElem.children.length;i++){
+                const item=codeElem.children.item(i);
+                if(!item){
+                    continue;
+                }
+                const w=(item as HTMLElement).offsetWidth;
+                if(w && w>minWidth){
+                    minWidth=w;
+                }
+            }
+        }
+        textArea.style.minWidth=minWidth+'px';
+    },[code,textArea,valueOverride,value,language,sh]);
 
     useEffect(()=>{
         onElem?.(code);
     },[onElem,code])
 
-    const [textArea,setTextArea]=useState<HTMLTextAreaElement|null>(null);
 
     useEffect(()=>{
         onTextarea?.(textArea);
@@ -140,23 +171,29 @@ export function CodeInput({
 
 
     return (
-        <div className={cn("CodeInput",{tall,disabled,readOnly},baseLayoutCn(props))}>
+        <div className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}>
 
-            <pre className="no-select">
-                <code
-                    key={language}
-                    ref={setCode}
-                    className={language==='auto'?undefined:`language-${language}`}/>
-            </pre>
+            {lineNumbers && <LineNumbers count={strLineCount(value)} lineErrors={lineErrors??parsingLineErrors} />}
 
-            <textarea
-                spellCheck={false}
-                ref={setTextArea}
-                onKeyDown={onKeyDown}
-                onChange={e=>onChange?.(e.target.value)}
-                onBlur={e=>onBlur?.(e.target.value)}
-                value={value}
-                readOnly={readOnly}/>
+            <div className="CodeInput-content">
+                <div>
+                    <div
+                        key={language}
+                        ref={setCode}
+                        className={cn("no-select",language==='auto'?undefined:`language-${language}`)}
+                    />
+
+                    <textarea
+                        spellCheck={false}
+                        ref={setTextArea}
+                        onKeyDown={onKeyDown}
+                        onChange={e=>onChange?.(e.target.value)}
+                        onBlur={e=>onBlur?.(e.target.value)}
+                        value={value}
+                        readOnly={readOnly}
+                    />
+                </div>
+            </div>
         </div>
     )
 
@@ -166,10 +203,11 @@ export function CodeInput({
 const style=atDotCss({name:'CodeInput',css:`
     .CodeInput{
         display:flex;
-        flex-direction:column;
-        position:relative;
         border-radius:8px;
         transition:opacity 0.1s ease-in-out;
+    }
+    .CodeInput textarea{
+        all:unset;
     }
     .CodeInput.tall{
         min-height:200px;
@@ -184,8 +222,6 @@ const style=atDotCss({name:'CodeInput',css:`
         margin:0 !important;
         padding:0 !important;
         display:block;
-        overflow-x:hidden !important;
-        overflow-y:hidden !important;
         white-space:pre;
         font-family:Courier !important;
         font-size:${dt().codeFontSize}px !important;
@@ -200,8 +236,6 @@ const style=atDotCss({name:'CodeInput',css:`
         margin:0 !important;
         padding:0 !important;
         display:block;
-        overflow-x:hidden !important;
-        overflow-y:hidden !important;
     }
     .CodeInput pre,.CodeInput code{
         background: none !important;
@@ -210,15 +244,17 @@ const style=atDotCss({name:'CodeInput',css:`
         position:absolute;
         left:0;
         top:0;
-        right:0;
-        bottom:0;
+        width:100%;
+        height:100%;
+        overflow:hidden;
         border:none;
         background:none;
         resize:none;
-        color:#00000000;
+        color:transparent;
         caret-color: #ffffffcc;
         outline:none;
         outline-width:0;
+        cursor:text;
     }
     .CodeInput.readOnly textarea{
         pointer-events:none;
@@ -228,6 +264,17 @@ const style=atDotCss({name:'CodeInput',css:`
     }
     .CodeInput.readOnly .no-select{
         pointer-events:auto;
+    }
+    .CodeInput-content{
+        display:flex;
+        flex-direction:column;
+        overflow-x:auto;
+    }
+    .CodeInput-content > div{
+        position:relative;
+    }
+    .CodeInput.lineNumbers .CodeInput-content > div{
+        margin-left:0.5rem !important;
     }
 
 `});
