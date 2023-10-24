@@ -98,6 +98,7 @@ export class StaticWebSite extends Construct {
             publicReadAccess: true,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
+            blockPublicAccess:s3.BlockPublicAccess.BLOCK_ACLS,
         });
 
         this.bucketUrl=`https://${bucket.bucketDomainName}`;
