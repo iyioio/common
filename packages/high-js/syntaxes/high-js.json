@@ -6,6 +6,7 @@
         "tsx"
     ],
     "injectionSelector": "L:source -comment -string",
+    "scopeName": "high-js",
     "patterns": [
         {
             "begin": "/\\*css\\*/\\s*`",
@@ -59,7 +60,25 @@
                     "include": "source.css.high-js"
                 }
             ]
+        },
+
+        {
+            "begin": "/\\*convo\\*/\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0": "support.type"
+            },
+            "patterns": [
+                {
+                    "include": "source.convo"
+                }
+            ]
         }
-    ],
-    "scopeName": "high-js"
+    ]
+
 }

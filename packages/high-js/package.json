@@ -2,7 +2,7 @@
     "name": "high-js",
     "displayName": "high-js",
     "description": "Let your javascript see all the pretty colors 🫠",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "publisher": "IYIO",
     "icon": "assets/logo.png",
     "engines": {
@@ -31,6 +31,12 @@
                     "JS String Highlighter"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "source.convo",
+                "aliases": ["Convo", "convo"],
+                "extensions": [".convo"],
+                "configuration": "./convo-language-configuration.json"
             }
         ],
         "grammars": [
@@ -38,6 +44,11 @@
                 "language": "source.css.high-js",
                 "scopeName": "source.css.high-js",
                 "path": "./syntaxes/css.json"
+            },
+            {
+                "language": "source.convo",
+                "scopeName": "source.convo",
+                "path": "./syntaxes/convo.tmLanguage.json"
             },
             {
                 "injectTo": [
@@ -51,6 +62,7 @@
                 "path": "./syntaxes/high-js.json",
                 "embeddedLanguages": {
                     "source.css.scss": "css",
+                    "source.convo": "convo",
                     "meta.embedded.line.ts": "typescript"
                 }
             }

@@ -91,4 +91,32 @@ export interface x{}
     @.root{
         color:@@mobileColor;
     }
-}`
+}`;
+
+
+/*convo*/`
+# Returns a header system message
+> local getHeader( age:number ) -> (
+    return("James is a funky monkey {{age}} years old")
+)
+
+> dude
+I'm okxc
+
+> system
+You are a friendly ghost. {{getHeader()}}
+
+> user
+My name is {{name}}
+
+${(async ()=>{
+    const x=55;
+    return x;
+})()}
+
+> call gradePaper(
+    score: 1
+    email: 'bob@tom.com'
+    job:map( name: 'salad fingers' )
+)
+`;
