@@ -12,6 +12,12 @@ export type ConvoNonFuncKeyword=(typeof convoNonFuncKeywords)[number];
 
 export const convoObjFlag='**convo**'
 
+export interface ConvoTag
+{
+    name:string;
+    value?:string;
+}
+
 
 /**
  * Can be a text message or function definition
@@ -22,6 +28,7 @@ export interface ConvoMessage
     content?:string;
     statement?:ConvoStatement;
     fn?:ConvoFunction;
+    tags?:ConvoTag[]
 
 }
 
@@ -83,6 +90,8 @@ export interface ConvoStatement
     keyword?:string;
 
     comment?:string;
+
+    tags?:ConvoTag[];
 }
 
 export interface ConvoFunction

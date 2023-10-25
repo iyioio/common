@@ -1,11 +1,11 @@
-import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
+import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
+const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|@|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -21,6 +21,8 @@ const numberReg=/^-?[.\d]/;
 const singleStringReg=/(\{\{|')/gs;
 const doubleStringReg=/(\{\{|")/gs;
 const msgStringReg=/(\{\{|[\n\r]\s*>)/gs;
+
+const tagReg=/(\w+)\s*=(.*)/
 
 const space=/\s/;
 
@@ -63,6 +65,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
     const stringStatementStack:ConvoStatement[]=[];
     let inString:StringType|null=null;
     let lastComment='';
+    let tags:ConvoTag[]=[];
     let index=0;
     let currentMessage:ConvoMessage|null=null;
     let currentFn:ConvoFunction|null=null;
@@ -124,6 +127,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             lastComment+='\n'+comment;
         }else{
             lastComment=comment
+        }
+        index=newline;
+    }
+
+    const takeTag=()=>{
+        index++;
+        const newline=code.indexOf('\n',index);
+        const tag=tagReg.exec(code.substring(index,newline).trim());
+        if(tag){
+            console.log('hio 👋 👋 👋 tag',tag);
+            tags.push({name:tag[1]??'',value:tag[2]?.trim()});
         }
         index=newline;
     }
@@ -277,8 +291,15 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 index+=(match[spaceIndex] as string).length
                 takeComment();
                 continue;
+            }else if(cc==='@'){
+                index+=(match[spaceIndex] as string).length
+                takeTag();
+                continue;
             }else if(cc===')' || cc==='}}'){// close function
                 lastComment=''
+                if(tags.length){
+                    tags=[];
+                }
                 if(!stack.length){
                     error='Unexpected end of function call';
                     break parsingLoop;
@@ -364,6 +385,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             if(lastComment){
                 statement.comment=lastComment;
                 lastComment='';
+            }
+            if(tags.length){
+                statement.tags=tags;
+                tags=[];
             }
             addStatement(statement);
 
@@ -469,6 +494,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     }
                     messages.push(currentMessage);
                     lastComment='';
+                    if(tags.length){
+                        currentMessage.tags=tags;
+                        tags=[];
+                    }
                     stack.push({fn:'map',params:currentFn.params});
                     inFnMsg=true;
                     inFnBody=false;
@@ -490,6 +519,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     }
                     messages.push(currentMessage);
                     lastComment='';
+                    if(tags.length){
+                        currentMessage.tags=tags;
+                        tags=[];
+                    }
                     inMsg=true;
                     const body:ConvoStatement={fn:'body'}
                     stack.push(body);
@@ -504,6 +537,8 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
             }else if(char==='#'){
                 takeComment();
+            }else if(char==='@'){
+                takeTag();
             }else if(space.test(char) || char===';' || char===','){
                 index++;
             }else{

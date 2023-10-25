@@ -108,8 +108,10 @@ const convo={
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
+                { "include": "#externFunction"},
                 { "include": "#embed" },
-                { "include": "#comment" }
+                { "include": "#comment" },
+                { "include": "#tag" }
             ]
         },
         "interpolation":{
@@ -193,6 +195,7 @@ const convo={
             },
             "patterns": [
                 {"include":"#comment"},
+                {"include":"#tag"},
                 {"include":"#functionReturn"},
                 {"include":"#functionCall"},
                 {"include":"#paramLineExpression"}
@@ -219,9 +222,21 @@ const convo={
             },
             "patterns": [
                 {"include":"#comment"},
+                {"include":"#tag"},
                 {"include":"#functionCall"},
                 {"include":"#lineExpression"}
             ]
+        },
+        "externFunction":{
+            "match":"(->)\\s*(extern)",
+            "captures": {
+                "1":{
+                    "name":"keyword.operator"
+                },
+                "2":{
+                    "name":"keyword.control"
+                }
+            }
         },
         "functionReturn":{
             "match":"(\\))\\s*(->)\\s*(\\w+)?\\s*(\\()",
@@ -267,9 +282,24 @@ const convo={
             "match":"#.*",
             "name":"comment"
         },
+        "tag":{
+            "match":"(@)\\s*(\\w*)\\s*=?(.*)",
+            "captures":{
+                "1":{
+                    "name":"entity.name.tag"
+                },
+                "2":{
+                    "name":"entity.name.tag"
+                },
+                "3":{
+                    "name":"string"
+                }
+            }
+        },
         "lineExpression":{
             "patterns":[
                 { "include": "#comment" },
+                {"include":"#tag"},
                 { "include": "#stringDq" },
                 { "include": "#stringSq" },
                 { "include": "#functionCall" },
@@ -283,6 +313,7 @@ const convo={
         "paramLineExpression":{
             "patterns":[
                 { "include": "#comment" },
+                {"include":"#tag"},
                 { "include": "#stringDq" },
                 { "include": "#stringSq" },
                 { "include": "#functionCall" },
@@ -356,7 +387,7 @@ const convo={
             }
         },
         "systemFunctions":{
-            "match":"\\b(elif|if|else|for|do|then)$",
+            "match":"\\b(elif|if|else|while|for|in|do|then)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
