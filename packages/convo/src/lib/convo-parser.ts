@@ -5,7 +5,7 @@ type StringType='"'|"'"|'>';
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/([\s\n\r]*)((#|\)|\}\})|((\w+)(\??):)?\s*((\w+)\s*=)?\s*('|"|\w+\s*(\()|[\w.]+))/gs;
+const statementReg=/([\s\n\r]*)((#|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -16,7 +16,7 @@ const fnOpenIndex=10;
 
 const returnTypeReg=/\s*->\s*(\w+)?\s*(\(?)/gs;
 
-const numberReg=/^[.\d]/;
+const numberReg=/^-?[.\d]/;
 
 const singleStringReg=/(\{\{|')/gs;
 const doubleStringReg=/(\{\{|")/gs;
@@ -24,9 +24,27 @@ const msgStringReg=/(\{\{|[\n\r]\s*>)/gs;
 
 const space=/\s/;
 
+const paramTrimPlaceHolder='{{**PLACE_HOLDER**}}';
 
-if(globalThis.window){
-    (window as any).__fnReg=fnMessageReg;
+
+const trimLeft=(value:string,count:number):string=>{
+    const lines=value.split('\n');
+    console.log('hio 👋 👋 👋 LINES',value,lines);
+    for(let l=0;l<lines.length;l++){
+        const line=lines[l];
+        if(!line){
+            continue;
+        }
+        let i=0;
+        while(i<count && i<line.length && (line[i]===' ' || line[i]==='\t')){
+            i++;
+        }
+        if(i){
+            lines[l]=line.substring(i);
+        }
+    }
+    return lines.join(value.includes('\r')?'\r\n':'\n');
+
 }
 
 export const parseConvoCode=(code:string):ConvoParsingResult=>{
@@ -39,6 +57,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
     let inFnMsg=false;
     let inFnBody=false;
     let msgName:string|null=null;
+    let whiteSpaceOffset=0;
     let stringEndReg=singleStringReg;
     const stringStack:StringType[]=[];
     const stringStatementStack:ConvoStatement[]=[];
@@ -128,6 +147,27 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
         ){
             currentMessage.content=currentMessage.statement.value.trim();
             delete currentMessage.statement;
+        }
+        if(whiteSpaceOffset){
+            if(typeof currentMessage?.content === 'string'){
+                currentMessage.content=trimLeft(currentMessage.content,whiteSpaceOffset);
+            }
+            if(currentMessage?.statement?.params){
+                const lines=trimLeft(
+                    currentMessage?.statement?.params
+                        .map(p=>(typeof p.value==='string')?p.value:paramTrimPlaceHolder).join(''),
+                    whiteSpaceOffset
+                ).split(paramTrimPlaceHolder);
+
+                for(let i=0;i<lines.length;i++){
+                    const v=lines[i];
+                    const param=currentMessage.statement.params[i===0?0:i*2];
+                    if(param){
+                        param.value=v;
+                    }
+                }
+            }
+            console.log('hio 👋 👋 👋 TRIM',currentMessage);
         }
         msgName=null;
         currentMessage=null;
@@ -312,7 +352,14 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 statement.opt=opt
             }
             if(set){
-                statement.set=set
+                if(set.includes('.')){
+                    const path=set.split('.');
+                    statement.set=path[0];
+                    path.shift();
+                    statement.setPath=path;
+                }else{
+                    statement.set=set;
+                }
             }
             if(lastComment){
                 statement.comment=lastComment;
@@ -325,7 +372,14 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     error='function call name expected';
                     break parsingLoop;
                 }
+
                 statement.fn=val.substring(0,val.length-1).trim()
+                if(statement.fn.includes('.')){
+                    const path=statement.fn.split('.');
+                    statement.fn=path[path.length-1];
+                    path.pop();
+                    statement.fnPath=path;
+                }
 
                 stack.push(statement);
                 console.log('hio 👋 👋 👋 PUSH STACK',stack.map(s=>s.fn));
@@ -358,8 +412,18 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }
             }else if(convoNonFuncKeywords.includes(val as ConvoNonFuncKeyword)){
                 statement.keyword=val;
+            }else if(val!==undefined){
+                if(val.includes('.')){
+                    const path=val.split('.');
+                    statement.ref=path[0];
+                    path.shift();
+                    statement.refPath=path;
+                }else{
+                    statement.ref=val;
+                }
             }else{
-                statement.varRef=val;
+                error='value expected';
+                break parsingLoop;
             }
 
             // label
@@ -373,7 +437,15 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 error='character expected'
                 break parsingLoop;
             }
-            if(char==='>' && (code[index-1]==='\n' || code[index-1]==='\r')){
+
+            if(char==='>'){
+
+                whiteSpaceOffset=0;
+                while(code[index-whiteSpaceOffset-1]===' ' || code[index-whiteSpaceOffset-1]==='\t'){
+                    whiteSpaceOffset++;
+                }
+
+                console.log('hio 👋 👋 👋 WHITESPACEOFFSET',whiteSpaceOffset,code.substring(index,index+15));
 
                 fnMessageReg.lastIndex=index;
                 let match=fnMessageReg.exec(code);
@@ -435,7 +507,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }else if(space.test(char)){
                 index++;
             }else{
-                error='Unexpected character';
+                error=`Unexpected character ||${char}||`;
                 break parsingLoop;
             }
         }

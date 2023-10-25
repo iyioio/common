@@ -104,10 +104,36 @@ const convo={
 
         "expression": {
             "patterns": [
+                { "include": "#interpolation"},
                 { "include": "#function"},
                 { "include": "#role" },
+                { "include": "#functionBody"},
                 { "include": "#embed" },
-                { "include": "#comment" },
+                { "include": "#comment" }
+            ]
+        },
+        "interpolation":{
+            "contentName": "meta.embedded.line.ts",
+            "begin": "\\${",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
+                }
+            },
+            "end": "}",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.definition.interpolation.end.bracket.curly.scss punctuation.definition.template-expression.end.js"
+                }
+            },
+            "name": "variable.interpolation.scss",
+            "patterns": [
+                {
+                    "include": "source.ts#expression"
+                },
+                {
+                    "include": "#interpolation"
+                }
             ]
         },
         "role": {
@@ -121,7 +147,7 @@ const convo={
                 },
                 "3":{
                     "name":"entity.name.type"
-                },
+                }
             }
         },
         "embed":{
@@ -130,12 +156,12 @@ const convo={
             "beginCaptures": {
                 "0":{
                     "name":"entity.name.tag"
-                },
+                }
             },
             "endCaptures": {
                 "0":{
                     "name":"entity.name.tag"
-                },
+                }
             },
             "patterns":[{"include":"#lineExpression"}]
 
@@ -143,7 +169,6 @@ const convo={
         "function":{
             "begin": "^\\s*(>)\\s*(\\w+)?\\s+(\\w+)\\s*([\\*\\?!]*)\\s*(\\()",
             "end": "\\)",
-            "applyEndPatternLast": 1,
             "beginCaptures": {
                 "1":{
                     "name":"keyword.control"
@@ -170,7 +195,32 @@ const convo={
                 {"include":"#comment"},
                 {"include":"#functionReturn"},
                 {"include":"#functionCall"},
-                {"include":"#lineExpression"},
+                {"include":"#paramLineExpression"}
+            ]
+        },
+        "functionBody":{
+            "begin":"(->)\\s*(\\w+)?\\s*(\\()",
+            "end":"\\)",
+            "beginCaptures": {
+                "1":{
+                    "name":"keyword.operator"
+                },
+                "2":{
+                    "name":"variable"
+                },
+                "3":{
+                    "name":"keyword.control"
+                }
+            },
+            "endCaptures": {
+                "0":{
+                    "name":"keyword.control"
+                }
+            },
+            "patterns": [
+                {"include":"#comment"},
+                {"include":"#functionCall"},
+                {"include":"#lineExpression"}
             ]
         },
         "functionReturn":{
@@ -202,7 +252,7 @@ const convo={
                 },
                 "2":{
                     "name":"meta.parameters"
-                },
+                }
             },
             "endCaptures":{
                 "0":{
@@ -210,7 +260,7 @@ const convo={
                 }
             },
             "patterns": [
-                { "include": "#lineExpression" },
+                { "include": "#lineExpression" }
             ]
         },
         "comment":{
@@ -224,11 +274,23 @@ const convo={
                 { "include": "#stringSq" },
                 { "include": "#functionCall" },
                 {"include": "#label"},
-                {"include": "#keyword"},
                 {"include": "#typeKeyword"},
                 {"include": "#number"},
                 {"include": "#constValue"},
-                {"include": "#lineVar"},
+                {"include": "#lineVar"}
+            ]
+        },
+        "paramLineExpression":{
+            "patterns":[
+                { "include": "#comment" },
+                { "include": "#stringDq" },
+                { "include": "#stringSq" },
+                { "include": "#functionCall" },
+                {"include": "#paramLabel"},
+                {"include": "#typeKeyword"},
+                {"include": "#number"},
+                {"include": "#constValue"},
+                {"include": "#lineVar"}
             ]
         },
         "lineVar":{
@@ -244,6 +306,14 @@ const convo={
             "captures":{
                 "1":{
                     "name":"entity.name"
+                }
+            }
+        },
+        "paramLabel":{
+            "match":"(\\w+)\\s*(\\?)?\\s*:",
+            "captures":{
+                "1":{
+                    "name":"variable"
                 }
             }
         },
@@ -278,23 +348,15 @@ const convo={
             ]
         },
         "typeKeyword":{
-            "match":"(string|number|boolean|bool|time|void)",
+            "match":"\\b(string|number|int|boolean|time|void|any|map|array)\\b",
             "captures":{
                 "1":{
                     "name":"entity.name.type"
                 }
             }
         },
-        "keyword":{
-            "match":"(in)",
-            "captures":{
-                "1":{
-                    "name":"keyword.control"
-                }
-            }
-        },
         "systemFunctions":{
-            "match":"(elif|if|else|for|do|then)",
+            "match":"\\b(elif|if|else|for|do|then)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
@@ -302,7 +364,7 @@ const convo={
             }
         },
         "number":{
-            "match":"(\\d+\\.\\d+|\\.\\d+|\\d+)+",
+            "match":"-?(\\d+\\.\\d+|\\.\\d+|\\d+)+",
             "name":"entity.name.type"
         },
         "constValue":{
@@ -312,3 +374,4 @@ const convo={
     }
 
 }
+
