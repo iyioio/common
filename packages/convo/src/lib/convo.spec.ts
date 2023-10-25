@@ -233,6 +233,53 @@ describe('convo',()=>{
 
     })
 
+    it('should add compare negative numbers',async ()=>{
+        const convo=parse(1,/*convo*/`
+
+> testFn(
+    value: number
+) -> values (
+    return( eq(value -2) )
+)
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:-2})).toBe(true);
+
+        expect(executeConvoFunction(fn,{value:2})).toBe(false);
+
+    })
+
+    it('should allow commas and semi-colons',async ()=>{
+        const convo=parse(1,/*convo*/`
+
+> testFn(
+    value: number
+) -> values (
+    return( eq( value , -2) );
+)
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:-2})).toBe(true);
+
+        expect(executeConvoFunction(fn,{value:2})).toBe(false);
+
+    })
+
+
     it('should deep return',async ()=>{
         const convo=parse(1,/*convo*/`
 

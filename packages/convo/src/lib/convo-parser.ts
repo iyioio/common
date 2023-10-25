@@ -5,7 +5,7 @@ type StringType='"'|"'"|'>';
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/([\s\n\r]*)((#|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
+const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -504,7 +504,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
             }else if(char==='#'){
                 takeComment();
-            }else if(space.test(char)){
+            }else if(space.test(char) || char===';' || char===','){
                 index++;
             }else{
                 error=`Unexpected character ||${char}||`;
