@@ -233,6 +233,63 @@ describe('convo',()=>{
 
     })
 
+    it('should escape single quotes in strings',async ()=>{
+        const convo=parse(1,/*convo*/`
+
+> testFn() -> values (
+    return( 'I\\'m bob' )
+)
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toBe("I'm bob");
+
+    })
+
+    it('should escape double quotes in strings',async ()=>{
+        const convo=parse(1,/*convo*/`
+
+> testFn() -> values (
+    return( "in the famous word of colonel sanders \\"i'm too drunk to taste this chicken\\" " )
+)
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toBe("in the famous word of colonel sanders \"i'm too drunk to taste this chicken\" ");
+
+    })
+
+    it('should embed strings',async ()=>{
+        const convo=parse(1,/*convo*/`
+
+> testFn() -> values (
+    return( "1 + 1 = {{ add(1 1) }}" )
+)
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toBe("1 + 1 = 2");
+
+    })
+
     it('should add compare negative numbers',async ()=>{
         const convo=parse(1,/*convo*/`
 
