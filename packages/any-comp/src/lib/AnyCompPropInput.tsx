@@ -141,7 +141,7 @@ export function AnyCompPropInput({
                 <input
                     className={style.checkbox()}
                     type="checkbox"
-                    value={value?.toString()}
+                    checked={value}
                     onChange={e=>setValue(e.target.checked)}
                     placeholder={placeholder}
                 />
