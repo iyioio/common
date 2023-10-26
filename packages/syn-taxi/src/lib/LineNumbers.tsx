@@ -39,7 +39,7 @@ const style=atDotCss({name:'LineNumbers',css:`
         font-size:${dt().codeFontSize}px !important;
         line-height:${dt().codeLineHeight}px !important;
         border-right:${dt().foreground}18 1px solid;
-        padding-right:0.5rem;
+        padding:0 0.5rem;
         font-family:Courier !important;
     }
     @.root > *{
