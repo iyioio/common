@@ -1,8 +1,10 @@
+import { convoBodyFnName } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
+const runMessageReg=/(>)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
 const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|@|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
@@ -344,7 +346,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
                             if(rMatch[2]){
                                 inFnBody=true;
-                                const body:ConvoStatement={fn:'body',params:currentFn.body}
+                                const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body}
                                 stack.push(body);
                                 continue;
                             }
@@ -506,6 +508,35 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     continue;
                 }
 
+                match=runMessageReg.exec(code);
+                if(match && match.index===index){
+                    msgName='run';
+                    currentFn={
+                        name:msgName,
+                        body:[],
+                        params:[],
+                        description:lastComment||undefined,
+
+                    }
+                    currentMessage={
+                        role:'run',
+                        fn:currentFn,
+                    }
+                    messages.push(currentMessage);
+                    lastComment='';
+                    if(tags.length){
+                        currentMessage.tags=tags;
+                        tags=[];
+                    }
+                    const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body}
+                    stack.push(body);
+                    inFnMsg=true;
+                    inFnBody=true;
+                    index+=match[0].length;
+                    console.log('hio 👋 👋 👋 match function',msgName);
+                    continue;
+                }
+
                 roleReg.lastIndex=index;
                 match=roleReg.exec(code);
                 if(match && match.index==index){
@@ -524,7 +555,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         tags=[];
                     }
                     inMsg=true;
-                    const body:ConvoStatement={fn:'body'}
+                    const body:ConvoStatement={fn:convoBodyFnName}
                     stack.push(body);
                     currentMessage.statement=openString('>');
                     index+=match[0].length;

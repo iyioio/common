@@ -108,7 +108,7 @@ const convo={
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
-                { "include": "#externFunction"},
+                { "include": "#run"},
                 { "include": "#embed" },
                 { "include": "#comment" },
                 { "include": "#tag" }
@@ -196,7 +196,6 @@ const convo={
             "patterns": [
                 {"include":"#comment"},
                 {"include":"#tag"},
-                {"include":"#functionReturn"},
                 {"include":"#functionCall"},
                 {"include":"#paramLineExpression"}
             ]
@@ -227,33 +226,28 @@ const convo={
                 {"include":"#lineExpression"}
             ]
         },
-        "externFunction":{
-            "match":"(->)\\s*(extern)",
-            "captures": {
-                "1":{
-                    "name":"keyword.operator"
-                },
-                "2":{
-                    "name":"keyword.control"
-                }
-            }
-        },
-        "functionReturn":{
-            "match":"(\\))\\s*(->)\\s*(\\w+)?\\s*(\\()",
-            "captures": {
+        "run":{
+            "begin":"(>)\\s*(\\()",
+            "end":"\\)",
+            "beginCaptures": {
                 "1":{
                     "name":"keyword.control"
                 },
                 "2":{
-                    "name":"keyword.operator"
-                },
-                "3":{
-                    "name":"variable"
-                },
-                "4":{
                     "name":"keyword.control"
                 }
-            }
+            },
+            "endCaptures": {
+                "0":{
+                    "name":"keyword.control"
+                }
+            },
+            "patterns": [
+                {"include":"#comment"},
+                {"include":"#tag"},
+                {"include":"#functionCall"},
+                {"include":"#lineExpression"}
+            ]
         },
         "functionCall":{
             "begin":"(\\w+)\\s*(\\()",
