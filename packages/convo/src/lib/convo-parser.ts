@@ -20,7 +20,7 @@ const numberReg=/^-?[.\d]/;
 
 const singleStringReg=/(\{\{|')/gs;
 const doubleStringReg=/(\{\{|")/gs;
-const msgStringReg=/(\{\{|[\n\r]\s*>)/gs;
+const msgStringReg=/(\{\{|[\n\r]\s*>|$)/gs;
 
 const tagReg=/(\w+)\s*=(.*)/
 
