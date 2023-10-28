@@ -1,4 +1,4 @@
-import { convoArrayFnName, convoBodyFnName, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createOptionalConvoValue, makeAnyConvoType } from "./convo-lib";
+import { convoArrayFnName, convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createOptionalConvoValue, makeAnyConvoType } from "./convo-lib";
 import { ConvoScope } from "./convo-types";
 
 const ifFalse=Symbol();
@@ -68,6 +68,8 @@ export const defaultConvoVars={
 
     [convoMapFnName]:mapFn,
     [convoArrayFnName]:arrayFn,
+    [convoJsonMapFnName]:mapFn,
+    [convoJsonArrayFnName]:arrayFn,
     and:and,
     or:createConvoScopeFunction(scope=>{
         if(!scope.paramValues?.length){

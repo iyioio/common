@@ -1,4 +1,4 @@
-import { convoBodyFnName } from "./convo-lib";
+import { convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'>';
@@ -7,7 +7,7 @@ const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const runMessageReg=/(>)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|@|\)|\}\})|((\w+)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+))/gs;
+const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|@|\)|\}\}|\}|\])|((['"]?\w+['"]?)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -273,7 +273,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
         }else if(inMsg || inFnMsg){
 
             statementReg.lastIndex=index;
-            const match=statementReg.exec(code);
+            let match=statementReg.exec(code);
             if(!match){
                 error=inFnMsg?'Unexpected end of function':'Unexpected end of message';
                 break parsingLoop;
@@ -289,6 +289,8 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 break parsingLoop;
             }
 
+            const indexOffset=match[0].length;
+
             if(cc==='#'){
                 index+=(match[spaceIndex] as string).length
                 takeComment();
@@ -297,8 +299,16 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 index+=(match[spaceIndex] as string).length
                 takeTag();
                 continue;
-            }else if(cc===')' || cc==='}}'){// close function
-                lastComment=''
+            }else if(cc===')' || cc==='}}' || cc==='}' || cc===']'){// close function
+                if(cc==='}' && stack[stack.length-1]?.fn!==convoJsonMapFnName){
+                    error="Unexpected closing of JSON object";
+                    break parsingLoop;
+                }
+                if(cc===']' && stack[stack.length-1]?.fn!==convoJsonArrayFnName){
+                    error="Unexpected closing of JSON array";
+                    break parsingLoop;
+                }
+                lastComment='';
                 if(tags.length){
                     tags=[];
                 }
@@ -362,8 +372,29 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 continue;
             }
 
-            const val=match[valueIndex]||undefined;
-            const label=match[labelIndex]||undefined;
+            let val=match[valueIndex]||undefined;
+            if(val==='{'){
+                console.log('hio 👋 👋 👋 jsonMap',);
+                statementReg.lastIndex=0;
+                match=statementReg.exec(`${convoJsonMapFnName}(`);
+                if(!match){
+                    error='JSON map open match expected';
+                    break parsingLoop;
+                }
+                val=match[valueIndex]||undefined
+            }else if(val==='['){
+                console.log('hio 👋 👋 👋 jsonArray',);
+                statementReg.lastIndex=0;
+                match=statementReg.exec(`${convoJsonArrayFnName}(`);
+                if(!match){
+                    error='JSON map open match expected';
+                    break parsingLoop;
+                }
+                val=match[valueIndex]||undefined
+            }
+
+
+            const label=match[labelIndex]?.replace(/["']/g,'')||undefined;
             const opt=match[optIndex]?true:undefined;
             const set=match[setIndex]||undefined;
 
@@ -457,7 +488,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             // assignment
 
 
-            index+=match[0].length;
+            index+=indexOffset;
         }else{
             const char=code[index];
             if(!char){
@@ -508,6 +539,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     continue;
                 }
 
+                runMessageReg.lastIndex=index;
                 match=runMessageReg.exec(code);
                 if(match && match.index===index){
                     msgName='run';

@@ -3,6 +3,8 @@ import { ConvoBaseType, ConvoError, ConvoFlowController, ConvoScope, ConvoScopeF
 export const convoBodyFnName='__body__';
 export const convoMapFnName='map';
 export const convoArrayFnName='array';
+export const convoJsonMapFnName='jsonMap';
+export const convoJsonArrayFnName='jsonArray';
 
 export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
     return {
