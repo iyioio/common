@@ -18,7 +18,7 @@ export function LineNumbers({
         lineErrors=[lineErrors];
     }
 
-    for(let i=1;i<=count;i++){
+    for(let i=1;i<count;i++){
         lines.push(<span className={(lineErrors && lineErrors.includes(i))?style.error():undefined} key={i}>{i}</span>)
     }
 
