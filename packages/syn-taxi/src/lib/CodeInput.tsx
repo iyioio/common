@@ -154,7 +154,7 @@ export function CodeInput({
                             const lineStart=lineStartReg.exec(prevLine)?.[lineStartRegIndex];
                             if(lineStart){
                                 e.preventDefault();
-                                textArea.value=textArea.value.substring(0,s+1)+lineStart+'\n'+textArea.value.substring(s+1)
+                                textArea.value=textArea.value.substring(0,s)+'\n'+lineStart+textArea.value.substring(s);
                                 textArea.selectionStart=s+lineStart.length+1;
                                 textArea.selectionEnd=s+lineStart.length+1;
                                 onChange?.(textArea.value);
