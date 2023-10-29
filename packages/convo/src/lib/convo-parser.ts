@@ -7,7 +7,7 @@ const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const runMessageReg=/(>)\s*(\()/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/[\s\n\r]*[,;]*([\s\n\r]*)((#|@|\)|\}\}|\}|\])|((['"]?\w+['"]?)(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
+const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|@|\)|\}\}|\}|\])|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -75,14 +75,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
     const stack:ConvoStatement[]=[];
     const len=code.length;
 
-    const openString=(type:StringType,s?:ConvoStatement):ConvoStatement=>{
-        console.log('hio 👋 👋 👋 OPEN STRING """"""""" ',type);
-        inString=type;
-        stringStack.push(type);
-        if(!s){
-            s=addStatement({});
-        }
-        stringStatementStack.push(s);
+    const setStringEndReg=(type:StringType)=>{
         switch(type){
 
             case '\'':
@@ -97,6 +90,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 stringEndReg=msgStringReg;
                 break;
         }
+    }
+
+    const openString=(type:StringType,s?:ConvoStatement):ConvoStatement=>{
+        console.log('hio 👋 👋 👋 OPEN STRING """"""""" ',type,`|${code.substring(index,index+20)}|`);
+        inString=type;
+        stringStack.push(type);
+        if(!s){
+            s=addStatement({s:index,e:index+type.length});
+        }
+        stringStatementStack.push(s);
+        setStringEndReg(type);
         return s;
     }
 
@@ -106,6 +110,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             error='No string on string stack';
             return false;
         }
+        last.c=index;
         console.log('hio 👋 👋 👋 Close STRING """"""""" ',last?.fn?JSON.stringify(last,null,4):last?.value);
         if(stack.includes(last)){
             if(stack[stack.length-1]!==last){
@@ -117,6 +122,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
         stringStack.pop();
         stringStatementStack.pop();
         inString=null;
+        const lastType=stringStack[stringStack.length-1];
+        if(lastType){
+            setStringEndReg(lastType);
+        }
         return true;
     }
 
@@ -211,6 +220,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 const e=stringEndReg.exec(code)
 
                 if(!e){
+                    console.log('hio 👋 👋 👋 exit bad string',{inString,stringEndReg,index,nextIndex},code.substring(nextIndex));
                     error='End of string not found';
                     break parsingLoop;
                 }
@@ -242,7 +252,6 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 content=unescapeStr(content);
             }
 
-            index=nextIndex;
             if(embedFound){
                 if(!strStatement.params){
                     strStatement.params=[];
@@ -251,17 +260,19 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     strStatement.fn='add';
                     stack.push(strStatement);
                 }
-                strStatement.params.push({value:content});
+                strStatement.params.push({value:content,s:index,e:nextIndex});
                 inString=null;
+                index=nextIndex;
             }else{
 
                 if(strStatement.params){// has embeds
                     if(content){
-                        strStatement.params.push({value:content});
+                        strStatement.params.push({value:content,s:index,e:nextIndex});
                     }
                 }else{
                     strStatement.value=content;
                 }
+                index=nextIndex;
                 if(!closeString()){
                     break parsingLoop;
                 }
@@ -280,8 +291,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }
 
             const cc=match.length===2?match[1]:match[ccIndex];
+            const indexOffset=match[0].length;
+            const spaceLength=(match[spaceIndex]?.length??0);
 
-            console.log('hio 👋 👋 👋 statement match',index,`||${cc}||`,`(((${code.substring(index,index+10)})))`,match)//
+            console.log('hio 👋 👋 👋 statement match',index,`||${cc}||`,`<<||${code.substring(index+spaceLength,index+indexOffset)}||>>`,match)//
             console.log(code.substring(index,index+match[0].length));
 
             if(match.index!==index){
@@ -289,14 +302,13 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 break parsingLoop;
             }
 
-            const indexOffset=match[0].length;
 
             if(cc==='#'){
-                index+=(match[spaceIndex] as string).length
+                index+=spaceLength;
                 takeComment();
                 continue;
             }else if(cc==='@'){
-                index+=(match[spaceIndex] as string).length
+                index+=spaceLength;
                 takeTag();
                 continue;
             }else if(cc===')' || cc==='}}' || cc==='}' || cc===']'){// close function
@@ -312,13 +324,16 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 if(tags.length){
                     tags=[];
                 }
-                if(!stack.length){
+                const lastStackItem=stack[stack.length-1];
+                if(!stack.length || !lastStackItem){
                     error='Unexpected end of function call';
                     break parsingLoop;
                 }
                 const endEmbed=cc==='}}';
+                const startIndex=index;
                 index+=match[0].length;
                 if(!endEmbed){
+                    lastStackItem.c=index;
                     stack.pop();
                 }
                 console.log('hio 👋 👋 👋 POP STACK',stack.map(s=>s.fn));
@@ -356,7 +371,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
                             if(rMatch[2]){
                                 inFnBody=true;
-                                const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body}
+                                const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body,s:startIndex,e:index}
                                 stack.push(body);
                                 continue;
                             }
@@ -373,6 +388,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }
 
             let val=match[valueIndex]||undefined;
+            const label=match[labelIndex]?.replace(/["']/g,'')||undefined;
+            const opt=match[optIndex]?true:undefined;
+            const set=match[setIndex]||undefined;
             if(val==='{'){
                 console.log('hio 👋 👋 👋 jsonMap',);
                 statementReg.lastIndex=0;
@@ -394,11 +412,8 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }
 
 
-            const label=match[labelIndex]?.replace(/["']/g,'')||undefined;
-            const opt=match[optIndex]?true:undefined;
-            const set=match[setIndex]||undefined;
 
-            const statement:ConvoStatement={}
+            const statement:ConvoStatement={s:index+spaceLength,e:index+indexOffset}
             if(label){
                 statement.label=label
             }
@@ -443,6 +458,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 console.log('hio 👋 👋 👋 PUSH STACK',stack.map(s=>s.fn));
             }else if(val==='"' || val==="'"){
                 openString(val,statement);
+                console.log('hio 👋 👋 👋',`|${code.substring(index+indexOffset,index+indexOffset+20)}|`);
             }else if(val && numberReg.test(val)){// number
                 statement.value=Number(val);
             }else if(convoValueConstants.includes(val as ConvoValueConstant)){
@@ -484,10 +500,6 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 break parsingLoop;
             }
 
-            // label
-            // assignment
-
-
             index+=indexOffset;
         }else{
             const char=code[index];
@@ -505,6 +517,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
                 console.log('hio 👋 👋 👋 WHITESPACEOFFSET',whiteSpaceOffset,code.substring(index,index+15));
 
+                const startIndex=index;
                 fnMessageReg.lastIndex=index;
                 let match=fnMessageReg.exec(code);
                 if(match && match.index==index){
@@ -531,10 +544,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         currentMessage.tags=tags;
                         tags=[];
                     }
-                    stack.push({fn:'map',params:currentFn.params});
+                    index+=match[0].length;
+                    stack.push({fn:'map',params:currentFn.params,s:startIndex,e:index});
                     inFnMsg=true;
                     inFnBody=false;
-                    index+=match[0].length;
                     console.log('hio 👋 👋 👋 match function',msgName);
                     continue;
                 }
@@ -560,11 +573,11 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         currentMessage.tags=tags;
                         tags=[];
                     }
-                    const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body}
+                    index+=match[0].length;
+                    const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body,s:startIndex,e:index}
                     stack.push(body);
                     inFnMsg=true;
                     inFnBody=true;
-                    index+=match[0].length;
                     console.log('hio 👋 👋 👋 match function',msgName);
                     continue;
                 }
@@ -587,7 +600,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         tags=[];
                     }
                     inMsg=true;
-                    const body:ConvoStatement={fn:convoBodyFnName}
+                    const body:ConvoStatement={fn:convoBodyFnName,s:index,e:index+match[0].length}
                     stack.push(body);
                     currentMessage.statement=openString('>');
                     index+=match[0].length;
@@ -605,6 +618,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }else if(space.test(char) || char===';' || char===','){
                 index++;
             }else{
+                console.log('hio 👋 👋 👋 UN char',{inString});
                 error=`Unexpected character ||${char}||`;
                 break parsingLoop;
             }

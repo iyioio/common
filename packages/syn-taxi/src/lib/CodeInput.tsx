@@ -70,7 +70,8 @@ export function CodeInput({
             return;
         }
 
-        const r=parseConvoCode(value)
+        const r=parseConvoCode(value);
+        (window as any).___code=value;
         console.log('hio 👋 👋 👋 parsing result',r.error,r);
         console.log(r.error?.near)
 

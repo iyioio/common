@@ -92,6 +92,21 @@ export interface ConvoStatement
     comment?:string;
 
     tags?:ConvoTag[];
+
+    /**
+     * Source index start
+     */
+    s:number;
+
+    /**
+     * Source index end. The index is non-inclusive.
+     */
+    e:number;
+
+    /**
+     * Source index close. Only used with function calls. The index is non-inclusive.
+     */
+    c?:number;
 }
 
 export interface ConvoFunction
