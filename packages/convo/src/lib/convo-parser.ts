@@ -1,13 +1,13 @@
-import { convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName } from "./convo-lib";
+import { convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
-const runMessageReg=/(>)\s*(\()/gs;
+const topLevelMessageReg=/(>)\s*(do|no\s+result|result)/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|@|\)|\}\}|\}|\])|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
+const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|@|\)|\}\}|\}|\]|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -311,13 +311,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 index+=spaceLength;
                 takeTag();
                 continue;
-            }else if(cc===')' || cc==='}}' || cc==='}' || cc===']'){// close function
+            }else if(cc===')' || cc==='}}' || cc==='}' || cc===']' || cc==='>' || cc===''){// close function
                 if(cc==='}' && stack[stack.length-1]?.fn!==convoJsonMapFnName){
                     error="Unexpected closing of JSON object";
                     break parsingLoop;
                 }
                 if(cc===']' && stack[stack.length-1]?.fn!==convoJsonArrayFnName){
                     error="Unexpected closing of JSON array";
+                    break parsingLoop;
+                }
+                if(cc==='>' && !currentFn?.topLevel){
+                    error='Unexpected end of function using (>) character';
                     break parsingLoop;
                 }
                 lastComment='';
@@ -331,7 +335,11 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }
                 const endEmbed=cc==='}}';
                 const startIndex=index;
-                index+=match[0].length;
+                if(cc==='>'){
+                    index+=(match[spaceIndex]?.length??0);
+                }else{
+                    index+=match[0].length;
+                }
                 if(!endEmbed){
                     lastStackItem.c=index;
                     stack.pop();
@@ -371,6 +379,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
                             if(rMatch[2]){
                                 inFnBody=true;
+                                currentFn.body=[];
                                 const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body,s:startIndex,e:index}
                                 stack.push(body);
                                 continue;
@@ -436,6 +445,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }
             if(tags.length){
                 statement.tags=tags;
+                if(tags.some(t=>t.name==='shared')){
+                    statement.shared=true;
+                }
                 tags=[];
             }
             addStatement(statement);
@@ -526,16 +538,18 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         error='function name expected';
                         break parsingLoop;
                     }
+                    const modifiers=match[2]?[match[2]]:[];
                     currentFn={
                         name:msgName,
-                        body:[],
                         params:[],
                         description:lastComment||undefined,
-                        scope:match[2]||undefined
-
+                        modifiers,
+                        local:modifiers.includes(convoLocalFunctionModifier),
+                        call:modifiers.includes(convoCallFunctionModifier),
+                        topLevel:false,
                     }
                     currentMessage={
-                        role:'function',
+                        role:currentFn.call?'function-call':'function',
                         fn:currentFn
                     }
                     messages.push(currentMessage);
@@ -552,19 +566,22 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     continue;
                 }
 
-                runMessageReg.lastIndex=index;
-                match=runMessageReg.exec(code);
+                topLevelMessageReg.lastIndex=index;
+                match=topLevelMessageReg.exec(code);
                 if(match && match.index===index){
-                    msgName='run';
+                    msgName=match[2]??'topLevelStatements';
                     currentFn={
                         name:msgName,
                         body:[],
                         params:[],
                         description:lastComment||undefined,
-
+                        modifiers:[],
+                        local:false,
+                        call:false,
+                        topLevel:true,
                     }
                     currentMessage={
-                        role:'run',
+                        role:'do',
                         fn:currentFn,
                     }
                     messages.push(currentMessage);

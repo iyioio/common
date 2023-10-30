@@ -94,6 +94,12 @@ export interface ConvoStatement
     tags?:ConvoTag[];
 
     /**
+     * If true the statement has the shared tag and assignment of variables will be stored in the
+     * shared variable scope.
+     */
+    shared?:boolean;
+
+    /**
      * Source index start
      */
     s:number;
@@ -112,10 +118,32 @@ export interface ConvoStatement
 export interface ConvoFunction
 {
     name:string;
-    scope?:string;
+    modifiers:string[];
+
+    /**
+     * If true the function is a local statement that should only be called by other functions in the
+     * current convo script
+     */
+    local:boolean;
+    /**
+     * If true it has been requested that the function be called.
+     */
+    call:boolean;
+
+    /**
+     * If true the function is a collection of top level statements
+     */
+    topLevel:boolean;
+
+
     description?:string;
     paramsType?:ZodObject<any>;
-    body:ConvoStatement[];
+
+    /**
+     * The body statements of the function. If a function does not have a body then it is either
+     * a function interface or a call or called statement.
+     */
+    body?:ConvoStatement[];
     params:ConvoStatement[];
     paramsName?:string;
 }
@@ -223,7 +251,6 @@ export interface ConvoScope
     s:ConvoStatement;
 
 
-
     /**
      * Wait id. Id of another scope to wait for before resuming
      */
@@ -242,7 +269,7 @@ export interface ConvoScope
     [convoScopeFnKey]?:ConvoScopeFunction;
 
     /**
-     * Param
+     * Param values used with function statements
      */
     paramValues?:any[];
 
@@ -263,6 +290,18 @@ export interface ConvoScope
     fromIndex?:number;
 
     gotoIndex?:number;
+
+    /**
+     * Variable scope for the scope. When a function is executed all scopes generated will share the
+     * same vars scope object. This is important to remember when serializing scope objects.
+     */
+    vars:Record<string,any>;
+
+    /**
+     * If true the scope is used as the default scope object. This property is used for internal
+     * optimization and should be ignored
+     */
+    _d?:boolean;
 }
 
 export const convoBaseTypes=['string','number','int','boolean','time','void','any','map','array'] as const;

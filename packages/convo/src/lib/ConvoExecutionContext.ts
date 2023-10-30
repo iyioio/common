@@ -14,20 +14,33 @@ export const executeConvoFunction=(fn:ConvoFunction,args:Record<string,any>={}):
     return exe.executeFunction(fn,args);
 }
 
+const createDefaultScope=(vars:Record<string,any>):ConvoScope=>{
+    return {
+        _d:true,
+        vars,
+        i:0,
+        s:{s:0,e:0},
+    }
+}
+
+const copyDefaultScope=(scope:ConvoScope):ConvoScope=>{
+    if(scope._d){
+        scope={...scope};
+        delete scope._d;
+    }
+
+    return scope;
+}
+
 export class ConvoExecutionContext
 {
-    public readonly vars:Record<string,any>;
+    public readonly sharedVars:Record<string,any>;private nextSuspendId=1;
 
-    private readonly stack:ConvoScope[]=[];
-
-    private readonly defaultScope:ConvoScope={
-        i:0,
-        s:{},
-    }
+    private readonly suspendedScopes:Record<string,ConvoScope>={};
 
     public constructor()
     {
-        this.vars={...defaultConvoVars}
+        this.sharedVars={...defaultConvoVars}
     }
 
     public executeFunction(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>|any
@@ -40,21 +53,28 @@ export class ConvoExecutionContext
 
         args=parsed.data;
 
+        const vars:Record<string,any>={}
+
+        let scope:ConvoScope={
+            i:0,
+            vars,
+            s:{
+                fn:convoBodyFnName,
+                params:fn.body??[],
+                s:0,
+                e:0,
+            },
+        }
+
         for(const e in args){
-            this.setVar(args[e],e);
+            this.setVar(false,args[e],e,undefined,scope);
         }
 
         if(fn.paramsName){
-            this.setVar(args,fn.paramsName);
+            this.setVar(false,args,fn.paramsName,undefined,scope);
         }
 
-        const scope=this.executeScope({
-            i:0,
-            s:{
-                fn:convoBodyFnName,
-                params:fn.body
-            }
-        },undefined);
+        scope=this.executeScope(scope,undefined,createDefaultScope(vars));
 
         if(scope.si){
             return new Promise((r,j)=>{
@@ -92,13 +112,17 @@ export class ConvoExecutionContext
 
     public paramsToScheme=(params:ConvoStatement[]):ZodObject<any>=>{
 
+        const vars:Record<string,any>={}
         const scope=this.executeScope({
             i:0,
+            vars,
             s:{
                 fn:convoMapFnName,
-                params
+                params,
+                s:0,
+                e:0,
             }
-        },undefined);
+        },undefined,createDefaultScope(vars));
 
         if(scope.si){
             console.error('scheme statements should not be suspended',scope,params)
@@ -116,17 +140,17 @@ export class ConvoExecutionContext
         return zType;
     }
 
-    private executeScope(scope:ConvoScope,parent:ConvoScope|undefined,resumeParamScope?:ConvoScope):ConvoScope{
+    private executeScope(scope:ConvoScope,parent:ConvoScope|undefined,defaultScope:ConvoScope,resumeParamScope?:ConvoScope):ConvoScope{
 
         const statement=scope.s;
 
         let value:any=undefined;
 
         if(statement.fn){
-            scope=this.copyDefaultScope(scope);
+            scope=copyDefaultScope(scope);
             const fn=scope[convoScopeFnKey]??(scope[convoScopeFnKey]=statement.fnPath?
-                getValueByAryPath(this.vars,statement.fnPath)?.[statement.fn]:
-                this.vars[statement.fn]
+                getValueByAryPath(this.sharedVars,statement.fnPath)?.[statement.fn]:
+                this.sharedVars[statement.fn]
             );
             if(typeof fn !== 'function'){
                 const errPath=statement.fnPath?statement.fnPath.join('.')+'.'+statement.fn:statement.fn;
@@ -155,9 +179,9 @@ export class ConvoExecutionContext
                                 paramScope=resumeParamScope;
                                 resumeParamScope=undefined;
                             }else{
-                                const d=this.defaultScope;
+                                const d=defaultScope;
                                 d.s=paramStatement;
-                                paramScope=this.executeScope(d,scope);
+                                paramScope=this.executeScope(d,scope,defaultScope);
                             }
 
                             if(paramScope.error){
@@ -224,30 +248,28 @@ export class ConvoExecutionContext
         }
 
         if(isPromise(value)){
-            scope=this.copyDefaultScope(scope);
+            scope=copyDefaultScope(scope);
             this.suspendScope(scope);
             value.then(v=>{
                 scope.v=v;
-                this.completeScope(scope,parent);
+                this.completeScope(scope,parent,defaultScope);
             }).catch(e=>{
                 setConvoScopeError(scope,{
                     message:`Promise throw error - ${e?.message}`,
                     error:e,
                     statement,
                 });
-                this.completeScope(scope,parent);
+                this.completeScope(scope,parent,defaultScope);
             })
         }else{
             scope.v=value;
-            this.completeScope(scope,parent);
+            this.completeScope(scope,parent,defaultScope);
         }
 
         return scope;
     }
 
-    private nextSuspendId=1;
 
-    private readonly suspendedScopes:Record<string,ConvoScope>={};
     private suspendScope(scope:ConvoScope,waitFor?:ConvoScope){
         if(scope.si){
             console.error('Scope already suspended',scope);
@@ -260,7 +282,7 @@ export class ConvoExecutionContext
         this.suspendedScopes[scope.si]=scope;
     }
 
-    private completeScope(scope:ConvoScope,parent:ConvoScope|undefined){
+    private completeScope(scope:ConvoScope,parent:ConvoScope|undefined,defaultScope:ConvoScope){
 
         if(scope.wi){
             throw new Error(`scope waiting on scope(${scope.wi}) before resuming`);
@@ -268,7 +290,7 @@ export class ConvoExecutionContext
 
         const statement=scope.s;
         if(statement.set){
-            this.setVar(scope.v,statement.set,statement.setPath,scope);
+            this.setVar(statement.shared,scope.v,statement.set,statement.setPath,scope);
         }
 
         if(statement.label && parent?.labels){
@@ -297,7 +319,7 @@ export class ConvoExecutionContext
                     throw new Error('Suspension parent not found');
                 }
                 delete r.pi;
-                this.executeScope(r,parent,scope);
+                this.executeScope(r,parent,defaultScope,scope);
             }
         }
 
@@ -309,13 +331,11 @@ export class ConvoExecutionContext
                 oc[i]?.(scope.v);
             }
         }
-
-        // todo - trigger callbacks
     }
 
     private getVar(name:string,path?:string[],scope?:ConvoScope){
-        let value=this.vars[name];
-        if(value===undefined && !(name in this.vars)){
+        let value=scope?.vars[name]??this.sharedVars[name];
+        if(value===undefined && !(name in this.sharedVars)){
             setConvoScopeError(scope,`reference to undefined var - ${name}`);
         }else if(path){
             value=getValueByAryPath(value,path);
@@ -323,15 +343,17 @@ export class ConvoExecutionContext
         return value;
     }
 
-    private setVar(value:any,name:string,path?:string[],scope?:ConvoScope){
+    private setVar(shared:boolean|undefined,value:any,name:string,path?:string[],scope?:ConvoScope){
 
         if(name in defaultConvoVars){
             setConvoScopeError(scope,'Overriding builtin var not allowed');
             return value;
         }
 
+        const vars=(shared || !scope)?this.sharedVars:scope.vars;
+
         if(path){
-            let obj=this.vars[name];
+            let obj=vars[name];
             if(obj===undefined || obj===null){
                 setConvoScopeError(scope,`reference to undefined var - ${name}`);
                 return value;
@@ -345,40 +367,10 @@ export class ConvoExecutionContext
             }
             obj[path[path.length-1]??'']=value;
         }else{
-            this.vars[name]=value;
+            vars[name]=value;
         }
 
         return value;
     }
-
-
-    private copyDefaultScope(scope:ConvoScope){
-        if(scope===this.defaultScope){
-            return {...scope};
-        }else{
-            return scope;
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

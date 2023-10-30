@@ -5,6 +5,8 @@ export const convoMapFnName='map';
 export const convoArrayFnName='array';
 export const convoJsonMapFnName='jsonMap';
 export const convoJsonArrayFnName='jsonArray';
+export const convoLocalFunctionModifier='local';
+export const convoCallFunctionModifier='call';
 
 export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
     return {

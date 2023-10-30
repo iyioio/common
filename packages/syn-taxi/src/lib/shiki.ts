@@ -105,10 +105,10 @@ const convo={
         "expression": {
             "patterns": [
                 { "include": "#interpolation"},
+                { "include": "#topLevelStatements"},
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
-                { "include": "#run"},
                 { "include": "#embed" },
                 { "include": "#comment" },
                 { "include": "#tag" }
@@ -168,6 +168,24 @@ const convo={
             "patterns":[{"include":"#lineExpression"}]
 
         },
+        "topLevelStatements":{
+            "begin": "^\\s*(>)\\s*(do|no\\s+result|result)",
+            "end": "(?=>)",
+            "beginCaptures": {
+                "1":{
+                    "name":"keyword.control"
+                },
+                "2":{
+                    "name":"keyword.control"
+                }
+            },
+            "patterns": [
+                {"include":"#comment"},
+                {"include":"#tag"},
+                {"include":"#functionCall"},
+                {"include":"#paramLineExpression"}
+            ]
+        },
         "function":{
             "begin": "^\\s*(>)\\s*(\\w+)?\\s+(\\w+)\\s*([\\*\\?!]*)\\s*(\\()",
             "end": "\\)",
@@ -211,29 +229,6 @@ const convo={
                     "name":"variable"
                 },
                 "3":{
-                    "name":"keyword.control"
-                }
-            },
-            "endCaptures": {
-                "0":{
-                    "name":"keyword.control"
-                }
-            },
-            "patterns": [
-                {"include":"#comment"},
-                {"include":"#tag"},
-                {"include":"#functionCall"},
-                {"include":"#lineExpression"}
-            ]
-        },
-        "run":{
-            "begin":"(>)\\s*(\\()",
-            "end":"\\)",
-            "beginCaptures": {
-                "1":{
-                    "name":"keyword.control"
-                },
-                "2":{
                     "name":"keyword.control"
                 }
             },
