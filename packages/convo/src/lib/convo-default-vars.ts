@@ -1,4 +1,4 @@
-import { convoArrayFnName, convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createOptionalConvoValue, makeAnyConvoType } from "./convo-lib";
+import { convoArrayFnName, convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, makeAnyConvoType } from "./convo-lib";
 import { ConvoScope } from "./convo-types";
 
 const ifFalse=Symbol();
@@ -7,25 +7,7 @@ const ifTrue=Symbol();
 
 const mapFn=makeAnyConvoType('map',createConvoScopeFunction({
     usesLabels:true
-},scope=>{
-    const obj:Record<string,any>={};
-    const labels=scope.labels
-    if(labels){
-        for(const e in labels){
-            const label=labels[e];
-            if(label===undefined){
-                continue;
-            }
-            const isOptional=typeof label === 'object'
-            const index=isOptional?label.value:label;
-            if(index!==undefined){
-                const v=scope.paramValues?.[index]
-                obj[e]=isOptional?createOptionalConvoValue(v):v;
-            }
-        }
-    }
-    return obj;
-}))
+},convoLabeledScopeParamsToObj))
 
 const arrayFn=makeAnyConvoType('array',(scope:ConvoScope)=>{
     return scope.paramValues??[]
@@ -359,6 +341,13 @@ export const defaultConvoVars={
             }
         }
         return value;
+    }),
+
+    print:createConvoScopeFunction(scope=>{
+        if(scope.paramValues){
+            console.log(...scope.paramValues)
+        }
+        return scope.paramValues;
     }),
 
 } as const;

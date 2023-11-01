@@ -1,8 +1,8 @@
 import { getValueByAryPath, isPromise } from '@iyio/common';
 import { ZodObject } from 'zod';
 import { defaultConvoVars } from "./convo-default-vars";
-import { convoBodyFnName, convoMapFnName, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
-import { ConvoFlowController, ConvoFunction, ConvoScope, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
+import { convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
+import { ConvoExecuteResult, ConvoFlowController, ConvoFunction, ConvoMessage, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
 import { convoValueToZodType } from './convo-zod';
 
 
@@ -11,7 +11,8 @@ const argsCacheKey=Symbol('argsCacheKey');
 
 export const executeConvoFunction=(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>|any=>{
     const exe=new ConvoExecutionContext();
-    return exe.executeFunction(fn,args);
+    const r=exe.executeFunction(fn,args);
+    return r.valuePromise??r.value;
 }
 
 const createDefaultScope=(vars:Record<string,any>):ConvoScope=>{
@@ -38,13 +39,61 @@ export class ConvoExecutionContext
 
     private readonly suspendedScopes:Record<string,ConvoScope>={};
 
+    public readonly sharedSetters:string[]=[];
+
     public constructor()
     {
         this.sharedVars={...defaultConvoVars}
     }
 
-    public executeFunction(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>|any
+    public loadFunctions(messages:ConvoMessage[],externFunctions?:Record<string,ConvoScopeFunction>)
     {
+        for(const msg of messages){
+            if(msg.fn && !msg.fn.call && !msg.fn.topLevel){
+                this.setVar(true,createConvoScopeFunction({
+                    usesLabels:true,
+                    catchReturn:true,
+                    sourceFn:msg.fn
+                },(scope,ctx)=>{
+                    if(msg.fn?.body){
+                        const r=this.executeFunction(msg.fn,convoLabeledScopeParamsToObj(scope));
+                        return r.valuePromise??r.value;
+                    }else{
+                        const externFn=externFunctions?.[msg.fn?.name??''];
+                        if(!externFn){
+                            setConvoScopeError(scope,`No extern function provided for ${msg.fn?.name}`);
+                            return;
+                        }
+                        return externFn(scope,ctx);
+                    }
+                }),msg.fn.name);
+            }
+        }
+    }
+
+    public clearSharedSetters(){
+        this.sharedSetters.splice(0,this.sharedSetters.length);
+    }
+
+    public executeStatement(statement:ConvoStatement):ConvoExecuteResult
+    {
+
+        const vars:Record<string,any>={}
+        const scope:ConvoScope={
+            i:0,
+            vars,
+            s:statement,
+        }
+
+        return this.execute(scope,vars);
+    }
+
+    public executeFunction(fn:ConvoFunction,args:Record<string,any>={}):ConvoExecuteResult
+    {
+        if(fn.call){
+            throw new Error('executeFunction does not support proxy calls. Use executeFunctionAsync instead')
+        }
+
         const scheme=this.getConvoFunctionArgsScheme(fn);
         const parsed=scheme.safeParse(args);
         if(parsed.success===false){
@@ -55,7 +104,7 @@ export class ConvoExecutionContext
 
         const vars:Record<string,any>={}
 
-        let scope:ConvoScope={
+        const scope:ConvoScope={
             i:0,
             vars,
             s:{
@@ -74,25 +123,29 @@ export class ConvoExecutionContext
             this.setVar(false,args,fn.paramsName,undefined,scope);
         }
 
-        scope=this.executeScope(scope,undefined,createDefaultScope(vars));
+        return this.execute(scope,vars);
+    }
 
-        if(scope.si){
-            return new Promise((r,j)=>{
-                if(!scope.onComplete){
-                    scope.onComplete=[];
-                }
-                if(!scope.onError){
-                    scope.onError=[];
-                }
-                scope.onComplete.push(r);
-                scope.onError.push(j);
-            })
-        }else{
-            if(scope.error){
-                throw scope.error;
-            }else{
-                return scope.v;
+    public async executeFunctionAsync(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>
+    {
+
+        if(fn.call){
+            const callee=(this.sharedVars[fn.name]?.[convoFlowControllerKey] as ConvoFlowController|undefined)?.sourceFn;
+            if(!callee){
+                throw new Error(`No function defined by the name ${fn.name}`);
             }
+            args=await this.paramsToObjAsync(fn.params);
+            console.log('hio 👋 👋 👋 CALL ARGS ---',args,JSON.stringify(fn.params,null,4));
+            fn=callee;
+
+        }
+
+        const result=this.executeFunction(fn,args);
+
+        if(result.valuePromise){
+            return await result.valuePromise
+        }else{
+            return result.value;
         }
     }
 
@@ -110,7 +163,29 @@ export class ConvoExecutionContext
         return scheme;
     }
 
-    public paramsToScheme=(params:ConvoStatement[]):ZodObject<any>=>{
+    public async paramsToObjAsync(params:ConvoStatement[]):Promise<Record<string,any>>{
+
+        const vars:Record<string,any>={}
+        const scope=this.executeScope({
+            i:0,
+            vars,
+            s:{
+                fn:convoMapFnName,
+                params,
+                s:0,
+                e:0,
+            }
+        },undefined,createDefaultScope(vars));
+
+        const r=this.execute(scope,vars);
+        if(r.valuePromise){
+            return await r.valuePromise;
+        }else{
+            return r.value;
+        }
+    }
+
+    public paramsToScheme(params:ConvoStatement[]):ZodObject<any>{
 
         const vars:Record<string,any>={}
         const scope=this.executeScope({
@@ -138,6 +213,31 @@ export class ConvoExecutionContext
         }
 
         return zType;
+    }
+
+    private execute(scope:ConvoScope,vars:Record<string,any>):ConvoExecuteResult
+    {
+
+        scope=this.executeScope(scope,undefined,createDefaultScope(vars));
+
+        if(scope.si){
+            return {valuePromise:new Promise((r,j)=>{
+                if(!scope.onComplete){
+                    scope.onComplete=[];
+                }
+                if(!scope.onError){
+                    scope.onError=[];
+                }
+                scope.onComplete.push(r);
+                scope.onError.push(j);
+            })}
+        }else{
+            if(scope.error){
+                throw scope.error;
+            }else{
+                return {value:scope.v};
+            }
+        }
     }
 
     private executeScope(scope:ConvoScope,parent:ConvoScope|undefined,defaultScope:ConvoScope,resumeParamScope?:ConvoScope):ConvoScope{
@@ -351,6 +451,10 @@ export class ConvoExecutionContext
         }
 
         const vars=(shared || !scope)?this.sharedVars:scope.vars;
+
+        if(vars===this.sharedVars && (typeof value !== 'function') && !this.sharedSetters.includes(name)){
+            this.sharedSetters.push(name);
+        }
 
         if(path){
             let obj=vars[name];

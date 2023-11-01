@@ -24,7 +24,7 @@ const singleStringReg=/(\{\{|')/gs;
 const doubleStringReg=/(\{\{|")/gs;
 const msgStringReg=/(\{\{|[\n\r]\s*>|$)/gs;
 
-const tagReg=/(\w+)\s*=(.*)/
+const tagReg=/(\w+)\s*=?(.*)/
 
 const space=/\s/;
 
@@ -145,6 +145,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
     const takeTag=()=>{
         index++;
         const newline=code.indexOf('\n',index);
+        console.log('hio 👋 👋 👋 TAG LINE',code.substring(index,newline));
         const tag=tagReg.exec(code.substring(index,newline).trim());
         if(tag){
             console.log('hio 👋 👋 👋 tag',tag);
@@ -308,6 +309,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 takeComment();
                 continue;
             }else if(cc==='@'){
+                console.log('hio 👋 👋 👋 FOUND TAG',cc);
                 index+=spaceLength;
                 takeTag();
                 continue;

@@ -78,3 +78,33 @@ export const setConvoScopeError=(scope:ConvoScope|null|undefined,error:ConvoErro
         }
     }
 }
+
+export const convoLabeledScopeParamsToObj=(scope:ConvoScope):Record<string,any>=>{
+    const obj:Record<string,any>={};
+    const labels=scope.labels
+    if(labels){
+        for(const e in labels){
+            const label=labels[e];
+            if(label===undefined){
+                continue;
+            }
+            const isOptional=typeof label === 'object'
+            const index=isOptional?label.value:label;
+            if(index!==undefined){
+                const v=scope.paramValues?.[index]
+                obj[e]=isOptional?createOptionalConvoValue(v):v;
+            }
+        }
+    }
+    return obj;
+}
+
+export const escapeConvoMessageContent=(content:string):string=>{
+    // todo - add escape sequence for \n\s*>
+    return content;
+}
+
+export const spreadConvoArgs=(args:Record<string,any>):string=>{
+    const json=JSON.stringify(args);
+    return json.substring(1,json.length-1);
+}

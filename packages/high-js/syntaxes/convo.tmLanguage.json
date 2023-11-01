@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name":"convo",
     "scopeName": "source.convo",
-    "uuid": "5BD68AE5-9EB2-4537-80F2-CC82887E22C4",
+    "uuid": "B7A8C571-820A-4958-A997-76DFD822B0FE",
     "fileTypes": ["convo"],
     "patterns": [
         { "include": "#expression" }
@@ -12,10 +12,10 @@
         "expression": {
             "patterns": [
                 { "include": "#interpolation"},
+                { "include": "#topLevelStatements"},
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
-                { "include": "#externFunction"},
                 { "include": "#embed" },
                 { "include": "#comment" },
                 { "include": "#tag" }
@@ -75,6 +75,24 @@
             "patterns":[{"include":"#lineExpression"}]
 
         },
+        "topLevelStatements":{
+            "begin": "^\\s*(>)\\s*(do|no\\s+result|result)",
+            "end": "(?=>)",
+            "beginCaptures": {
+                "1":{
+                    "name":"keyword.control"
+                },
+                "2":{
+                    "name":"keyword.control"
+                }
+            },
+            "patterns": [
+                {"include":"#comment"},
+                {"include":"#tag"},
+                {"include":"#functionCall"},
+                {"include":"#paramLineExpression"}
+            ]
+        },
         "function":{
             "begin": "^\\s*(>)\\s*(\\w+)?\\s+(\\w+)\\s*([\\*\\?!]*)\\s*(\\()",
             "end": "\\)",
@@ -103,7 +121,6 @@
             "patterns": [
                 {"include":"#comment"},
                 {"include":"#tag"},
-                {"include":"#functionReturn"},
                 {"include":"#functionCall"},
                 {"include":"#paramLineExpression"}
             ]
@@ -133,34 +150,6 @@
                 {"include":"#functionCall"},
                 {"include":"#lineExpression"}
             ]
-        },
-        "externFunction":{
-            "match":"(->)\\s*(extern)",
-            "captures": {
-                "1":{
-                    "name":"keyword.operator"
-                },
-                "2":{
-                    "name":"keyword.control"
-                }
-            }
-        },
-        "functionReturn":{
-            "match":"(\\))\\s*(->)\\s*(\\w+)?\\s*(\\()",
-            "captures": {
-                "1":{
-                    "name":"keyword.control"
-                },
-                "2":{
-                    "name":"keyword.operator"
-                },
-                "3":{
-                    "name":"variable"
-                },
-                "4":{
-                    "name":"keyword.control"
-                }
-            }
         },
         "functionCall":{
             "begin":"(\\w+)\\s*(\\()",

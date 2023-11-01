@@ -1,4 +1,5 @@
 import type { ZodObject } from 'zod';
+import type { Conversation } from './Conversation';
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
 
 export type ConvoMessageType='text'|'function';
@@ -137,7 +138,6 @@ export interface ConvoFunction
 
 
     description?:string;
-    paramsType?:ZodObject<any>;
 
     /**
      * The body statements of the function. If a function does not have a body then it is either
@@ -195,6 +195,8 @@ export interface ConvoFlowController
      * If true return control flow should be caught
      */
     catchReturn?:boolean;
+
+    sourceFn?:ConvoFunction;
 
     nextParam?(
         scope:ConvoScope,
@@ -314,3 +316,45 @@ export interface ConvoTypeDef
     type:string;
 }
 export const isConvoTypeDef=(value:any):value is ConvoTypeDef=>(value as ConvoTypeDef)?.[convoObjFlag]==='type';
+
+export interface FlatConvoMessage
+{
+    role:string;
+    content?:string;
+    fn?:ConvoFunction;
+    fnParams?:ZodObject<any>;
+}
+
+export interface ConvoCompletionMessage
+{
+    role?:string;
+    content?:string;
+    callFn?:string;
+    callParams?:any;
+}
+
+export interface ConvoCompletionService
+{
+    completeConvoAsync(flat:FlatConvoConversation):Promise<ConvoCompletionMessage[]>;
+}
+
+export interface ConvoCompletion
+{
+    message?:ConvoCompletionMessage;
+    messages:ConvoCompletionMessage[];
+    error?:any;
+    exe?:ConvoExecutionContext;
+}
+
+export interface FlatConvoConversation
+{
+    exe:ConvoExecutionContext;
+    messages:FlatConvoMessage[];
+    conversation:Conversation;
+}
+
+export interface ConvoExecuteResult
+{
+    value?:any;
+    valuePromise?:Promise<any>
+}
