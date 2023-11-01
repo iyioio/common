@@ -270,6 +270,7 @@ const style=atDotCss({name:'CodeInput',css:`
         display:flex;
         flex-direction:column;
         overflow-x:auto;
+        flex:1;
     }
     .CodeInput-content > div{
         position:relative;
