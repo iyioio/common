@@ -144,6 +144,12 @@ export interface AuthProvider extends IOpInit, IOpDisposable
     verifyAsync?(identity:string,code:string):Promise<AuthVerificationResult>;
 
     /**
+     * Re-sends a verification code the the given identity
+     * @param identity
+     */
+    resendVerificationCodeAsync?(identity:string):Promise<boolean>;
+
+    /**
      * Sends a password reset code to the given identity
      */
     resetPasswordAsync?(identity:string):Promise<PasswordResetResult>;

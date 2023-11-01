@@ -153,6 +153,13 @@ export class AuthService implements IDisposable, IInit
         );
     }
 
+    public async resendVerificationCodeAsync(identity:string):Promise<boolean|undefined>
+    {
+        return await this.authProviders.getFirstAsync(null,async provider=>{
+            return await provider.resendVerificationCodeAsync?.(identity);
+        });
+    }
+
     public async registerEmailPasswordAsync(email:string,password:string,userData?:HashMap):Promise<AuthRegisterResult>
     {
         if(!isValidEmail(email)){

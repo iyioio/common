@@ -361,6 +361,25 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         });
     }
 
+    public resendVerificationCodeAsync(identity:string):Promise<boolean>
+    {
+        return new Promise<boolean>((resolve)=>{
+            const cognitoUser=new CognitoUser({
+                Username:identity,
+                Pool:this.userPool,
+            });
+            cognitoUser.resendConfirmationCode((err)=>{
+
+                if(err){
+                    resolve(false)
+                    return;
+                }
+
+                resolve(true)
+            })
+        });
+    }
+
     public verifyAsync(identity:string,code:string):Promise<AuthVerificationResult>
     {
         return new Promise<AuthVerificationResult>((resolve)=>{
