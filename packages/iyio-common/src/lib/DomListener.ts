@@ -54,7 +54,7 @@ export class DomListener
         if(!handler.listenerCount){
             return;
         }
-        let k=nativeEvt.code.toLowerCase();
+        let k=(nativeEvt.code??'').toLowerCase();
         if(k.startsWith('key')){
             k=k.substring(3);
         }
@@ -67,8 +67,8 @@ export class DomListener
             }${
                 k
             }`,
-            keyLowercase:nativeEvt.key.toLowerCase(),
-            keyUppercase:nativeEvt.key.toUpperCase(),
+            keyLowercase:(nativeEvt.key??'').toLowerCase(),
+            keyUppercase:(nativeEvt.key??'').toUpperCase(),
             cancel:false,
             preventDefault(){
                 nativeEvt.preventDefault();
