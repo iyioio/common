@@ -252,4 +252,69 @@ describe('convo',()=>{
 
     })
 
+    it('should check type with is operator',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+            > define
+            Category = enum('fun' 'boring')
+
+            Grade = map(
+                score: number
+                suggestions?: array(string)
+                category: Category
+            )
+
+            > checkType(
+                value: any
+            ) -> (
+                return(map(
+                    isCategory:is(value Category)
+                    isGrade:is(value Grade)
+                    isNumber:is(value number)
+                    isString:is(value string)
+                ))
+            )
+
+        `);
+
+        let r=await convo.callFunctionAsync('checkType',{value:6});
+        expect(r).toEqual({
+            isCategory:false,
+            isGrade:false,
+            isNumber:true,
+            isString:false,
+        })
+
+        r=await convo.callFunctionAsync('checkType',{value:'6'});
+        expect(r).toEqual({
+            isCategory:false,
+            isGrade:false,
+            isNumber:false,
+            isString:true,
+        })
+
+        r=await convo.callFunctionAsync('checkType',{value:'fun'});
+        expect(r).toEqual({
+            isCategory:true,
+            isGrade:false,
+            isNumber:false,
+            isString:true,
+        })
+
+        r=await convo.callFunctionAsync('checkType',{value:{
+            score:7,
+            suggestions:['stay out of jail','don\'t trust a fart'],
+            category:'fun'
+        }});
+        expect(r).toEqual({
+            isCategory:false,
+            isGrade:true,
+            isNumber:false,
+            isString:false,
+        })
+
+    })
+
 });

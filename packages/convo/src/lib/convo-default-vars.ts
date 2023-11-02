@@ -1,5 +1,6 @@
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
 import { ConvoScope } from "./convo-types";
+import { convoValueToZodType } from "./convo-zod";
 
 const ifFalse=Symbol();
 const ifTrue=Symbol();
@@ -59,6 +60,25 @@ export const defaultConvoVars={
             type:'enum',
             enumValues:scope.paramValues??[],
         })
+    }),
+    is:createConvoScopeFunction(scope=>{
+        if(!scope.paramValues || scope.paramValues.length<2){
+            return false;
+        }
+        const type=scope.paramValues[scope.paramValues.length-1];
+        if(!type || (typeof type !== 'object')){
+            return false;
+        }
+
+        const scheme=convoValueToZodType(type);
+
+        for(let i=0;i<scope.paramValues.length-1;i++){
+            const p=scheme.safeParse(scope.paramValues[i]);
+            if(!p.success){
+                return false;
+            }
+        }
+        return true;
     }),
     and:and,
     or:createConvoScopeFunction(scope=>{
