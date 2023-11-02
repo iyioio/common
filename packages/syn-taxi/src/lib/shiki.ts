@@ -170,7 +170,7 @@ const convo={
         },
         "topLevelStatements":{
             "begin": "^\\s*(>)\\s*(do|no\\s+result|result)",
-            "end": "(?=>)",
+            "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
                     "name":"keyword.control"
