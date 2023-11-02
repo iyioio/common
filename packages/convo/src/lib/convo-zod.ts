@@ -40,6 +40,23 @@ const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
     }else if(isConvoTypeDef(value)){
         if(isConvoBaseType(value.type)){
             zType=convoBaseTypeToZodType(value.type);
+        }else if(value.enumValues){
+            if(value.enumValues.length===0){
+                zType=z.enum(['']);
+            }else{
+                let allStrings=true;
+                for(let ei=0;ei<value.enumValues.length;ei++){
+                    if(!(typeof value.enumValues[ei] === 'string')){
+                        allStrings=false;
+                        break;
+                    }
+                }
+                if(allStrings){
+                    zType=z.enum(value.enumValues as any);
+                }else{
+                    zType=z.union(value.enumValues as any);
+                }
+            }
         }else{
             zType=z.unknown();
         }

@@ -2,7 +2,7 @@ import { getValueByAryPath, isPromise } from '@iyio/common';
 import { ZodObject, ZodType } from 'zod';
 import { ConvoError } from './ConvoError';
 import { defaultConvoVars } from "./convo-default-vars";
-import { convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
+import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
 import { ConvoExecuteResult, ConvoFlowController, ConvoFunction, ConvoMessage, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
 import { convoValueToZodType } from './convo-zod';
 
@@ -112,7 +112,9 @@ export class ConvoExecutionContext
 
         args=parsed.data;
 
-        const vars:Record<string,any>={}
+        const vars:Record<string,any>={
+            [convoArgsName]:args
+        }
 
         const scope:ConvoScope={
             i:0,
@@ -129,9 +131,6 @@ export class ConvoExecutionContext
             this.setVar(false,args[e],e,undefined,scope);
         }
 
-        if(fn.paramsName){
-            this.setVar(false,args,fn.paramsName,undefined,scope);
-        }
 
         return this.execute(scope,vars,this.getConvoFunctionReturnScheme(fn));
     }
@@ -170,9 +169,8 @@ export class ConvoExecutionContext
             }
         }
         let scheme:ZodObject<any>;
-        const first=fn.params[0];
-        if(fn.params.length===1 && first && !first.label && first.ref){
-            const type=this.getVarAsType(first.ref);
+        if(fn.paramType){
+            const type=this.getVarAsType(fn.paramType);
             if(!type){
                 throw new ConvoError('function-args-type-not-defined',{fn});
             }

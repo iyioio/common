@@ -1,12 +1,20 @@
 import { ConvoBaseType, ConvoError, ConvoFlowController, ConvoScope, ConvoScopeFunction, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
-export const convoBodyFnName='__body__';
+export const convoBodyFnName='__body';
 export const convoMapFnName='map';
 export const convoArrayFnName='array';
 export const convoJsonMapFnName='jsonMap';
 export const convoJsonArrayFnName='jsonArray';
 export const convoLocalFunctionModifier='local';
 export const convoCallFunctionModifier='call';
+export const convoEnumFnName='enum';
+export const convoArgsName='__args';
+
+export const allowedConvoDefinitionFunctions=[
+    convoMapFnName,
+    convoArrayFnName,
+    convoEnumFnName
+] as const;
 
 export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
     return {

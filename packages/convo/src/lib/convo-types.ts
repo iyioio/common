@@ -169,6 +169,11 @@ export interface ConvoFunction
      */
     topLevel:boolean;
 
+    /**
+     * If true the function only defines types
+     */
+    definitionBlock?:boolean;
+
 
     description?:string;
 
@@ -178,7 +183,7 @@ export interface ConvoFunction
      */
     body?:ConvoStatement[];
     params:ConvoStatement[];
-    paramsName?:string;
+    paramType?:string;
 }
 
 export interface ConvoParsingResult
@@ -347,6 +352,7 @@ export interface ConvoTypeDef
 {
     [convoObjFlag]:'type';
     type:string;
+    enumValues?:any[];
 }
 export const isConvoTypeDef=(value:any):value is ConvoTypeDef=>(value as ConvoTypeDef)?.[convoObjFlag]==='type';
 

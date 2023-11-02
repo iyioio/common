@@ -159,7 +159,6 @@ export class Conversation
                 if(exe.sharedSetters.length){
                     const lines:string[]=['> result'];
                     for(const s of exe.sharedSetters){
-                        lines.push('@shared');
                         lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
                     }
                     this.append(lines.join('\n'),true);

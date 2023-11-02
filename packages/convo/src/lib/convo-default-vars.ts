@@ -1,4 +1,4 @@
-import { convoArrayFnName, convoBodyFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, makeAnyConvoType } from "./convo-lib";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
 import { ConvoScope } from "./convo-types";
 
 const ifFalse=Symbol();
@@ -52,6 +52,14 @@ export const defaultConvoVars={
     [convoArrayFnName]:arrayFn,
     [convoJsonMapFnName]:mapFn,
     [convoJsonArrayFnName]:arrayFn,
+    [convoArgsName]:undefined,
+
+    [convoEnumFnName]:createConvoScopeFunction(scope=>{
+        return createConvoTypeDef({
+            type:'enum',
+            enumValues:scope.paramValues??[],
+        })
+    }),
     and:and,
     or:createConvoScopeFunction(scope=>{
         if(!scope.paramValues?.length){
@@ -408,9 +416,4 @@ Object.freeze(defaultConvoVars);
 
 
 )
-
-> system
-You are a dude
-
-> @teaTime user
 `;

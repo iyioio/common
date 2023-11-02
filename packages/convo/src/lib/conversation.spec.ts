@@ -101,7 +101,6 @@ describe('convo',()=>{
 
         const r=await convo.completeAsync(/*convo*/`
             > do
-            @shared
             Ricky='Bobby'
 
             > user
@@ -118,7 +117,6 @@ describe('convo',()=>{
 
         convo.append(/*convo*/`
             > do
-            @shared
             Stats=map(
                 speed: number
                 turn: string
@@ -162,14 +160,13 @@ describe('convo',()=>{
 
         convo.append(/*convo*/`
             > do
-            @shared
             Stats=map(
                 speed: number
                 turn: string
             )
 
-            > goFast(Stats) stats -> (
-                return( stats.speed )
+            > goFast(speed) Stats -> (
+                return( speed )
             )
         `);
 
@@ -183,6 +180,66 @@ describe('convo',()=>{
 
         try{
             await convo.callFunctionAsync('goFast',{slow:true});
+            throw new Error('Arg validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-args'));
+            }else{
+                throw ex;
+            }
+
+        }
+
+    })
+
+    it('should validate enum',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+            > define
+            Category = enum('fun' 'boring')
+
+            Grade = map(
+                score: number
+                suggestions?: array(string)
+                category: Category
+            )
+
+            > processGrade(
+                score
+                suggestions
+                category
+            ) Grade -> number (
+                if( eq(category 'fun') ) then (
+                    return(mul(score 2))
+                ) else (
+                    return(div(score 2))
+                )
+            )
+
+        `);
+
+        let r=await convo.callFunctionAsync('processGrade',{
+            score:10,
+            turn:'left',
+            category:'fun'
+        });
+        expect(r).toBe(20);
+
+        r=await convo.callFunctionAsync('processGrade',{
+            score:10,
+            turn:'left',
+            category:'boring'
+        });
+        expect(r).toBe(5);
+
+        try{
+            await convo.callFunctionAsync('processGrade',{
+                score:10,
+                turn:'left',
+                category:'cats'
+            });
             throw new Error('Arg validation should have throw an error')
         }catch(ex){
             if(ex instanceof ConvoError){

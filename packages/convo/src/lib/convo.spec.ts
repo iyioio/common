@@ -6,6 +6,28 @@ import { parseConvoCode } from './convo-parser';
 import { ConvoErrorType } from './convo-types';
 
 const defaultPrompt=/*convo*/`
+
+> define
+Category = enum('fun' 'boring')
+
+Grade = map(
+    score: number
+    suggestions?: array(string)
+    category: Category
+)
+
+> processGrade(
+    score
+    suggestions
+    category
+) Grade -> number (
+    if( eq(category 'fun') ) then (
+        return(mul(score 2))
+    ) else (
+        return(div(score 2))
+    )
+)
+
     # Grades a paper
 > gradePaper(
 
@@ -20,7 +42,9 @@ const defaultPrompt=/*convo*/`
         name: string
     ))
 
-) grade -> (
+) -> (
+
+    grade = __args
 
     lable1: beans.xy = 'good'
     lable?: beanx = dIt()
@@ -112,7 +136,7 @@ describe('convo',()=>{
     }
 
     it('should parse',()=>{
-        parse(6,defaultPrompt);
+        parse(8,defaultPrompt);
     })
 
 
@@ -218,8 +242,8 @@ describe('convo',()=>{
             > testFn(
                 valueA: number
                 valueB?: number
-            ) values -> (
-                return( add(values.valueA values.valueB) )
+            ) -> (
+                return( add(valueA valueB) )
             )
         `);
 
@@ -366,9 +390,9 @@ describe('convo',()=>{
         const convo=parse(1,/*convo*/`
             > testFn(
                 value: boolean
-            ) p -> (
-                if(p.value) then(
-                    if(p.value) then(
+            ) -> (
+                if(value) then(
+                    if(value) then(
                         return('first')
                     )
                 )
@@ -495,6 +519,31 @@ describe('convo',()=>{
             }
 
         }
+
+    })
+
+
+
+
+
+    it('should reference __args',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value: number
+            ) -> (
+                return( __args )
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:8})).toEqual({value:8});
 
     })
 

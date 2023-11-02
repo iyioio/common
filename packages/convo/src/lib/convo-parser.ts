@@ -1,10 +1,10 @@
-import { convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
+import { allowedConvoDefinitionFunctions, convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
-const topLevelMessageReg=/(>)\s*(do|no\s+result|result)/gs;
+const topLevelMessageReg=/(>)\s*(do|no\s+result|result|define)/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
 const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|@|\)|\}\}|\}|\]|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
@@ -372,11 +372,18 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         const rMatch=returnTypeReg.exec(code);
                         console.log('hio 👋 👋 👋 BODY MATCH------',rMatch);
                         if(rMatch && rMatch.index===index){
-                            console.log('hio 👋 👋 👋 ENTER BODY',);
+                            console.log('hio 👋 👋 👋 ENTER BODY',JSON.stringify(currentFn,null,4));
                             index+=rMatch[0].length;
 
                             if(rMatch[1]){
-                                currentFn.paramsName=rMatch[1];
+                                currentFn.paramType=rMatch[1];
+                                for(const p of currentFn.params){
+                                    if(p.label){
+                                        index=p.s;
+                                        error='Functions that define a parameter collection type should not define individual parameter types';
+                                        break parsingLoop;
+                                    }
+                                }
                             }
 
                             if(rMatch[2]){
@@ -449,10 +456,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 statement.comment=lastComment;
                 lastComment='';
             }
+            if(currentFn?.topLevel){
+                if(!tags.some(t=>t.name==='local')){
+                    statement.shared=true;
+                }
+            }
             if(tags.length){
                 statement.tags=tags;
-                if(tags.some(t=>t.name==='shared')){
-                    statement.shared=true;
+                if(!currentFn?.topLevel){
+                    if(tags.some(t=>t.name==='shared')){
+                        statement.shared=true;
+                    }
                 }
                 tags=[];
             }
@@ -464,7 +478,13 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     break parsingLoop;
                 }
 
-                statement.fn=val.substring(0,val.length-1).trim()
+                statement.fn=val.substring(0,val.length-1).trim();
+
+                if(currentFn?.definitionBlock && !allowedConvoDefinitionFunctions.includes(statement.fn as any)){
+                    error=`Definition block calling illegal function (${statement.fn}). Definition blocks can only call the following functions: ${allowedConvoDefinitionFunctions.join(', ')}`;
+                    break parsingLoop;
+                }
+
                 if(statement.fn.includes('.')){
                     const path=statement.fn.split('.');
                     statement.fn=path[path.length-1];
@@ -585,9 +605,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         local:false,
                         call:false,
                         topLevel:true,
+                        definitionBlock:msgName==='define',
                     }
                     currentMessage={
-                        role:'do',
+                        role:msgName==='define'?'define':'do',
                         fn:currentFn,
                     }
                     messages.push(currentMessage);

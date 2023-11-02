@@ -169,7 +169,7 @@ const convo={
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|no\\s+result|result)",
+            "begin": "^\\s*(>)\\s*(do|no\\s+result|result|define)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -223,7 +223,7 @@ const convo={
             "end":"\\)",
             "beginCaptures": {
                 "1":{
-                    "name":"variable"
+                    "name":"entity.name.type"
                 },
                 "2":{
                     "name":"keyword.operator"
@@ -401,7 +401,7 @@ const convo={
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"(true|false|null|undefined)",
+            "match":"\\b(true|false|null|undefined|__args)\\b",
             "name":"constant.language"
         }
     }
