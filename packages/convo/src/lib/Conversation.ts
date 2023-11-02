@@ -1,8 +1,9 @@
 import { Observable, Subject } from "rxjs";
+import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { escapeConvoMessageContent, spreadConvoArgs } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoMessage, ConvoParsingResult, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoFunction, ConvoMessage, ConvoParsingResult, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { convoCompletionService } from "./convo.deps";
 
 export interface ConversationOptions
@@ -81,21 +82,53 @@ export class Conversation
             this.append(append);
         }
 
-        if(!this.completionService){
+        const completionService=this.completionService;
+
+        if(!completionService){
             return {messages:[]}
         }
+
+        return await this._completeAsync(flat=>completionService.completeConvoAsync(flat))
+
+    }
+
+    public async callFunctionAsync(fn:ConvoFunction|string,args:Record<string,any>={}):Promise<any>
+    {
+        const c=await this._completeAsync(flat=>{
+
+            if(typeof fn === 'object'){
+                flat.exe.loadFunctions([{
+                    fn,
+                    role:'function'
+                }])
+            }
+
+            return [{
+                callFn:typeof fn==='string'?fn:fn.name,
+                callParams:args
+
+            }]
+        })
+
+        return c.returnValues?.[0];
+    }
+
+    private async _completeAsync(
+        getCompletion:(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[]
+    ):Promise<ConvoCompletion>{
 
         const flat=await this.flattenAsync();
         if(this._isDisposed){
             return {messages:[]}
         }
 
-        const completion=await this.completionService.completeConvoAsync(flat);
+        const completion=await getCompletion(flat);
 
         const exe=flat.exe;
         let cMsg:ConvoCompletionMessage|undefined=undefined;
 
-        // todo - check for function call
+        let returnValues:any[]|undefined=undefined;
+
         for(const msg of completion){
 
             if(msg.content){
@@ -107,13 +140,21 @@ export class Conversation
                 const result=this.append(`> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams)})`);
                 const callMessage=result.messages[0];
                 if(result.messages.length!==1 || !callMessage){
-                    throw new Error('failed to parse function call. Exactly 1 function call should have been parsed')
+                    throw new ConvoError(
+                        'function-call-parse-count',
+                        {completion:msg},
+                        'failed to parse function call. Exactly 1 function call should have been parsed'
+                    );
                 }
                 exe.clearSharedSetters();
                 if(!callMessage.fn?.call){
                     continue;
                 }
-                await exe.executeFunctionAsync(callMessage.fn);
+                const callResult=await exe.executeFunctionAsync(callMessage.fn);
+                if(!returnValues){
+                    returnValues=[];
+                }
+                returnValues.push(callResult);
 
                 if(exe.sharedSetters.length){
                     const lines:string[]=['> result'];
@@ -133,6 +174,7 @@ export class Conversation
             message:cMsg,
             messages:completion,
             exe,
+            returnValues,
         }
     }
 

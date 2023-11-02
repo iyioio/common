@@ -1,6 +1,9 @@
+import { asType } from '@iyio/common';
 import { ZodObject } from 'zod';
+import { ConvoError } from './ConvoError';
 import { ConvoExecutionContext, executeConvoFunction } from './ConvoExecutionContext';
 import { parseConvoCode } from './convo-parser';
+import { ConvoErrorType } from './convo-types';
 
 const defaultPrompt=/*convo*/`
     # Grades a paper
@@ -17,7 +20,7 @@ const defaultPrompt=/*convo*/`
         name: string
     ))
 
-) -> grade (
+) grade -> (
 
     lable1: beans.xy = 'good'
     lable?: beanx = dIt()
@@ -215,7 +218,7 @@ describe('convo',()=>{
             > testFn(
                 valueA: number
                 valueB?: number
-            ) -> values (
+            ) values -> (
                 return( add(values.valueA values.valueB) )
             )
         `);
@@ -239,7 +242,7 @@ describe('convo',()=>{
     it('should escape single quotes in strings',async ()=>{
 
         const convo=parse(1,/*convo*/`
-            > testFn() -> values (
+            > testFn() -> (
                 return( 'I\\'m bob' )
             )
         `);
@@ -262,7 +265,7 @@ describe('convo',()=>{
     it('should escape double quotes in strings',async ()=>{
 
         const convo=parse(1,/*convo*/`
-            > testFn() -> values (
+            > testFn() -> (
                 return( "in the famous word of colonel sanders \\"i'm too drunk to taste this chicken\\" " )
             )
         `);
@@ -285,7 +288,7 @@ describe('convo',()=>{
     it('should embed strings',async ()=>{
 
         const convo=parse(1,/*convo*/`
-            > testFn() -> values (
+            > testFn() -> (
                 return( "1 + 1 = {{ add(1 1) }}" )
             )
         `);
@@ -309,7 +312,7 @@ describe('convo',()=>{
         const convo=parse(1,/*convo*/`
             > testFn(
                 value: number
-            ) -> values (
+            ) -> (
                 return( eq(value -2) )
             )
         `);
@@ -336,7 +339,7 @@ describe('convo',()=>{
         const convo=parse(1,/*convo*/`
             > testFn(
                 value: number
-            ) -> values (
+            ) -> (
                 return( eq( value , -2) );
             )
         `);
@@ -363,7 +366,7 @@ describe('convo',()=>{
         const convo=parse(1,/*convo*/`
             > testFn(
                 value: boolean
-            ) -> p (
+            ) p -> (
                 if(p.value) then(
                     if(p.value) then(
                         return('first')
@@ -414,6 +417,84 @@ describe('convo',()=>{
         expect(executeConvoFunction(fn,{value:3})).toBe('less');
 
         expect(executeConvoFunction(fn,{value:8})).toBe('more');
+
+    })
+
+
+
+
+
+    it('should validate return type',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value: number
+            ) -> string (
+                if(mt(value 5)) then (
+                    return('more')
+                )else(
+                    return(0)
+                )
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:8})).toBe('more');
+
+        try{
+            executeConvoFunction(fn,{value:3});
+            throw new Error('Return validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-return-value-type'));
+            }else{
+                throw ex;
+            }
+
+        }
+
+    })
+
+
+
+
+
+    it('should validate function args',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value: number
+            ) -> (
+                return( value )
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:8})).toBe(8);
+
+        try{
+            executeConvoFunction(fn,{value:'3'});
+            throw new Error('Arg validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-args'));
+            }else{
+                throw ex;
+            }
+
+        }
 
     })
 

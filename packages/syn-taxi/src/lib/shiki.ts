@@ -219,16 +219,19 @@ const convo={
             ]
         },
         "functionBody":{
-            "begin":"(->)\\s*(\\w+)?\\s*(\\()",
+            "begin":"(\\w+)?\\s*(->)\\s*(\\w+)?\\s*(\\()",
             "end":"\\)",
             "beginCaptures": {
                 "1":{
-                    "name":"keyword.operator"
-                },
-                "2":{
                     "name":"variable"
                 },
+                "2":{
+                    "name":"keyword.operator"
+                },
                 "3":{
+                    "name":"entity.name.type"
+                },
+                "4":{
                     "name":"keyword.control"
                 }
             },
@@ -287,34 +290,44 @@ const convo={
         },
         "lineExpression":{
             "patterns":[
-                { "include": "#comment" },
+                {"include":"#comment"},
                 {"include":"#tag"},
-                { "include": "#stringDq" },
-                { "include": "#stringSq" },
-                { "include": "#functionCall" },
-                {"include": "#label"},
-                {"include": "#typeKeyword"},
-                {"include": "#number"},
-                {"include": "#constValue"},
-                {"include": "#lineVar"}
+                {"include":"#stringDq"},
+                {"include":"#stringSq"},
+                {"include":"#functionCall"},
+                {"include":"#label"},
+                {"include":"#typeKeyword"},
+                {"include":"#number"},
+                {"include":"#constValue"},
+                {"include":"#userDefinedType"},
+                {"include":"#lineVar"}
             ]
         },
         "paramLineExpression":{
             "patterns":[
-                { "include": "#comment" },
+                {"include":"#comment"},
                 {"include":"#tag"},
-                { "include": "#stringDq" },
-                { "include": "#stringSq" },
-                { "include": "#functionCall" },
-                {"include": "#paramLabel"},
-                {"include": "#typeKeyword"},
-                {"include": "#number"},
-                {"include": "#constValue"},
-                {"include": "#lineVar"}
+                {"include":"#stringDq"},
+                {"include":"#stringSq"},
+                {"include":"#functionCall"},
+                {"include":"#paramLabel"},
+                {"include":"#typeKeyword"},
+                {"include":"#number"},
+                {"include":"#constValue"},
+                {"include":"#userDefinedType"},
+                {"include":"#lineVar"}
             ]
         },
+        "userDefinedType":{
+            "match":"\\b[A-Z]\\w*\\b",
+            "captures":{
+                "0":{
+                    "name":"entity.name.type"
+                }
+            }
+        },
         "lineVar":{
-            "match":"\\w+",
+            "match":"\\b\\w+\\b",
             "captures":{
                 "0":{
                     "name":"variable"

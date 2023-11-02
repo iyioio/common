@@ -2,7 +2,7 @@
     "name": "high-js",
     "displayName": "high-js",
     "description": "Let your javascript see all the pretty colors 🫠",
-    "version": "0.3.8",
+    "version": "0.3.9",
     "publisher": "IYIO",
     "icon": "assets/logo.png",
     "engines": {

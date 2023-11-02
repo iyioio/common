@@ -1,6 +1,8 @@
+import { asType } from '@iyio/common';
 import { CallbackConvoCompletionService } from './CallbackConvoCompletionService';
 import { Conversation } from "./Conversation";
-import { FlatConvoConversation } from "./convo-types";
+import { ConvoError } from './ConvoError';
+import { ConvoErrorType, FlatConvoConversation } from "./convo-types";
 
 describe('convo',()=>{
 
@@ -109,4 +111,88 @@ describe('convo',()=>{
         expect(r.exe?.sharedVars?.['Ricky']).toBe('Bobby');
 
     })
+
+    it('should validate user defined return type',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+            > do
+            @shared
+            Stats=map(
+                speed: number
+                turn: string
+            )
+
+            > goFast(correct:boolean) -> Stats (
+                if( correct ) then (
+                    return( map(
+                        speed: 150
+                        turn: 'left'
+                    ) )
+                ) else (
+                    return( map( color: 'red' ))
+                )
+            )
+        `);
+
+        const r=await convo.callFunctionAsync('goFast',{correct:true});
+
+
+        expect(r?.speed).toBe(150);
+        expect(r?.turn).toBe('left');
+
+        try{
+            await convo.callFunctionAsync('goFast',{correct:false});
+            throw new Error('Return validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-return-value-type'));
+            }else{
+                throw ex;
+            }
+
+        }
+
+    })
+
+    it('should validate user defined args type',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+            > do
+            @shared
+            Stats=map(
+                speed: number
+                turn: string
+            )
+
+            > goFast(Stats) stats -> (
+                return( stats.speed )
+            )
+        `);
+
+        const r=await convo.callFunctionAsync('goFast',{
+            speed:200,
+            turn:'left',
+        });
+
+
+        expect(r).toBe(200);
+
+        try{
+            await convo.callFunctionAsync('goFast',{slow:true});
+            throw new Error('Arg validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-args'));
+            }else{
+                throw ex;
+            }
+
+        }
+
+    })
+
 });

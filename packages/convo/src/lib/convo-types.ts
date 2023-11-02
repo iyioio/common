@@ -19,6 +19,32 @@ export interface ConvoTag
     value?:string;
 }
 
+export type ConvoErrorType=(
+    'invalid-return-value-type'|
+    'function-call-parse-count'|
+    'unexpected-base-type'|
+    'invalid-args'|
+    'proxy-call-not-supported'|
+    'function-not-defined'|
+    'function-return-type-not-defined'|
+    'function-args-type-not-defined'|
+    'function-args-type-not-an-object'|
+    'suspended-scheme-statements-not-supported'|
+    'zod-object-expected'|
+    'scope-already-suspended'|
+    'scope-waiting'|
+    'suspension-parent-not-found'
+);
+
+export interface ConvoErrorReferences
+{
+    message?:ConvoMessage;
+    fn?:ConvoFunction;
+    statement?:ConvoStatement;
+    statements?:ConvoStatement[];
+    completion?:ConvoCompletionMessage;
+    baseType?:ConvoBaseType;
+}
 
 /**
  * Can be a text message or function definition
@@ -119,7 +145,14 @@ export interface ConvoStatement
 export interface ConvoFunction
 {
     name:string;
+
     modifiers:string[];
+
+    /**
+     * Name of a type variable that the function returns. If undefined the function
+     * can return any type.
+     */
+    returnType?:string;
 
     /**
      * If true the function is a local statement that should only be called by other functions in the
@@ -344,6 +377,7 @@ export interface ConvoCompletion
     messages:ConvoCompletionMessage[];
     error?:any;
     exe?:ConvoExecutionContext;
+    returnValues?:any[];
 }
 
 export interface FlatConvoConversation

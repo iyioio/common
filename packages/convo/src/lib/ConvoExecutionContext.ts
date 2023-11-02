@@ -1,5 +1,6 @@
 import { getValueByAryPath, isPromise } from '@iyio/common';
-import { ZodObject } from 'zod';
+import { ZodObject, ZodType } from 'zod';
+import { ConvoError } from './ConvoError';
 import { defaultConvoVars } from "./convo-default-vars";
 import { convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
 import { ConvoExecuteResult, ConvoFlowController, ConvoFunction, ConvoMessage, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
@@ -7,6 +8,7 @@ import { convoValueToZodType } from './convo-zod';
 
 
 const argsCacheKey=Symbol('argsCacheKey');
+const returnCacheKey=Symbol('returnCacheKey');
 
 
 export const executeConvoFunction=(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>|any=>{
@@ -91,13 +93,21 @@ export class ConvoExecutionContext
     public executeFunction(fn:ConvoFunction,args:Record<string,any>={}):ConvoExecuteResult
     {
         if(fn.call){
-            throw new Error('executeFunction does not support proxy calls. Use executeFunctionAsync instead')
+            throw new ConvoError(
+                'proxy-call-not-supported',
+                {fn},
+                'executeFunction does not support proxy calls. Use executeFunctionAsync instead'
+            )
         }
 
         const scheme=this.getConvoFunctionArgsScheme(fn);
         const parsed=scheme.safeParse(args);
         if(parsed.success===false){
-            throw new Error(`Invalid args passed to convo function. fn = ${fn.name}, message = ${parsed.error.message}`);
+            throw new ConvoError(
+                'invalid-args',
+                {fn},
+                `Invalid args passed to convo function. fn = ${fn.name}, message = ${parsed.error.message}`
+            );
         }
 
         args=parsed.data;
@@ -123,7 +133,7 @@ export class ConvoExecutionContext
             this.setVar(false,args,fn.paramsName,undefined,scope);
         }
 
-        return this.execute(scope,vars);
+        return this.execute(scope,vars,this.getConvoFunctionReturnScheme(fn));
     }
 
     public async executeFunctionAsync(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>
@@ -132,7 +142,10 @@ export class ConvoExecutionContext
         if(fn.call){
             const callee=(this.sharedVars[fn.name]?.[convoFlowControllerKey] as ConvoFlowController|undefined)?.sourceFn;
             if(!callee){
-                throw new Error(`No function defined by the name ${fn.name}`);
+                throw new ConvoError(
+                    'function-not-defined',
+                    {fn},
+                    `No function defined by the name ${fn.name}`);
             }
             args=await this.paramsToObjAsync(fn.params);
             console.log('hio 👋 👋 👋 CALL ARGS ---',args,JSON.stringify(fn.params,null,4));
@@ -156,11 +169,59 @@ export class ConvoExecutionContext
                 return s;
             }
         }
-        const scheme=this.paramsToScheme(fn.params??[]);
+        let scheme:ZodObject<any>;
+        const first=fn.params[0];
+        if(fn.params.length===1 && first && !first.label && first.ref){
+            const type=this.getVarAsType(first.ref);
+            if(!type){
+                throw new ConvoError('function-args-type-not-defined',{fn});
+            }
+            if(!(type instanceof ZodObject)){
+                throw new ConvoError('function-args-type-not-an-object',{fn})
+            }
+            scheme=type;
+        }else{
+            scheme=this.paramsToScheme(fn.params??[]);
+        }
         if(cache){
             (fn as any)[argsCacheKey]=scheme;
         }
         return scheme;
+    }
+
+    public getConvoFunctionReturnScheme(fn:ConvoFunction,cache=true):ZodType<any>|undefined{
+        if(!fn.returnType){
+            return undefined;
+        }
+        if(cache){
+            const s=(fn as any)[returnCacheKey];
+            if(s){
+                return s;
+            }
+        }
+
+        const typeVar=this.sharedVars[fn.returnType];
+        if(!typeVar){
+            throw new ConvoError(
+                'function-return-type-not-defined',
+                {fn},
+                `Function return type not defined. function = ${fn.name}, returnType = ${fn.returnType}`
+            );
+        }
+        const scheme=convoValueToZodType(typeVar);
+        if(cache){
+            (fn as any)[returnCacheKey]=scheme;
+        }
+        return scheme;
+    }
+
+    public getVarAsType(name:string):ZodType<any>|undefined
+    {
+        const typeVar=this.sharedVars[name];
+        if(!typeVar){
+            return undefined;
+        }
+        return convoValueToZodType(typeVar);
     }
 
     public async paramsToObjAsync(params:ConvoStatement[]):Promise<Record<string,any>>{
@@ -200,8 +261,11 @@ export class ConvoExecutionContext
         },undefined,createDefaultScope(vars));
 
         if(scope.si){
-            console.error('scheme statements should not be suspended',scope,params)
-            throw new Error('scheme statements should not be suspended');
+            throw new ConvoError(
+                'suspended-scheme-statements-not-supported',
+                {statements:params},
+                'scheme statements should not be suspended'
+            );
         }
 
         console.log('hio 👋 👋 👋 SCOPE EXECUTED',JSON.stringify(scope,null,4));
@@ -209,13 +273,17 @@ export class ConvoExecutionContext
         const zType=convoValueToZodType(scope.v);
 
         if(!(zType instanceof ZodObject)){
-            throw new Error('ZodObject expected when converting ConvoStatements to zod type');
+            throw new ConvoError(
+                'zod-object-expected',
+                {statements:params},
+                'ZodObject expected when converting ConvoStatements to zod type'
+            );
         }
 
         return zType;
     }
 
-    private execute(scope:ConvoScope,vars:Record<string,any>):ConvoExecuteResult
+    private execute(scope:ConvoScope,vars:Record<string,any>,resultScheme?:ZodType<any>):ConvoExecuteResult
     {
 
         scope=this.executeScope(scope,undefined,createDefaultScope(vars));
@@ -228,13 +296,42 @@ export class ConvoExecutionContext
                 if(!scope.onError){
                     scope.onError=[];
                 }
-                scope.onComplete.push(r);
                 scope.onError.push(j);
+                if(resultScheme){
+                    scope.onComplete.push(value=>{
+                        const parsed=resultScheme.safeParse(value);
+                        if(parsed.success===true){
+                            r(parsed.data);
+                        }else if(parsed.success===false){
+                            j(new ConvoError(
+                                'invalid-return-value-type',
+                                {statement:scope.s},
+                                `Invalid result value - ${parsed.error.message}`
+                            ));
+                        }else{
+                            r(value);
+                        }
+                    })
+                }else{
+                    scope.onComplete.push(r);
+                }
             })}
         }else{
             if(scope.error){
                 throw scope.error;
             }else{
+                if(resultScheme){
+                    const parsed=resultScheme.safeParse(scope.v);
+                    if(parsed.success===true){
+                        return {value:parsed.data}
+                    }else if(parsed.success===false){
+                        throw new ConvoError(
+                            'invalid-return-value-type',
+                            {statement:scope.s},
+                            `Invalid result value - ${parsed.error.message}`
+                        );
+                    }
+                }
                 return {value:scope.v};
             }
         }
@@ -373,7 +470,7 @@ export class ConvoExecutionContext
     private suspendScope(scope:ConvoScope,waitFor?:ConvoScope){
         if(scope.si){
             console.error('Scope already suspended',scope);
-            throw new Error('Scope already suspended')
+            throw new ConvoError('scope-already-suspended',{statement:scope.s})
         }
         scope.si=(this.nextSuspendId++).toString();
         if(waitFor){
@@ -385,7 +482,7 @@ export class ConvoExecutionContext
     private completeScope(scope:ConvoScope,parent:ConvoScope|undefined,defaultScope:ConvoScope){
 
         if(scope.wi){
-            throw new Error(`scope waiting on scope(${scope.wi}) before resuming`);
+            throw new ConvoError('scope-waiting',{statement:scope.s},`scope waiting on scope(${scope.wi}) before resuming`);
         }
 
         const statement=scope.s;
@@ -416,7 +513,7 @@ export class ConvoExecutionContext
             for(const r of resume){
                 const parent=r.pi?this.suspendedScopes[r.pi]:undefined;
                 if(r.pi && !parent){
-                    throw new Error('Suspension parent not found');
+                    throw new ConvoError('suspension-parent-not-found',{statement:scope.s});
                 }
                 delete r.pi;
                 this.executeScope(r,parent,defaultScope,scope);

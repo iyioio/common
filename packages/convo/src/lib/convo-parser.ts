@@ -16,7 +16,7 @@ const setIndex=8;
 const valueIndex=9;
 const fnOpenIndex=10;
 
-const returnTypeReg=/\s*->\s*(\w+)?\s*(\(?)/gs;
+const returnTypeReg=/\s*(\w+)?\s*->\s*(\w+)?\s*(\(?)/gs;
 
 const numberReg=/^-?[.\d]/;
 
@@ -380,6 +380,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                             }
 
                             if(rMatch[2]){
+                                currentFn.returnType=rMatch[2];
+                            }
+
+                            if(rMatch[3]){
                                 inFnBody=true;
                                 currentFn.body=[];
                                 const body:ConvoStatement={fn:convoBodyFnName,params:currentFn.body,s:startIndex,e:index}

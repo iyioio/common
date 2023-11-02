@@ -1,8 +1,21 @@
 import { ZodType, z } from "zod";
+import { ConvoError } from "./ConvoError";
 import { ConvoBaseType, OptionalConvoValue, isConvoBaseType, isConvoTypeDef, isOptionalConvoValue } from "./convo-types";
 
+const typeCacheKey=Symbol('typeCacheKey');
 
-export const convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
+export const convoValueToZodType=(value:any,maxDepth=100,cache=true):ZodType<any>=>{
+    if(cache && value && value[typeCacheKey]){
+        return value[typeCacheKey];
+    }
+    const type=_convoValueToZodType(value,maxDepth);
+    if(cache && value){
+        value[typeCacheKey]=type;
+    }
+    return type;
+}
+
+const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
 
     maxDepth--;
     if(maxDepth<0){
@@ -22,7 +35,7 @@ export const convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
         if(value.length===0){
             zType=z.any();
         }else{
-            zType=convoValueToZodType(value[0],maxDepth);
+            zType=_convoValueToZodType(value[0],maxDepth);
         }
     }else if(isConvoTypeDef(value)){
         if(isConvoBaseType(value.type)){
@@ -81,6 +94,10 @@ export const convoBaseTypeToZodType=(type:ConvoBaseType):ZodType<any>=>{
         case 'map': return z.record(z.string());
         case 'any': return z.any();
         default:
-            throw new Error(`Unexpected ConvoBaseType - ${type}`);
+            throw new ConvoError(
+                'unexpected-base-type',
+                {baseType:type},
+                `Unexpected ConvoBaseType - ${type}`
+            );
     }
 }
