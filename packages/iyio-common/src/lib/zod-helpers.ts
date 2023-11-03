@@ -1,4 +1,4 @@
-import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined } from "zod";
+import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion } from "zod";
 import { JsonScheme } from "./json-scheme";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
@@ -155,6 +155,14 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,o
         const values=type._def.values;
         if(Array.isArray(values)){
             jsonType.enum=[...values];
+        }
+    }else if(type instanceof ZodUnion){
+        jsonType.enum=[];
+        const values=type._def.options;
+        for(const v of values){
+            if(v instanceof ZodLiteral){
+                jsonType.enum.push(v.value);
+            }
         }
     }else if(type instanceof ZodObject){
         jsonType.type='object';
