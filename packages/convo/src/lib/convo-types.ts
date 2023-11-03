@@ -33,7 +33,8 @@ export type ConvoErrorType=(
     'zod-object-expected'|
     'scope-already-suspended'|
     'scope-waiting'|
-    'suspension-parent-not-found'
+    'suspension-parent-not-found'|
+    'variable-ref-required'
 );
 
 export interface ConvoErrorReferences
@@ -217,6 +218,11 @@ export interface OptionalConvoValue<T=any>
 }
 export const isOptionalConvoValue=(value:any):value is OptionalConvoValue=>(value as OptionalConvoValue)?.[convoObjFlag]==='optional';
 
+export interface ConvoFlowControllerDataRef
+{
+    ctrlData?:any;
+    childCtrlData?:Record<string,ConvoFlowControllerDataRef>;
+}
 
 export const convoFlowControllerKey=Symbol('convoFlowControllerKey')
 export interface ConvoFlowController
@@ -235,6 +241,18 @@ export interface ConvoFlowController
     catchReturn?:boolean;
 
     sourceFn?:ConvoFunction;
+
+    /**
+     * If true the ctrl data will be stored by the parent scope of the ctrl
+     * This is useful for ctrls that manage loops or iterators.
+     */
+    keepData?:boolean;
+
+    startParam?(
+        scope:ConvoScope,
+        parentScope:ConvoScope|undefined,
+        ctx:ConvoExecutionContext
+    ):number|false;
 
     nextParam?(
         scope:ConvoScope,
@@ -284,6 +302,17 @@ export interface ConvoScope
     r?:boolean;
 
     /**
+     * If true the control flow should break the current loop
+     */
+    bl?:boolean;
+
+    /**
+     * If defined li tells control flow that the statement at the given index is the body of a
+     * loop statement
+     */
+    li?:number;
+
+    /**
      * index
      */
     i:number;
@@ -327,9 +356,17 @@ export interface ConvoScope
 
     ctrlData?:any;
 
+    /**
+     * Similar to ctrlData but can be used by child statement controls to store data between
+     * statements executions. Used by the (in) function to store iterator position.
+     */
+    childCtrlData?:Record<string,any>;
+
     fromIndex?:number;
 
     gotoIndex?:number;
+
+    it?:ConvoIterator;
 
     /**
      * Variable scope for the scope. When a function is executed all scopes generated will share the
@@ -342,6 +379,25 @@ export interface ConvoScope
      * optimization and should be ignored
      */
     _d?:boolean;
+}
+
+export interface ConvoIterator
+{
+    /**
+     * Index of current iteration item
+     */
+    i:number;
+
+    /**
+     * Keys of item currently being iterated. Used when iterating over objects
+     */
+    keys?:string[];
+}
+
+export interface ConvoKeyValuePair
+{
+    key:string;
+    value:any;
 }
 
 export const convoBaseTypes=['string','number','int','boolean','time','void','any','map','array'] as const;
@@ -398,3 +454,8 @@ export interface ConvoExecuteResult
     value?:any;
     valuePromise?:Promise<any>
 }
+
+/**
+ * A function that prints the args it is passed and returns the last arg.
+ */
+export type ConvoPrintFunction=(...args:any[])=>any;

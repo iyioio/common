@@ -1,6 +1,7 @@
-import { ConvoBaseType, ConvoError, ConvoFlowController, ConvoScope, ConvoScopeFunction, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
+import { ConvoBaseType, ConvoError, ConvoFlowController, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
 export const convoBodyFnName='__body';
+export const convoStructFnName='struct';
 export const convoMapFnName='map';
 export const convoArrayFnName='array';
 export const convoJsonMapFnName='jsonMap';
@@ -11,6 +12,7 @@ export const convoEnumFnName='enum';
 export const convoArgsName='__args';
 
 export const allowedConvoDefinitionFunctions=[
+    convoStructFnName,
     convoMapFnName,
     convoArrayFnName,
     convoEnumFnName
@@ -115,4 +117,9 @@ export const escapeConvoMessageContent=(content:string):string=>{
 export const spreadConvoArgs=(args:Record<string,any>):string=>{
     const json=JSON.stringify(args);
     return json.substring(1,json.length-1);
+}
+
+export const defaultConvoPrintFunction:ConvoPrintFunction=(...args:any[]):any=>{
+    console.log(...args);
+    return args[args.length-1];
 }

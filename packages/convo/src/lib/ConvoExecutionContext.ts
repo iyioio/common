@@ -2,8 +2,8 @@ import { getValueByAryPath, isPromise } from '@iyio/common';
 import { ZodObject, ZodType } from 'zod';
 import { ConvoError } from './ConvoError';
 import { defaultConvoVars } from "./convo-default-vars";
-import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, setConvoScopeError } from './convo-lib';
-import { ConvoExecuteResult, ConvoFlowController, ConvoFunction, ConvoMessage, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
+import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, defaultConvoPrintFunction, setConvoScopeError } from './convo-lib';
+import { ConvoExecuteResult, ConvoFlowController, ConvoFlowControllerDataRef, ConvoFunction, ConvoMessage, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
 import { convoValueToZodType } from './convo-zod';
 
 
@@ -42,6 +42,8 @@ export class ConvoExecutionContext
     private readonly suspendedScopes:Record<string,ConvoScope>={};
 
     public readonly sharedSetters:string[]=[];
+
+    public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
     public constructor()
     {
@@ -358,11 +360,29 @@ export class ConvoExecutionContext
                 scope.paramValues=[];
             }
             const flowCtrl=fn[convoFlowControllerKey] as ConvoFlowController|undefined;
+            const parentStartIndex=parent?.i??0;
+            if(flowCtrl?.keepData && parent?.childCtrlData){
+                const dr:ConvoFlowControllerDataRef|undefined=parent.childCtrlData[parentStartIndex.toString()];
+                if(dr){
+                    console.log('hio 👋 👋 👋 Set ctrlData',statement.fn,dr.ctrlData,dr);
+                    scope.ctrlData=dr.ctrlData;
+                    scope.childCtrlData=dr.childCtrlData;
+                }
+            }
             const shouldExecute=flowCtrl?.shouldExecute?.(scope,parent,this)??true;
             if(shouldExecute){
+                delete scope.li;
                 if(statement.params?.length){
                     if(flowCtrl?.usesLabels && !scope.labels){
                         scope.labels={}
+                    }
+                    if(flowCtrl?.startParam){
+                        const startI=flowCtrl.startParam(scope,parent,this);
+                        if(startI===false){
+                            scope.i=statement.params.length;
+                        }else{
+                            scope.i=Math.max(0,startI);
+                        }
                     }
                     while(scope.i<statement.params.length){
                         const paramStatement=statement.params[scope.i];
@@ -404,6 +424,17 @@ export class ConvoExecutionContext
                                 return scope;
                             }
 
+                            if(paramScope.bl){
+                                if(scope.li===scope.i){
+                                    delete scope.fromIndex;
+                                    delete scope.gotoIndex;
+                                    delete scope.li;
+                                }else{
+                                    scope.bl=true;
+                                    return scope;
+                                }
+                            }
+
 
                             if(scope.fromIndex===scope.i && scope.gotoIndex!==undefined){
                                 scope.i=scope.gotoIndex;
@@ -428,8 +459,20 @@ export class ConvoExecutionContext
                 console.log('hio 👋 👋 👋 CALL()',statement.fn,statement);
                 value=fn(scope,this);
             }
-            if(flowCtrl?.transformResult){
-                value=flowCtrl.transformResult(value,scope,parent,this);
+            if(flowCtrl){
+                if(flowCtrl.keepData && parent){
+                    if(!parent.childCtrlData){
+                        parent.childCtrlData={}
+                    }
+                    const dr:ConvoFlowControllerDataRef={
+                        ctrlData:scope.ctrlData,
+                        childCtrlData:scope.childCtrlData,
+                    }
+                    parent.childCtrlData[parentStartIndex.toString()]=dr;
+                }
+                if(flowCtrl.transformResult){
+                    value=flowCtrl.transformResult(value,scope,parent,this);
+                }
             }
 
         }else if(statement.ref){
@@ -528,17 +571,43 @@ export class ConvoExecutionContext
         }
     }
 
-    private getVar(name:string,path?:string[],scope?:ConvoScope){
+    public getRefValue(statement:ConvoStatement|null|undefined,scope?:ConvoScope,throwUndefined=true):any{
+        if(!statement){
+            return undefined;
+        }
+        if(!statement.ref){
+            throw new ConvoError('variable-ref-required',{statement});
+        }
+        return this.getVar(statement.ref,statement.refPath,scope,throwUndefined);
+    }
+
+    public getVar(name:string,path?:string[],scope?:ConvoScope,throwUndefined=true){
         let value=scope?.vars[name]??this.sharedVars[name];
         if(value===undefined && !(name in this.sharedVars)){
-            setConvoScopeError(scope,`reference to undefined var - ${name}`);
+            if(throwUndefined){
+                setConvoScopeError(scope,`reference to undefined var - ${name}`);
+            }
         }else if(path){
             value=getValueByAryPath(value,path);
         }
         return value;
     }
 
-    private setVar(shared:boolean|undefined,value:any,name:string,path?:string[],scope?:ConvoScope){
+    public setRefValue(statement:ConvoStatement|null|undefined,value:any,scope?:ConvoScope):any{
+        if(!statement){
+            return value;
+        }
+
+        if(!statement.ref){
+            throw new ConvoError('variable-ref-required',{statement});
+        }
+
+        this.setVar(statement.shared,value,statement.ref,statement.refPath,scope);
+
+        return value;
+    }
+
+    public setVar(shared:boolean|undefined,value:any,name:string,path?:string[],scope?:ConvoScope){
 
         if(name in defaultConvoVars){
             setConvoScopeError(scope,'Overriding builtin var not allowed');
@@ -554,7 +623,7 @@ export class ConvoExecutionContext
         if(path){
             let obj=vars[name];
             if(obj===undefined || obj===null){
-                setConvoScopeError(scope,`reference to undefined var - ${name}`);
+                setConvoScopeError(scope,`reference to undefined var for setting path - ${name}`);
                 return value;
             }
             if(path.length>1){

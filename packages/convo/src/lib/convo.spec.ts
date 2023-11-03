@@ -74,7 +74,7 @@ Grade = map(
 
     gotoJob(grade.job)
 
-    if( mt(grade.score 8) ) then (
+    if( gt(grade.score 8) ) then (
         return('passed')
     ) elif ( lt(grade.score 3) ) then (
         return(map( score:0 message:"did not meat min grad"))
@@ -423,7 +423,7 @@ describe('convo',()=>{
             > testFn(
                 value: number
             ) -> (
-                if(mt(value 5)) then (
+                if(gt(value 5)) then (
                     return('more')
                 )else(
                     return('less')
@@ -454,7 +454,7 @@ describe('convo',()=>{
             > testFn(
                 value: number
             ) -> string (
-                if(mt(value 5)) then (
+                if(gt(value 5)) then (
                     return('more')
                 )else(
                     return(0)
@@ -545,6 +545,188 @@ describe('convo',()=>{
 
         expect(executeConvoFunction(fn,{value:8})).toEqual({value:8});
 
+    })
+
+
+
+
+
+    it('should loop using while',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                total = 0
+                n = 0
+                while( lt(n 5) ) do (
+                    total = add( n total )
+                    n = add( n 1 )
+                )
+                return(total)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toEqual(10);
+
+    })
+
+
+
+
+
+    it('should loop using foreach',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                total = 0
+                foreach( num=in(array(1 2 3)) ) do (
+                    total = add( num total )
+                )
+                return(total)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toEqual(6);
+
+    })
+
+
+
+
+    it('should break foreach',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                total = 0
+                foreach( num=in(array(1 2 3 4 )) ) do (
+                    if(eq(num 4)) then(
+                        break()
+                    )
+                    total = add( num total )
+                )
+                return(total)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toEqual(6);
+
+    })
+
+
+
+
+    it('should increment var',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                inc(total)
+                inc(total 2)
+                return(total)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toEqual(3);
+
+    })
+
+
+
+
+    it('should decrement var',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                dec(total)
+                dec(total 2)
+                return(total)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toEqual(-3);
+
+    })
+
+
+
+
+    it('should validate enum with strings and numbers',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:enum('a' 'b' 3)
+            ) -> (
+                return(add(value value))
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:'a'})).toEqual('aa');
+        expect(executeConvoFunction(fn,{value:'b'})).toEqual('bb');
+        expect(executeConvoFunction(fn,{value:3})).toEqual(6);
+
+        try{
+            executeConvoFunction(fn,{value:'c'});
+            throw new Error('Arg validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-args'));
+            }else{
+                throw ex;
+            }
+
+        }
+
+        try{
+            executeConvoFunction(fn,{value:6});
+            throw new Error('Arg validation should have throw an error')
+        }catch(ex){
+            if(ex instanceof ConvoError){
+                expect(ex.convoType).toBe(asType<ConvoErrorType>('invalid-args'));
+            }else{
+                throw ex;
+            }
+
+        }
     })
 
 });

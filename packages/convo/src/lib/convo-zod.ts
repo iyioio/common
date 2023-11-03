@@ -54,7 +54,7 @@ const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
                 if(allStrings){
                     zType=z.enum(value.enumValues as any);
                 }else{
-                    zType=z.union(value.enumValues as any);
+                    zType=z.union(value.enumValues.map(v=>z.literal(v)) as any);
                 }
             }
         }else{

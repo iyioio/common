@@ -1,9 +1,10 @@
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
-import { ConvoScope } from "./convo-types";
+import { ConvoIterator, ConvoScope } from "./convo-types";
 import { convoValueToZodType } from "./convo-zod";
 
 const ifFalse=Symbol();
 const ifTrue=Symbol();
+const breakLoop=Symbol();
 
 
 const mapFn=makeAnyConvoType('map',createConvoScopeFunction({
@@ -172,6 +173,7 @@ export const defaultConvoVars={
                 if(value){
                     parentScope.fromIndex=parentScope.i+1;
                     parentScope.gotoIndex=parentScope.i;
+                    parentScope.li=parentScope.i+1;
                 }
             }
             if(value){
@@ -189,6 +191,99 @@ export const defaultConvoVars={
             scope.ctrlData=ifTrue;
         }
         return scope.ctrlData??ifFalse;
+    }),
+
+    foreach:createConvoScopeFunction({
+        discardParams:true,
+        keepData:true,
+        startParam(scope,parentScope){
+            if(!scope.s.params?.length){
+                if(parentScope){
+                    parentScope.i++;
+                }
+                return false;
+            }
+            return 0;
+        },
+        nextParam(scope,parentScope){
+            console.log('hio 👋 👋 👋 foreach loop',scope.paramValues);
+            if(scope.paramValues?.[0]===breakLoop){
+                if(parentScope){
+                    parentScope.i++;
+                }
+                return false;
+            }
+            if(parentScope && scope.i+1===scope.s.params?.length){
+                parentScope.fromIndex=parentScope.i+1;
+                parentScope.gotoIndex=parentScope.i;
+                parentScope.li=parentScope.i+1;
+            }
+            return scope.i+1;
+        }
+    },(scope)=>{
+        const value=scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
+        if(value){
+            scope.ctrlData=ifTrue;
+        }
+        return scope.ctrlData??ifFalse;
+    }),
+
+    in:createConvoScopeFunction({
+        discardParams:true,
+        keepData:true,
+        nextParam(scope){
+
+            const value=scope.paramValues?.[0];
+
+            if(!value || (typeof value !== 'object')){
+                return false;
+            }
+            let it:ConvoIterator=scope.ctrlData;
+            if(!it){
+                it={i:0}
+                if(!Array.isArray(value)){
+                    it.keys=Object.keys(value);
+                }
+                scope.ctrlData=it;
+            }
+
+            return false;
+        }
+    },(scope)=>{
+        const it=scope.ctrlData as ConvoIterator|undefined;
+        if(!it){
+            return breakLoop;
+        }
+
+        const value=scope.paramValues?.[0];
+        const isArray=Array.isArray(value);
+        const ary:any[]=it.keys??value;
+
+        console.log('hio 👋 👋 👋 in value',it,value,ary);
+
+        if(it.i>=ary.length){
+            return breakLoop;
+        }
+
+        const r=isArray?value[it.i]:{key:ary[it.i],value:value[ary[it.i]]};
+        it.i++;
+
+        return r;
+
+    }),
+
+    break:createConvoScopeFunction((scope)=>{
+        if(!scope.paramValues?.length){
+            scope.bl=true;
+            return undefined;
+        }
+        for(let i=0;i<scope.paramValues.length;i++){
+            if(scope.paramValues[i]){
+                scope.bl=true;
+                return undefined;
+            }
+        }
+        return undefined;
     }),
 
     do:createConvoScopeFunction({
@@ -215,7 +310,7 @@ export const defaultConvoVars={
         return true;
     }),
 
-    mt:createConvoScopeFunction(scope=>{
+    gt:createConvoScopeFunction(scope=>{
         if(!scope.paramValues || scope.paramValues.length<2){
             return false;
         }
@@ -227,7 +322,7 @@ export const defaultConvoVars={
         return true;
     }),
 
-    mte:createConvoScopeFunction(scope=>{
+    gte:createConvoScopeFunction(scope=>{
         if(!scope.paramValues || scope.paramValues.length<2){
             return false;
         }
@@ -371,11 +466,49 @@ export const defaultConvoVars={
         return value;
     }),
 
-    print:createConvoScopeFunction(scope=>{
+    print:createConvoScopeFunction((scope,ctx)=>{
         if(scope.paramValues){
-            console.log(...scope.paramValues)
+            ctx.print(...scope.paramValues);
         }
-        return scope.paramValues;
+        return scope.paramValues?.[scope.paramValues?.length??0];
+    }),
+
+    inc:createConvoScopeFunction({
+        discardParams:true,
+        startParam(){
+            return 1;
+        }
+    },(scope,ctx)=>{
+        if(!scope.s.params){
+            return undefined;
+        }
+        const value=scope.paramValues?.[0]??1;
+        let lastValue=value;
+        const s=scope.s.params[0];
+        const sv=ctx.getRefValue(s,scope,false);
+        lastValue=sv===undefined?value:sv+value;
+        ctx.setRefValue(s,lastValue,scope);
+
+        return lastValue;
+    }),
+
+    dec:createConvoScopeFunction({
+        discardParams:true,
+        startParam(){
+            return 1;
+        }
+    },(scope,ctx)=>{
+        if(!scope.s.params){
+            return undefined;
+        }
+        const value=scope.paramValues?.[0]??1;
+        let lastValue=value;
+        const s=scope.s.params[0];
+        const sv=ctx.getRefValue(s,scope,false);
+        lastValue=sv===undefined?-value:sv-value;
+        ctx.setRefValue(s,lastValue,scope);
+
+        return lastValue;
     }),
 
 } as const;
@@ -411,15 +544,14 @@ Object.freeze(defaultConvoVars);
     string
     number
     boolean
-    bool
     time
     void
 
     eq()
     lt()
     lte()
-    mt()
-    mte()
+    gt()
+    gte()
 
     and()
     or()
@@ -437,3 +569,4 @@ Object.freeze(defaultConvoVars);
 
 )
 `;
+

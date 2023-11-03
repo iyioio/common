@@ -253,9 +253,12 @@ const convo={
             "beginCaptures": {
                 "1":{
                     "name":"support.function",
-                    "patterns":[{
-                        "include":"#systemFunctions"
-                    }]
+                    "patterns":[
+                        {"include":"#operators"},
+                        {"include":"#typeFunctions"},
+                        {"include":"#logicOperators"},
+                        {"include":"#systemFunctions"}
+                    ]
                 },
                 "2":{
                     "name":"meta.parameters"
@@ -389,10 +392,34 @@ const convo={
             }
         },
         "systemFunctions":{
-            "match":"\\b(elif|if|else|while|for|in|do|then)$",
+            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
+                }
+            }
+        },
+        "typeFunctions":{
+            "match":"\\b(enum|struct|array)$",
+            "captures":{
+                "1":{
+                    "name":"keyword.control"
+                }
+            }
+        },
+        "operators":{
+            "match":"\\b(lt|lte|eq|mt|mte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
+            "captures":{
+                "1":{
+                    "name":"keyword"
+                }
+            }
+        },
+        "logicOperators":{
+            "match":"\\b(and|or)$",
+            "captures":{
+                "1":{
+                    "name":"keyword"
                 }
             }
         },

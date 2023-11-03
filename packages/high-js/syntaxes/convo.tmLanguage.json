@@ -76,7 +76,7 @@
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|no\\s+result|result)",
+            "begin": "^\\s*(>)\\s*(do|no\\s+result|result|define)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -130,7 +130,7 @@
             "end":"\\)",
             "beginCaptures": {
                 "1":{
-                    "name":"variable"
+                    "name":"entity.name.type"
                 },
                 "2":{
                     "name":"keyword.operator"
@@ -160,9 +160,12 @@
             "beginCaptures": {
                 "1":{
                     "name":"support.function",
-                    "patterns":[{
-                        "include":"#systemFunctions"
-                    }]
+                    "patterns":[
+                        {"include":"#operators"},
+                        {"include":"#typeFunctions"},
+                        {"include":"#logicOperators"},
+                        {"include":"#systemFunctions"}
+                    ]
                 },
                 "2":{
                     "name":"meta.parameters"
@@ -296,10 +299,34 @@
             }
         },
         "systemFunctions":{
-            "match":"\\b(elif|if|else|while|for|in|do|then)$",
+            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
+                }
+            }
+        },
+        "typeFunctions":{
+            "match":"\\b(enum|struct|array)$",
+            "captures":{
+                "1":{
+                    "name":"keyword.control"
+                }
+            }
+        },
+        "operators":{
+            "match":"\\b(lt|lte|eq|mt|mte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
+            "captures":{
+                "1":{
+                    "name":"keyword"
+                }
+            }
+        },
+        "logicOperators":{
+            "match":"\\b(and|or)$",
+            "captures":{
+                "1":{
+                    "name":"keyword"
                 }
             }
         },
@@ -308,7 +335,7 @@
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"(true|false|null|undefined)",
+            "match":"\\b(true|false|null|undefined|__args)\\b",
             "name":"constant.language"
         }
     }
