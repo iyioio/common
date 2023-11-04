@@ -274,8 +274,19 @@ const convo={
             ]
         },
         "comment":{
-            "match":"#.*",
-            "name":"comment"
+            "patterns":[
+                {
+                    "match":"#.*",
+                    "name":"comment"
+                },
+                {
+                    "match":"//.*",
+                    "name":"emphasis",
+                    "captures":{
+                        "0":{"name":"comment"}
+                    }
+                }
+            ]
         },
         "tag":{
             "match":"(@)\\s*(\\w*)\\s*=?(.*)",

@@ -7,7 +7,7 @@ const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const topLevelMessageReg=/(>)\s*(do|no\s+result|result|define)/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|@|\)|\}\}|\}|\]|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
+const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|\/\/|@|\)|\}\}|\}|\]|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -129,15 +129,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
         return true;
     }
 
-    const takeComment=()=>{
+    const takeComment=(drop=false)=>{
         index++;
         const newline=code.indexOf('\n',index);
-        const comment=code.substring(index,newline).trim();
-        console.log('hio 👋 👋 👋 comment',comment);
-        if(lastComment.trim()){
-            lastComment+='\n'+comment;
-        }else{
-            lastComment=comment
+        if(!drop){
+            const comment=code.substring(index,newline).trim();
+            console.log('hio 👋 👋 👋 comment',comment);
+            if(lastComment.trim()){
+                lastComment+='\n'+comment;
+            }else{
+                lastComment=comment
+            }
         }
         index=newline;
     }
@@ -304,9 +306,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             }
 
 
-            if(cc==='#'){
+            if(cc==='#' || cc==='//'){
                 index+=spaceLength;
-                takeComment();
+                takeComment(cc==='//');
                 continue;
             }else if(cc==='@'){
                 console.log('hio 👋 👋 👋 FOUND TAG',cc);
@@ -660,6 +662,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
             }else if(char==='#'){
                 takeComment();
+            }else if(char==='/' && code[index+1]==='/'){
+                index++;
+                takeComment(true);
             }else if(char==='@'){
                 takeTag();
             }else if(space.test(char) || char===';' || char===','){
