@@ -1,6 +1,7 @@
 import { ZodType, z } from "zod";
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, OptionalConvoValue, isConvoBaseType, isConvoTypeDef, isOptionalConvoValue } from "./convo-types";
+import { convoMetadataKey } from "./convo-lib";
+import { ConvoBaseType, ConvoMetadata, OptionalConvoValue, isConvoBaseType, isConvoTypeDef, isOptionalConvoValue } from "./convo-types";
 
 const typeCacheKey=Symbol('typeCacheKey');
 
@@ -8,14 +9,14 @@ export const convoValueToZodType=(value:any,maxDepth=100,cache=true):ZodType<any
     if(cache && value && value[typeCacheKey]){
         return value[typeCacheKey];
     }
-    const type=_convoValueToZodType(value,maxDepth);
+    const type=_convoValueToZodType(value,value?.[convoMetadataKey],maxDepth);
     if(cache && value){
         value[typeCacheKey]=type;
     }
     return type;
 }
 
-const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
+const _convoValueToZodType=(value:any,metadata:ConvoMetadata|undefined,maxDepth=100):ZodType<any>=>{
 
     maxDepth--;
     if(maxDepth<0){
@@ -35,7 +36,7 @@ const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
         if(value.length===0){
             zType=z.any();
         }else{
-            zType=_convoValueToZodType(value[0],maxDepth);
+            zType=_convoValueToZodType(value[0],undefined,maxDepth);
         }
     }else if(isConvoTypeDef(value)){
         if(isConvoBaseType(value.type)){
@@ -66,7 +67,7 @@ const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
             case null: zType=z.null(); break;
             default:
                 if(typeof value === 'object'){
-                    const shape=convoParamsToZodShape(value,maxDepth);
+                    const shape=_convoParamsToZodShape(value,metadata,maxDepth);
                     zType=z.object(shape);
                 }else{
                     zType=z.literal(value);
@@ -82,18 +83,28 @@ const _convoValueToZodType=(value:any,maxDepth=100):ZodType<any>=>{
         zType=zType.optional();
     }
 
+    if(metadata?.comment){
+        zType=zType.describe(metadata.comment);
+    }
+
     return zType;
 
 }
 
 export const convoParamsToZodShape=(params:Record<string,any>,maxDepth=100):Record<string,ZodType<any>>=>{
 
+    return _convoParamsToZodShape(params,undefined,maxDepth);
+}
+
+const _convoParamsToZodShape=(params:Record<string,any>,metadata:ConvoMetadata|undefined,maxDepth=100):Record<string,ZodType<any>>=>{
+
     maxDepth--;
 
     const shape:Record<string,ZodType<any>>={};
 
     for(const e in params){
-        shape[e]=convoValueToZodType(params[e],maxDepth);
+        const v=params[e];
+        shape[e]=_convoValueToZodType(v,metadata?.properties?.[e]??v?.[convoMetadataKey],maxDepth);
     }
 
     return shape;

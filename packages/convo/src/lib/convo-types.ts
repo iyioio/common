@@ -203,7 +203,7 @@ export interface ConvoParsingError
     near:string;
 }
 
-export interface ConvoError
+export interface ConvoScopeError
 {
     message:string;
     error?:any;
@@ -347,7 +347,7 @@ export interface ConvoScope
      */
     labels?:Record<string,number|OptionalConvoValue<number>>;
 
-    error?:ConvoError;
+    error?:ConvoScopeError;
 
     /**
      * If true the scope is defining a type
@@ -373,6 +373,11 @@ export interface ConvoScope
      * same vars scope object. This is important to remember when serializing scope objects.
      */
     vars:Record<string,any>;
+
+    /**
+     * If true metadata should be captured. Metadata capturing is implemented in ConvoFlowControllers.
+     */
+    cm?:boolean;
 
     /**
      * If true the scope is used as the default scope object. This property is used for internal
@@ -459,3 +464,12 @@ export interface ConvoExecuteResult
  * A function that prints the args it is passed and returns the last arg.
  */
 export type ConvoPrintFunction=(...args:any[])=>any;
+
+export interface ConvoMetadata
+{
+    name?:string;
+    comment?:string;
+    tags?:ConvoTag[];
+    properties?:Record<string,ConvoMetadata>;
+}
+

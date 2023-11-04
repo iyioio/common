@@ -1,7 +1,9 @@
 import { asType } from '@iyio/common';
+import { ZodEnum, ZodObject } from 'zod';
 import { CallbackConvoCompletionService } from './CallbackConvoCompletionService';
 import { Conversation } from "./Conversation";
 import { ConvoError } from './ConvoError';
+import { getConvoMetadata } from './convo-lib';
 import { ConvoErrorType, FlatConvoConversation } from "./convo-types";
 
 describe('convo',()=>{
@@ -314,6 +316,82 @@ describe('convo',()=>{
             isNumber:false,
             isString:false,
         })
+
+    })
+
+    it('should create metadata',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+            > define
+
+            # description 0
+            Category = enum('fun' 'boring')
+
+            # description 1
+            Grade = struct(
+                # description 2
+                score: number
+                # description 3
+                suggestions?: array(string)
+                # description 4
+                category: Category
+            )
+
+            # description 5
+            > checkType(
+                score
+                suggestions
+                category
+            ) Grade -> (
+                return(score)
+            )
+
+        `);
+        console.log('hio 👋 👋 👋 before ----------------------------',);
+
+        const c=await convo.completeAsync();
+
+        console.log('hio 👋 👋 👋 SHARED VARS',c.exe?.sharedVars);
+
+        const category=c.exe?.sharedVars['Category'];
+        const grade=c.exe?.sharedVars['Grade'];
+
+        expect(category).not.toBeUndefined();
+        expect(grade).not.toBeUndefined();
+
+
+        let m=0;
+
+        let metadata=getConvoMetadata(category);
+        expect(metadata?.comment).toBe(`description ${m++}`);
+
+        metadata=getConvoMetadata(grade);
+        expect(metadata?.comment).toBe(`description ${m++}`);
+        expect(metadata?.properties?.['score']?.comment).toBe(`description ${m++}`);
+        expect(metadata?.properties?.['suggestions']?.comment).toBe(`description ${m++}`);
+        expect(metadata?.properties?.['category']?.comment).toBe(`description ${m++}`);
+
+
+        m=0;
+        let zod=c.exe?.getVarAsType('Category');
+        expect(zod).toBeInstanceOf(ZodEnum);
+        expect(zod?.description).toBe(`description ${m++}`);
+
+
+        zod=c.exe?.getVarAsType('Grade');
+        expect(zod).toBeInstanceOf(ZodObject);
+        expect(zod?.description).toBe(`description ${m++}`);
+        if(zod instanceof ZodObject){
+            expect(zod.shape['score']?.description).toBe(`description ${m++}`);
+            expect(zod.shape['suggestions']?.description).toBe(`description ${m++}`);
+            expect(zod.shape['category']?.description).toBe(`description ${m++}`);
+        }else{
+            throw new Error('value Should be instance of ZodObject');
+        }
+
+
 
     })
 

@@ -3,7 +3,7 @@ import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { escapeConvoMessageContent, spreadConvoArgs } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoFunction, ConvoMessage, ConvoParsingResult, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoFunction, ConvoMessage, ConvoParsingResult, ConvoScopeFunction, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { convoCompletionService } from "./convo.deps";
 
 export interface ConversationOptions
@@ -84,11 +84,7 @@ export class Conversation
 
         const completionService=this.completionService;
 
-        if(!completionService){
-            return {messages:[]}
-        }
-
-        return await this._completeAsync(flat=>completionService.completeConvoAsync(flat))
+        return await this._completeAsync(flat=>completionService?.completeConvoAsync(flat)??[])
 
     }
 
@@ -137,7 +133,7 @@ export class Conversation
             }
 
             if(msg.callFn){
-                const result=this.append(`> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams)})`);
+                const result=this.append(`> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
                 const callMessage=result.messages[0];
                 if(result.messages.length!==1 || !callMessage){
                     throw new ConvoError(
@@ -196,12 +192,14 @@ export class Conversation
         return this.roleMap[role]??role;
     }
 
+    public externFunctions:Record<string,ConvoScopeFunction>={}
+
     public async flattenAsync():Promise<FlatConvoConversation>
     {
         const exe=new ConvoExecutionContext();
         const messages:FlatConvoMessage[]=[];
 
-        exe.loadFunctions(this._messages);
+        exe.loadFunctions(this._messages,this.externFunctions);
 
         for(let i=0;i<this._messages.length;i++){
             const msg=this._messages[i];

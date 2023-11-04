@@ -1,4 +1,4 @@
-import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoBaseTypeDef, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoStructFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
 import { ConvoIterator, ConvoScope } from "./convo-types";
 import { convoValueToZodType } from "./convo-zod";
 
@@ -8,7 +8,7 @@ const breakLoop=Symbol();
 
 
 const mapFn=makeAnyConvoType('map',createConvoScopeFunction({
-    usesLabels:true
+    usesLabels:true,
 },convoLabeledScopeParamsToObj))
 
 const arrayFn=makeAnyConvoType('array',(scope:ConvoScope)=>{
@@ -50,6 +50,12 @@ export const defaultConvoVars={
     ['null']:null,
     ['undefined']:undefined,
 
+    [convoStructFnName]:makeAnyConvoType('map',createConvoScopeFunction({
+        usesLabels:true,
+    },(scope)=>{
+        scope.cm=true;
+        return convoLabeledScopeParamsToObj(scope);
+    })),
     [convoMapFnName]:mapFn,
     [convoArrayFnName]:arrayFn,
     [convoJsonMapFnName]:mapFn,
@@ -57,10 +63,13 @@ export const defaultConvoVars={
     [convoArgsName]:undefined,
 
     [convoEnumFnName]:createConvoScopeFunction(scope=>{
-        return createConvoTypeDef({
+        const type=createConvoTypeDef({
             type:'enum',
             enumValues:scope.paramValues??[],
         })
+        const metadata=createConvoMetadataForStatement(scope.s);
+        (type as any)[convoMetadataKey]=metadata;
+        return type;
     }),
     is:createConvoScopeFunction(scope=>{
         if(!scope.paramValues || scope.paramValues.length<2){

@@ -2,7 +2,7 @@ import { getValueByAryPath, isPromise } from '@iyio/common';
 import { ZodObject, ZodType } from 'zod';
 import { ConvoError } from './ConvoError';
 import { defaultConvoVars } from "./convo-default-vars";
-import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, createConvoScopeFunction, createOptionalConvoValue, defaultConvoPrintFunction, setConvoScopeError } from './convo-lib';
+import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoStructFnName, createConvoScopeFunction, createOptionalConvoValue, defaultConvoPrintFunction, setConvoScopeError } from './convo-lib';
 import { ConvoExecuteResult, ConvoFlowController, ConvoFlowControllerDataRef, ConvoFunction, ConvoMessage, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
 import { convoValueToZodType } from './convo-zod';
 
@@ -253,7 +253,7 @@ export class ConvoExecutionContext
             i:0,
             vars,
             s:{
-                fn:convoMapFnName,
+                fn:convoStructFnName,
                 params,
                 s:0,
                 e:0,

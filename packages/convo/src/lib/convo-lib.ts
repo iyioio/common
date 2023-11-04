@@ -1,4 +1,4 @@
-import { ConvoBaseType, ConvoError, ConvoFlowController, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
+import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoStructFnName='struct';
@@ -10,6 +10,8 @@ export const convoLocalFunctionModifier='local';
 export const convoCallFunctionModifier='call';
 export const convoEnumFnName='enum';
 export const convoArgsName='__args';
+export const convoMetadataKey=Symbol('convoMetadataKey');
+export const convoCaptureMetadataTag='captureMetadata';
 
 export const allowedConvoDefinitionFunctions=[
     convoStructFnName,
@@ -68,7 +70,7 @@ export const createConvoScopeFunction:CreateConvoScopeFunctionOverloads=(
     return fn;
 }
 
-export const setConvoScopeError=(scope:ConvoScope|null|undefined,error:ConvoError|string)=>{
+export const setConvoScopeError=(scope:ConvoScope|null|undefined,error:ConvoScopeError|string)=>{
     if(typeof error === 'string'){
         error={
             message:error,
@@ -89,9 +91,46 @@ export const setConvoScopeError=(scope:ConvoScope|null|undefined,error:ConvoErro
     }
 }
 
+export const containsConvoTag=(tags:ConvoTag[]|null|undefined,tagName:string):boolean=>{
+    if(!tags){
+        return false;
+    }
+    for(let i=0;i<tags.length;i++){
+        if(tags[i]?.name===tagName){
+            return true;
+        }
+    }
+    return false;
+}
+
+export const createConvoMetadataForStatement=(statement:ConvoStatement):ConvoMetadata=>{
+    return {
+        name:(
+            (statement.set && !statement.setPath)?
+                statement.set
+            :statement.label?
+                statement.label
+            :
+                undefined
+        ),
+        comment:statement.comment,
+        tags:statement.tags,
+    };
+}
+
+export const getConvoMetadata=(value:any):ConvoMetadata|undefined=>{
+    return value?.[convoMetadataKey];
+}
+
 export const convoLabeledScopeParamsToObj=(scope:ConvoScope):Record<string,any>=>{
     const obj:Record<string,any>={};
-    const labels=scope.labels
+    const labels=scope.labels;
+    let metadata:ConvoMetadata|undefined=undefined;
+    if(scope.cm || (scope.s.tags && containsConvoTag(scope.s.tags,convoCaptureMetadataTag))){
+        metadata=createConvoMetadataForStatement(scope.s);
+        metadata.properties={};
+        (obj as any)[convoMetadataKey]=metadata;
+    }
     if(labels){
         for(const e in labels){
             const label=labels[e];
@@ -103,6 +142,18 @@ export const convoLabeledScopeParamsToObj=(scope:ConvoScope):Record<string,any>=
             if(index!==undefined){
                 const v=scope.paramValues?.[index]
                 obj[e]=isOptional?createOptionalConvoValue(v):v;
+
+                if(metadata?.properties && scope.s.params){
+                    const propStatement=scope.s.params[index];
+                    if(propStatement){
+                        metadata.properties[e]={
+                            name:e,
+                            comment:propStatement.comment,
+                            tags:propStatement.tags
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -114,8 +165,8 @@ export const escapeConvoMessageContent=(content:string):string=>{
     return content;
 }
 
-export const spreadConvoArgs=(args:Record<string,any>):string=>{
-    const json=JSON.stringify(args);
+export const spreadConvoArgs=(args:Record<string,any>,format?:boolean):string=>{
+    const json=JSON.stringify(args,null,format?4:undefined);
     return json.substring(1,json.length-1);
 }
 

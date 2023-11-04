@@ -326,7 +326,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     error='Unexpected end of function using (>) character';
                     break parsingLoop;
                 }
-                lastComment='';
+                if(cc!=='>'){
+                    lastComment='';
+                }
                 if(tags.length){
                     tags=[];
                 }
@@ -560,6 +562,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 let match=fnMessageReg.exec(code);
                 if(match && match.index==index){
                     msgName=match[3]??'';
+                    console.log(`hio 👋 👋 👋 new function ${msgName}`,lastComment,match);
                     if(!msgName){
                         error='function name expected';
                         break parsingLoop;
