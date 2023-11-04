@@ -206,6 +206,7 @@ const style=atDotCss({name:'CodeInput',css:`
         display:flex;
         border-radius:8px;
         transition:opacity 0.1s ease-in-out;
+        background:#1E1E1E;
     }
     .CodeInput textarea{
         all:unset;
@@ -248,6 +249,7 @@ const style=atDotCss({name:'CodeInput',css:`
         width:100%;
         height:100%;
         overflow:hidden;
+        overflow:clip;
         border:none;
         background:none;
         resize:none;
