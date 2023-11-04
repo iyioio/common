@@ -1,8 +1,9 @@
 import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
+import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation } from '@iyio/convo';
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiComplationMessageType, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions } from "./ai-complete-types";
+import { AiComplationMessageType, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
 import { parseAiCompletionMessages } from "./ai-message-converter";
 
 export interface AiCompletionServiceOptions
@@ -10,7 +11,7 @@ export interface AiCompletionServiceOptions
     providers:ProviderTypeDef<AiCompletionProvider>;
 }
 
-export class AiCompletionService
+export class AiCompletionService implements ConvoCompletionService
 {
 
     public static fromScope(scope:Scope){
@@ -252,6 +253,56 @@ export class AiCompletionService
         return this.providers.getFirst(null,p=>{
             return p.getTokenEstimateForMessage?.(message,model);
         })??(message.length/2)
+    }
+
+    public async completeConvoAsync(flat:FlatConvoConversation):Promise<ConvoCompletionMessage[]>
+    {
+        const messages:AiCompletionMessage[]=[];
+        const functions:AiCompletionFunction[]=[];
+
+        const baseId=shortUuid()+'_';
+
+        for(let i=0;i<flat.messages.length;i++){
+            const msg=flat.messages[i];
+            if(!msg){
+                continue;
+            }
+            if(msg.fn){
+
+                functions.push({
+                    name:msg.fn.name,
+                    description:msg.fn.description??'',
+                    params:msg.fnParams?zodTypeToJsonScheme(msg.fnParams):undefined
+                });
+
+            }else{
+                messages.push({
+                    id:baseId+i,
+                    type:'text',
+                    role:isAiCompletionRole(msg.role)?msg.role:'user',
+                    content:msg.content
+                });
+            }
+        }
+
+        const result=await this.completeAsync({messages,functions});
+
+        const resultMessage=result.options[0];
+        if(!resultMessage){
+            return []
+        }
+
+        if(resultMessage.message.call){
+            return [{
+                callFn:resultMessage.message.call.name,
+                callParams:resultMessage.message.call.params
+            }]
+        }else{
+            return [{
+                role:resultMessage.message.role,
+                content:resultMessage.message.content
+            }]
+        }
     }
 
 }
