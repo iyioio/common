@@ -36,6 +36,6 @@ export function JsonView({
 
 const style=atDotCss({name:'JsonView',order:'frameworkHigh',css:`
     .JsonView{
-        white-space:pre;
+        white-space:pre-wrap;
     }
 `});
