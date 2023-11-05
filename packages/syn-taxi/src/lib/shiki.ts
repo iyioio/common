@@ -407,7 +407,7 @@ const convo={
             }
         },
         "systemFunctions":{
-            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then)$",
+            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then|fn|return)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
@@ -423,7 +423,7 @@ const convo={
             }
         },
         "operators":{
-            "match":"\\b(lt|lte|eq|mt|mte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
+            "match":"\\b(lt|lte|eq|gt|gte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
             "captures":{
                 "1":{
                     "name":"keyword"

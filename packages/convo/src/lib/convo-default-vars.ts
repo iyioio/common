@@ -305,6 +305,13 @@ export const defaultConvoVars={
         return scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
     }),
 
+    fn:createConvoScopeFunction({
+        discardParams:true,
+        catchReturn:true,
+    },()=>{
+        return undefined;
+    }),
+
     return:createConvoScopeFunction(scope=>{
         const value=scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
         scope.r=true;

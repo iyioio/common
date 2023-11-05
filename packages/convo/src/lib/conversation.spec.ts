@@ -442,9 +442,12 @@ describe('convo',()=>{
             ) -> (
                 convo << map(
                     REPLACE:add(a '_' b)
+                    MESSAGE:fn(
+                        return(add(b '_' a))
+                    )
                 ) << ----
                     > user
-                    REPLACE ok
+                    REPLACE ok MESSAGE ko
                 ----
 
                 return('ok')
@@ -460,7 +463,11 @@ describe('convo',()=>{
 
         expect(convo.convo).toContain('GO_FAST');
 
+        expect(convo.convo).toContain('FAST_GO');
+
         expect(convo.convo.split('GO_FAST').length).toBe(2);
+
+        expect(convo.convo.split('FAST_GO').length).toBe(2);
 
     })
 

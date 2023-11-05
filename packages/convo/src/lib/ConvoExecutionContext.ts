@@ -426,11 +426,9 @@ export class ConvoExecutionContext
                             }
 
                             if(paramScope.r){
-                                scope.v=paramScope.v;
-                                if(!flowCtrl?.catchReturn){
-                                    scope.r=true;
-                                }
-                                return scope;
+                                value=paramScope.v;
+                                scope.r=true;
+                                break;
                             }
 
                             if(paramScope.bl){
@@ -466,9 +464,15 @@ export class ConvoExecutionContext
                     }
                 }
                 console.log('hio 👋 👋 👋 CALL()',statement.fn,statement);
-                value=fn(scope,this);
+                if(!scope.r){
+                    value=fn(scope,this);
+                }
             }
-            if(flowCtrl){
+            if(scope.r){
+                if(flowCtrl?.catchReturn){
+                    scope.r=false;
+                }
+            }else if(flowCtrl){
                 if(flowCtrl.keepData && parent){
                     if(!parent.childCtrlData){
                         parent.childCtrlData={}
