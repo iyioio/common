@@ -1,13 +1,13 @@
-import { allowedConvoDefinitionFunctions, convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
+import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
-type StringType='"'|"'"|'>';
+type StringType='"'|"'"|'---'|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
 const topLevelMessageReg=/(>)\s*(do|no\s+result|result|define)/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
-const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|\/\/|@|\)|\}\}|\}|\]|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
+const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|\/\/|@|\)|\}\}|\}|\]|<<|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|-{3,}|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;
 const spaceIndex=1;
 const ccIndex=3;
 const labelIndex=5;
@@ -20,9 +20,13 @@ const returnTypeReg=/\s*(\w+)?\s*->\s*(\w+)?\s*(\(?)/gs;
 
 const numberReg=/^-?[.\d]/;
 
-const singleStringReg=/(\{\{|')/gs;
-const doubleStringReg=/(\{\{|")/gs;
+const singleStringReg=/\{\{|'/gs;
+const doubleStringReg=/\{\{|"/gs;
+const heredocStringReg=/-{3,}/gs;
 const msgStringReg=/(\{\{|[\n\r]\s*>|$)/gs;
+
+const heredocOpening=/^([^\n])*\n(\s*)/;
+const hereDocReplace=/\n(\s*)/g;
 
 const tagReg=/(\w+)\s*=?(.*)/
 
@@ -84,6 +88,10 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
             case '"':
                 stringEndReg=doubleStringReg;
+                break;
+
+            case '---':
+                stringEndReg=heredocStringReg;
                 break;
 
             case '>':
@@ -268,12 +276,27 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 index=nextIndex;
             }else{
 
-                if(strStatement.params){// has embeds
-                    if(content){
-                        strStatement.params.push({value:content,s:index,e:nextIndex});
+                if(inString==='---'){
+                    const openMatch=heredocOpening.exec(content);
+                    if(openMatch){
+                        const l=openMatch[2]?.length??0;
+                        strStatement.value=content.replace(hereDocReplace,(_:string,space:string)=>{
+                            return '\n'+space.substring(l)
+                        })
+                        if(openMatch[1]?.trim()){
+                            strStatement.value=strStatement.value.trim();
+                        }
+                    }else{
+                        strStatement.value=content;
                     }
                 }else{
-                    strStatement.value=content;
+                    if(strStatement.params){// has embeds
+                        if(content){
+                            strStatement.params.push({value:content,s:index,e:nextIndex});
+                        }
+                    }else{
+                        strStatement.value=content;
+                    }
                 }
                 index=nextIndex;
                 if(!closeString()){
@@ -315,6 +338,24 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 index+=spaceLength;
                 takeTag();
                 continue;
+            }else if(cc==='<<'){
+                const last=stack[stack.length-1];
+                if(!last){
+                    error='Pipe operator used outside of a parent statement';
+                    break parsingLoop;
+                }
+                if(last.params?.length && last.params[last.params.length-1]?._pipe){
+                    error='Pipe operator followed by another pipe operator';
+                    break parsingLoop;
+                }
+                last._hasPipes=true;
+                addStatement({
+                    s:index,
+                    e:index+indexOffset,
+                    _pipe:true,
+                })
+                index+=indexOffset;
+                continue;
             }else if(cc===')' || cc==='}}' || cc==='}' || cc===']' || cc==='>' || cc===''){// close function
                 if(cc==='}' && stack[stack.length-1]?.fn!==convoJsonMapFnName){
                     error="Unexpected closing of JSON object";
@@ -338,6 +379,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 if(!stack.length || !lastStackItem){
                     error='Unexpected end of function call';
                     break parsingLoop;
+                }
+                if(lastStackItem._hasPipes){
+                    collapseConvoPipes(lastStackItem);
                 }
                 const endEmbed=cc==='}}';
                 const startIndex=index;
@@ -500,6 +544,9 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 console.log('hio 👋 👋 👋 PUSH STACK',stack.map(s=>s.fn));
             }else if(val==='"' || val==="'"){
                 openString(val,statement);
+                console.log('hio 👋 👋 👋',`|${code.substring(index+indexOffset,index+indexOffset+20)}|`);
+            }else if(val?.startsWith('---')){
+                openString('---',statement);
                 console.log('hio 👋 👋 👋',`|${code.substring(index+indexOffset,index+indexOffset+20)}|`);
             }else if(val && numberReg.test(val)){// number
                 statement.value=Number(val);

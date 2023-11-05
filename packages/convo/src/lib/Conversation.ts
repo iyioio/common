@@ -113,7 +113,23 @@ export class Conversation
         getCompletion:(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[]
     ):Promise<ConvoCompletion>{
 
-        const flat=await this.flattenAsync();
+        let append:string[]|undefined=undefined;
+        const flat=await this.flattenAsync(new ConvoExecutionContext({
+            conversation:this,
+            convoPipeSink:(value)=>{
+                if(!(typeof value === 'string')){
+                    value=value?.toString();
+                    if(!value?.trim()){
+                        return value;
+                    }
+                }
+                if(!append){
+                    append=[];
+                }
+                append.push(value);
+                return value;
+            }
+        }));
         if(this._isDisposed){
             return {messages:[]}
         }
@@ -165,6 +181,12 @@ export class Conversation
 
         }
 
+        if(append){
+            for(const a of (append as string[])){
+                this.append(a);
+            }
+        }
+
         return {
             message:cMsg,
             messages:completion,
@@ -194,9 +216,10 @@ export class Conversation
 
     public externFunctions:Record<string,ConvoScopeFunction>={}
 
-    public async flattenAsync():Promise<FlatConvoConversation>
-    {
-        const exe=new ConvoExecutionContext();
+    public async flattenAsync(
+        exe:ConvoExecutionContext=new ConvoExecutionContext({conversation:this})
+    ):Promise<FlatConvoConversation>{
+
         const messages:FlatConvoMessage[]=[];
 
         exe.loadFunctions(this._messages,this.externFunctions);

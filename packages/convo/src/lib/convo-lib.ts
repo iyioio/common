@@ -6,8 +6,10 @@ export const convoMapFnName='map';
 export const convoArrayFnName='array';
 export const convoJsonMapFnName='jsonMap';
 export const convoJsonArrayFnName='jsonArray';
+export const convoPipeFnName='pipe';
 export const convoLocalFunctionModifier='local';
 export const convoCallFunctionModifier='call';
+export const convoGlobalRef='convo';
 export const convoEnumFnName='enum';
 export const convoArgsName='__args';
 export const convoMetadataKey=Symbol('convoMetadataKey');
@@ -173,4 +175,51 @@ export const spreadConvoArgs=(args:Record<string,any>,format?:boolean):string=>{
 export const defaultConvoPrintFunction:ConvoPrintFunction=(...args:any[]):any=>{
     console.log(...args);
     return args[args.length-1];
+}
+
+export const collapseConvoPipes=(statement:ConvoStatement):number=>{
+    const params=statement.params;
+    if(!params){
+        return 0;
+    }
+    delete statement._hasPipes;
+    let count=0;
+    for(let i=0;i<params.length;i++){
+        const s=params[i];
+        if(!s?._pipe){
+            continue;
+        }
+        count++;
+
+        const dest=params[i-1];
+        const src=params[i+1];
+
+        if(i===0 || i===params.length-1 || !dest || !src){// discard - pipes need a target and source
+            params.splice(i,1);
+            i--;
+            continue;
+        }
+
+        if(dest.fn===convoPipeFnName){
+            if(!dest.params){
+                dest.params=[];
+            }
+            dest.params.unshift(src);
+            params.splice(i,2);
+        }else{
+
+            const pipeCall:ConvoStatement={
+                s:dest.s,
+                e:dest.e,
+                fn:convoPipeFnName,
+                params:[src,dest]
+            }
+
+            params.splice(i-1,3,pipeCall);
+        }
+        i--;
+
+    }
+
+    return count;
 }

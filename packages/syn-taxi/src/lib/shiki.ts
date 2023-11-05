@@ -306,8 +306,10 @@ const convo={
             "patterns":[
                 {"include":"#comment"},
                 {"include":"#tag"},
+                {"include":"#heredoc"},
                 {"include":"#stringDq"},
                 {"include":"#stringSq"},
+                {"include":"#pipe"},
                 {"include":"#functionCall"},
                 {"include":"#label"},
                 {"include":"#typeKeyword"},
@@ -321,8 +323,10 @@ const convo={
             "patterns":[
                 {"include":"#comment"},
                 {"include":"#tag"},
+                {"include":"#heredoc"},
                 {"include":"#stringDq"},
                 {"include":"#stringSq"},
+                {"include":"#pipe"},
                 {"include":"#functionCall"},
                 {"include":"#paramLabel"},
                 {"include":"#typeKeyword"},
@@ -439,10 +443,28 @@ const convo={
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"\\b(true|false|null|undefined|__args)\\b",
+            "match":"\\b(true|false|null|undefined|convo|__args)\\b",
             "name":"constant.language"
+        },
+        "heredoc":{
+            "begin":"-{3,}",
+            "end":"-{3,}",
+            "beginCaptures":{
+                "0":{"name":"comment"}
+            },
+            "endCaptures":{
+                "0":{"name":"comment"}
+            },
+            "patterns": [
+                {"include":"#expression"}
+            ]
+        },
+        "pipe":{
+            "match":"<<",
+            "name":"keyword.control"
         }
     }
 
 }
+
 

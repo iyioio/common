@@ -2,8 +2,8 @@ import { getValueByAryPath, isPromise } from '@iyio/common';
 import { ZodObject, ZodType } from 'zod';
 import { ConvoError } from './ConvoError';
 import { defaultConvoVars } from "./convo-default-vars";
-import { convoArgsName, convoBodyFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoStructFnName, createConvoScopeFunction, createOptionalConvoValue, defaultConvoPrintFunction, setConvoScopeError } from './convo-lib';
-import { ConvoExecuteResult, ConvoFlowController, ConvoFlowControllerDataRef, ConvoFunction, ConvoMessage, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
+import { convoArgsName, convoBodyFnName, convoGlobalRef, convoLabeledScopeParamsToObj, convoMapFnName, convoStructFnName, createConvoScopeFunction, createOptionalConvoValue, defaultConvoPrintFunction, setConvoScopeError } from './convo-lib';
+import { ConvoExecuteResult, ConvoFlowController, ConvoFlowControllerDataRef, ConvoFunction, ConvoGlobal, ConvoMessage, ConvoPrintFunction, ConvoScope, ConvoScopeFunction, ConvoStatement, convoFlowControllerKey, convoScopeFnKey } from "./convo-types";
 import { convoValueToZodType } from './convo-zod';
 
 
@@ -43,11 +43,20 @@ export class ConvoExecutionContext
 
     public readonly sharedSetters:string[]=[];
 
+    public readonly convo:ConvoGlobal;
+
     public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
-    public constructor()
+    public constructor(convo?:Partial<ConvoGlobal>)
     {
-        this.sharedVars={...defaultConvoVars}
+        this.convo={
+            ...convo,
+            exe:this,
+            convoPipeSink:convo?.convoPipeSink??((value:any)=>{
+                this.print('CONVO_PIPE <<',value);
+            })
+        }
+        this.sharedVars={...defaultConvoVars,[convoGlobalRef]:this.convo}
     }
 
     public loadFunctions(messages:ConvoMessage[],externFunctions?:Record<string,ConvoScopeFunction>)

@@ -319,6 +319,9 @@ describe('convo',()=>{
 
     })
 
+
+
+
     it('should create metadata',async ()=>{
 
         const convo=new Conversation();
@@ -392,6 +395,72 @@ describe('convo',()=>{
         }
 
 
+
+    })
+
+
+
+
+    it('should pipe',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            > pipeMessage() -> (
+                convo << ---- #ok bill
+                    > user
+                    STUFF ok
+                ----
+
+                return('ok')
+            )
+
+        `);
+
+        const r=await convo.callFunctionAsync('pipeMessage');
+
+        expect(r).toBe('ok');
+
+        expect(convo.convo).toContain('STUFF');
+
+        expect(convo.convo.split('STUFF').length).toBe(3)
+
+        console.log('hio 👋 👋 👋 PIPED',convo.convo);
+
+    })
+
+    it('should pipe with map',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            > pipeMessage(
+                a: string
+                b: string
+            ) -> (
+                convo << map(
+                    REPLACE:add(a '_' b)
+                ) << ----
+                    > user
+                    REPLACE ok
+                ----
+
+                return('ok')
+            )
+
+        `);
+
+        const r=await convo.callFunctionAsync('pipeMessage',{a:'GO',b:'FAST'});
+
+        console.log('hio 👋 👋 👋 PIPED',convo.convo);
+
+        expect(r).toBe('ok');
+
+        expect(convo.convo).toContain('GO_FAST');
+
+        expect(convo.convo.split('GO_FAST').length).toBe(2);
 
     })
 

@@ -141,6 +141,18 @@ export interface ConvoStatement
      * Source index close. Only used with function calls. The index is non-inclusive.
      */
     c?:number;
+
+    /**
+     * If true the statement in font of the current pipe statement will be  piped to the statement
+     * behind the current pipe statement. Pipe statements are converted to calls to the pipe function
+     * when a convo script is parsed and will to be present in a fully parsed syntax tree
+     */
+    _pipe?:boolean;
+
+    /**
+     * If true the statement has pipe statements in it's args.
+     */
+    _hasPipes?:boolean;
 }
 
 export interface ConvoFunction
@@ -473,3 +485,18 @@ export interface ConvoMetadata
     properties?:Record<string,ConvoMetadata>;
 }
 
+
+export interface ConvoPipeTarget
+{
+    convoPipeSink(value:any):Promise<any>|any
+}
+
+export const isConvoPipeTarget=(value:any):value is ConvoPipeTarget=>{
+    return (typeof (value as ConvoPipeTarget)?.convoPipeSink) === 'function';
+}
+
+export interface ConvoGlobal extends ConvoPipeTarget
+{
+    conversation?:Conversation;
+    exe?:ConvoExecutionContext;
+}

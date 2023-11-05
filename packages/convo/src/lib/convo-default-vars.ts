@@ -1,4 +1,5 @@
-import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoStructFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
+import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
 import { convoValueToZodType } from "./convo-zod";
 
@@ -49,6 +50,9 @@ export const defaultConvoVars={
     ['false']:false,
     ['null']:null,
     ['undefined']:undefined,
+    [convoGlobalRef]:undefined,
+
+    [convoPipeFnName]:convoPipeScopeFunction,
 
     [convoStructFnName]:makeAnyConvoType('map',createConvoScopeFunction({
         usesLabels:true,
@@ -297,8 +301,8 @@ export const defaultConvoVars={
 
     do:createConvoScopeFunction({
         discardParams:true,
-    },()=>{
-        return true
+    },scope=>{
+        return scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
     }),
 
     return:createConvoScopeFunction(scope=>{
