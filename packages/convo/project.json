@@ -34,8 +34,7 @@
             "options": {
                 "jestConfig": "packages/convo/jest.config.ts",
                 "passWithNoTests": true,
-                "bail":1,
-                "onlyChanged": true
+                "bail":1
             },
             "configurations": {
                 "ci": {

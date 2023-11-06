@@ -1,11 +1,11 @@
-import { convoArgsName, convoArrayFnName, convoBodyFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoTypeDef, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
 import { convoValueToZodType } from "./convo-zod";
 
 const ifFalse=Symbol();
 const ifTrue=Symbol();
-const breakLoop=Symbol();
+const breakIteration=Symbol();
 
 
 const mapFn=makeAnyConvoType('map',createConvoScopeFunction({
@@ -220,7 +220,7 @@ export const defaultConvoVars={
         },
         nextParam(scope,parentScope){
             console.log('hio 👋 👋 👋 foreach loop',scope.paramValues);
-            if(scope.paramValues?.[0]===breakLoop){
+            if(scope.paramValues?.[0]===breakIteration){
                 if(parentScope){
                     parentScope.i++;
                 }
@@ -265,7 +265,7 @@ export const defaultConvoVars={
     },(scope)=>{
         const it=scope.ctrlData as ConvoIterator|undefined;
         if(!it){
-            return breakLoop;
+            return breakIteration;
         }
 
         const value=scope.paramValues?.[0];
@@ -275,7 +275,7 @@ export const defaultConvoVars={
         console.log('hio 👋 👋 👋 in value',it,value,ary);
 
         if(it.i>=ary.length){
-            return breakLoop;
+            return breakIteration;
         }
 
         const r=isArray?value[it.i]:{key:ary[it.i],value:value[ary[it.i]]};
@@ -285,18 +285,26 @@ export const defaultConvoVars={
 
     }),
 
-    break:createConvoScopeFunction((scope)=>{
+    break:createConvoScopeFunction({
+        discardParams:true,
+        nextParam(scope,parentScope){
+            if(parentScope?.paramValues){
+                scope.ctrlData=parentScope.paramValues[parentScope.paramValues.length-1];
+            }
+            return scope.i+1;
+        }
+    },(scope)=>{
         if(!scope.paramValues?.length){
             scope.bl=true;
-            return undefined;
+            return scope.ctrlData;
         }
         for(let i=0;i<scope.paramValues.length;i++){
             if(scope.paramValues[i]){
                 scope.bl=true;
-                return undefined;
+                return scope.ctrlData;
             }
         }
-        return undefined;
+        return scope.ctrlData;
     }),
 
     do:createConvoScopeFunction({
@@ -529,6 +537,108 @@ export const defaultConvoVars={
         ctx.setRefValue(s,lastValue,scope);
 
         return lastValue;
+    }),
+
+    [convoSwitchFnName]:createConvoScopeFunction({
+        discardParams:true,
+        nextParam(scope){
+
+            if(scope.i===0){
+                if(scope.s.hmc){
+                    scope.sv=scope.paramValues?.[0];
+                    return 1;
+                }else{
+                    return scope.paramValues?.[0]?1:2;
+                }
+            }
+
+            if(scope.s.hmc){
+                if(scope.s.params && !scope.s.params[scope.i]?.mc){
+                    console.log('hio 👋 👋 👋 CHANGE CASE',scope.bi,scope.s.params[scope.i],scope);
+                    scope.sv=scope.paramValues?.[0];
+                }
+                const nextIndex=scope.ctrlData;
+                if(nextIndex===undefined){
+                    return scope.i+1;
+                }else{
+                    delete scope.ctrlData;
+                    return nextIndex;
+                }
+            }else{
+                return false;
+            }
+
+
+        }
+    },scope=>{
+        return scope.paramValues?.[0];
+    }),
+
+    [convoCaseFnName]:createConvoScopeFunction({
+        discardParams:true,
+        nextParam(scope,parentScope){
+
+            if(parentScope?.s.fn!==convoSwitchFnName || !scope.s.params?.length){
+                return false;
+            }
+
+            const isMatch=parentScope.sv===scope.paramValues?.[0];
+            console.log('hio 👋 👋 👋 CASE',isMatch,scope,parentScope);
+            if(isMatch){// let control flow move to next statement and do not check anymore statements
+                parentScope.bi=parentScope.i+2;
+                return false;
+            }
+
+            if(scope.i===scope.s.params.length-1){// no matches found, skip next statement
+                parentScope.ctrlData=parentScope.i+2;
+                console.log('hio 👋 👋 👋 SKIP CASE',parentScope.s.params?.[parentScope.i+1],parentScope);
+                return false;
+            }
+            return scope.i+1;
+        }
+    },()=>{
+        return undefined;
+    }),
+
+    [convoDefaultFnName]:createConvoScopeFunction({
+        discardParams:true,
+        startParam(scope,parentScope){
+            console.log('hio 👋 👋 👋 DEFAULT SWITCH',parentScope);
+            if(parentScope?.s.fn!==convoSwitchFnName){
+                return false;
+            }
+            parentScope.bi=parentScope.i+2;
+            return false;
+        }
+    },()=>{
+        console.log('hio 👋 👋 👋 RETURN DEF',);
+        return undefined;
+    }),
+
+    [convoTestFnName]:createConvoScopeFunction({
+        discardParams:true,
+        nextParam(scope,parentScope){
+
+            if(parentScope?.s.fn!==convoSwitchFnName || !scope.s.params?.length){
+                return false;
+            }
+
+            const isMatch=scope.paramValues?.[0]?true:false;
+            console.log('hio 👋 👋 👋 CASE',isMatch,scope,parentScope);
+            if(isMatch){// let control flow move to next statement and do not check anymore statements
+                parentScope.bi=parentScope.i+2;
+                return false;
+            }
+
+            if(scope.i===scope.s.params.length-1){// no matches found, skip next statement
+                parentScope.ctrlData=parentScope.i+2;
+                console.log('hio 👋 👋 👋 SKIP CASE',parentScope.s.params?.[parentScope.i+1],parentScope);
+                return false;
+            }
+            return scope.i+1;
+        }
+    },()=>{
+        return undefined;
     }),
 
 } as const;

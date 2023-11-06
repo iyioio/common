@@ -729,5 +729,178 @@ describe('convo',()=>{
         }
     })
 
+
+
+
+    it('should use switch statement',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:any
+            ) -> (
+                result = switch(
+                    value
+                    case(1) "one"
+                    case(2) "two"
+                )
+                return(result)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:1})).toEqual('one');
+        expect(executeConvoFunction(fn,{value:2})).toEqual('two');
+        expect(executeConvoFunction(fn,{value:3})).toEqual(undefined);
+
+    })
+
+
+
+
+    it('should use switch statement with multiple switch values',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:any
+                value2:any
+            ) -> (
+                result = switch(
+
+                    value
+                    case(1) "one"
+                    case(2) "two"
+
+                    value2
+                    case('b') "bee"
+                    case('c') "sea"
+
+                )
+                return(result)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:1,value2:'c'})).toEqual('one');
+        expect(executeConvoFunction(fn,{value:2,value2:'b'})).toEqual('two');
+        expect(executeConvoFunction(fn,{value:3,value2:'c'})).toEqual('sea');
+        expect(executeConvoFunction(fn,{value:4,value2:'b'})).toEqual('bee');
+        expect(executeConvoFunction(fn,{value:5,value2:'z'})).toEqual(undefined);
+
+    })
+
+
+
+
+    it('should use switch statement with default',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:any
+            ) -> (
+                result = switch(
+
+                    value
+                    case(1) "one"
+                    case(2) "two"
+
+                    default() "three"
+
+                    test(true) "not possible"
+
+                )
+                return(result)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:1})).toEqual('one');
+        expect(executeConvoFunction(fn,{value:2})).toEqual('two');
+        expect(executeConvoFunction(fn,{value:3})).toEqual('three');
+        expect(executeConvoFunction(fn,{value:77})).toEqual('three');
+
+    })
+
+
+
+
+    it('should use switch statement with test',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:any
+            ) -> (
+                result = switch(
+
+                    value
+                    case(1) "one"
+                    case(2) "two"
+
+                    test(gt(value,10)) "more that 10"
+
+                )
+                return(result)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:1})).toEqual('one');
+        expect(executeConvoFunction(fn,{value:2})).toEqual('two');
+        expect(executeConvoFunction(fn,{value:3})).toEqual(undefined);
+        expect(executeConvoFunction(fn,{value:77})).toEqual('more that 10');
+
+    })
+
+
+
+
+    it('should use switch statement as ternary',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                value:any
+            ) -> (
+                result = switch( value "true" "false" )
+                return(result)
+            )
+        `);
+
+        const fn=convo.messages[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:0})).toEqual('false');
+        expect(executeConvoFunction(fn,{value:false})).toEqual('false');
+        expect(executeConvoFunction(fn,{value:1})).toEqual('true');
+        expect(executeConvoFunction(fn,{value:true})).toEqual('true');
+
+    })
+
 });
 

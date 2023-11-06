@@ -381,19 +381,19 @@ export class ConvoExecutionContext
             const shouldExecute=flowCtrl?.shouldExecute?.(scope,parent,this)??true;
             if(shouldExecute){
                 delete scope.li;
+                if(flowCtrl?.startParam){
+                    const startI=flowCtrl.startParam(scope,parent,this);
+                    if(startI===false){
+                        scope.i=statement.params?.length??0;
+                    }else{
+                        scope.i=Math.max(0,startI);
+                    }
+                }
                 if(statement.params?.length){
                     if(flowCtrl?.usesLabels && !scope.labels){
                         scope.labels={}
                     }
-                    if(flowCtrl?.startParam){
-                        const startI=flowCtrl.startParam(scope,parent,this);
-                        if(startI===false){
-                            scope.i=statement.params.length;
-                        }else{
-                            scope.i=Math.max(0,startI);
-                        }
-                    }
-                    while(scope.i<statement.params.length){
+                    while(scope.i<statement.params.length && (scope.bi!==scope.i)){
                         const paramStatement=statement.params[scope.i];
 
                         if(paramStatement){
@@ -432,7 +432,9 @@ export class ConvoExecutionContext
                             }
 
                             if(paramScope.bl){
-                                if(scope.li===scope.i){
+                                if(flowCtrl?.catchBreak){
+                                    break;
+                                }else if(scope.li===scope.i){
                                     delete scope.fromIndex;
                                     delete scope.gotoIndex;
                                     delete scope.li;
@@ -596,7 +598,7 @@ export class ConvoExecutionContext
 
     public getVar(name:string,path?:string[],scope?:ConvoScope,throwUndefined=true){
         let value=scope?.vars[name]??this.sharedVars[name];
-        if(value===undefined && !(name in this.sharedVars)){
+        if(value===undefined && (scope?!(name in scope.vars):true) && !(name in this.sharedVars)){
             if(throwUndefined){
                 setConvoScopeError(scope,`reference to undefined var - ${name}`);
             }

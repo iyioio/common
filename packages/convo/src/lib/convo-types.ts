@@ -143,6 +143,17 @@ export interface ConvoStatement
     c?:number;
 
     /**
+     * If true the statement is a match case. Match cases are used with switch statements. Match
+     * case functions include (case, test and default)
+     */
+    mc?:boolean;
+
+    /**
+     * If the statement has child match case statements.
+     */
+    hmc?:boolean;
+
+    /**
      * If true the statement in font of the current pipe statement will be  piped to the statement
      * behind the current pipe statement. Pipe statements are converted to calls to the pipe function
      * when a convo script is parsed and will to be present in a fully parsed syntax tree
@@ -251,6 +262,11 @@ export interface ConvoFlowController
      * If true return control flow should be caught
      */
     catchReturn?:boolean;
+
+    /**
+     * If true break control flow should be caught
+     */
+    catchBreak?:boolean;
 
     sourceFn?:ConvoFunction;
 
@@ -378,6 +394,12 @@ export interface ConvoScope
 
     gotoIndex?:number;
 
+    /**
+     * When this index is reached flow control should break. The statement at the index will not be executed.
+     * breakIndex (bi) does not effect the scopes parent.
+     */
+    bi?:number;
+
     it?:ConvoIterator;
 
     /**
@@ -390,6 +412,11 @@ export interface ConvoScope
      * If true metadata should be captured. Metadata capturing is implemented in ConvoFlowControllers.
      */
     cm?:boolean;
+
+    /**
+     * Stores the current switch value
+     */
+    sv?:any;
 
     /**
      * If true the scope is used as the default scope object. This property is used for internal

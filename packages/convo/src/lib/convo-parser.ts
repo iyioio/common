@@ -1,4 +1,4 @@
-import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier } from "./convo-lib";
+import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTestFnName } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'---'|'>';
@@ -33,6 +33,26 @@ const tagReg=/(\w+)\s*=?(.*)/
 const space=/\s/;
 
 const paramTrimPlaceHolder='{{**PLACE_HOLDER**}}';
+
+const getInvalidSwitchStatement=(statement:ConvoStatement):ConvoStatement|undefined=>{
+    if(!statement.params){
+        return undefined;
+    }
+    let valCount=0;
+    for(let i=0;i<statement.params.length;i++){
+        if(!statement.params[i]?.mc){
+            valCount++;
+            if(valCount>2){
+                console.log('hio 👋 👋 👋 INVALID SWITCH PARAMS',i,statement);
+                return statement.params[i];
+            }
+        }else{
+            valCount=0;
+        }
+
+    }
+    return undefined;
+}
 
 
 const trimLeft=(value:string,count:number):string=>{
@@ -383,6 +403,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 if(lastStackItem._hasPipes){
                     collapseConvoPipes(lastStackItem);
                 }
+                if(lastStackItem.hmc){
+                    const invalid=getInvalidSwitchStatement(lastStackItem);
+                    if(invalid){
+                        index=invalid.s;
+                        error=(
+                            'Switch statements should not switch the current switch value without at least 1 match statement between the 2 value statements.'+
+                            'Use a do or fn statement to execute multiple statements after a switch match'
+                        );
+                        break parsingLoop;
+                    }
+                }
                 const endEmbed=cc==='}}';
                 const startIndex=index;
                 if(cc==='>'){
@@ -527,6 +558,21 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }
 
                 statement.fn=val.substring(0,val.length-1).trim();
+                if(statement.fn===convoCaseFnName || statement.fn===convoTestFnName || statement.fn===convoDefaultFnName){
+                    statement.mc=true;
+                    const last=stack[stack.length-1];
+                    if(last?.fn!==convoSwitchFnName){
+                        error='Switch match statement used outside of a switch';
+                        break parsingLoop;
+                    }
+                    last.hmc=true;
+                    if(last.params?.[0]===statement){
+                        index=statement.s;
+                        error='Switch match statement used before passing a value to match. The first parameter of a switch should be any value other than a switch match statement';
+                        break parsingLoop;
+                    }
+
+                }
 
                 if(currentFn?.definitionBlock && !allowedConvoDefinitionFunctions.includes(statement.fn as any)){
                     error=`Definition block calling illegal function (${statement.fn}). Definition blocks can only call the following functions: ${allowedConvoDefinitionFunctions.join(', ')}`;

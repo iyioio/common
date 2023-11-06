@@ -407,7 +407,7 @@ const convo={
             }
         },
         "systemFunctions":{
-            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then|fn|return)$",
+            "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then|fn|return|case|default|switch|test)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
