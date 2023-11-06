@@ -158,7 +158,6 @@ export class ConvoExecutionContext
                     `No function defined by the name ${fn.name}`);
             }
             args=await this.paramsToObjAsync(fn.params);
-            console.log('hio 👋 👋 👋 CALL ARGS ---',args,JSON.stringify(fn.params,null,4));
             fn=callee;
 
         }
@@ -277,8 +276,6 @@ export class ConvoExecutionContext
             );
         }
 
-        console.log('hio 👋 👋 👋 SCOPE EXECUTED',JSON.stringify(scope,null,4));
-
         const zType=convoValueToZodType(scope.v);
 
         if(!(zType instanceof ZodObject)){
@@ -373,7 +370,6 @@ export class ConvoExecutionContext
             if(flowCtrl?.keepData && parent?.childCtrlData){
                 const dr:ConvoFlowControllerDataRef|undefined=parent.childCtrlData[parentStartIndex.toString()];
                 if(dr){
-                    console.log('hio 👋 👋 👋 Set ctrlData',statement.fn,dr.ctrlData,dr);
                     scope.ctrlData=dr.ctrlData;
                     scope.childCtrlData=dr.childCtrlData;
                 }
@@ -465,7 +461,6 @@ export class ConvoExecutionContext
                         }
                     }
                 }
-                console.log('hio 👋 👋 👋 CALL()',statement.fn,statement);
                 if(!scope.r){
                     value=fn(scope,this);
                 }

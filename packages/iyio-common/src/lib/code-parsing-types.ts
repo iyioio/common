@@ -15,4 +15,4 @@ export interface CodeParsingError
     near:string;
 }
 
-export type CodeParser<T=any>=(code:string)=>CodeParsingResult<T>;
+export type CodeParser<T=any>=(code:string,debug?:(...args:any[])=>void)=>CodeParsingResult<T>;

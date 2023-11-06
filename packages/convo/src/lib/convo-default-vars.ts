@@ -219,7 +219,6 @@ export const defaultConvoVars={
             return 0;
         },
         nextParam(scope,parentScope){
-            console.log('hio 👋 👋 👋 foreach loop',scope.paramValues);
             if(scope.paramValues?.[0]===breakIteration){
                 if(parentScope){
                     parentScope.i++;
@@ -271,8 +270,6 @@ export const defaultConvoVars={
         const value=scope.paramValues?.[0];
         const isArray=Array.isArray(value);
         const ary:any[]=it.keys??value;
-
-        console.log('hio 👋 👋 👋 in value',it,value,ary);
 
         if(it.i>=ary.length){
             return breakIteration;
@@ -554,7 +551,6 @@ export const defaultConvoVars={
 
             if(scope.s.hmc){
                 if(scope.s.params && !scope.s.params[scope.i]?.mc){
-                    console.log('hio 👋 👋 👋 CHANGE CASE',scope.bi,scope.s.params[scope.i],scope);
                     scope.sv=scope.paramValues?.[0];
                 }
                 const nextIndex=scope.ctrlData;
@@ -583,7 +579,6 @@ export const defaultConvoVars={
             }
 
             const isMatch=parentScope.sv===scope.paramValues?.[0];
-            console.log('hio 👋 👋 👋 CASE',isMatch,scope,parentScope);
             if(isMatch){// let control flow move to next statement and do not check anymore statements
                 parentScope.bi=parentScope.i+2;
                 return false;
@@ -591,7 +586,6 @@ export const defaultConvoVars={
 
             if(scope.i===scope.s.params.length-1){// no matches found, skip next statement
                 parentScope.ctrlData=parentScope.i+2;
-                console.log('hio 👋 👋 👋 SKIP CASE',parentScope.s.params?.[parentScope.i+1],parentScope);
                 return false;
             }
             return scope.i+1;
@@ -603,7 +597,6 @@ export const defaultConvoVars={
     [convoDefaultFnName]:createConvoScopeFunction({
         discardParams:true,
         startParam(scope,parentScope){
-            console.log('hio 👋 👋 👋 DEFAULT SWITCH',parentScope);
             if(parentScope?.s.fn!==convoSwitchFnName){
                 return false;
             }
@@ -611,7 +604,6 @@ export const defaultConvoVars={
             return false;
         }
     },()=>{
-        console.log('hio 👋 👋 👋 RETURN DEF',);
         return undefined;
     }),
 
@@ -624,7 +616,6 @@ export const defaultConvoVars={
             }
 
             const isMatch=scope.paramValues?.[0]?true:false;
-            console.log('hio 👋 👋 👋 CASE',isMatch,scope,parentScope);
             if(isMatch){// let control flow move to next statement and do not check anymore statements
                 parentScope.bi=parentScope.i+2;
                 return false;
@@ -632,7 +623,6 @@ export const defaultConvoVars={
 
             if(scope.i===scope.s.params.length-1){// no matches found, skip next statement
                 parentScope.ctrlData=parentScope.i+2;
-                console.log('hio 👋 👋 👋 SKIP CASE',parentScope.s.params?.[parentScope.i+1],parentScope);
                 return false;
             }
             return scope.i+1;

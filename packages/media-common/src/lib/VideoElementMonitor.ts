@@ -135,7 +135,6 @@ export class VideoElementMonitor
 
         this.hasFocus=hasFocus;
         this.lastFrameTime=Date.now();
-        console.log('hio 👋 👋 👋',{hasFocus});
     }
 }
 
