@@ -36,6 +36,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
     parsingDelayMs?:number;
     logParsed?:boolean;
     debugParser?:boolean|((...args:any[])=>void);
+    bottomPadding?:number|string;
 }
 
 export function CodeInput<P=any>({
@@ -60,6 +61,7 @@ export function CodeInput<P=any>({
     logParsed,
     parsingDelayMs=700,
     debugParser,
+    bottomPadding=500,
     ...props
 }:CodeInputProps<P>){
 
@@ -211,11 +213,12 @@ export function CodeInput<P=any>({
         }
     },[textArea,tab,onChange,onSubmit,onNewLine,disabled,lineStartReg,lineStartRegIndex])
 
+    const pad=<div className="CodeInput-bottomMargin" style={{height:bottomPadding}}/>
 
     return (
         <div className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}>
 
-            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} pad={<div className="CodeInput-pad"/>} />}
+            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} pad={pad} />}
 
             <div className="CodeInput-content">
                 <div>
@@ -234,7 +237,7 @@ export function CodeInput<P=any>({
                         value={value}
                         readOnly={readOnly}
                     />
-                    <div className="CodeInput-pad"/>
+                    {pad}
                 </div>
             </div>
         </div>
@@ -344,10 +347,6 @@ const style=atDotCss({name:'CodeInput',css:`
         left:0;
         top:0;
         color:#ff000088;
-    }
-
-    .CodeInput-pad{
-        height:500px;
     }
 
 `});
