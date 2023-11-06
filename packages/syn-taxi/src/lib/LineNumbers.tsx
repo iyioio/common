@@ -16,23 +16,27 @@ export interface LineNumbersProps
 {
     count?:number;
     errors?:(CodeParsingError|number)[];
+    pad?:any;
 }
 
 export function LineNumbers({
     count=1,
-    errors
+    errors,
+    pad
 }:LineNumbersProps){
 
     const lines:any[]=[];
 
-    for(let i=1;i<count;i++){
+    for(let i=1;i<=count;i++){
         lines.push(<span className={(errors && isLineError(i,errors))?style.error():undefined} key={i}>{i}</span>)
     }
+
 
     return (
         <div className={style.root()}>
             <span className={style.first()}>&nbsp;&nbsp;&nbsp;</span>
             {lines}
+            {pad}
         </div>
     )
 

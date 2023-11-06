@@ -1,6 +1,9 @@
 import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
 export const convoBodyFnName='__body';
+export const convoArgsName='__args';
+export const convoResultReturnName='__return';
+export const convoDisableAutoCompleteName='__disableAutoComplete';
 export const convoStructFnName='struct';
 export const convoMapFnName='map';
 export const convoArrayFnName='array';
@@ -15,9 +18,12 @@ export const convoLocalFunctionModifier='local';
 export const convoCallFunctionModifier='call';
 export const convoGlobalRef='convo';
 export const convoEnumFnName='enum';
-export const convoArgsName='__args';
 export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
+
+export const convoTags={
+    disableAutoComplete:'disableAutoComplete'
+} as const;
 
 export const allowedConvoDefinitionFunctions=[
     convoStructFnName,

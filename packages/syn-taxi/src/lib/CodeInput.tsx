@@ -8,6 +8,7 @@ import { useShiki } from './shiki';
 export const defaultCodeLineStartReg=/^(\s*)/;
 export const markdownCodeLineStartReg=/^(\s*-?\s*)/;
 
+
 interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 {
     tab?:string;
@@ -33,6 +34,8 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 
     parser?:CodeParser<P>;
     parsingDelayMs?:number;
+    logParsed?:boolean;
+    debugParser?:boolean|((...args:any[])=>void);
 }
 
 export function CodeInput<P=any>({
@@ -54,7 +57,9 @@ export function CodeInput<P=any>({
     lineNumbers,
     errors,
     parser,
+    logParsed,
     parsingDelayMs=700,
+    debugParser,
     ...props
 }:CodeInputProps<P>){
 
@@ -95,12 +100,14 @@ export function CodeInput<P=any>({
         if(parser){
             const iv=setTimeout(()=>{
                 try{
-                    const r=parser(value);
-                    (window as any).___code=value;
+                    const r=parser(value,debugParser===true?console.info:(debugParser||undefined));
+                    if(logParsed){
+                        console.info('CodeInput parsing result',r)
+                    }
 
                     setParsingErrors(r.error?[r.error]:undefined);
                     if(r.error){
-                        console.info('CodeInput parsing error',r.error);
+                        console.info('⛔️ CodeInput parsing error',r.error);
                         console.info(r.error.near);
                         code.innerHTML=sh.codeToHtml(value,{lang:language,lineOptions:[
                             {
@@ -127,7 +134,7 @@ export function CodeInput<P=any>({
             setParsingErrors(undefined);
             return undefined;
         }
-    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs]);
+    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs,logParsed,debugParser]);
 
     useEffect(()=>{
         onElem?.(code);
@@ -208,7 +215,7 @@ export function CodeInput<P=any>({
     return (
         <div className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}>
 
-            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} />}
+            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} pad={<div className="CodeInput-pad"/>} />}
 
             <div className="CodeInput-content">
                 <div>
@@ -227,6 +234,7 @@ export function CodeInput<P=any>({
                         value={value}
                         readOnly={readOnly}
                     />
+                    <div className="CodeInput-pad"/>
                 </div>
             </div>
         </div>
@@ -256,7 +264,7 @@ const style=atDotCss({name:'CodeInput',css:`
     }
     .CodeInput code, .CodeInput textarea{
         margin:0 !important;
-        padding:0 !important;
+        padding: 0 !important;
         display:block;
         white-space:pre;
         font-family:Courier !important;
@@ -336,6 +344,10 @@ const style=atDotCss({name:'CodeInput',css:`
         left:0;
         top:0;
         color:#ff000088;
+    }
+
+    .CodeInput-pad{
+        height:500px;
     }
 
 `});

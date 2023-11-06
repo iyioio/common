@@ -76,7 +76,7 @@
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|no\\s+result|result|define)",
+            "begin": "^\\s*(>)\\s*(do|result|define)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -350,7 +350,7 @@
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"\\b(true|false|null|undefined|convo|__args)\\b",
+            "match":"\\b(true|false|null|undefined|convo|__args|__return|__disableAutoComplete)\\b",
             "name":"constant.language"
         },
         "heredoc":{

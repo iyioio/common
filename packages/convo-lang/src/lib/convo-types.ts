@@ -23,6 +23,7 @@ export interface ConvoTag
 export type ConvoErrorType=(
     'invalid-return-value-type'|
     'function-call-parse-count'|
+    'function-call-args-suspended'|
     'unexpected-base-type'|
     'invalid-args'|
     'proxy-call-not-supported'|
@@ -447,8 +448,31 @@ export interface FlatConvoMessage
 {
     role:string;
     content?:string;
+
+    /**
+     * A function that can be called
+     */
     fn?:ConvoFunction;
+    /**
+     * Params type of the function that can be called
+     */
     fnParams?:ZodObject<any>;
+
+
+    /**
+     * A function that was called
+     */
+    called?:ConvoFunction;
+    /**
+     * The parameters that where passed to the function
+     */
+    calledParams?:any;
+    /**
+     * The value the called function returned
+     */
+    calledReturn?:any;
+
+
 }
 
 export interface ConvoCompletionMessage
@@ -482,6 +506,7 @@ export interface FlatConvoConversation
 
 export interface ConvoExecuteResult
 {
+    scope:ConvoScope;
     value?:any;
     valuePromise?:Promise<any>
 }

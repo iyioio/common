@@ -98,6 +98,15 @@ export const AiCompletionMessageScheme=z.object({
     callError:AiCompletionFunctionCallErrorScheme.optional(),
 
     /**
+     * Name of a function that was called.
+     */
+    called:z.string().optional(),
+
+    calledParams:z.any().optional(),
+
+    calledReturn:z.any().optional(),
+
+    /**
      * Id of another message that cause an error
      */
     errorCausedById:z.string().optional(),

@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { escapeConvoMessageContent, spreadConvoArgs } from "./convo-lib";
+import { containsConvoTag, convoDisableAutoCompleteName, convoResultReturnName, convoTags, escapeConvoMessageContent, spreadConvoArgs } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
 import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoFunction, ConvoMessage, ConvoParsingResult, ConvoScopeFunction, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { convoCompletionService } from "./convo.deps";
@@ -112,7 +112,10 @@ export class Conversation
     }
 
     private async _completeAsync(
-        getCompletion:(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[]
+        getCompletion:(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[],
+        autoCompleteFunctionReturns=true,
+        prevCompletion?:ConvoCompletionMessage[],
+        preReturnValues?:any[]
     ):Promise<ConvoCompletion>{
 
         let append:string[]|undefined=undefined;
@@ -143,11 +146,13 @@ export class Conversation
 
         let returnValues:any[]|undefined=undefined;
 
+        let lastResultValue:any=undefined;
+
         for(const msg of completion){
 
             if(msg.content){
                 cMsg=msg;
-                this.append(`> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}`);
+                this.append(`> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
             }
 
             if(msg.callFn){
@@ -164,29 +169,55 @@ export class Conversation
                 if(!callMessage.fn?.call){
                     continue;
                 }
-                const callResult=await exe.executeFunctionAsync(callMessage.fn);
+                const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
+                const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
+                const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
+                const disableAutoComplete=(
+                    exe.getVar(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
+                    containsConvoTag(target?.tags,convoTags.disableAutoComplete)
+                )
                 if(!returnValues){
                     returnValues=[];
                 }
-                returnValues.push(callResult);
+                returnValues.push(callResultValue);
 
-                if(exe.sharedSetters.length){
-                    const lines:string[]=['> result'];
+                lastResultValue=(typeof callResultValue === 'function')?undefined:callResultValue;
+
+                const lines:string[]=['> result'];
+                if(exe.sharedSetters){
                     for(const s of exe.sharedSetters){
                         lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
                     }
-                    this.append(lines.join('\n'),true);
-                }else{
-                    this.append('> no result',true);
                 }
+                lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                lines.push('');
+                this.append(lines.join('\n'),true);
+
+                if(disableAutoComplete){
+                    lastResultValue=undefined;
+                }
+
             }
 
+        }
+
+        if(prevCompletion){
+            completion.unshift(...prevCompletion);
+        }
+        if(preReturnValues){
+            if(returnValues){
+                returnValues.unshift(...preReturnValues);
+            }else{
+                returnValues=preReturnValues;
+            }
         }
 
         if(append){
             for(const a of (append as string[])){
                 this.append(a);
             }
+        }else if(lastResultValue!==undefined && autoCompleteFunctionReturns){
+            return await this._completeAsync(getCompletion,false,completion,returnValues);
         }
 
         return {
@@ -242,7 +273,15 @@ export class Conversation
                     if(r.valuePromise){
                         await r.valuePromise;
                     }
-                    continue;
+                    const prev=this._messages[i-1];
+                    if(msg.role==='result' && prev?.fn?.call){
+                        flat.role='function';
+                        flat.called=prev.fn;
+                        flat.calledReturn=exe.getVar(convoResultReturnName,undefined,undefined,false);
+                        flat.calledParams=exe.getConvoFunctionArgsValue(prev.fn);
+                    }else{
+                        continue;
+                    }
                 }else{
                     flat.role='function';
                     flat.fn=msg.fn;

@@ -144,7 +144,7 @@ export class AiCompletionService implements ConvoCompletionService
             return result??{options:[]}
         }
 
-        if(lastMessage?.role==='user'){
+        if(lastMessage?.role==='user' || lastMessage?.called){
             const success=await complete(lastMessage);
             if(!success){
                 return result??{options:[]}
@@ -275,6 +275,15 @@ export class AiCompletionService implements ConvoCompletionService
                     params:msg.fnParams?zodTypeToJsonScheme(msg.fnParams):undefined
                 });
 
+            }else if(msg.called){
+                messages.push({
+                    id:baseId+i,
+                    type:'function',
+                    role:'assistant',
+                    called:msg.called.name,
+                    calledParams:msg.calledParams,
+                    calledReturn:msg.calledReturn,
+                })
             }else{
                 messages.push({
                     id:baseId+i,

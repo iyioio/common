@@ -175,7 +175,9 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
         const newline=code.indexOf('\n',index);
         const tag=tagReg.exec(code.substring(index,newline).trim());
         if(tag){
-            tags.push({name:tag[1]??'',value:tag[2]?.trim()});
+            debug?.('TAG',tag);
+            const v=tag[2]?.trim()
+            tags.push({name:tag[1]??'',value:v?v:undefined});
         }
         index=newline;
     }
@@ -385,7 +387,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 if(cc!=='>'){
                     lastComment='';
                 }
-                if(tags.length){
+                if(tags.length && cc!=='>'){
                     tags=[];
                 }
                 const lastStackItem=stack[stack.length-1];
@@ -658,7 +660,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 let match=fnMessageReg.exec(code);
                 if(match && match.index==index){
                     msgName=match[3]??'';
-                    debug?.(`NEW FUNCTION ${msgName}`,lastComment,match);
+                    debug?.(`NEW FUNCTION ${msgName}`,{lastComment,tags,match});
                     if(!msgName){
                         error='function name expected';
                         break parsingLoop;
@@ -707,7 +709,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                         definitionBlock:msgName==='define',
                     }
                     currentMessage={
-                        role:msgName==='define'?'define':'do',
+                        role:msgName,
                         fn:currentFn,
                     }
                     messages.push(currentMessage);

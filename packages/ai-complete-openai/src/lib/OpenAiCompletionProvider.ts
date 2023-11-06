@@ -2,6 +2,7 @@ import { AiComplationMessageType, AiCompletionFunctionCallError, AiCompletionMes
 import { FileBlob, Scope, SecretManager, deleteUndefined, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources/chat';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
@@ -94,6 +95,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         switch(lastMessage.requestedResponseType??lastMessage.type){
 
             case 'text':
+            case 'function':
                 return await this.completeChatAsync(lastMessage,request);
 
             case 'audio':
@@ -117,15 +119,38 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const api=await this.getApiAsync();
 
+        const oMsgs:ChatCompletionMessageParam[]=[];
+        for(const m of request.messages){
+            if(m.type==='text'){
+                oMsgs.push(deleteUndefined({
+                    role:m.role??'user',
+                    content:m.content??'',
+                    name:m.name,
+                    user:lastMessage?.userId,
+                }))
+            }else if(m.type==='function' && m.called){
+                oMsgs.push({
+                    role:'assistant',
+                    content:null,
+                    function_call:{
+                        name:m.called,
+                        arguments:JSON.stringify(m.calledParams),
+                    }
+                })
+                if(m.calledReturn!==undefined){
+                    oMsgs.push({
+                        role:'function',
+                        name:m.called,
+                        content:JSON.stringify(m.calledReturn),
+                    })
+                }
+            }
+        }
+
         const r=await api.chat.completions.create({
             model,
             stream:false,
-            messages:request.messages.filter(m=>m.type==='text').map((m)=>deleteUndefined({
-                role:m.role??'user',
-                content:m.content??'',
-                name:m.name,
-                user:lastMessage?.userId,
-            })),
+            messages:oMsgs,
             functions:request.functions?.map(f=>{
                 return deleteUndefined({
                     name:f.name,

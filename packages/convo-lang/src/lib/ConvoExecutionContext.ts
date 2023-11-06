@@ -149,6 +149,18 @@ export class ConvoExecutionContext
     public async executeFunctionAsync(fn:ConvoFunction,args:Record<string,any>={}):Promise<any>
     {
 
+        const result=await this.executeFunctionResultAsync(fn,args);
+
+        if(result.valuePromise){
+            return await result.valuePromise
+        }else{
+            return result.value;
+        }
+    }
+
+    public async executeFunctionResultAsync(fn:ConvoFunction,args:Record<string,any>={}):Promise<ConvoExecuteResult>
+    {
+
         if(fn.call){
             const callee=(this.sharedVars[fn.name]?.[convoFlowControllerKey] as ConvoFlowController|undefined)?.sourceFn;
             if(!callee){
@@ -162,13 +174,15 @@ export class ConvoExecutionContext
 
         }
 
-        const result=this.executeFunction(fn,args);
+        return this.executeFunction(fn,args);
+    }
 
-        if(result.valuePromise){
-            return await result.valuePromise
-        }else{
-            return result.value;
+    public getConvoFunctionArgsValue(fn:ConvoFunction):any{
+        const r=this.paramsToObj(fn.params??[]);
+        if(r.valuePromise){
+            throw new ConvoError('function-call-args-suspended')
         }
+        return r.value;
     }
 
     public getConvoFunctionArgsScheme(fn:ConvoFunction,cache=true):ZodObject<any>{
@@ -232,8 +246,7 @@ export class ConvoExecutionContext
         return convoValueToZodType(typeVar);
     }
 
-    public async paramsToObjAsync(params:ConvoStatement[]):Promise<Record<string,any>>{
-
+    public paramsToObj(params:ConvoStatement[]):ConvoExecuteResult{
         const vars:Record<string,any>={}
         const scope=this.executeScope({
             i:0,
@@ -246,7 +259,11 @@ export class ConvoExecutionContext
             }
         },undefined,createDefaultScope(vars));
 
-        const r=this.execute(scope,vars);
+        return this.execute(scope,vars);
+    }
+
+    public async paramsToObjAsync(params:ConvoStatement[]):Promise<Record<string,any>>{
+        const r=this.paramsToObj(params);
         if(r.valuePromise){
             return await r.valuePromise;
         }else{
@@ -291,11 +308,10 @@ export class ConvoExecutionContext
 
     private execute(scope:ConvoScope,vars:Record<string,any>,resultScheme?:ZodType<any>):ConvoExecuteResult
     {
-
         scope=this.executeScope(scope,undefined,createDefaultScope(vars));
 
         if(scope.si){
-            return {valuePromise:new Promise((r,j)=>{
+            return {scope,valuePromise:new Promise((r,j)=>{
                 if(!scope.onComplete){
                     scope.onComplete=[];
                 }
@@ -329,7 +345,7 @@ export class ConvoExecutionContext
                 if(resultScheme){
                     const parsed=resultScheme.safeParse(scope.v);
                     if(parsed.success===true){
-                        return {value:parsed.data}
+                        return {scope,value:parsed.data}
                     }else if(parsed.success===false){
                         throw new ConvoError(
                             'invalid-return-value-type',
@@ -338,7 +354,7 @@ export class ConvoExecutionContext
                         );
                     }
                 }
-                return {value:scope.v};
+                return {scope,value:scope.v};
             }
         }
     }
@@ -620,7 +636,7 @@ export class ConvoExecutionContext
     public setVar(shared:boolean|undefined,value:any,name:string,path?:string[],scope?:ConvoScope){
 
         if(name in defaultConvoVars){
-            setConvoScopeError(scope,'Overriding builtin var not allowed');
+            setConvoScopeError(scope,`Overriding builtin var not allowed - ${name}`);
             return value;
         }
 
