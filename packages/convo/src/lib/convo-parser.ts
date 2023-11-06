@@ -1,5 +1,6 @@
+import { CodeParsingError } from "@iyio/common";
 import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTestFnName } from "./convo-lib";
-import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingError, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
+import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'---'|'>';
 
@@ -344,7 +345,8 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
             console.log(code.substring(index,index+match[0].length));
 
             if(match.index!==index){
-                error='Token index match out of sync';
+                index=match.index-1;
+                error=`Invalid character in function body (${code[index]})`;
                 break parsingLoop;
             }
 
@@ -378,14 +380,17 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 continue;
             }else if(cc===')' || cc==='}}' || cc==='}' || cc===']' || cc==='>' || cc===''){// close function
                 if(cc==='}' && stack[stack.length-1]?.fn!==convoJsonMapFnName){
+                    index+=indexOffset-1;
                     error="Unexpected closing of JSON object";
                     break parsingLoop;
                 }
                 if(cc===']' && stack[stack.length-1]?.fn!==convoJsonArrayFnName){
+                    index+=indexOffset-1;
                     error="Unexpected closing of JSON array";
                     break parsingLoop;
                 }
                 if(cc==='>' && !currentFn?.topLevel){
+                    index+=indexOffset-1;
                     error='Unexpected end of function using (>) character';
                     break parsingLoop;
                 }
@@ -397,6 +402,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }
                 const lastStackItem=stack[stack.length-1];
                 if(!stack.length || !lastStackItem){
+                    index+=indexOffset-1;
                     error='Unexpected end of function call';
                     break parsingLoop;
                 }
@@ -430,6 +436,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     console.log('hio 👋 👋 👋 closing embed',code.substring(index,index+10));
                     const prevInStr=stringStack[stringStack.length-1];
                     if(!prevInStr){
+                        index+=indexOffset-1;
                         error='Unexpected string embed closing found';
                         break parsingLoop;
                     }
@@ -437,11 +444,13 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }else if(stack.length===0){
 
                     if(stringStack.length){
+                        index+=indexOffset-1;
                         error='End of call stack reached within a string';
                         break parsingLoop;
                     }
 
                     if(!currentFn){
+                        index+=indexOffset-1;
                         error='End of call stack reached without being in function';
                         break parsingLoop;
                     }
@@ -497,6 +506,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 statementReg.lastIndex=0;
                 match=statementReg.exec(`${convoJsonMapFnName}(`);
                 if(!match){
+                    index+=indexOffset-1;
                     error='JSON map open match expected';
                     break parsingLoop;
                 }
@@ -506,6 +516,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 statementReg.lastIndex=0;
                 match=statementReg.exec(`${convoJsonArrayFnName}(`);
                 if(!match){
+                    index+=indexOffset-1;
                     error='JSON map open match expected';
                     break parsingLoop;
                 }
@@ -553,6 +564,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
             if(match[fnOpenIndex]){//push function on stack
                 if(!val || val.length<2){
+                    index+=indexOffset-1;
                     error='function call name expected';
                     break parsingLoop;
                 }
@@ -562,6 +574,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     statement.mc=true;
                     const last=stack[stack.length-1];
                     if(last?.fn!==convoSwitchFnName){
+                        index=statement.s;
                         error='Switch match statement used outside of a switch';
                         break parsingLoop;
                     }
@@ -575,6 +588,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                 }
 
                 if(currentFn?.definitionBlock && !allowedConvoDefinitionFunctions.includes(statement.fn as any)){
+                    index+=indexOffset-1;
                     error=`Definition block calling illegal function (${statement.fn}). Definition blocks can only call the following functions: ${allowedConvoDefinitionFunctions.join(', ')}`;
                     break parsingLoop;
                 }
@@ -616,6 +630,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                         break;
 
                     default:
+                        index+=indexOffset-1;
                         error=`Unknown value constant - ${val}`;
                         break parsingLoop;
                 }
@@ -631,6 +646,7 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
                     statement.ref=val;
                 }
             }else{
+                index+=indexOffset-1;
                 error='value expected';
                 break parsingLoop;
             }
@@ -772,11 +788,11 @@ export const parseConvoCode=(code:string):ConvoParsingResult=>{
 
 
 
-    return {messages,endIndex:index,error:error?getConvoParsingError(code,index,error):undefined};
+    return {result: messages,endIndex:index,error:error?getConvoParsingError(code,index,error):undefined};
 
 }
 
-const getConvoParsingError=(code:string,index:number,message:string):ConvoParsingError=>{
+const getConvoParsingError=(code:string,index:number,message:string):CodeParsingError=>{
 
     let lineNumber=1;
     for(let i=0;i<=index;i++){
@@ -798,9 +814,10 @@ const getConvoParsingError=(code:string,index:number,message:string):ConvoParsin
         index,
         lineNumber,
         line:code.substring(s,e).trim(),
+        col:index-s,
         near:(
             code
-            .substring(e-10,e+20)
+            .substring(index-10,index+20)
             .replace(/[\n]/g,'↩︎').replace(/[\s]/g,'•')
             +'\n'+' '.repeat(neg)+'^'
         ),

@@ -1,25 +1,32 @@
 import { atDotCss } from "@iyio/at-dot-css";
+import { CodeParsingError } from "@iyio/common";
 import { dt } from "./lib-design-tokens";
+
+const isLineError=(line:number,errors:(CodeParsingError|number)[]):boolean=>{
+    for(let i=0;i<errors.length;i++){
+        const e=errors[i];
+        if(e && e===line || (e as CodeParsingError).lineNumber===line){
+            return true;
+        }
+    }
+    return false;
+}
 
 export interface LineNumbersProps
 {
     count?:number;
-    lineErrors?:number[]|number;
+    errors?:(CodeParsingError|number)[];
 }
 
 export function LineNumbers({
     count=1,
-    lineErrors
+    errors
 }:LineNumbersProps){
 
     const lines:any[]=[];
 
-    if(typeof lineErrors === 'number'){
-        lineErrors=[lineErrors];
-    }
-
     for(let i=1;i<count;i++){
-        lines.push(<span className={(lineErrors && lineErrors.includes(i))?style.error():undefined} key={i}>{i}</span>)
+        lines.push(<span className={(errors && isLineError(i,errors))?style.error():undefined} key={i}>{i}</span>)
     }
 
     return (

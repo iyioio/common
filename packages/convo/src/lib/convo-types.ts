@@ -1,3 +1,4 @@
+import { CodeParsingResult } from '@iyio/common';
 import type { ZodObject } from 'zod';
 import type { Conversation } from './Conversation';
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
@@ -210,21 +211,7 @@ export interface ConvoFunction
     paramType?:string;
 }
 
-export interface ConvoParsingResult
-{
-    messages:ConvoMessage[];
-    error?:ConvoParsingError;
-    endIndex:number;
-}
-
-export interface ConvoParsingError
-{
-    message:string;
-    index:number;
-    lineNumber:number;
-    line:string;
-    near:string;
-}
+export type ConvoParsingResult=CodeParsingResult<ConvoMessage[]>
 
 export interface ConvoScopeError
 {

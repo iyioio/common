@@ -130,7 +130,7 @@ describe('convo',()=>{
 
         expect(r.error).toBeUndefined();
 
-        expect(r.messages.length).toBe(msgCount);
+        expect(r.result?.length).toBe(msgCount);
 
         return r;
     }
@@ -171,7 +171,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -247,7 +247,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -271,7 +271,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -294,7 +294,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -317,7 +317,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -341,7 +341,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -368,7 +368,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -400,7 +400,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -431,7 +431,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -462,7 +462,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -499,7 +499,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -536,7 +536,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -565,7 +565,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -592,7 +592,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -621,7 +621,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -645,7 +645,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -669,7 +669,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -693,7 +693,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -747,7 +747,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -785,7 +785,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -824,7 +824,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -860,7 +860,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){
@@ -888,7 +888,7 @@ describe('convo',()=>{
             )
         `);
 
-        const fn=convo.messages[0]?.fn;
+        const fn=convo.result?.[0]?.fn;
 
         expect(fn).not.toBeUndefined();
         if(!fn){

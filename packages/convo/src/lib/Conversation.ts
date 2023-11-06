@@ -63,8 +63,10 @@ export class Conversation
             this._convo.push(messages);
         }
 
-        for(const m of r.messages){
-            this._messages.push(m);
+        if(r.result){
+            for(const m of r.result){
+                this._messages.push(m);
+            }
         }
 
         this._onMessagesChanged.next();
@@ -150,8 +152,8 @@ export class Conversation
 
             if(msg.callFn){
                 const result=this.append(`> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
-                const callMessage=result.messages[0];
-                if(result.messages.length!==1 || !callMessage){
+                const callMessage=result.result?.[0];
+                if(result.result?.length!==1 || !callMessage){
                     throw new ConvoError(
                         'function-call-parse-count',
                         {completion:msg},

@@ -1,6 +1,5 @@
 import { atDotCss } from '@iyio/at-dot-css';
-import { baseLayoutCn, BaseLayoutOuterProps, cn, strLineCount } from '@iyio/common';
-import { parseConvoCode } from '@iyio/convo';
+import { baseLayoutCn, BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, escapeHtml, strLineCount } from '@iyio/common';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { dt } from '../lib/lib-design-tokens';
 import { LineNumbers } from './LineNumbers';
@@ -9,7 +8,7 @@ import { useShiki } from './shiki';
 export const defaultCodeLineStartReg=/^(\s*)/;
 export const markdownCodeLineStartReg=/^(\s*-?\s*)/;
 
-interface CodeInputProps extends BaseLayoutOuterProps
+interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 {
     tab?:string;
     language?:string;
@@ -30,10 +29,13 @@ interface CodeInputProps extends BaseLayoutOuterProps
     lineStartReg?:RegExp|null;
     lineStartRegIndex?:number;
     lineNumbers?:boolean;
-    lineErrors?:number[]|number;
+    errors?:(CodeParsingError|number)[];
+
+    parser?:CodeParser<P>;
+    parsingDelayMs?:number;
 }
 
-export function CodeInput({
+export function CodeInput<P=any>({
     tab='    ',
     language='auto',
     value,
@@ -50,32 +52,28 @@ export function CodeInput({
     lineStartReg=defaultCodeLineStartReg,
     lineStartRegIndex=1,
     lineNumbers,
-    lineErrors,
+    errors,
+    parser,
+    parsingDelayMs=700,
     ...props
-}:CodeInputProps){
+}:CodeInputProps<P>){
 
     style.root();
 
     const sh=useShiki(language);
 
-    const [parsingLineErrors,setParsingLineErrors]=useState<number[]|number|undefined>(undefined);
+    const [parsingErrors,setParsingErrors]=useState<(CodeParsingError|number)[]|undefined>(undefined);
 
     const [code,setCode]=useState<HTMLElement|null>(null);
     const [textArea,setTextArea]=useState<HTMLTextAreaElement|null>(null);
 
     useEffect(()=>{
 
+        setParsingErrors(undefined);
+
         if(!code || !sh || !textArea){
-            setParsingLineErrors(undefined);
             return;
         }
-
-        const r=parseConvoCode(value);
-        (window as any).___code=value;
-        console.log('hio 👋 👋 👋 parsing result',r.error,r);
-        console.log(r.error?.near)
-
-        setParsingLineErrors(r.error?.lineNumber);
 
         code.innerHTML=sh.codeToHtml(value,{lang:language});
         let minWidth=0;
@@ -93,7 +91,43 @@ export function CodeInput({
             }
         }
         textArea.style.minWidth=minWidth+'px';
-    },[code,textArea,valueOverride,value,language,sh]);
+
+        if(parser){
+            const iv=setTimeout(()=>{
+                try{
+                    const r=parser(value);
+                    (window as any).___code=value;
+
+                    setParsingErrors(r.error?[r.error]:undefined);
+                    if(r.error){
+                        console.info('CodeInput parsing error',r.error);
+                        console.info(r.error.near);
+                        code.innerHTML=sh.codeToHtml(value,{lang:language,lineOptions:[
+                            {
+                                line:r.error.lineNumber,
+                                classes:['CodeInput-errorLine']
+                            }
+                        ]}).replace(
+                            /class="[^"]*CodeInput-errorLine[^"]*"[^>]*>/g,
+                            v=>`${v}<div class="CodeInput-error">${
+                                escapeHtml(r.error?.message??'')
+                            }</div><div class="CodeInput-errorCol">${
+                                '&nbsp;'.repeat((r.error?.col??0)-1)+'_'
+                            }</div>`
+                        );
+                    }
+                }catch(ex){
+                    setParsingErrors([0]);
+                }
+            },parsingDelayMs);
+            return ()=>{
+                clearTimeout(iv);
+            }
+        }else{
+            setParsingErrors(undefined);
+            return undefined;
+        }
+    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs]);
 
     useEffect(()=>{
         onElem?.(code);
@@ -174,7 +208,7 @@ export function CodeInput({
     return (
         <div className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}>
 
-            {lineNumbers && <LineNumbers count={strLineCount(value)} lineErrors={lineErrors??parsingLineErrors} />}
+            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} />}
 
             <div className="CodeInput-content">
                 <div>
@@ -279,6 +313,29 @@ const style=atDotCss({name:'CodeInput',css:`
     }
     .CodeInput.lineNumbers .CodeInput-content > div{
         margin-left:0.5rem !important;
+    }
+
+    .CodeInput-errorLine{
+        position:relative;
+    }
+    .CodeInput-errorLine > .CodeInput-error{
+        position:absolute;
+        left:calc( 100% + 1rem);
+        font-size:12px !important;
+        line-height:12px !important;
+        display:flex;
+        align-items:center;
+        background-color:#ff000033;
+        top:-0.2rem;
+        bottom:-0.2rem;
+        padding:0 0.4rem;
+        border-radius:4px;
+    }
+    .CodeInput-errorCol{
+        position:absolute;
+        left:0;
+        top:0;
+        color:#ff000088;
     }
 
 `});
