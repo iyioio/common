@@ -1,5 +1,5 @@
 import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
-import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation } from '@iyio/convo';
+import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation } from '@iyio/convo-lang';
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";

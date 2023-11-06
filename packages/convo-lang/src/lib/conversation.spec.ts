@@ -86,8 +86,6 @@ describe('convo',()=>{
 
         expect(r.exe?.sharedVars?.['newSpeed']).toBe(speed+100);
 
-        console.log('hio 👋 👋 👋 FULL convo',convo.convo);
-
     })
 
     it('should eval top level statements',async ()=>{
@@ -352,11 +350,8 @@ describe('convo',()=>{
             )
 
         `);
-        console.log('hio 👋 👋 👋 before ----------------------------',);
 
         const c=await convo.completeAsync();
-
-        console.log('hio 👋 👋 👋 SHARED VARS',c.exe?.sharedVars);
 
         const category=c.exe?.sharedVars['Category'];
         const grade=c.exe?.sharedVars['Grade'];
@@ -424,9 +419,7 @@ describe('convo',()=>{
 
         expect(convo.convo).toContain('STUFF');
 
-        expect(convo.convo.split('STUFF').length).toBe(3)
-
-        console.log('hio 👋 👋 👋 PIPED',convo.convo);
+        expect(convo.convo.split('STUFF').length).toBe(3);
 
     })
 
@@ -456,8 +449,6 @@ describe('convo',()=>{
         `);
 
         const r=await convo.callFunctionAsync('pipeMessage',{a:'GO',b:'FAST'});
-
-        console.log('hio 👋 👋 👋 PIPED',convo.convo);
 
         expect(r).toBe('ok');
 
