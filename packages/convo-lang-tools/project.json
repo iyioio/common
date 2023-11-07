@@ -41,6 +41,19 @@
                     "codeCoverage": true
                 }
             }
+        },
+        "test-ext": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "code --extensionDevelopmentPath=$(pwd)/packages/convo-lang-tools/ --disable-extensions packages/convo-lang-tools/examples"
+            }
+        },
+        "publish-ext": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/convo-lang-tools",
+                "command": "./publish.sh"
+            }
         }
     },
     "tags": []
