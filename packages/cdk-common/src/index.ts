@@ -9,6 +9,7 @@ export * from './lib/RedirectApi';
 export * from './lib/SecretBuilder';
 export * from './lib/SiteBuilder';
 export * from './lib/SqlCluster';
+export * from './lib/SqlClusterBuilder';
 export * from './lib/StaticWebSite';
 export * from './lib/TableBuilder';
 export * from './lib/UserPoolBuilder';

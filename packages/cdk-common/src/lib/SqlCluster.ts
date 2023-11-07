@@ -6,11 +6,10 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import { Construct } from "constructs";
 import { ManagedProps } from "./ManagedProps";
 import { SqlDbMigrator, SqlDbMigratorOptions } from "./SqlDbMigrator";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 
-export interface SqlClusterOptions
+export interface SqlClusterOptionsBase
 {
-    managed?:ManagedProps;
-    vpc:ec2.IVpc;
     defaultDatabaseName?:string;
     minCapacity?:number,
     maxCapacity?:number,
@@ -19,7 +18,15 @@ export interface SqlClusterOptions
     migratorOptions?:Partial<SqlDbMigratorOptions>;
 }
 
-export class SqlCluster extends Construct{
+export interface SqlClusterOptions extends SqlClusterOptionsBase
+{
+    managed?:ManagedProps;
+    vpc:ec2.IVpc;
+}
+
+export class SqlCluster extends Construct implements IAccessGrantGroup{
+
+    public readonly accessGrants:AccessGranter[]=[];
 
     public constructor(scope:Construct,id:string,{
         vpc,
@@ -30,7 +37,8 @@ export class SqlCluster extends Construct{
         migrations,
         migratorOptions,
         managed:{
-            params
+            params,
+            accessManager,
         }={}
     }:SqlClusterOptions){
 
@@ -71,6 +79,19 @@ export class SqlCluster extends Construct{
             }
             params.setParam(rdsClusterArnParam,dbCluster.clusterArn);
             params.setParam(rdsSecretArnParam,rdsAdminCredentialsArn);
+        }
+
+        this.accessGrants.push({
+            grantName:id,
+            grant:request=>{
+                if(request.types?.includes('query')){
+                    dbCluster.grantDataApiAccess(request.grantee);
+                }
+            }
+        })
+
+        if(accessManager){
+            accessManager.addGrantGroup(this);
         }
 
     }

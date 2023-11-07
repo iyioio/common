@@ -16,6 +16,7 @@ import { paramPlugin } from "./plugins/paramPlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { secretPlugin } from "./plugins/secretPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
+import { sqlClusterPlugin } from "./plugins/sqlClusterPlugin";
 import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin";
 import { sqlTablePlugin } from "./plugins/sqlTablePlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
@@ -125,6 +126,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:bucketPlugin
+        },
+        {
+            name:'sqlClusterPlugin',
+            source:'@',
+            paths:[],
+            plugin:sqlClusterPlugin
         },
         {
             name:'callablePlugin',
