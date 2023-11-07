@@ -19,6 +19,7 @@ export * from './lib/NamedValue';
 export * from './lib/ObjMirror';
 export * from './lib/ObjWatcher';
 export * from './lib/PromiseCache';
+export * from './lib/PromiseSource';
 export * from './lib/QueryCtrl';
 export * from './lib/QueryCtrl.deps';
 export * from './lib/RouterStore';
