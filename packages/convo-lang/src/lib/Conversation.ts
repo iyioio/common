@@ -1,9 +1,10 @@
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDisableAutoCompleteName, convoResultReturnName, convoTags, escapeConvoMessageContent, spreadConvoArgs } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoTags, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoFunction, ConvoMessage, ConvoParsingResult, ConvoScopeFunction, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 
 export interface ConversationOptions
@@ -22,6 +23,7 @@ export class Conversation
     }
 
     private _messages:ConvoMessage[]=[];
+    public get messages(){return this._messages}
 
     private readonly _onMessagesChanged=new Subject<void>();
     public get onMessagesChanged():Observable<void>{return this._onMessagesChanged}
@@ -31,6 +33,8 @@ export class Conversation
     public roleMap:Record<string,string>
 
     private readonly completionService?:ConvoCompletionService;
+
+    public readonly externFunctions:Record<string,ConvoScopeFunction>={}
 
     public constructor({
         userRoles=['user'],
@@ -72,6 +76,14 @@ export class Conversation
         this._onMessagesChanged.next();
 
         return r;
+    }
+
+    public appendDefine(defineCode:string,description?:string):ConvoParsingResult{
+        return this.append((description?convoDescriptionToComment(description)+'\n':'')+'> define\n'+defineCode);
+    }
+
+    public appendTopLevel(defineCode:string,description?:string):ConvoParsingResult{
+        return this.append((description?convoDescriptionToComment(description)+'\n':'')+'> do\n'+defineCode);
     }
 
     /**
@@ -247,8 +259,6 @@ export class Conversation
         return this.roleMap[role]??role;
     }
 
-    public externFunctions:Record<string,ConvoScopeFunction>={}
-
     public async flattenAsync(
         exe:ConvoExecutionContext=new ConvoExecutionContext({conversation:this})
     ):Promise<FlatConvoConversation>{
@@ -315,4 +325,138 @@ export class Conversation
             conversation:this
         }
     }
+
+    private readonly definitionItems:ConvoDefItem[]=[];
+
+    public define(items:ConvoDefItem[],override?:boolean):ConvoParsingResult|undefined
+    {
+        const out:string[]=[];
+        for(let i=0;i<items.length;i++){
+            const type=items[i]?.type;
+            if(!type || (!override && this.getAssignment(type.name))){
+                continue
+            }
+
+            validateConvoTypeName(type.name);
+
+            const str=schemeToConvoTypeString(type.scheme,type.name);
+            if(!str){
+                continue;
+            }
+            out.push(str);
+            out.push('\n');
+            this.definitionItems.push({type});
+        }
+
+        for(let i=0;i<items.length;i++){
+            const v=items[i]?.var;
+            if(!v || (!override && this.getAssignment(v.name))){
+                continue
+            }
+
+            validateConvoVarName(v.name);
+
+            out.push(`${v.name} = ${JSON.stringify(v.value)}`);
+            out.push('\n');
+            this.definitionItems.push({var:v});
+        }
+
+        if(out.length){
+            out.unshift('> define\n')
+        }
+
+        for(let i=0;i<items.length;i++){
+            const fn=items[i]?.fn;
+            if(!fn || (!override && this.getAssignment(fn.name))){
+                continue
+            }
+
+            validateConvoFunctionName(fn.name);
+
+            out.push(this.createFunctionImpl(fn));
+            out.push('\n');
+        }
+
+        return out.length?this.append(out.join('')):undefined;
+    }
+
+    public defineType(type:ConvoTypeDef,override?:boolean):ConvoParsingResult|undefined{
+        return this.define([{type}],override);
+    }
+
+    public defineTypes(types:ConvoTypeDef[],override?:boolean):ConvoParsingResult|undefined{
+        return this.define(types.map(type=>({type})),override);
+    }
+
+    public defineVar(variable:ConvoVarDef,override?:boolean):ConvoParsingResult|undefined{
+        return this.define([{var:variable}],override);
+
+    }
+
+    public defineVars(vars:ConvoVarDef[],override?:boolean):ConvoParsingResult|undefined{
+        return this.define(vars.map(v=>({var:v})),override);
+    }
+
+    public defineFunction(fn:ConvoFunctionDef,override?:boolean){
+        return this.define([{fn}],override);
+    }
+
+    public defineFunctions(fns:ConvoFunctionDef[],override?:boolean){
+        return this.define(fns.map(fn=>({fn})),override);
+    }
+
+    private createFunctionImpl(fnDef:ConvoFunctionDef):string{
+        const params=fnDef.paramsZodScheme??fnDef.paramsJsonScheme;
+        const fnSig=(
+            (fnDef.description?convoDescriptionToComment(fnDef.description)+'\n':'')+
+            (params?schemeToConvoTypeString(params,`>${fnDef.local?' local':''} `+fnDef.name):`>${fnDef.local?' local':''} ${fnDef.name}()`)
+        );
+
+        if(fnDef.returnScheme && !this.definitionItems.some(t=>t.type===fnDef.returnScheme)){
+            this.defineType(fnDef.returnScheme);
+        }
+
+        if(fnDef.body){
+            const returnType=fnDef.returnScheme?.name??fnDef.returnTypeName;
+            return `${fnSig} ->${returnType?' '+returnType:''} (\n${fnDef.body}\n)`;
+        }else{
+
+            if(fnDef.scopeCallback){
+                this.externFunctions[fnDef.name]=fnDef.scopeCallback;
+            }else if(fnDef.callback){
+                const callback=fnDef.callback;
+                this.externFunctions[fnDef.name]=(scope)=>{
+                    return callback(convoLabeledScopeParamsToObj(scope));
+                }
+            }
+            return fnSig;
+        }
+    }
+
+    public getAssignment(name:string):ConvoMessageAndOptStatement|undefined{
+        for(let i=this._messages.length-1;i>-1;i--){
+            const message=this._messages[i];
+            if(!message?.fn){continue}
+
+            if(message.fn.topLevel){
+                if(!message.fn.body){
+                    continue;
+                }
+                for(let b=0;b<message.fn.body.length;b++){
+                    const statement=message.fn.body[b];
+                    if(!statement){continue}
+
+                    if(statement.set===name && !statement.setPath){
+                        return {message,statement}
+                    }
+                }
+            }else{
+                if(!message.fn.call && message.fn.name===name){
+                    return {message};
+                }
+            }
+        }
+        return undefined;
+    }
 }
+

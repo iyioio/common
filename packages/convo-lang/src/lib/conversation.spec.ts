@@ -1,5 +1,5 @@
 import { asType } from '@iyio/common';
-import { ZodEnum, ZodObject } from 'zod';
+import { ZodEnum, ZodObject, z } from 'zod';
 import { CallbackConvoCompletionService } from './CallbackConvoCompletionService';
 import { Conversation } from "./Conversation";
 import { ConvoError } from './ConvoError';
@@ -460,6 +460,57 @@ describe('convo',()=>{
 
         expect(convo.convo.split('FAST_GO').length).toBe(2);
 
+    })
+
+    it('should call extern defined function',async ()=>{
+
+        const convo=new Conversation();
+
+        let lastParams:any=undefined;
+        let called=false;
+        convo.defineFunction({
+            name:'testFn',
+            description:'Calls test function',
+            local:true,
+            paramsZodScheme:z.object({
+                speed:z.number(),
+                turn:z.string(),
+            }),
+            callback:(params)=>{
+                called=true;
+                lastParams=params;
+                return `speed:${params.speed},turn:${params.turn}`
+            }
+        })
+
+        const r=await convo.callFunctionAsync('testFn',{speed:150,turn:'left'});
+
+        expect(called).toBe(true);
+        expect(lastParams).not.toBeUndefined();
+        expect(r).toBe(`speed:150,turn:left`);
+        expect(lastParams.speed).toBe(150);
+        expect(lastParams.speed).not.toBe('150');
+        expect(lastParams.turn).toBe('left');
+    })
+
+    it('should enforce def overrides',async ()=>{
+
+        const convo=new Conversation();
+
+        expect(convo.defineType({name:'Type1',scheme:z.object({name:z.string()})})).not.toBeUndefined();
+        expect(convo.getAssignment('Type1')).not.toBeUndefined();
+        expect(convo.defineType({name:'Type1',scheme:z.object({type:z.string()})})).toBeUndefined();
+
+        expect(convo.defineVar({name:'var1',value:77})).not.toBeUndefined();
+        expect(convo.getAssignment('var1')).not.toBeUndefined();
+        expect(convo.defineVar({name:'var1',value:66})).toBeUndefined();
+
+        expect(convo.defineFunction({name:'fn1',paramsZodScheme:z.object({age:z.number().int()})})).not.toBeUndefined();
+        expect(convo.getAssignment('fn1')).not.toBeUndefined();
+        expect(convo.defineFunction({name:'fn1',paramsZodScheme:z.object({name:z.string().optional()})})).toBeUndefined();
+
+
+        console.log('hio 👋 👋 👋 CONVO',convo.convo);
     })
 
 });

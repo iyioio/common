@@ -1,4 +1,5 @@
-import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTypeDef, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
+import { ConvoError } from "./ConvoError";
+import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -39,11 +40,11 @@ export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
     }
 }
 
-export const createConvoTypeDef=(typeDef:Omit<ConvoTypeDef,typeof convoObjFlag>):ConvoTypeDef=>{
-    (typeDef as ConvoTypeDef)[convoObjFlag]='type';
-    return typeDef as ConvoTypeDef;
+export const createConvoType=(typeDef:Omit<ConvoType,typeof convoObjFlag>):ConvoType=>{
+    (typeDef as ConvoType)[convoObjFlag]='type';
+    return typeDef as ConvoType;
 }
-export const createConvoBaseTypeDef=(type:ConvoBaseType):ConvoTypeDef=>{
+export const createConvoBaseTypeDef=(type:ConvoBaseType):ConvoType=>{
     return {
         [convoObjFlag]:'type',
         type,
@@ -232,4 +233,57 @@ export const collapseConvoPipes=(statement:ConvoStatement):number=>{
     }
 
     return count;
+}
+
+export const convoDescriptionToCommentOut=(description:string,tab='',out:string[])=>{
+    const lines=description.split('\n');
+    for(let i=0;i<lines.length;i++){
+        const line=lines[i];
+        out.push(`${tab}# ${line}`);
+    }
+}
+export const convoDescriptionToComment=(description:string,tab=''):string=>{
+    const out:string[]=[];
+    convoDescriptionToCommentOut(description,tab,out);
+    return out.join('\n');
+}
+
+
+const nameReg=/^[a-z_]\w{,254}$/
+const typeNameReg=/^[A-Z]\w{,254}$/
+export const isValidConvoVarName=(name:string):boolean=>{
+    return nameReg.test(name);
+}
+export const isValidConvoFunctionName=(name:string):boolean=>{
+    return nameReg.test(name);
+}
+export const isValidConvoTypeName=(typeName:string):boolean=>{
+    return typeNameReg.test(typeName);
+}
+export const validateConvoVarName=(name:string):void=>{
+    if(nameReg.test(name)){
+        throw new ConvoError(
+            'invalid-variable-name',
+            undefined,
+            `${name} is an invalid Convo variable name. Variable names must start with a lower case letter followed by 0 to 254 more word characters`
+        );
+    }
+}
+export const validateConvoFunctionName=(name:string):void=>{
+    if(nameReg.test(name)){
+        throw new ConvoError(
+            'invalid-function-name',
+            undefined,
+            `${name} is an invalid Convo function name. Function names must start with a lower case letter followed by 0 to 254 more word characters`
+        );
+    }
+}
+export const validateConvoTypeName=(name:string):void=>{
+    if(nameReg.test(name)){
+        throw new ConvoError(
+            'invalid-type-name',
+            undefined,
+            `${name} is an invalid Convo type name. Type names must start with an upper case letter followed by 0 to 254 more word characters`
+        );
+    }
 }

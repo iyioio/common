@@ -1,7 +1,8 @@
-import { ZodType, z } from "zod";
+import { JsonScheme, zodTypeToJsonScheme } from "@iyio/common";
+import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
-import { convoMetadataKey } from "./convo-lib";
-import { ConvoBaseType, ConvoMetadata, OptionalConvoValue, isConvoBaseType, isConvoTypeDef, isOptionalConvoValue } from "./convo-types";
+import { convoDescriptionToCommentOut, convoMetadataKey } from "./convo-lib";
+import { ConvoBaseType, ConvoMetadata, OptionalConvoValue, isConvoBaseType, isConvoType, isOptionalConvoValue } from "./convo-types";
 
 const typeCacheKey=Symbol('typeCacheKey');
 
@@ -38,7 +39,7 @@ const _convoValueToZodType=(value:any,metadata:ConvoMetadata|undefined,maxDepth=
         }else{
             zType=_convoValueToZodType(value[0],undefined,maxDepth);
         }
-    }else if(isConvoTypeDef(value)){
+    }else if(isConvoType(value)){
         if(isConvoBaseType(value.type)){
             zType=convoBaseTypeToZodType(value.type);
         }else if(value.enumValues){
@@ -127,5 +128,106 @@ export const convoBaseTypeToZodType=(type:ConvoBaseType):ZodType<any>=>{
                 {baseType:type},
                 `Unexpected ConvoBaseType - ${type}`
             );
+    }
+}
+
+export const schemeToConvoTypeString=(scheme:ZodTypeAny|JsonScheme,nameOverride?:string):string=>{
+    if(scheme instanceof ZodType){
+        const json=zodTypeToJsonScheme(scheme);
+        if(!json){
+            throw new ConvoError('invalid-scheme-type');
+        }
+        return jsonSchemeToConvoTypeString(json,nameOverride);
+    }else{
+        return jsonSchemeToConvoTypeString(scheme,nameOverride);
+    }
+}
+
+export const zodSchemeToConvoTypeString=(scheme:ZodTypeAny,nameOverride?:string):string=>{
+    const json=zodTypeToJsonScheme(scheme);
+    if(!json){
+        throw new ConvoError('invalid-scheme-type');
+    }
+    return jsonSchemeToConvoTypeString(json,nameOverride);
+}
+
+export const jsonSchemeToConvoTypeString=(scheme:JsonScheme,nameOverride?:string):string=>{
+    const out:string[]=[];
+    _jsonSchemeToConvoTypeString(scheme,out,'',null,nameOverride,false,20);
+    return out.join('');
+}
+
+const tabSize='    ';
+
+const _jsonSchemeToConvoTypeString=(
+    scheme:JsonScheme,
+    out:string[],
+    tab:string,
+    label:string|null,
+    nameOverride:string|undefined,
+    required:boolean,
+    maxDepth:number
+)=>{
+    if(maxDepth<0){
+        throw new ConvoError('max-type-conversion-depth-reached');
+    }
+    maxDepth--;
+    if(scheme.description){
+        convoDescriptionToCommentOut(scheme.description,tab,out);
+        out.push('\n');
+    }
+    const open=label?`${tab}${label}${required?'':'?'}: `:tab;
+    if(scheme.type){
+        switch(scheme.type){
+            case 'object':
+                out.push(open,nameOverride??'struct','(\n');
+                if(scheme.properties){
+                    for(const e in scheme.properties){
+                        const prop=scheme.properties[e];
+                        if(!prop){continue}
+                        _jsonSchemeToConvoTypeString(prop,out,tab+tabSize,e,undefined,scheme.required?.includes(e)?true:false,maxDepth);
+                        out.push('\n')
+                    }
+                }
+                out.push(tab,')');
+                break;
+
+            case 'array':
+                out.push(open,'array(\n');
+                if(scheme.items){
+                    _jsonSchemeToConvoTypeString(scheme.items,out,tab+tabSize,null,undefined,false,maxDepth);
+                    out.push('\n');
+                }
+                out.push(tab,')');
+                break;
+
+            case 'string':
+                out.push(open,'string');
+                break;
+
+            case 'number':
+                out.push(open,'number');
+                break;
+
+            case 'boolean':
+                out.push(open,'boolean');
+                break;
+
+            case 'integer':
+                out.push(open,'int');
+                break;
+
+            case 'null':
+                out.push(open,'null');
+                break;
+
+            default:
+                throw new ConvoError('unknown-json-scheme-type',undefined,`${scheme.type} is an unknown json scheme type to convo`);
+
+        }
+    }else if(scheme.enum){
+        out.push(tab,'enum(',scheme.enum.map(v=>JSON.stringify(v)).join(' '),')');
+    }else{
+        throw new ConvoError('unknown-json-scheme-type',undefined,`json scheme type did not define a type or enum values`);
     }
 }

@@ -127,21 +127,46 @@ export class ConvoExecutionContext
             [convoArgsName]:args
         }
 
-        const scope:ConvoScope={
-            i:0,
-            vars,
-            s:{
-                fn:convoBodyFnName,
-                params:fn.body??[],
-                s:0,
-                e:0,
-            },
-        }
+        let scope:ConvoScope;
+        if(fn.body){
+            scope={
+                i:0,
+                vars,
+                s:{
+                    fn:convoBodyFnName,
+                    params:fn.body,
+                    s:0,
+                    e:0,
+                },
+            }
 
-        for(const e in args){
-            this.setVar(false,args[e],e,undefined,scope);
+            for(const e in args){
+                this.setVar(false,args[e],e,undefined,scope);
+            }
+        }else{
+            if(typeof this.sharedVars[fn.name] !== 'function'){
+                throw new ConvoError('function-not-defined',{fn},`No function defined by name ${fn.name}`)
+            }
+            const params:ConvoStatement[]=[];
+            for(const e in args){
+                params.push({
+                    s:0,
+                    e:0,
+                    label:e,
+                    value:args[e]
+                })
+            }
+            scope={
+                i:0,
+                vars,
+                s:{
+                    fn:fn.name,
+                    params,
+                    s:0,
+                    e:0,
+                },
+            }
         }
-
 
         return this.execute(scope,vars,this.getConvoFunctionReturnScheme(fn));
     }

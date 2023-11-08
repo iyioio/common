@@ -1,5 +1,5 @@
-import { CodeParsingResult } from '@iyio/common';
-import type { ZodObject } from 'zod';
+import { CodeParsingResult, JsonScheme } from '@iyio/common';
+import type { ZodObject, ZodType } from 'zod';
 import type { Conversation } from './Conversation';
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
 
@@ -36,7 +36,13 @@ export type ConvoErrorType=(
     'scope-already-suspended'|
     'scope-waiting'|
     'suspension-parent-not-found'|
-    'variable-ref-required'
+    'variable-ref-required'|
+    'max-type-conversion-depth-reached'|
+    'unknown-json-scheme-type'|
+    'invalid-scheme-type'|
+    'invalid-variable-name'|
+    'invalid-function-name'|
+    'invalid-type-name'
 );
 
 export interface ConvoErrorReferences
@@ -166,6 +172,12 @@ export interface ConvoStatement
      * If true the statement has pipe statements in it's args.
      */
     _hasPipes?:boolean;
+}
+
+export interface ConvoMessageAndOptStatement
+{
+    message:ConvoMessage;
+    statement?:ConvoStatement;
 }
 
 export interface ConvoFunction
@@ -436,13 +448,13 @@ export const convoBaseTypes=['string','number','int','boolean','time','void','an
 export type ConvoBaseType=(typeof convoBaseTypes)[number];
 export const isConvoBaseType=(value:any):value is ConvoBaseType=>convoBaseTypes.includes(value);
 
-export interface ConvoTypeDef
+export interface ConvoType
 {
     [convoObjFlag]:'type';
     type:string;
     enumValues?:any[];
 }
-export const isConvoTypeDef=(value:any):value is ConvoTypeDef=>(value as ConvoTypeDef)?.[convoObjFlag]==='type';
+export const isConvoType=(value:any):value is ConvoType=>(value as ConvoType)?.[convoObjFlag]==='type';
 
 export interface FlatConvoMessage
 {
@@ -538,4 +550,44 @@ export interface ConvoGlobal extends ConvoPipeTarget
 {
     conversation?:Conversation;
     exe?:ConvoExecutionContext;
+}
+
+export interface ConvoTypeDef<T=any>
+{
+    name:string;
+    scheme:ZodType<T>|JsonScheme;
+}
+
+export interface ConvoVarDef<T=any>
+{
+    name:string;
+    value:T;
+}
+
+export interface ConvoFunctionDef<P=any,R=any>
+{
+    description?:string;
+    name:string;
+    local?:boolean;
+
+    paramsZodScheme?:ZodType<P>;
+    paramsJsonScheme?:JsonScheme;
+
+    returnTypeName?:string;
+    returnScheme?:ConvoTypeDef<P>;
+
+    /**
+     * Convo function body code
+     */
+    body?:string;
+
+    callback?:(params:P)=>R;
+    scopeCallback?:ConvoScopeFunction;
+}
+
+export interface ConvoDefItem<T=any,R=any>
+{
+    type?:ConvoTypeDef<T>;
+    var?:ConvoVarDef;
+    fn?:ConvoFunctionDef<T,R>;
 }
