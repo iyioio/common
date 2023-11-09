@@ -5,6 +5,18 @@
     "projectType": "library",
     "targets": {
         "build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "echo build"
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "echo publish"
+            }
+        },
+        "_build": {
             "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
@@ -14,7 +26,7 @@
                 "assets": ["packages/convo-lang-tools/*.md"]
             }
         },
-        "publish": {
+        "_publish": {
             "executor": "nx:run-commands",
             "options": {
                 "command": "node tools/scripts/publish.mjs convo-lang-tools {args.ver} {args.tag}"
