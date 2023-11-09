@@ -12,6 +12,7 @@ export * from './lib/EnvParams';
 export * from './lib/HttpClient';
 export * from './lib/HttpDefaultFetcher';
 export * from './lib/JsonStore';
+export * from './lib/LazyPromise';
 export * from './lib/LocalStorageStore';
 export * from './lib/Lock';
 export * from './lib/MemoryStore';
