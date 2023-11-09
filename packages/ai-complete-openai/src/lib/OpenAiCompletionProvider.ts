@@ -147,17 +147,19 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             }
         }
 
+        const oFns=request.functions?.map(f=>{
+            return deleteUndefined({
+                name:f.name,
+                description:f.description,
+                parameters:f.params??{}
+            })
+        })
+
         const r=await api.chat.completions.create({
             model,
             stream:false,
             messages:oMsgs,
-            functions:request.functions?.map(f=>{
-                return deleteUndefined({
-                    name:f.name,
-                    description:f.description,
-                    parameters:f.params??{}
-                })
-            })
+            functions:oFns?.length?oFns:undefined
         })
 
         return {options:r.choices.map<AiCompletionOption>(c=>{
