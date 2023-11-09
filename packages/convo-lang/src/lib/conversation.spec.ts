@@ -472,7 +472,7 @@ describe('convo',()=>{
             name:'testFn',
             description:'Calls test function',
             local:true,
-            paramsZodScheme:z.object({
+            paramsType:z.object({
                 speed:z.number(),
                 turn:z.string(),
             }),
@@ -497,17 +497,17 @@ describe('convo',()=>{
 
         const convo=new Conversation();
 
-        expect(convo.defineType({name:'Type1',scheme:z.object({name:z.string()})})).not.toBeUndefined();
+        expect(convo.defineType({name:'Type1',type:z.object({name:z.string()})})).not.toBeUndefined();
         expect(convo.getAssignment('Type1')).not.toBeUndefined();
-        expect(convo.defineType({name:'Type1',scheme:z.object({type:z.string()})})).toBeUndefined();
+        expect(convo.defineType({name:'Type1',type:z.object({type:z.string()})})).toBeUndefined();
 
         expect(convo.defineVar({name:'var1',value:77})).not.toBeUndefined();
         expect(convo.getAssignment('var1')).not.toBeUndefined();
         expect(convo.defineVar({name:'var1',value:66})).toBeUndefined();
 
-        expect(convo.defineFunction({name:'fn1',paramsZodScheme:z.object({age:z.number().int()})})).not.toBeUndefined();
+        expect(convo.defineFunction({name:'fn1',paramsType:z.object({age:z.number().int()})})).not.toBeUndefined();
         expect(convo.getAssignment('fn1')).not.toBeUndefined();
-        expect(convo.defineFunction({name:'fn1',paramsZodScheme:z.object({name:z.string().optional()})})).toBeUndefined();
+        expect(convo.defineFunction({name:'fn1',paramsType:z.object({name:z.string().optional()})})).toBeUndefined();
 
 
         console.log('hio 👋 👋 👋 CONVO',convo.convo);

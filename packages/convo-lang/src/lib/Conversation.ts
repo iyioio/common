@@ -328,8 +328,64 @@ export class Conversation
 
     private readonly definitionItems:ConvoDefItem[]=[];
 
-    public define(items:ConvoDefItem[],override?:boolean):ConvoParsingResult|undefined
+    public define(items:ConvoDefItem|(ConvoDefItem[]),override?:boolean):ConvoParsingResult|undefined
     {
+
+        let original=true;
+        if(!Array.isArray(items)){
+            original=false;
+            items=[items];
+        }
+
+        const startLength=items.length;
+        for(let i=0;i<startLength;i++){
+            const item=items[i];
+            if(!item){continue}
+
+            if(item.types){
+                if(original){
+                    items=[...items];
+                    original=false;
+                }
+                for(const e in item.types){
+                    const type=item.types[e];
+                    if(type){
+                        items.push({type:{name:e,type:type}})
+                    }
+                }
+            }
+
+            if(item.vars){
+                if(original){
+                    items=[...items];
+                    original=false;
+                }
+                for(const e in item.vars){
+                    items.push({var:{name:e,value:item.vars[e]}})
+                }
+            }
+
+            if(item.fns){
+                if(original){
+                    items=[...items];
+                    original=false;
+                }
+                for(const e in item.fns){
+                    const fn=item.fns[e];
+                    if(typeof fn === 'object'){
+                        items.push({fn:{name:e,...fn}})
+                    }else if(fn){
+                        items.push({fn:{
+                            name:e,
+                            local:true,
+                            callback:fn
+                        }})
+                    }
+                }
+            }
+        }
+
+
         const out:string[]=[];
         for(let i=0;i<items.length;i++){
             const type=items[i]?.type;
@@ -339,7 +395,7 @@ export class Conversation
 
             validateConvoTypeName(type.name);
 
-            const str=schemeToConvoTypeString(type.scheme,type.name);
+            const str=schemeToConvoTypeString(type.type,type.name);
             if(!str){
                 continue;
             }
@@ -373,6 +429,9 @@ export class Conversation
 
             validateConvoFunctionName(fn.name);
 
+            if(out.length){
+                out.push('\n');
+            }
             out.push(this.createFunctionImpl(fn));
             out.push('\n');
         }
@@ -406,8 +465,9 @@ export class Conversation
     }
 
     private createFunctionImpl(fnDef:ConvoFunctionDef):string{
-        const params=fnDef.paramsZodScheme??fnDef.paramsJsonScheme;
+        const params=fnDef.paramsType??fnDef.paramsJsonScheme;
         const fnSig=(
+            (fnDef.disableAutoComplete?`@${convoTags.disableAutoComplete}\n`:'')+
             (fnDef.description?convoDescriptionToComment(fnDef.description)+'\n':'')+
             (params?schemeToConvoTypeString(params,`>${fnDef.local?' local':''} `+fnDef.name):`>${fnDef.local?' local':''} ${fnDef.name}()`)
         );
@@ -420,22 +480,35 @@ export class Conversation
             const returnType=fnDef.returnScheme?.name??fnDef.returnTypeName;
             return `${fnSig} ->${returnType?' '+returnType:''} (\n${fnDef.body}\n)`;
         }else{
-
             if(fnDef.scopeCallback){
                 this.externFunctions[fnDef.name]=fnDef.scopeCallback;
             }else if(fnDef.callback){
                 const callback=fnDef.callback;
-                this.externFunctions[fnDef.name]=(scope)=>{
-                    return callback(convoLabeledScopeParamsToObj(scope));
+                if(fnDef.paramsJsonScheme || fnDef.paramsType){
+                    this.externFunctions[fnDef.name]=(scope)=>{
+                        return callback(convoLabeledScopeParamsToObj(scope));
+                    }
+                }else{
+                    this.externFunctions[fnDef.name]=(scope)=>{
+                        return callback(scope.paramValues?.[0]);
+                    }
                 }
+
             }
             return fnSig;
         }
     }
 
-    public getAssignment(name:string):ConvoMessageAndOptStatement|undefined{
-        for(let i=this._messages.length-1;i>-1;i--){
-            const message=this._messages[i];
+    public getAssignment(name:string,excludePreAssigned=false):ConvoMessageAndOptStatement|undefined{
+        return (
+            this._getAssignment(name,this._messages)??
+            (excludePreAssigned?undefined:this._getAssignment(name,this.preAssignMessages))
+        )
+    }
+
+    private _getAssignment(name:string,messages:ConvoMessage[]):ConvoMessageAndOptStatement|undefined{
+        for(let i=messages.length-1;i>-1;i--){
+            const message=messages[i];
             if(!message?.fn){continue}
 
             if(message.fn.topLevel){
@@ -457,6 +530,23 @@ export class Conversation
             }
         }
         return undefined;
+    }
+
+
+    private preAssignMessages:ConvoMessage[]=[];
+    /**
+     * Used to mark variables, types and function as assigned before actually appending the code.
+     */
+    public preAssign(convoCode:string){
+        const r=parseConvoCode(convoCode);
+        if(r.error){
+            throw new Error(r.error.message);
+        }
+        if(r.result){
+            for(const m of r.result){
+                this.preAssignMessages.push(m);
+            }
+        }
     }
 }
 

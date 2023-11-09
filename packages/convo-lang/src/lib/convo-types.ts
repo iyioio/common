@@ -555,7 +555,7 @@ export interface ConvoGlobal extends ConvoPipeTarget
 export interface ConvoTypeDef<T=any>
 {
     name:string;
-    scheme:ZodType<T>|JsonScheme;
+    type:ZodType<T>|JsonScheme;
 }
 
 export interface ConvoVarDef<T=any>
@@ -570,7 +570,7 @@ export interface ConvoFunctionDef<P=any,R=any>
     name:string;
     local?:boolean;
 
-    paramsZodScheme?:ZodType<P>;
+    paramsType?:ZodType<P>;
     paramsJsonScheme?:JsonScheme;
 
     returnTypeName?:string;
@@ -583,11 +583,17 @@ export interface ConvoFunctionDef<P=any,R=any>
 
     callback?:(params:P)=>R;
     scopeCallback?:ConvoScopeFunction;
+
+    disableAutoComplete?:boolean;
 }
 
 export interface ConvoDefItem<T=any,R=any>
 {
     type?:ConvoTypeDef<T>;
-    var?:ConvoVarDef;
+    var?:ConvoVarDef<T>;
     fn?:ConvoFunctionDef<T,R>;
+
+    types?:Record<string,ConvoTypeDef['type']>;
+    vars?:Record<string,ConvoVarDef['value']>;
+    fns?:Record<string,Omit<ConvoFunctionDef,'name'>|((params?:any)=>any)>;
 }
