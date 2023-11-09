@@ -30,7 +30,9 @@ export const allowedConvoDefinitionFunctions=[
     convoStructFnName,
     convoMapFnName,
     convoArrayFnName,
-    convoEnumFnName
+    convoEnumFnName,
+    convoJsonMapFnName,
+    convoJsonArrayFnName,
 ] as const;
 
 export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
