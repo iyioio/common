@@ -379,8 +379,7 @@ const convo={
                         "1":{"name":"constant.character.escape"},
                         "2":{"name":"string"}
                     }
-                },
-                {"include":"#embed"}
+                }
             ]
         },
         "stringSq":{
