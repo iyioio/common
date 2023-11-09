@@ -22,7 +22,7 @@ const returnTypeReg=/\s*(\w+)?\s*->\s*(\w+)?\s*(\(?)/gs;
 const numberReg=/^-?[.\d]/;
 
 const singleStringReg=/\{\{|'/gs;
-const doubleStringReg=/\{\{|"/gs;
+const doubleStringReg=/"/gs;
 const heredocStringReg=/-{3,}/gs;
 const msgStringReg=/(\{\{|[\n\r]\s*>|$)/gs;
 

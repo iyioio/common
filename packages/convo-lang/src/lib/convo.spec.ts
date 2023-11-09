@@ -99,7 +99,7 @@ Grade = map(
 
 # Returns a header system message
 > local getHeader( age:number ) -> (
-    return("James is a funky monkey {{age}} years old")
+    return('James is a funky monkey {{age}} years old')
 )
 
 > dude
@@ -313,7 +313,7 @@ describe('convo',()=>{
 
         const convo=parse(1,/*convo*/`
             > testFn() -> (
-                return( "1 + 1 = {{ add(1 1) }}" )
+                return( '1 + 1 = {{ add(1 1) }}' )
             )
         `);
 
@@ -325,6 +325,24 @@ describe('convo',()=>{
         }
 
         expect(executeConvoFunction(fn)).toBe("1 + 1 = 2");
+    })
+
+    it('should not embed double quote strings',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                return( "1 + 1 = {{ add(1 1) }}" )
+            )
+        `);
+
+        const fn=convo.result?.[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toBe("1 + 1 = {{ add(1 1) }}");
     })
 
 
