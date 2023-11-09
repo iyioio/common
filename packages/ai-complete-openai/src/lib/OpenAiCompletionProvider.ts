@@ -1,12 +1,14 @@
 import { AiComplationMessageType, AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
-import { FileBlob, Scope, SecretManager, deleteUndefined, secretManager, shortUuid, unused } from '@iyio/common';
+import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources/chat';
+import { ImagesResponse } from 'openai/resources';
+import { ChatCompletionAssistantMessageParam, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam } from 'openai/resources/chat';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
 const defaultTokenCharLength=3.75;
+const maxImageGenAttempts=5;
 
 export interface OpenAiCompletionProviderOptions
 {
@@ -17,6 +19,9 @@ export interface OpenAiCompletionProviderOptions
     secretManager?:SecretManager;
     secretsName?:string;
 }
+
+const dalle2Model='dall-e-2';
+const dalle3Model='dall-e-3';
 
 export class OpenAiCompletionProvider implements AiCompletionProvider
 {
@@ -44,6 +49,9 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     private readonly _audioModel?:string;
     private readonly _imageModel?:string;
 
+    private readonly imageGenLockLow:Lock=new Lock(1)
+    private readonly imageGenLock:Lock=new Lock(3);
+
     public constructor({
         apiKey,
         secretManager,
@@ -51,7 +59,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         //chatModels=['gpt-4'],
         chatModels=['gpt-3.5-turbo'],
         audioModels=['whisper-1'],
-        imageModels=['dalle'],
+        imageModels=[dalle3Model],
     }:OpenAiCompletionProviderOptions){
         this.apiKey=apiKey;
         this.secretManager=secretManager;
@@ -122,12 +130,10 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         const oMsgs:ChatCompletionMessageParam[]=[];
         for(const m of request.messages){
             if(m.type==='text'){
-                oMsgs.push(deleteUndefined({
-                    role:m.role??'user',
+                oMsgs.push(deleteUndefined(asType<ChatCompletionUserMessageParam|ChatCompletionAssistantMessageParam|ChatCompletionSystemMessageParam>({
+                    role:(m.role??'user') as any,
                     content:m.content??'',
-                    name:m.name,
-                    user:lastMessage?.userId,
-                }))
+                })))
             }else if(m.type==='function' && m.called){
                 oMsgs.push({
                     role:'assistant',
@@ -159,7 +165,8 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             model,
             stream:false,
             messages:oMsgs,
-            functions:oFns?.length?oFns:undefined
+            functions:oFns?.length?oFns:undefined,
+            user:lastMessage?.userId,
         })
 
         return {options:r.choices.map<AiCompletionOption>(c=>{
@@ -238,12 +245,34 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const api=await this.getApiAsync();
 
-        const r=await api.images.generate({
-            prompt:lastMessage.content??'',
-            n:1,
-            size:'512x512',
-            user:lastMessage.userId,
-        });
+        let r:ImagesResponse|undefined=undefined;
+
+        for(let i=1;i<=maxImageGenAttempts;i++){
+            try{
+                const release=await (model===dalle3Model?this.imageGenLockLow:this.imageGenLock).waitAsync();
+                try{
+                    r=await api.images.generate({
+                        prompt:lastMessage.content??'',
+                        n:1,
+                        size:model===dalle3Model?'1024x1024':'512x512',
+                        user:lastMessage.userId,
+                        model
+                    });
+                }finally{
+                    release();
+                }
+                break;
+            }catch(ex){
+                if(i>=maxImageGenAttempts){
+                    throw ex;
+                }
+                await delayAsync(i*1000+Math.round(1000*Math.random()));
+            }
+        }
+
+        if(!r){
+            throw new Error('Image not generated');
+        }
 
         return {options:[{
             message:{
