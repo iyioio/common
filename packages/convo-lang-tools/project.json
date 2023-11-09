@@ -4,60 +4,10 @@
     "sourceRoot": "packages/convo-lang-tools/src",
     "projectType": "library",
     "targets": {
-        "build": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "echo build"
-            }
-        },
-        "publish": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "echo publish"
-            }
-        },
-        "_build": {
-            "executor": "@iyio/nx-common:lib-builder",
-            "outputs": ["{options.outputPath}"],
-            "options": {
-                "outputPath": "dist/packages/convo-lang-tools",
-                "main": "packages/convo-lang-tools/src/index.ts",
-                "tsConfig": "packages/convo-lang-tools/tsconfig.lib.json",
-                "assets": ["packages/convo-lang-tools/*.md"]
-            }
-        },
-        "_publish": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "node tools/scripts/publish.mjs convo-lang-tools {args.ver} {args.tag}"
-            },
-            "dependsOn": ["build"]
-        },
-        "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["packages/convo-lang-tools/**/*.ts"]
-            }
-        },
-        "test": {
-            "executor": "@nrwl/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "packages/convo-lang-tools/jest.config.ts",
-                "passWithNoTests": true
-            },
-            "configurations": {
-                "ci": {
-                    "ci": true,
-                    "codeCoverage": true
-                }
-            }
-        },
         "test-ext": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "code --extensionDevelopmentPath=$(pwd)/packages/convo-lang-tools/ --disable-extensions packages/convo-lang-tools/examples"
+                "command": "./packages/convo-lang-tools/lsp/build-lsp.sh && code --extensionDevelopmentPath=$(pwd)/packages/convo-lang-tools/ --disable-extensions packages/convo-lang-tools/examples"
             }
         },
         "publish-ext": {
