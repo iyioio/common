@@ -1,10 +1,10 @@
 {
     "name": "@iyio/tmpl-gen",
-    "version": "0.3.7",
+    "version": "0.4.0",
     "type": "commonjs",
     "sideEffects": false,
-    "bin":{
-        "tmpl-gen-process-tmpl-dir":"bin/generate-command.js",
-        "tmpl-gen":"bin/process-tmpl-dir.js"
+    "bin": {
+        "tmpl-gen-process-tmpl-dir": "bin/generate-command.js",
+        "tmpl-gen": "bin/process-tmpl-dir.js"
     }
 }
