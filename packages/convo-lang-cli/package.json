@@ -1,0 +1,9 @@
+{
+    "name": "@iyio/convo-lang-cli",
+    "version": "0.0.1",
+    "type": "commonjs",
+    "sideEffects": false,
+    "bin": {
+        "convo": "bin/convo.js"
+    }
+}
