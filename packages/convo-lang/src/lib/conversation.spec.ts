@@ -388,9 +388,39 @@ describe('convo',()=>{
         }else{
             throw new Error('value Should be instance of ZodObject');
         }
+    })
 
+    it('should sleep',async ()=>{
 
+        const convo=new Conversation();
 
+        convo.append(/*convo*/`
+
+            > testFn(delay:number)->(
+                sleep(delay)
+                return(delay)
+            )
+
+        `);
+
+        const v=await convo.callFunctionAsync('testFn',{delay:1});
+        expect(v).toBe(1);
+    })
+
+    it('should return promise',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            > testFn(delay:number)->(
+                return(sleep(delay))
+            )
+
+        `);
+
+        const v=await convo.callFunctionAsync('testFn',{delay:1});
+        expect(typeof v).toBe('number');
     })
 
 
@@ -509,8 +539,6 @@ describe('convo',()=>{
         expect(convo.getAssignment('fn1')).not.toBeUndefined();
         expect(convo.defineFunction({name:'fn1',paramsType:z.object({name:z.string().optional()})})).toBeUndefined();
 
-
-        console.log('hio 👋 👋 👋 CONVO',convo.convo);
     })
 
 });
