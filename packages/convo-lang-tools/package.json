@@ -2,7 +2,7 @@
     "name": "convo-lang-tools",
     "displayName": "convo-lang",
     "description": "A conversational language 🤓",
-    "version": "0.4.1",
+    "version": "0.4.3",
     "type": "commonjs",
     "sideEffects": false,
     "publisher": "IYIO",
@@ -13,6 +13,7 @@
     "activationEvents": [
         "onLanguage:convo.source"
     ],
+    "license":"Apache-2.0",
     "main": "./lsp/client/out/extension",
     "contributes": {
         "languages": [
@@ -25,7 +26,11 @@
                 "extensions": [
                     ".convo"
                 ],
-                "configuration": "./convo-language-configuration.json"
+                "configuration": "./convo-language-configuration.json",
+                "icon": {
+                    "light": "assets/convo-icon.png",
+                    "dark": "assets/convo-icon.png"
+                }
             }
         ],
         "grammars": [
