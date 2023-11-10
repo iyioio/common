@@ -18,8 +18,10 @@ npx esbuild \
     --platform=node \
     --format=cjs \
     --bundle \
-    --packages=external \
-    --tree-shaking=true\
+    --external:'vscode' \
+    --external:'path' \
+    --external:'vscode-languageserver-textdocument' \
+    --external:'vscode-languageserver' \
     --outfile=server/out/server.js
 
 npx esbuild \
@@ -28,7 +30,9 @@ npx esbuild \
     --format=cjs \
     --tree-shaking=true\
     --bundle \
-    --packages=external \
     --external:'vscode' \
     --external:'path' \
+    --external:'vscode-languageserver-textdocument' \
+    --external:'vscode-languageserver' \
     --outfile=client/out/extension.js
+    #--packages=external \
