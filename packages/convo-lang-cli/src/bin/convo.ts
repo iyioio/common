@@ -14,6 +14,7 @@ const args=parseCliArgsT<Args>({
         out:args=>args[0],
         parse:args=>args.length?true:false,
         parseFormat:args=>safeParseNumberOrUndefined(args[0]),
+        bufferOutput:args=>args.length?true:false,
 
     }
 }).parsed as Args;

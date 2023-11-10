@@ -2,7 +2,7 @@
     "name": "convo-lang-tools",
     "displayName": "convo-lang",
     "description": "A conversational language 🤓",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "type": "commonjs",
     "sideEffects": false,
     "publisher": "IYIO",
@@ -34,6 +34,25 @@
                 "scopeName": "source.convo",
                 "path": "./syntaxes/convo.tmLanguage.json"
             }
+        ],
+        "commands": [
+			{
+				"command": "convo.complete",
+				"title": "Complete Convo Conversation",
+                "shortTitle": "convo"
+			},
+			{
+				"command": "convo.parse",
+				"title": "Parse Convo Conversation"
+			}
+		],
+        "keybindings": [
+			{
+				"command": "convo.complete",
+				"key": "ctrl+r",
+				"mac": "cmd+r",
+				"when": "editorTextFocus && editorLangId == 'source.convo'"
+			}
         ]
     }
 }

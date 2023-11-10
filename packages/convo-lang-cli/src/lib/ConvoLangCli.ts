@@ -7,25 +7,67 @@ import { writeFile } from "fs/promises";
 import { homedir } from 'node:os';
 import { ConvoCliConfig, ConvoLangCliOptions } from "./convo-cli-types";
 
+let configPromise:Promise<ConvoCliConfig>|null=null;
+const getConfigAsync=(options:ConvoLangCliOptions):Promise<ConvoCliConfig>=>
+{
+    return configPromise??(configPromise=_getConfigAsync(options));
+}
 
+const _getConfigAsync=async (options:ConvoLangCliOptions):Promise<ConvoCliConfig>=>
+{
+    let configPath=options.config??'~/.config/convo/convo.json';
+
+    if(configPath.startsWith('~')){
+        configPath=homedir()+configPath.substring(1);
+    }
+
+    const configExists=await pathExistsAsync(configPath);
+    if(!configExists && options.config!==undefined){
+        throw new Error(`Convo config file not found a path - ${configPath}`)
+    }
+    return await readFileAsJsonAsync(configPath);
+}
+
+let initPromise:Promise<void>|null=null;
+const initAsync=(options:ConvoLangCliOptions):Promise<void>=>
+{
+    return initPromise??(initPromise=_initAsync(options));
+}
+
+const _initAsync=async (options:ConvoLangCliOptions):Promise<void>=>
+{
+
+    const config=await getConfigAsync(options);
+
+    initRootScope(reg=>{
+        if(config.env){
+            reg.addParams(config.env);
+        }
+        reg.addParams(new EnvParams());
+        reg.use(nodeCommonModule);
+        reg.use(openAiModule);
+        reg.use(aiCompleteConvoModule);
+    })
+    await rootScope.getInitPromise();
+}
 
 export class ConvoLangCli
 {
 
     public readonly options:ConvoLangCliOptions;
 
-    private readonly outChunks:string[]=[]
+    public readonly buffer:string[]=[];
 
     public constructor(options:ConvoLangCliOptions){
         this.options=options;
     }
 
     private out(...chunks:string[]){
-        if(this.options.out){
+        if(this.options.out || this.options.bufferOutput){
             if(typeof this.options.out==='function'){
                 this.options.out(...chunks);
             }else{
-                this.outChunks.push(...chunks);
+                this.buffer.push(...chunks);
             }
         }else{
             if(globalThis?.process?.stdout){
@@ -38,52 +80,11 @@ export class ConvoLangCli
         }
     }
 
-    private configPromise:Promise<ConvoCliConfig>|null=null;
-    public getConfigAsync():Promise<ConvoCliConfig>
-    {
-        return this.configPromise??(this.configPromise=this._getConfigAsync());
-    }
 
-    private async _getConfigAsync():Promise<ConvoCliConfig>{
-        let configPath=this.options.config??'~/.config/convo/convo.json';
-
-        if(configPath.startsWith('~')){
-            configPath=homedir()+configPath.substring(1);
-        }
-
-        const configExists=await pathExistsAsync(configPath);
-        if(!configExists && this.options.config!==undefined){
-            throw new Error(`Convo config file not found a path - ${configPath}`)
-        }
-        return await readFileAsJsonAsync(configPath);
-    }
-
-    private initPromise:Promise<void>|null=null;
-    public initAsync():Promise<void>
-    {
-        return this.initPromise??(this.initPromise=this._initAsync());
-    }
-
-    private async _initAsync():Promise<void>
-    {
-
-        const config=await this.getConfigAsync();
-
-        initRootScope(reg=>{
-            if(config.env){
-                reg.addParams(config.env);
-            }
-            reg.addParams(new EnvParams());
-            reg.use(nodeCommonModule);
-            reg.use(openAiModule);
-            reg.use(aiCompleteConvoModule);
-        })
-        await rootScope.getInitPromise();
-    }
 
     public async executeAsync():Promise<void>
     {
-        await this.initAsync();
+        await initAsync(this.options);
 
         if(this.options.inline){
             if(this.options.parse){
@@ -131,6 +132,6 @@ export class ConvoLangCli
         if(typeof out !== 'string'){
             return;
         }
-        await writeFile(out,this.outChunks.join(''));
+        await writeFile(out,this.buffer.join(''));
     }
 }

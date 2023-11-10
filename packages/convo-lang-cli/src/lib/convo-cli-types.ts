@@ -37,4 +37,9 @@ export interface ConvoLangCliOptions
      * convo script then output the results back into the same file.
      */
     out?:((...chunks:string[])=>void)|string;
+
+    /**
+     * If true the output of the executor is buffered to be used later.
+     */
+    bufferOutput?:boolean;
 }
