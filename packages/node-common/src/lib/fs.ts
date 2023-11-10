@@ -1,6 +1,7 @@
 import { CancelToken, isRooted } from '@iyio/common';
-import { accessSync } from 'node:fs';
-import { access, readdir, realpath, stat } from 'node:fs/promises';
+import { Abortable } from 'node:events';
+import { OpenMode, PathLike, accessSync } from 'node:fs';
+import { access, readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 export const pathExistsAsync=async (path:string):Promise<boolean>=>
@@ -93,4 +94,21 @@ export const readDirAsync=async (options:ReadDirOptions,cancel?:CancelToken):Pro
 
     return outputs;
 
+}
+
+export type ReadFileOptions={encoding?:null|undefined;flag?:OpenMode|undefined;}&Abortable
+
+export const readFileAsStringAsync=async (
+    path:PathLike,
+    options?:ReadFileOptions|null
+):Promise<string>=>{
+    return (await readFile(path,options)).toString();
+}
+
+export const readFileAsJsonAsync=async <T>(
+    path:PathLike,
+    options?:ReadFileOptions|null
+):Promise<T>=>{
+    const json=await readFileAsStringAsync(path,options);
+    return JSON.parse(json);
 }
