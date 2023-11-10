@@ -16,6 +16,20 @@
                 "cwd": "packages/convo-lang-tools",
                 "command": "./publish.sh"
             }
+        },
+        "mate-build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/convo-lang-tools",
+                "command": "./mate-build.sh"
+            }
+        },
+        "mate-install": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "packages/convo-lang-tools",
+                "command": "./mate-install.sh"
+            }
         }
     },
     "tags": []
