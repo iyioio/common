@@ -8,6 +8,11 @@ export interface ExecOptions
     cmd:string;
 
     /**
+     * Current working directory
+     */
+    cwd?:string;
+
+    /**
      * Disables output to the stdout, stderr and onExecutionError, out is not effected.
      * @default false
      */
@@ -62,6 +67,7 @@ export const execAsync:execAsyncOverrides=(
 
     const {
         cmd,
+        cwd,
         out,
         silent=out?true:false,
         ignoreErrors=false,
@@ -75,7 +81,7 @@ export const execAsync:execAsyncOverrides=(
             stdout('> '+cmd);
         }
         out?.('> '+cmd)
-        exec(cmd,(err,_stdout,_stderr)=>{
+        exec(cmd,{cwd},(err,_stdout,_stderr)=>{
             if(err){
                 if(!silent){
                     onExecutionError('| '+err);
