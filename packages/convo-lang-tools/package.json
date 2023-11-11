@@ -2,7 +2,7 @@
     "name": "convo-lang-tools",
     "displayName": "convo-lang",
     "description": "A conversational language 🤓",
-    "version": "0.4.3",
+    "version": "0.4.5",
     "type": "commonjs",
     "sideEffects": false,
     "publisher": "IYIO",
@@ -38,6 +38,21 @@
                 "language": "source.convo",
                 "scopeName": "source.convo",
                 "path": "./syntaxes/convo.tmLanguage.json"
+            },
+            {
+                "injectTo": [
+                    "source.js",
+                    "source.ts",
+                    "source.jsx",
+                    "source.js.jsx",
+                    "source.tsx"
+                ],
+                "scopeName": "convo-js",
+                "path": "./syntaxes/convo-js.json",
+                "embeddedLanguages": {
+                    "source.convo": "convo",
+                    "meta.embedded.line.ts": "typescript"
+                }
             }
         ],
         "commands": [

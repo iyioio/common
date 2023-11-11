@@ -1,0 +1,30 @@
+{
+    "fileTypes": [
+        "js",
+        "jsx",
+        "ts",
+        "tsx"
+    ],
+    "injectionSelector": "L:source -comment -string",
+    "scopeName": "convo-js",
+    "patterns": [
+        {
+            "begin": "/\\*convo\\*/\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0": "support.type"
+            },
+            "patterns": [
+                {
+                    "include": "source.convo"
+                }
+            ]
+        }
+    ]
+
+}

@@ -631,6 +631,16 @@ export const defaultConvoVars={
         return undefined;
     }),
 
+    sleep:createConvoScopeFunction(scope=>{
+        const start=Date.now();
+        const delay=scope.paramValues?.[0];
+        return new Promise<number>(r=>{
+            setTimeout(()=>{
+                r(Date.now()-start);
+            },typeof delay==='number'?delay:0);
+        })
+    }),
+
 } as const;
 
 Object.freeze(defaultConvoVars);

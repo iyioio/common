@@ -60,15 +60,19 @@
             "executor": "nx:run-commands",
             "options": {
                 "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-lang-cli/tsconfig.lib.json packages/convo-lang-cli/src/bin/convo.ts packages/convo-lang-cli/examples/example.convo"
-            },
-            "dependsOn": ["build"]
+            }
         },
         "example-parse": {
             "executor": "nx:run-commands",
             "options": {
                 "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-lang-cli/tsconfig.lib.json packages/convo-lang-cli/src/bin/convo.ts packages/convo-lang-cli/examples/example.convo --parse --parseFormat 4"
-            },
-            "dependsOn": ["build"]
+            }
+        },
+        "example-exec": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-lang-cli/tsconfig.lib.json packages/convo-lang-cli/src/bin/convo.ts packages/convo-lang-cli/examples/run-command.convo"
+            }
         }
     },
     "tags": []

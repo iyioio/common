@@ -60,24 +60,6 @@
                     "include": "source.css.high-js"
                 }
             ]
-        },
-
-        {
-            "begin": "/\\*convo\\*/\\s*`",
-            "beginCaptures": {
-                "0":{
-                    "name": "support.type"
-                }
-            },
-            "end": "`",
-            "endCaptures":{
-                "0": "support.type"
-            },
-            "patterns": [
-                {
-                    "include": "source.convo"
-                }
-            ]
         }
     ]
 

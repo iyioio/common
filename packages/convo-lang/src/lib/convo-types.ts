@@ -33,7 +33,6 @@ export type ConvoErrorType=(
     'function-args-type-not-an-object'|
     'suspended-scheme-statements-not-supported'|
     'zod-object-expected'|
-    'scope-already-suspended'|
     'scope-waiting'|
     'suspension-parent-not-found'|
     'variable-ref-required'|
@@ -42,7 +41,8 @@ export type ConvoErrorType=(
     'invalid-scheme-type'|
     'invalid-variable-name'|
     'invalid-function-name'|
-    'invalid-type-name'
+    'invalid-type-name'|
+    'invalid-register-only-function'
 );
 
 export interface ConvoErrorReferences
@@ -585,6 +585,13 @@ export interface ConvoFunctionDef<P=any,R=any>
     scopeCallback?:ConvoScopeFunction;
 
     disableAutoComplete?:boolean;
+
+    /**
+     * If true the function will only be registered and will not be added the to conversation code.
+     * This is useful for defining library functions or functions that don't need to be tracked as
+     * part of a conversation. Setting registerOnly will for the function to be local.
+     */
+    registerOnly?:boolean;
 }
 
 export interface ConvoDefItem<T=any,R=any>
@@ -596,4 +603,10 @@ export interface ConvoDefItem<T=any,R=any>
     types?:Record<string,ConvoTypeDef['type']>;
     vars?:Record<string,ConvoVarDef['value']>;
     fns?:Record<string,Omit<ConvoFunctionDef,'name'>|((params?:any)=>any)>;
+}
+
+export interface ConvoAppend
+{
+    text:string;
+    messages:ConvoMessage[];
 }

@@ -1,9 +1,16 @@
+
+export type ConvoExecAllowMode='disable'|'ask'|'allow'
+
 export interface ConvoCliConfig
 {
     env?:Record<string,string>;
+    /**
+     * Contains how shell command execution is allowed
+     */
+    allowExec?:ConvoExecAllowMode|ConvoExecConfirmCallback;
 }
 
-export interface ConvoLangCliOptions
+export interface ConvoCliOptions
 {
     /**
      * Path to a ConvoCliConfig file
@@ -42,4 +49,16 @@ export interface ConvoLangCliOptions
      * If true the output of the executor is buffered to be used later.
      */
     bufferOutput?:boolean;
+
+    /**
+     * Contains how shell command execution is allowed
+     */
+    allowExec?:ConvoExecAllowMode|ConvoExecConfirmCallback;
+
+    /**
+     * Conversation content to prepend to source
+     */
+    prepend?:string;
 }
+
+export type ConvoExecConfirmCallback=(command:string,commandIndex:number)=>Promise<boolean>|boolean;

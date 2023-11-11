@@ -442,7 +442,7 @@ const convo={
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"\\b(true|false|null|undefined|convo|__args|__return|__disableAutoComplete)\\b",
+            "match":"\\b(true|false|null|undefined|convo|__args|__return|__error|__disableAutoComplete)\\b",
             "name":"constant.language"
         },
         "heredoc":{

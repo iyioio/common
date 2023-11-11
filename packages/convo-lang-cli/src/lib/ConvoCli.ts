@@ -2,18 +2,19 @@ import { aiCompleteConvoModule } from '@iyio/ai-complete';
 import { openAiModule } from '@iyio/ai-complete-openai';
 import { EnvParams, initRootScope, rootScope } from "@iyio/common";
 import { Conversation, parseConvoCode } from "@iyio/convo-lang";
-import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync } from "@iyio/node-common";
+import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync, readStdInLineAsync } from "@iyio/node-common";
 import { writeFile } from "fs/promises";
 import { homedir } from 'node:os';
-import { ConvoCliConfig, ConvoLangCliOptions } from "./convo-cli-types";
+import { ConvoCliConfig, ConvoCliOptions, ConvoExecAllowMode, ConvoExecConfirmCallback } from "./convo-cli-types";
+import { createConvoExec } from './convo-exec';
 
 let configPromise:Promise<ConvoCliConfig>|null=null;
-const getConfigAsync=(options:ConvoLangCliOptions):Promise<ConvoCliConfig>=>
+export const getConvoCliConfigAsync=(options:ConvoCliOptions):Promise<ConvoCliConfig>=>
 {
     return configPromise??(configPromise=_getConfigAsync(options));
 }
 
-const _getConfigAsync=async (options:ConvoLangCliOptions):Promise<ConvoCliConfig>=>
+const _getConfigAsync=async (options:ConvoCliOptions):Promise<ConvoCliConfig>=>
 {
     let configPath=options.config??'~/.config/convo/convo.json';
 
@@ -28,16 +29,16 @@ const _getConfigAsync=async (options:ConvoLangCliOptions):Promise<ConvoCliConfig
     return await readFileAsJsonAsync(configPath);
 }
 
-let initPromise:Promise<void>|null=null;
-const initAsync=(options:ConvoLangCliOptions):Promise<void>=>
+let initPromise:Promise<ConvoCliOptions>|null=null;
+export const initConvoCliAsync=(options:ConvoCliOptions):Promise<ConvoCliOptions>=>
 {
     return initPromise??(initPromise=_initAsync(options));
 }
 
-const _initAsync=async (options:ConvoLangCliOptions):Promise<void>=>
+const _initAsync=async (options:ConvoCliOptions):Promise<ConvoCliOptions>=>
 {
 
-    const config=await getConfigAsync(options);
+    const config=await getConvoCliConfigAsync(options);
 
     initRootScope(reg=>{
         if(config.env){
@@ -49,17 +50,32 @@ const _initAsync=async (options:ConvoLangCliOptions):Promise<void>=>
         reg.use(aiCompleteConvoModule);
     })
     await rootScope.getInitPromise();
+    return config;
 }
 
-export class ConvoLangCli
+export const createConvoCliAsync=async (options:ConvoCliOptions):Promise<ConvoCli>=>{
+    await initConvoCliAsync(options);
+    return new ConvoCli(options);
+}
+
+export class ConvoCli
 {
 
-    public readonly options:ConvoLangCliOptions;
+    public readonly options:ConvoCliOptions;
 
     public readonly buffer:string[]=[];
 
-    public constructor(options:ConvoLangCliOptions){
+    public readonly convo:Conversation;
+
+    public allowExec?:ConvoExecAllowMode|ConvoExecConfirmCallback;
+
+    public constructor(options:ConvoCliOptions){
+        this.allowExec=options.allowExec;
         this.options=options;
+        this.convo=new Conversation();
+        if(options.prepend){
+            this.convo.append(options.prepend);
+        }
     }
 
     private out(...chunks:string[]){
@@ -84,7 +100,11 @@ export class ConvoLangCli
 
     public async executeAsync():Promise<void>
     {
-        await initAsync(this.options);
+        const config=await initConvoCliAsync(this.options);
+        this.convo.autoUpdateCompletionService();
+        if(!this.allowExec){
+            this.allowExec=config.allowExec??'ask';
+        }
 
         if(this.options.inline){
             if(this.options.parse){
@@ -104,15 +124,33 @@ export class ConvoLangCli
         }
     }
 
+    private readonly execConfirmAsync=async (command:string):Promise<boolean>=>{
+        if(this.allowExec==='allow'){
+            return true;
+        }else if(this.allowExec==='ask'){
+            process.stdout.write(`Exec command requested\n> ${command}\nAllow y/N?\n`);
+            const line=(await readStdInLineAsync()).toLowerCase();
+            return line==='yes' || line==='y';
+        }else{
+            return false;
+        }
+    }
+
     private async executeSourceCode(code:string):Promise<void>{
 
-        const convo=new Conversation();
-        convo.append(code);
-        const r=await convo.completeAsync();
+        this.convo.defineFunction({
+            name:'exec',
+            registerOnly:true,
+            scopeCallback:createConvoExec(typeof this.allowExec==='function'?
+                this.allowExec:this.execConfirmAsync
+            )
+        })
+        this.convo.append(code);
+        const r=await this.convo.completeAsync();
         if(r.error){
             throw r.error;
         }
-        this.out(convo.convo);
+        this.out(this.convo.convo);
     }
 
     private parseCode(code:string){

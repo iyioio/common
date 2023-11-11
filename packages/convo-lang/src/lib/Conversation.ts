@@ -1,9 +1,10 @@
+import { delayAsync } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoTags, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 
@@ -25,14 +26,14 @@ export class Conversation
     private _messages:ConvoMessage[]=[];
     public get messages(){return this._messages}
 
-    private readonly _onMessagesChanged=new Subject<void>();
-    public get onMessagesChanged():Observable<void>{return this._onMessagesChanged}
+    private readonly _onAppend=new Subject<ConvoAppend>();
+    public get onAppend():Observable<ConvoAppend>{return this._onAppend}
 
 
     public userRoles:string[];
     public roleMap:Record<string,string>
 
-    private readonly completionService?:ConvoCompletionService;
+    private completionService?:ConvoCompletionService;
 
     public readonly externFunctions:Record<string,ConvoScopeFunction>={}
 
@@ -56,6 +57,13 @@ export class Conversation
         this._isDisposed=true;
     }
 
+    public autoUpdateCompletionService()
+    {
+        if(!this.completionService){
+            this.completionService=convoCompletionService.get();
+        }
+    }
+
     public append(messages:string,mergeWithPrev=false):ConvoParsingResult{
         const r=parseConvoCode(messages);
         if(r.error){
@@ -73,7 +81,10 @@ export class Conversation
             }
         }
 
-        this._onMessagesChanged.next();
+        this._onAppend.next({
+            text:messages,
+            messages:r.result??[]
+        });
 
         return r;
     }
@@ -201,9 +212,18 @@ export class Conversation
                         lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
                     }
                 }
-                lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                if( (typeof lastResultValue === 'string') &&
+                    lastResultValue.length>50 &&
+                    lastResultValue.includes('\n') &&
+                    !lastResultValue.includes('---')
+                ){
+                    lines.push(`${convoResultReturnName}=---\n${lastResultValue}\n---`)
+                }else{
+                    lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                }
                 lines.push('');
                 this.append(lines.join('\n'),true);
+                await delayAsync(5000)
 
                 if(disableAutoComplete){
                     lastResultValue=undefined;
@@ -432,8 +452,15 @@ export class Conversation
             if(out.length){
                 out.push('\n');
             }
-            out.push(this.createFunctionImpl(fn));
-            out.push('\n');
+            if(fn.registerOnly){
+                if(fn.local===false){
+                    throw new ConvoError('invalid-register-only-function',undefined,'Register only functions can only be local');
+                }
+                this.createFunctionImpl(fn);
+            }else{
+                out.push(this.createFunctionImpl(fn));
+                out.push('\n');
+            }
         }
 
         return out.length?this.append(out.join('')):undefined;
@@ -477,6 +504,9 @@ export class Conversation
         }
 
         if(fnDef.body){
+            if(fnDef.registerOnly){
+                throw new ConvoError('invalid-register-only-function',undefined,'Register only function are not allowed to define a body')
+            }
             const returnType=fnDef.returnScheme?.name??fnDef.returnTypeName;
             return `${fnSig} ->${returnType?' '+returnType:''} (\n${fnDef.body}\n)`;
         }else{

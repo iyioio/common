@@ -4,6 +4,7 @@ import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
 export const convoResultReturnName='__return';
+export const convoResultErrorName='__error';
 export const convoDisableAutoCompleteName='__disableAutoComplete';
 export const convoStructFnName='struct';
 export const convoMapFnName='map';

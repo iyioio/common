@@ -1,7 +1,7 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import { Lock, delayAsync } from '@iyio/common';
-import { parseConvoCode } from '@iyio/convo-lang';
-import { ConvoLangCli } from '@iyio/convo-lang-cli';
+import { Lock } from '@iyio/common';
+import { convoResultErrorName, parseConvoCode } from '@iyio/convo-lang';
+import { ConvoCli } from '@iyio/convo-lang-cli';
 import * as path from 'path';
 import { ExtensionContext, ProgressLocation, Range, commands, window, workspace } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
@@ -180,47 +180,66 @@ const registerCommands=(context:ExtensionContext)=>{
 
             let done=false;
 
-            try{
-                const lock=new Lock(1);
+            const startLength=src.length;
+            let tmpAppend='';
 
-                const startLength=src.length;
+            const lock=new Lock(1);
 
-                const setCodeAsync=async (code:string,isFinal:boolean,append:boolean)=>{
-                    const release=await lock.waitAsync();
-                    try{
+            const setCodeAsync=async (code:string,isFinal:boolean,append:boolean)=>{
+                if(token.isCancellationRequested){
+                    return;
+                }
+                const release=await lock.waitAsync();
+                try{
+                    if(done && !isFinal){
+                        return;
+                    }
+                    if(!isFinal && tmpAppend){
+                        code=tmpAppend+'\n\n'+code;
+                    }
+                    const editor=await window.showTextDocument(document);
+
+                    await editor.edit(builder=>{
                         if(done && !isFinal){
                             return;
                         }
-                        const editor=await window.showTextDocument(document);
-
-                        await editor.edit(builder=>{
-                            if(done && !isFinal){
-                                return;
-                            }
-                            const all=append?
-                                new Range(document.positionAt(startLength),document.positionAt(document.getText().length)):
-                                new Range(document.positionAt(0),document.positionAt(document.getText().length));
-                            builder.replace(all,code);
-                        })
-                    }finally{
-                        release();
-                    }
+                        const all=append?
+                            new Range(document.positionAt(startLength),document.positionAt(document.getText().length)):
+                            new Range(document.positionAt(0),document.positionAt(document.getText().length));
+                        builder.replace(all,code);
+                    })
+                }finally{
+                    release();
                 }
+            }
+
+            try{
 
 
-                (async ()=>{
-                    let i=0;
-                    while(!done){
-                        await setCodeAsync(`\n\n// completing.${'.'.repeat(i%4)}\n`,false,true);
-                        i++;
-                        if(done){
-                            break;
-                        }
-                        await delayAsync(1000);
+                let msg=`\n\n// completing...`;
+                await setCodeAsync(msg,false,true);
+
+                const cli=new ConvoCli({inline:src,bufferOutput:true,allowExec:async (command)=>{
+                    if(token.isCancellationRequested){
+                        return false;
                     }
-                })()
+                    const option=await window.showWarningMessage(
+                        `exec > ${command}`, 'Deny', 'Allow'
+                    );
+                    tmpAppend+=`\n// exec > ${command.split('\n').join(' ')}`;
+                    await setCodeAsync(msg,false,true);
+                    return option==='Allow';
+                }});
 
-                const cli=new ConvoLangCli({inline:src,bufferOutput:true});
+                let firstAppend=true;
+                cli.convo.onAppend.subscribe(v=>{
+                    if(firstAppend){
+                        firstAppend=false;
+                        return;
+                    }
+                    tmpAppend+='\n\n'+v.text
+                    setCodeAsync(msg,false,true);
+                })
 
                 await cli.executeAsync();
                 done=true;
@@ -228,7 +247,9 @@ const registerCommands=(context:ExtensionContext)=>{
                 if(token.isCancellationRequested){
                     return;
                 }
-                await setCodeAsync(cli.buffer.join(''),true,false);
+                await setCodeAsync(cli.buffer.join('')+'\n\n> user\n',true,false);
+            }catch(ex){
+                await setCodeAsync(`${src}\n\n> result\n${convoResultErrorName}=${JSON.stringify(ex,null,4)}`,true,false);
             }finally{
                 done=true;
             }

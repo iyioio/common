@@ -82,6 +82,16 @@ export class ConvoExecutionContext
                 }),msg.fn.name);
             }
         }
+        if(externFunctions){
+            for(const e in externFunctions){
+                const fn=externFunctions[e];
+                if(!fn || this.sharedVars[e]!==undefined){
+                    continue;
+                }
+                this.setVar(true,createConvoScopeFunction(fn),e);
+
+            }
+        }
     }
 
     public clearSharedSetters(){
@@ -560,15 +570,13 @@ export class ConvoExecutionContext
 
 
     private suspendScope(scope:ConvoScope,waitFor?:ConvoScope){
-        if(scope.si){
-            console.error('Scope already suspended',scope);
-            throw new ConvoError('scope-already-suspended',{statement:scope.s})
+        if(!scope.si){
+            scope.si=(this.nextSuspendId++).toString();
         }
-        scope.si=(this.nextSuspendId++).toString();
+        this.suspendedScopes[scope.si]=scope;
         if(waitFor){
             scope.wi=waitFor.si;
         }
-        this.suspendedScopes[scope.si]=scope;
     }
 
     private completeScope(scope:ConvoScope,parent:ConvoScope|undefined,defaultScope:ConvoScope){
@@ -588,27 +596,19 @@ export class ConvoExecutionContext
 
         delete scope.pi;
 
+        const resume:ConvoScope[]|null=scope.si?[]:null;
+
         if(scope.si){
             const si=scope.si;
             delete scope.si;
             delete this.suspendedScopes[si];
-            const resume:ConvoScope[]=[];
             for(const e in this.suspendedScopes){
                 const ss=this.suspendedScopes[e];
                 if(ss?.wi===si){
                     delete this.suspendedScopes[e];
-                    delete ss.si;
                     delete ss.wi;
-                    resume.push(ss);
+                    (resume as ConvoScope[]).push(ss);
                 }
-            }
-            for(const r of resume){
-                const parent=r.pi?this.suspendedScopes[r.pi]:undefined;
-                if(r.pi && !parent){
-                    throw new ConvoError('suspension-parent-not-found',{statement:scope.s});
-                }
-                delete r.pi;
-                this.executeScope(r,parent,defaultScope,scope);
             }
         }
 
@@ -618,6 +618,17 @@ export class ConvoExecutionContext
             delete scope.onError;
             for(let i=0;i<oc.length;i++){
                 oc[i]?.(scope.v);
+            }
+        }
+
+        if(resume){
+            for(const r of resume){
+                const parent=r.pi?this.suspendedScopes[r.pi]:undefined;
+                if(r.pi && !parent){
+                    throw new ConvoError('suspension-parent-not-found',{statement:scope.s});
+                }
+                delete r.pi;
+                this.executeScope(r,parent,defaultScope,scope);
             }
         }
     }

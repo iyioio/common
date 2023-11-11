@@ -1,8 +1,9 @@
 import { parseCliArgsT, safeParseNumberOrUndefined } from "@iyio/common";
-import { ConvoLangCli } from "../lib/ConvoLangCli";
-import { ConvoLangCliOptions } from "../lib/convo-cli-types";
+import { stopReadingStdIn } from "@iyio/node-common";
+import { ConvoCli } from "../lib/ConvoCli";
+import { ConvoCliOptions } from "../lib/convo-cli-types";
 
-type Args=ConvoLangCliOptions;
+type Args=ConvoCliOptions;
 const args=parseCliArgsT<Args>({
     args:process.argv,
     startIndex:2,
@@ -15,18 +16,21 @@ const args=parseCliArgsT<Args>({
         parse:args=>args.length?true:false,
         parseFormat:args=>safeParseNumberOrUndefined(args[0]),
         bufferOutput:args=>args.length?true:false,
+        allowExec:args=>args[0] as any,
+        prepend:args=>args[0],
 
     }
 }).parsed as Args;
 
 const main=async()=>{
-    const cli=new ConvoLangCli(args);
+    const cli=new ConvoCli(args);
     try{
         await cli.executeAsync();
     }catch(ex){
         console.error('convo execution failed',ex);
         process.exit(1);
     }
+    stopReadingStdIn();
 }
 
 main();

@@ -541,4 +541,24 @@ describe('convo',()=>{
 
     })
 
+    it('should complete multiple suspensions',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            > testFn(delay:number)->(
+                sleep(delay)
+                sleep(delay)
+                do(sleep(delay))
+                do(do(do(do(sleep(delay)))))
+                return(sleep(delay))
+            )
+
+        `);
+
+        const v=await convo.callFunctionAsync('testFn',{delay:1});
+        expect(typeof v).toBe('number');
+    })
+
 });
