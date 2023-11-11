@@ -1,7 +1,7 @@
 import { aiCompleteConvoModule } from '@iyio/ai-complete';
 import { openAiModule } from '@iyio/ai-complete-openai';
 import { EnvParams, initRootScope, rootScope } from "@iyio/common";
-import { Conversation, parseConvoCode } from "@iyio/convo-lang";
+import { Conversation, convoVars, parseConvoCode } from "@iyio/convo-lang";
 import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync, readStdInLineAsync } from "@iyio/node-common";
 import { writeFile } from "fs/promises";
 import { homedir } from 'node:os';
@@ -76,6 +76,20 @@ export class ConvoCli
         if(options.prepend){
             this.convo.append(options.prepend);
         }
+        if(this.options.exeCwd){
+            this.convo.unregisteredVars[convoVars.__cwd]=this.options.exeCwd;
+        }
+    }
+
+    private _isDisposed=false;
+    public get isDisposed(){return this._isDisposed}
+    public dispose()
+    {
+        if(this._isDisposed){
+            return;
+        }
+        this._isDisposed=true;
+        this.convo.dispose();
     }
 
     private out(...chunks:string[]){

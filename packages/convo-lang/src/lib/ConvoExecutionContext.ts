@@ -678,7 +678,7 @@ export class ConvoExecutionContext
 
         const vars=(shared || !scope)?this.sharedVars:scope.vars;
 
-        if(vars===this.sharedVars && (typeof value !== 'function') && !this.sharedSetters.includes(name)){
+        if(shared!==false && vars===this.sharedVars && (typeof value !== 'function') && !this.sharedSetters.includes(name)){
             this.sharedSetters.push(name);
         }
 

@@ -59,6 +59,11 @@ export interface ConvoCliOptions
      * Conversation content to prepend to source
      */
     prepend?:string;
+
+    /**
+     * The current working directory used for context execution
+     */
+    exeCwd?:string;
 }
 
 export type ConvoExecConfirmCallback=(command:string,commandIndex:number)=>Promise<boolean>|boolean;

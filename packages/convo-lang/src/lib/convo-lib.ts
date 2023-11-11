@@ -23,6 +23,10 @@ export const convoEnumFnName='enum';
 export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
 
+export const convoVars={
+    __cwd:'__cwd'
+} as const;
+
 export const convoTags={
     disableAutoComplete:'disableAutoComplete'
 } as const;

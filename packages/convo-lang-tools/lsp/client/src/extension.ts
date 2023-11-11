@@ -219,17 +219,26 @@ const registerCommands=(context:ExtensionContext)=>{
                 let msg=`\n\n// completing...`;
                 await setCodeAsync(msg,false,true);
 
-                const cli=new ConvoCli({inline:src,bufferOutput:true,allowExec:async (command)=>{
-                    if(token.isCancellationRequested){
-                        return false;
+                const cli=new ConvoCli({
+                    inline:src,
+                    bufferOutput:true,
+                    exeCwd:document.uri.scheme==='file'?path.dirname(document.uri.fsPath):undefined,
+                    allowExec:async (command)=>{
+                        if(token.isCancellationRequested){
+                            return false;
+                        }
+                        const option=await window.showWarningMessage(
+                            `exec > ${command}`, 'Deny', 'Allow'
+                        );
+                        tmpAppend+=`\n// exec > ${command.split('\n').join(' ')}`;
+                        await setCodeAsync(msg,false,true);
+                        return option==='Allow';
                     }
-                    const option=await window.showWarningMessage(
-                        `exec > ${command}`, 'Deny', 'Allow'
-                    );
-                    tmpAppend+=`\n// exec > ${command.split('\n').join(' ')}`;
-                    await setCodeAsync(msg,false,true);
-                    return option==='Allow';
-                }});
+                });
+
+                token.onCancellationRequested(()=>{
+                    cli.convo.dispose();
+                })
 
                 let firstAppend=true;
                 cli.convo.onAppend.subscribe(v=>{

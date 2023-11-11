@@ -1,10 +1,10 @@
-import { createConvoScopeFunction } from "@iyio/convo-lang";
+import { convoVars, createConvoScopeFunction } from "@iyio/convo-lang";
 import { execAsync } from "@iyio/node-common";
 import { ConvoExecConfirmCallback } from "./convo-cli-types";
 
 
 export const createConvoExec=(confirm:ConvoExecConfirmCallback)=>{
-    return createConvoScopeFunction(async scope=>{
+    return createConvoScopeFunction(async (scope,exe)=>{
         if(!scope.paramValues?.length){
             return '';
         }
@@ -20,8 +20,10 @@ export const createConvoExec=(confirm:ConvoExecConfirmCallback)=>{
                 out.push('Access denied');
                 break;
             }
+            const cwd=exe.getVar(convoVars.__cwd,undefined,scope,false);
             const r=await execAsync({
                 cmd,
+                cwd:(typeof cwd === 'string')?cwd:undefined,
                 silent:true,
                 ignoreErrors:true,
             })

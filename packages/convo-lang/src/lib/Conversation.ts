@@ -1,4 +1,3 @@
-import { delayAsync } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
@@ -29,13 +28,19 @@ export class Conversation
     private readonly _onAppend=new Subject<ConvoAppend>();
     public get onAppend():Observable<ConvoAppend>{return this._onAppend}
 
+    /**
+     * Unregistered variables will be available during execution but will not be added to the code
+     * of the conversation. For example the __cwd var is often used to set the current working
+     * directory but is not added to the conversation code.
+     */
+    public readonly unregisteredVars:Record<string,any>={};
 
     public userRoles:string[];
     public roleMap:Record<string,string>
 
     private completionService?:ConvoCompletionService;
 
-    public readonly externFunctions:Record<string,ConvoScopeFunction>={}
+    public readonly externFunctions:Record<string,ConvoScopeFunction>={};
 
     public constructor({
         userRoles=['user'],
@@ -162,7 +167,14 @@ export class Conversation
             return {messages:[]}
         }
 
+        for(const e in this.unregisteredVars){
+            flat.exe.setVar(false,this.unregisteredVars[e],e);
+        }
+
         const completion=await getCompletion(flat);
+        if(this._isDisposed){
+            return {messages:[]};
+        }
 
         const exe=flat.exe;
         let cMsg:ConvoCompletionMessage|undefined=undefined;
@@ -193,6 +205,9 @@ export class Conversation
                     continue;
                 }
                 const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
+                if(this._isDisposed){
+                    return {messages:[]}
+                }
                 const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
                 const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
                 const disableAutoComplete=(
@@ -223,7 +238,6 @@ export class Conversation
                 }
                 lines.push('');
                 this.append(lines.join('\n'),true);
-                await delayAsync(5000)
 
                 if(disableAutoComplete){
                     lastResultValue=undefined;

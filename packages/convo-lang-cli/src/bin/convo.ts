@@ -18,6 +18,7 @@ const args=parseCliArgsT<Args>({
         bufferOutput:args=>args.length?true:false,
         allowExec:args=>args[0] as any,
         prepend:args=>args[0],
+        exeCwd:args=>args[0],
 
     }
 }).parsed as Args;
@@ -29,6 +30,8 @@ const main=async()=>{
     }catch(ex){
         console.error('convo execution failed',ex);
         process.exit(1);
+    }finally{
+        cli.dispose();
     }
     stopReadingStdIn();
 }
