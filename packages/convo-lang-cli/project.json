@@ -11,7 +11,7 @@
                 "outputPath": "dist/packages/convo-lang-cli",
                 "main": "packages/convo-lang-cli/src/index.ts",
                 "tsConfig": "packages/convo-lang-cli/tsconfig.lib.json",
-                "assets": ["packages/convo-lang-cli/*.md"],
+                "assets": ["packages/convo-lang-cli/*.md","assets/**"],
                 "esbuildTargets":[
                     {
                         "srcDir":"packages/convo-lang-cli/src/bin",

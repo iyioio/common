@@ -2,7 +2,7 @@
     "name": "convo-lang-tools",
     "displayName": "convo-lang",
     "description": "A conversational language 🤓",
-    "version": "0.4.6",
+    "version": "0.4.8",
     "type": "commonjs",
     "sideEffects": false,
     "publisher": "IYIO",
@@ -15,6 +15,11 @@
     ],
     "license":"Apache-2.0",
     "main": "./lsp/client/out/extension",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/iyioio/common.git",
+        "directory": "packages/convo-lang-cli"
+    },
     "contributes": {
         "languages": [
             {

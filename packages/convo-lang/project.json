@@ -11,7 +11,7 @@
                 "outputPath": "dist/packages/convo-lang",
                 "main": "packages/convo-lang/src/index.ts",
                 "tsConfig": "packages/convo-lang/tsconfig.lib.json",
-                "assets": ["packages/convo-lang/*.md"]
+                "assets": ["packages/convo-lang/*.md","assets/**"]
             }
         },
         "publish": {

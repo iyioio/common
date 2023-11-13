@@ -641,6 +641,16 @@ export const defaultConvoVars={
         })
     }),
 
+    rand:createConvoScopeFunction(scope=>{
+        const range=scope.paramValues?.[0];
+        if(typeof range=== 'number'){
+            return Math.round(Math.random()*range);
+        }else{
+            return Math.random();
+        }
+
+    }),
+
 } as const;
 
 Object.freeze(defaultConvoVars);
