@@ -21,5 +21,5 @@ export type JwtProvider=(uri:string)=>string|undefined;
  */
 export interface JwtValidator
 {
-    validateJwtAsync(jwt:string):Promise<boolean>;
+    validateJwtAsync(jwt:string,options?:Record<string,any>):Promise<boolean>;
 }

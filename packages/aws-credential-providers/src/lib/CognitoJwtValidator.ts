@@ -34,19 +34,31 @@ export class CognitoJwtValidator implements JwtValidator
         this.config=config;
     }
 
-    private verifier:CognitoJwtVerifier<any,any,any>|null=null;
+    private verifierId:CognitoJwtVerifier<any,any,any>|null=null;
+    private verifierAccess:CognitoJwtVerifier<any,any,any>|null=null;
 
-    public async validateJwtAsync(jwt:string):Promise<boolean>
+    public async validateJwtAsync(jwt:string,options?:Record<string,any>):Promise<boolean>
     {
-        if(!this.verifier){
-            this.verifier=CognitoJwtVerifier.create({
+
+        const tokenUse:'access'|'id'=options?.['tokenUse']??'id';
+        if(tokenUse!=='id' && tokenUse!=='access'){
+            return false;
+        }
+
+        const verifier=tokenUse==='id'?
+            (this.verifierId??(this.verifierId=CognitoJwtVerifier.create({
                 userPoolId:this.config.userPoolId,
                 clientId:this.config.clientId,
                 tokenUse:"id",
-            })
-        }
+            }))):
+            (this.verifierId??(this.verifierId=CognitoJwtVerifier.create({
+                userPoolId:this.config.userPoolId,
+                clientId:this.config.clientId,
+                tokenUse:"access",
+            })));
+
         try{
-            await this.verifier.verify(jwt);
+            await verifier.verify(jwt);
             return true;
         }catch{
             return false;
