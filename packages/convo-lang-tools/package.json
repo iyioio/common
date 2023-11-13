@@ -13,7 +13,7 @@
     "activationEvents": [
         "onLanguage:convo.source"
     ],
-    "license":"Apache-2.0",
+    "license": "Apache-2.0",
     "main": "./lsp/client/out/extension",
     "repository": {
         "type": "git",
@@ -61,23 +61,23 @@
             }
         ],
         "commands": [
-			{
-				"command": "convo.complete",
-				"title": "Complete Convo Conversation",
+            {
+                "command": "convo.complete",
+                "title": "Complete Convo Conversation",
                 "shortTitle": "convo"
-			},
-			{
-				"command": "convo.parse",
-				"title": "Parse Convo Conversation"
-			}
-		],
+            },
+            {
+                "command": "convo.parse",
+                "title": "Parse Convo Conversation"
+            }
+        ],
         "keybindings": [
-			{
-				"command": "convo.complete",
-				"key": "ctrl+r",
-				"mac": "cmd+r",
-				"when": "editorTextFocus && editorLangId == 'source.convo'"
-			}
+            {
+                "command": "convo.complete",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "editorTextFocus && editorLangId == 'source.convo'"
+            }
         ]
     }
 }
