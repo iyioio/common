@@ -336,9 +336,9 @@ export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements
         }));
     }
 
-    public putIntoTable<T extends Record<string,any>>(table:DataTableDescription<T>,item:T):Promise<void>
+    public putIntoTable<T extends Record<string,any>>(table:DataTableDescription<T>,item:T,allowOverride=false):Promise<void>
     {
-        return this.putAsync(getDataTableId(table),table.primaryKey,item);
+        return this.putAsync(getDataTableId(table),allowOverride?null:table.primaryKey,item);
     }
 
     public async patchAsync<T>(tableName:string, key:Partial<T>, item:ItemPatch<T>, extendedOptions?:ExtendedItemUpdateOptions):Promise<void>
