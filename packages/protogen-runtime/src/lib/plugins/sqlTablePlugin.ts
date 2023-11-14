@@ -185,11 +185,16 @@ const sqlTypeMap:Record<string,string>={
 
 const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):string|undefined=>{
     const type=node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
-    if(type || !node.refType || !allNodes){
+    if(type || !allNodes){
         return type;
     }
 
-    const t=node.refType.path[0];
+    const refType=node.types[0];
+    if(!refType?.isRefType){
+        return undefined;
+    }
+
+    const t=refType.path[0];
     if(!t){
         return undefined;
     }
