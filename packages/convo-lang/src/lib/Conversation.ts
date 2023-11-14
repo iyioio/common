@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoTags, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
 import { ConvoAppend, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
@@ -185,13 +185,14 @@ export class Conversation
 
         for(const msg of completion){
 
+            const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
             if(msg.content){
                 cMsg=msg;
-                this.append(`> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                this.append(`${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
             }
 
             if(msg.callFn){
-                const result=this.append(`> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
+                const result=this.append(`${tagsCode}> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
                 const callMessage=result.result?.[0];
                 if(result.result?.length!==1 || !callMessage){
                     throw new ConvoError(
@@ -307,7 +308,8 @@ export class Conversation
                 continue;
             }
             const flat:FlatConvoMessage={
-                role:this.getMappedRole(msg.role)
+                role:this.getMappedRole(msg.role),
+                tags:msg.tags?convoTagsToMap(msg.tags):undefined,
             }
             if(msg.fn){
                 if(msg.fn.local || msg.fn.call){
@@ -323,6 +325,9 @@ export class Conversation
                         flat.called=prev.fn;
                         flat.calledReturn=exe.getVar(convoResultReturnName,undefined,undefined,false);
                         flat.calledParams=exe.getConvoFunctionArgsValue(prev.fn);
+                        if(prev.tags){
+                            flat.tags=flat.tags?{...convoTagsToMap(prev.tags),...flat.tags}:convoTagsToMap(prev.tags)
+                        }
                     }else{
                         continue;
                     }
@@ -356,7 +361,26 @@ export class Conversation
         return {
             exe,
             messages,
-            conversation:this
+            conversation:this,
+            debug:exe.getVar(convoVars.__debug,undefined,undefined,false)?(...args:any[])=>{
+                if(!args.length){
+                    return;
+                }
+                const out:string[]=[];
+                for(const v of args){
+                    if(typeof v === 'string'){
+                        out.push(v);
+                    }else{
+                        try{
+                            out.push(JSON.stringify(v,null,4)??'');
+                        }catch{
+                            out.push(v?.toString()??'');
+                        }
+                    }
+                }
+                const debugComment=convoStringToComment(out.join('\n'));
+                this.append(`> debug\n${debugComment}}`);
+            }:undefined
         }
     }
 

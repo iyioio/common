@@ -5,7 +5,7 @@ import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingResult, C
 type StringType='"'|"'"|'---'|'>';
 
 const fnMessageReg=/(>)\s*(\w+)?\s+(\w+)\s*([*?!]*)\s*(\()/gs;
-const topLevelMessageReg=/(>)\s*(do|no\s+result|result|define)/gs;
+const topLevelMessageReg=/(>)\s*(do|no\s+result|result|define|debug)/gs;
 const roleReg=/(>)\s*(\w+)\s*([*?!]*)/gs;
 
 const statementReg=/([\s\n\r]*[,;]*[\s\n\r]*)((#|\/\/|@|\)|\}\}|\}|\]|<<|>|$)|((\w+|"[^"]*"|'[^']*')(\??):)?\s*(([\w.]+)\s*=)?\s*('|"|-{3,}|[\w.]+\s*(\()|[\w.]+|-?[\d.]+|\{|\[))/gs;

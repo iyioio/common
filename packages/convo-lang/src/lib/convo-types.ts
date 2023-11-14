@@ -485,6 +485,9 @@ export interface FlatConvoMessage
     calledReturn?:any;
 
 
+    tags?:Record<string,string|undefined>;
+
+
 }
 
 export interface ConvoCompletionMessage
@@ -493,6 +496,7 @@ export interface ConvoCompletionMessage
     content?:string;
     callFn?:string;
     callParams?:any;
+    tags?:Record<string,string|undefined>;
 }
 
 export interface ConvoCompletionService
@@ -514,6 +518,10 @@ export interface FlatConvoConversation
     exe:ConvoExecutionContext;
     messages:FlatConvoMessage[];
     conversation:Conversation;
+    /**
+     * If defined the debug function should be written to with debug info.
+     */
+    debug?:(...args:any[])=>void;
 }
 
 export interface ConvoExecuteResult

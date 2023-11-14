@@ -283,18 +283,20 @@ export class AiCompletionService implements ConvoCompletionService
                     called:msg.called.name,
                     calledParams:msg.calledParams,
                     calledReturn:msg.calledReturn,
+                    metadata:msg.tags,
                 })
             }else{
                 messages.push({
                     id:baseId+i,
                     type:'text',
                     role:isAiCompletionRole(msg.role)?msg.role:'user',
-                    content:msg.content
+                    content:msg.content,
+                    metadata:msg.tags,
                 });
             }
         }
 
-        const result=await this.completeAsync({messages,functions});
+        const result=await this.completeAsync({messages,functions,debug:flat.debug});
 
         const resultMessage=result.options[0];
         if(!resultMessage){
@@ -304,12 +306,14 @@ export class AiCompletionService implements ConvoCompletionService
         if(resultMessage.message.call){
             return [{
                 callFn:resultMessage.message.call.name,
-                callParams:resultMessage.message.call.params
+                callParams:resultMessage.message.call.params,
+                tags:resultMessage.message.metadata,
             }]
         }else{
             return [{
                 role:resultMessage.message.role,
-                content:resultMessage.message.content
+                content:resultMessage.message.content,
+                tags:resultMessage.message.metadata,
             }]
         }
     }

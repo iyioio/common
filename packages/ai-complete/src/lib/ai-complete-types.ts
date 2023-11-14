@@ -76,6 +76,8 @@ export const AiCompletionMessageScheme=z.object({
 
     url:z.string().optional(),
 
+    metadata:z.record(z.string().optional()).optional(),
+
     /**
      * Base64 blob of data
      */
@@ -162,7 +164,9 @@ export const AiCompletionRequestScheme=z.object({
      */
     preGenerateOnly:z.boolean().optional(),
 })
-export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme>;
+export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme> & {
+    debug?:(...args:any[])=>void;
+};
 
 export type AiCompletionMessageOptionalId=Omit<AiCompletionMessage,'id'> & {
     id?:string;

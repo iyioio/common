@@ -169,7 +169,7 @@ const convo={
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|result|define)",
+            "begin": "^\\s*(>)\\s*(do|result|define|debug)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -442,7 +442,7 @@ const convo={
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"\\b(true|false|null|undefined|convo|__args|__return|__error|__disableAutoComplete)\\b",
+            "match":"\\b(true|false|null|undefined|convo|__args|__return|__error|__debug|__disableAutoComplete)\\b",
             "name":"constant.language"
         },
         "heredoc":{

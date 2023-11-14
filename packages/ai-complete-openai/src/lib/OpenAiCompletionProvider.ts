@@ -3,7 +3,7 @@ import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefin
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
 import { ImagesResponse } from 'openai/resources';
-import { ChatCompletionAssistantMessageParam, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam } from 'openai/resources/chat';
+import { ChatCompletionAssistantMessageParam, ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from 'openai/resources/chat';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
@@ -20,7 +20,7 @@ export interface OpenAiCompletionProviderOptions
     secretsName?:string;
 }
 
-const dalle2Model='dall-e-2';
+//const dalle2Model='dall-e-2';
 const dalle3Model='dall-e-3';
 
 export class OpenAiCompletionProvider implements AiCompletionProvider
@@ -135,52 +135,71 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                     content:m.content??'',
                 })))
             }else if(m.type==='function' && m.called){
+                const toolId=m.metadata?.['toolId']??m.called;
                 oMsgs.push({
                     role:'assistant',
                     content:null,
-                    function_call:{
-                        name:m.called,
-                        arguments:JSON.stringify(m.calledParams),
-                    }
+                    tool_calls:[{
+                        id:toolId,
+                        type:'function',
+                        function:{
+                            name:m.called,
+                            arguments:JSON.stringify(m.calledParams),
+                        }
+                    }]
                 })
                 if(m.calledReturn!==undefined){
                     oMsgs.push({
-                        role:'function',
-                        name:m.called,
+                        role:'tool',
+                        tool_call_id:toolId,
                         content:JSON.stringify(m.calledReturn),
                     })
                 }
             }
         }
 
-        const oFns=request.functions?.map(f=>{
-            return deleteUndefined({
-                name:f.name,
-                description:f.description,
-                parameters:f.params??{}
-            })
+        const oFns=request.functions?.map<ChatCompletionTool>(f=>{
+            return {
+                type:"function",
+                function:deleteUndefined({
+                    name:f.name,
+                    description:f.description,
+                    parameters:f.params??{}
+                })
+            }
         })
 
-        const r=await api.chat.completions.create({
+        const cParams:ChatCompletionCreateParams={
             model,
             stream:false,
             messages:oMsgs,
-            functions:oFns?.length?oFns:undefined,
+            tools:oFns?.length?oFns:undefined,
             user:lastMessage?.userId,
-        })
+        };
+        request.debug?.('snd > OpenAi.ChatCompletionCreateParams',cParams);
+
+        const r=await api.chat.completions.create(cParams);
+
+        request.debug?.('rec < OpenAi.ChatCompletionCreateParams',r);
 
         return {options:r.choices.map<AiCompletionOption>(c=>{
 
             let params:Record<string,any>|undefined;
             let callError:AiCompletionFunctionCallError|undefined;;
 
-            if(c.message.function_call?.arguments){
+            const tool=c.message.tool_calls?.find(t=>t.function);
+            const toolFn=tool?.function??c.message.function_call;
+            let fnName:string|undefined=undefined;
+            const toolId=(tool && toolFn)?tool.id:undefined;
+            if(toolFn){
                 try{
-                    params=parse(c.message.function_call.arguments??'{}');
+
+                    fnName=toolFn.name;
+                    params=parse(toolFn.arguments??'{}');
                 }catch(ex){
                     callError={
-                        name:c.message.function_call.name,
-                        error:`Unable to parse arguments - ${(ex as any)?.message}\n${c.message.function_call.arguments}`
+                        name:toolFn.name,
+                        error:`Unable to parse arguments - ${(ex as any)?.message}\n${toolFn.arguments}`
                     }
                 }
             }
@@ -188,16 +207,17 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             return {
                 message:{
                     id:shortUuid(),
-                    type:callError?'function-error':c.message?.function_call?'function':'text',
+                    type:callError?'function-error':fnName?'function':'text',
                     role:c.message?.role,
                     content:c.message?.content??'',
-                    call:(c.message?.function_call && !callError)?{
-                        name:c.message.function_call.name??'',
+                    call:(fnName && !callError)?{
+                        name:fnName,
                         params:params??{}
                     }:undefined,
                     callError,
                     errorCausedById:callError?lastMessage.id:undefined,
                     isError:callError?true:undefined,
+                    metadata:toolId?{toolId}:undefined,
 
                 },
                 confidence:1,

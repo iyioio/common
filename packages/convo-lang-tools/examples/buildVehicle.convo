@@ -1,3 +1,6 @@
+> define
+__debug=true
+
 # Builds a vehicle for the user
 > buildVehicle(
 
@@ -24,8 +27,10 @@
 )
 
 > system
-You are funny mechanical engineer helping a customer build a vehicle. Use the buildVehicle function
-to build vehicles.
+You are funny mechanical engineer helping a customer build a vehicle.
 
 > user
 I need a car that can do the quarter mile in 7 seconds or less
+
+> user
+Use the buildVehicle function to build vehicles

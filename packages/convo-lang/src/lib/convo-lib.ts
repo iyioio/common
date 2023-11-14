@@ -24,7 +24,8 @@ export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
 
 export const convoVars={
-    __cwd:'__cwd'
+    __cwd:'__cwd',
+    __debug:'__debug',
 } as const;
 
 export const convoTags={
@@ -111,6 +112,18 @@ export const setConvoScopeError=(scope:ConvoScope|null|undefined,error:ConvoScop
     }
 }
 
+const notWord=/\W/g;
+const newline=/[\n\r]/g;
+
+export const convoTagMapToCode=(tagsMap:Record<string,string|undefined>,append='',tab=''):string=>{
+    const out:string[]=[];
+    for(const e in tagsMap){
+        const v=tagsMap[e];
+        out.push(`${tab}@${e.replace(notWord,'_')}${v?' '+v.replace(newline,' '):''}`)
+    }
+    return out.join('\n')+append
+}
+
 export const containsConvoTag=(tags:ConvoTag[]|null|undefined,tagName:string):boolean=>{
     if(!tags){
         return false;
@@ -121,6 +134,14 @@ export const containsConvoTag=(tags:ConvoTag[]|null|undefined,tagName:string):bo
         }
     }
     return false;
+}
+
+export const convoTagsToMap=(tags:ConvoTag[]):Record<string,string|undefined>=>{
+    const map:Record<string,string|undefined>={};
+    for(const t of tags){
+        map[t.name]=t.value;
+    }
+    return map;
 }
 
 export const createConvoMetadataForStatement=(statement:ConvoStatement):ConvoMetadata=>{
@@ -252,6 +273,19 @@ export const convoDescriptionToCommentOut=(description:string,tab='',out:string[
 export const convoDescriptionToComment=(description:string,tab=''):string=>{
     const out:string[]=[];
     convoDescriptionToCommentOut(description,tab,out);
+    return out.join('\n');
+}
+
+export const convoStringToCommentOut=(str:string,tab='',out:string[])=>{
+    const lines=str.split('\n');
+    for(let i=0;i<lines.length;i++){
+        const line=lines[i];
+        out.push(`${tab}// ${line}`);
+    }
+}
+export const convoStringToComment=(str:string,tab=''):string=>{
+    const out:string[]=[];
+    convoStringToCommentOut(str,tab,out);
     return out.join('\n');
 }
 

@@ -5,7 +5,7 @@ Convo consists of a series of messages. A message can be a block of text, a bloc
 function definition.
 
 
-![convo](./assets/code-example-1.png)
+![convo](https://raw.githubusercontent.com/iyioio/common/main/packages/convo-lang-cli/assets/code-example-1.png)
 
 ## Configuration
 To allow convo to access OpenAI, create a JSON file called ~/.config/convo/convo.json and add the
