@@ -113,7 +113,7 @@ url      = "localhost"
                         continue;
                     }
 
-                    const type=getSqlType(child);
+                    const type=getSqlType(child,context.nodes);
                     const maxLength=getSqlMaxLength(child,longProps);
 
                     if(type){
@@ -179,10 +179,28 @@ const sqlTypeMap:Record<string,string>={
     booleanMap:'Json',
     dateMap:'Json',
     bigIntMap:'Json',
+    union:'String',
+    enum:'Int'
 }
 
-const getSqlType=(node:ProtoNode):string|undefined=>{
-    return node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
+const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):string|undefined=>{
+    const type=node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
+    if(type || !node.refType || !allNodes){
+        return type;
+    }
+
+    const t=node.refType.path[0];
+    if(!t){
+        return undefined;
+    }
+
+    const r=allNodes.find(n=>n.address===t);
+    if(!r){
+        return undefined;
+    }
+
+    return getSqlType(r);
+
 }
 
 const getSqlMaxLength=(node:ProtoNode,longProps:string[]):number|null=>{
