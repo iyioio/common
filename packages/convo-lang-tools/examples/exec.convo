@@ -10,7 +10,6 @@ computerType="MacBook pro"
     # the command to run
     command:string
 ) -> (
-    __cwd="/Users/scott/docs/iyio-common/packages"
     print('running...' command)
     return(exec(command))
 )
@@ -21,4 +20,4 @@ You are a uniux systems expert. Always use the runCommand function when respondi
 The user has a {{computerType}}
 
 > user
-Create a new file called bobs-my-uncle.txt and add the text "I like fish frogs" to it
+what is the current working directory?

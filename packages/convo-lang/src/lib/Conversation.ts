@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
 import { ConvoAppend, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
@@ -358,29 +358,39 @@ export class Conversation
             messages.push(flat);
         }
 
+
+        const shouldDebug=exe.getVar(convoVars.__debug,undefined,undefined,false);
+        const debug=shouldDebug?(...args:any[])=>{
+            if(!args.length){
+                return;
+            }
+            const out:string[]=[];
+            for(const v of args){
+                if(typeof v === 'string'){
+                    out.push(v);
+                }else{
+                    try{
+                        out.push(JSON.stringify(v,null,4)??'');
+                    }catch{
+                        out.push(v?.toString()??'');
+                    }
+                }
+            }
+            const debugComment=convoStringToComment(out.join('\n'));
+            this.append(`> debug\n${debugComment}`);
+        }:undefined;
+        if(shouldDebug){
+            exe.print=(...args:any[])=>{
+                debug?.(...args);
+                return defaultConvoPrintFunction(...args);
+            }
+        }
+
         return {
             exe,
             messages,
             conversation:this,
-            debug:exe.getVar(convoVars.__debug,undefined,undefined,false)?(...args:any[])=>{
-                if(!args.length){
-                    return;
-                }
-                const out:string[]=[];
-                for(const v of args){
-                    if(typeof v === 'string'){
-                        out.push(v);
-                    }else{
-                        try{
-                            out.push(JSON.stringify(v,null,4)??'');
-                        }catch{
-                            out.push(v?.toString()??'');
-                        }
-                    }
-                }
-                const debugComment=convoStringToComment(out.join('\n'));
-                this.append(`> debug\n${debugComment}}`);
-            }:undefined
+            debug
         }
     }
 
