@@ -21,6 +21,7 @@ export * from "./lib/LockScreenView";
 export * from "./lib/ModalBase";
 export * from "./lib/PageTransition";
 export * from "./lib/PageTransitionOptions";
+export * from "./lib/PanZoomControls";
 export * from "./lib/PanZoomView";
 export * from "./lib/Portal";
 export * from "./lib/PortalRenderer";

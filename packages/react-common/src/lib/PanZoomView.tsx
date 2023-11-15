@@ -1,7 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { base64UrlReg, createBase64DataUrl, isDomNodeDescendantOf, MutableRef, Point } from "@iyio/common";
+import { base64UrlReg, createBase64DataUrl, domListener, isDomNodeDescendantOf, MutableRef, Point } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
+import { PanZoomControls } from "./PanZoomControls";
 
 export interface DragTarget{
     selector?:(elem:Element)=>boolean;
@@ -15,7 +16,7 @@ export interface DragTarget{
 /**
  * Editor mode requires users use the middle button to pan and cmd + scroll wheel to zoom
  */
-export type PanZoomMode='default'|'editor';
+export type PanZoomMode='default'|'editor'|'scroll';
 
 export interface PanZoomViewProps
 {
@@ -64,6 +65,25 @@ export interface PanZoomViewProps
      * Content rendered after the plane element
      */
     afterPlane?:any;
+
+    disabled?:boolean;
+
+    controls?:boolean|((ctrl:PanZoomCtrl)=>any);
+
+    /**
+     * If true a marker will be place in the center of the viewport.
+     */
+    markCenter?:boolean;
+
+    /**
+     * If true contents will not be allowed to fully level the viewport
+     */
+    bound?:boolean;
+
+    /**
+     * If true CMD + PLUS and CMD + MINUS will zoom in and out
+     */
+    listenToKeys?:boolean;
 }
 
 
@@ -83,14 +103,26 @@ export function PanZoomView({
     onBgClick,
     beforePlane,
     afterPlane,
+    disabled,
+    controls,
+    markCenter,
+    bound,
+    listenToKeys
 }:PanZoomViewProps){
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
+    const [plane,setPlane]=useState<HTMLDivElement|null>(null);
 
     const initRef=useRef(initState);
 
-    const ctrl=useMemo(()=>new PanZoomCtrl(initRef.current),[]);
-    const [plane,setPlane]=useState<HTMLDivElement|null>(null);
+    const ctrlRefs=useRef<CtrlRefs>({rootElem,plane,minScale,maxScale,bound});
+    ctrlRefs.current.rootElem=rootElem;
+    ctrlRefs.current.plane=plane;
+    ctrlRefs.current.minScale=minScale;
+    ctrlRefs.current.maxScale=maxScale;
+    ctrlRefs.current.bound=bound;
+
+    const ctrl=useMemo(()=>new PanZoomCtrl(ctrlRefs.current,initRef.current),[]);
 
     const hasBg=(backgroundUrl || backgroundSvg)?true:false;
     let bgIsMutableRef=false;
@@ -121,6 +153,9 @@ export function PanZoomView({
 
         const sub=ctrl.state.subscribe(v=>{
             plane.style.transform=`translate(${v.x}px,${v.y}px) scale(${v.scale})`;
+            stateRef.current.scale=v.scale;
+            stateRef.current.x=v.x;
+            stateRef.current.y=v.y;
             if(hasBg){
                 updateBg(v);
             }
@@ -163,15 +198,20 @@ export function PanZoomView({
         dragY:0,
         dragAnchorX:0,
         dragAnchorY:0,
+        ignoreRest:false,
 
         ignore,
         ignoreClasses,
         dragTargets,
+        disabled,
+        bound,
     })
     stateRef.current.mode=mode;
     stateRef.current.ignore=ignore;
     stateRef.current.ignoreClasses=ignoreClasses;
     stateRef.current.dragTargets=dragTargets;
+    stateRef.current.disabled=disabled;
+    stateRef.current.bound=bound;
 
     const onPoints=useCallback((points:TouchPoint[], simTouch=false)=>{
         if(!plane){
@@ -185,29 +225,28 @@ export function PanZoomView({
         const editorDrag=!simTouch && state.mode==='editor' && dragInput;
         const dragTargetOnly=!simTouch && state.mode==='editor' && !dragInput;
 
-        if(!editorDrag && (!state.dragTarget && (state.ignore || state.ignoreClasses))){
-            for(let i=0;i<points.length;i++){
-                if(matchHierarchy(points[i].target,state.ignoreClasses,state.ignore)){
-                    if(state.dragTargets){
-                        let _continue=false;
-                        for(const t of state.dragTargets){
-                            if(matchHierarchy(points[i].target,t.className,t.selector)){
-                                _continue=true;
-                            }
-                        }
-                        if(_continue){
-                            continue;
+        const shouldIgnore=(target:EventTarget)=>{
+            if(editorDrag || !(state.ignore && !state.ignoreClasses)){
+                return false;
+            }
+            if(matchHierarchy(target,state.ignoreClasses,state.ignore)){
+                if(state.dragTargets){
+                    for(const t of state.dragTargets){
+                        if(matchHierarchy(target,t.className,t.selector)){
+                            return false;
                         }
                     }
-                    points.splice(i,1);
-                    i--;
                 }
+                return true;
+            }else{
+                return false;
             }
         }
 
         const clearDragTarget=()=>{
             const t=state.dragTarget;
             state.dragTarget=null;
+            state.ignoreRest=false;
             t?.dt.onEnd?.({x:state.dragX,y:state.dragY},t.elem);
         }
 
@@ -221,8 +260,15 @@ export function PanZoomView({
             return;
         }
 
+        if(state.ignoreRest || state.disabled){
+            return;
+        }
+
         if(state.dragTargets && !state.dragTarget && !state.anchorPanT && points.length && !editorDrag){
             for(const t of state.dragTargets){
+                if(!points[0]){
+                    continue;
+                }
                 let match=matchHierarchy(points[0].target,t.className,t.selector);
                 if(t.targetParentClass){
                     match=matchHierarchy(match as EventTarget,t.targetParentClass);
@@ -277,6 +323,10 @@ export function PanZoomView({
                     state.anchorX=x;
                     state.anchorY=y;
                 }else{
+                    if(shouldIgnore(t1.target)){
+                        state.ignoreRest=true;
+                        return;
+                    }
                     state.anchorX=state.x;
                     state.anchorY=state.y;
                 }
@@ -327,6 +377,13 @@ export function PanZoomView({
             clearDragTarget();
         }
 
+        if(state.bound && rootElem){
+
+            const pt=checkBounds(rootElem,state);
+            state.x=pt.x;
+            state.y=pt.y;
+        }
+
         if(state.dragTarget){
             if(!state.dragTarget.dt.skipSetTransform){
                 state.dragTarget.elem.style.transform=`translate(${state.dragX}px,${state.dragY}px)`
@@ -343,7 +400,7 @@ export function PanZoomView({
             }
         }
 
-    },[minScale,maxScale,plane])
+    },[minScale,maxScale,plane,rootElem])
 
     const onTouch=useCallback((e:TouchEvent)=>{
         stateRef.current.isTouch=true;
@@ -520,6 +577,24 @@ export function PanZoomView({
         }
     },[dragCover])
 
+    useEffect(()=>{
+        if(!listenToKeys || disabled){
+            return;
+        }
+        return domListener().keyDownEvt.addListenerWithDispose(e=>{
+            switch(e.keyMod){
+                case 'ctrl+equal':
+                    ctrl.zoom(0.2);
+                    e.preventDefault();
+                    break;
+                case 'ctrl+minus':
+                    ctrl.zoom(-0.2);
+                    e.preventDefault();
+                    break;
+            }
+        })
+    },[listenToKeys,ctrl,disabled]);
+
     style.root();
 
     return (
@@ -556,9 +631,17 @@ export function PanZoomView({
                     {children}
                 </div>
 
+                {controls && ((typeof controls==='function')?
+                    controls(ctrl)
+                :
+                    <PanZoomControls ctrl={ctrl}/>
+                )}
+
                 {afterPlane}
 
                 <div ref={setDragCover} className="PanZoomView-dragCover"/>
+
+                {markCenter && <div className="PanZoomView-center"><div/><div/></div>}
             </div>
         </PanZoomContext.Provider>
     )
@@ -600,6 +683,27 @@ const style=atDotCss({name:'PanZoomView',order:'frameworkHigh',css:`
         cursor:move;
         background:transparent;
     }
+    .PanZoomView-center{
+        position:absolute;
+        left:50%;
+        top:50%;
+    }
+    .PanZoomView-center > div:first-child{
+        position:absolute;
+        left:-25px;
+        top:0.5px;
+        width:50px;
+        height:1px;
+        background-color:#000;
+    }
+    .PanZoomView-center > div:last-child{
+        position:absolute;
+        top:-25px;
+        left:0.5px;
+        height:50px;
+        width:1px;
+        background-color:#000;
+    }
 `});
 
 interface TouchPoint{
@@ -616,12 +720,24 @@ export interface PanZoomState
     scale:number;
 }
 
+interface CtrlRefs
+{
+    rootElem:HTMLElement|null;
+    plane:HTMLElement|null;
+    minScale:number;
+    maxScale:number;
+    bound?:boolean;
+}
+
 export class PanZoomCtrl
 {
     public readonly state:BehaviorSubject<PanZoomState>;
 
-    public constructor(initState?:PanZoomState)
+    private readonly refs:CtrlRefs;
+
+    public constructor(refs:CtrlRefs,initState?:PanZoomState)
     {
+        this.refs=refs;
         this.state=new BehaviorSubject<PanZoomState>(initState?{...initState}:{
             x:0,
             y:0,
@@ -635,6 +751,64 @@ export class PanZoomCtrl
             x:(pt.x-this.state.value.x)/this.state.value.scale,
             y:(pt.y-this.state.value.y)/this.state.value.scale,
         }
+    }
+
+    public zoom(scale:number,mode:'add'|'set'='add'){
+        const {
+            rootElem,
+            plane,
+            minScale,
+            maxScale,
+        }=this.refs;
+
+        if(mode==='add'){
+            scale=this.state.value.scale+scale
+        }
+
+        scale=Math.max(minScale,Math.min(maxScale,scale));
+
+        if(scale===this.state.value.scale){
+            return scale;
+        }
+
+        if(!rootElem || !plane){
+            this.state.next({...this.state.value,scale});
+            return;
+        }
+
+        const oScale=this.state.value.scale;
+        const vx=-this.state.value.x;
+        const vy=-this.state.value.y;
+        const ew=rootElem.offsetWidth;
+        const eh=rootElem.offsetHeight;
+        const ow=ew*oScale;
+        const oh=eh*oScale;
+        const w=ew*scale;
+        const h=eh*scale;
+
+        const ocx=ow/2;
+        const ocy=oh/2;
+
+        const ecx=ew/2;
+        const ecy=eh/2;
+
+        const ox=(ocx-ecx);
+        const oy=(ocy-ecy);
+
+        const offsetX=(vx-ox)/ow;
+        const offsetY=(vy-oy)/oh;
+
+        const cx=w/2;
+        const cy=h/2;
+
+        const x=-(cx-ecx)-(w*offsetX);
+        const y=-(cy-ecy)-(h*offsetY);
+
+        const pt=checkBounds(rootElem,{x,y,scale});
+
+        this.state.next({...pt,scale});
+
+        return scale;
     }
 }
 
@@ -672,4 +846,29 @@ const matchHierarchy=(target:EventTarget,classes?:string|string[],select?:(elem:
 
     return null;
 
+}
+
+const checkBounds=(rootElem:HTMLElement,state:PanZoomState)=>{
+    const w=rootElem.offsetWidth*state.scale;
+    const h=rootElem.offsetHeight*state.scale;
+
+    const l=state.x;
+    const r=l+w;
+    let x=state.x;
+    if(l>0){
+        x=0;
+    }else if(r<rootElem.offsetWidth){
+        x=rootElem.offsetWidth-w;
+    }
+
+    const t=state.y;
+    const b=t+h;
+    let y=state.y;
+    if(t>0){
+        y=0;
+    }else if(b<rootElem.offsetHeight){
+        y=rootElem.offsetHeight-h;
+    }
+
+    return {x,y}
 }
