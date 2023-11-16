@@ -4,7 +4,7 @@ import { parse } from 'json5';
 import OpenAIApi from 'openai';
 import { ImagesResponse } from 'openai/resources';
 import { ChatCompletionAssistantMessageParam, ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from 'openai/resources/chat';
-import { openAiApiKeyParam, openAiAudioModelParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
+import { openAiApiKeyParam, openAiAudioModelParam, openAiBaseUrlParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
 const defaultTokenCharLength=3.75;
@@ -13,6 +13,7 @@ const maxImageGenAttempts=5;
 export interface OpenAiCompletionProviderOptions
 {
     apiKey?:string;
+    apiBaseUrl?:string;
     chatModels?:string[];
     audioModels?:string[];
     imageModels?:string[];
@@ -29,6 +30,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     public static fromScope(scope:Scope){
         return new OpenAiCompletionProvider({
             apiKey:scope.to(openAiApiKeyParam).get(),
+            apiBaseUrl:scope.to(openAiBaseUrlParam).get(),
             secretManager:scope.to(secretManager).get(),
             secretsName:scope.to(openAiSecretsParam).get(),
             chatModels:scope.to(openAiChatModelParam).get()?.split(',').map(m=>m.trim()),
@@ -40,6 +42,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     private readonly secretManager?:SecretManager;
 
     private readonly apiKey?:string;
+    private readonly _apiBaseUrl?:string;
 
     private readonly secretsName?:string;
 
@@ -49,6 +52,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     private readonly _audioModel?:string;
     private readonly _imageModel?:string;
 
+
     private readonly imageGenLockLow:Lock=new Lock(1)
     private readonly imageGenLock:Lock=new Lock(3);
 
@@ -56,12 +60,13 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         apiKey,
         secretManager,
         secretsName,
-        //chatModels=['gpt-4'],
+        apiBaseUrl,
         chatModels=['gpt-3.5-turbo'],
         audioModels=['whisper-1'],
         imageModels=[dalle3Model],
     }:OpenAiCompletionProviderOptions){
         this.apiKey=apiKey;
+        this._apiBaseUrl=apiBaseUrl,
         this.secretManager=secretManager;
         this.secretsName=secretsName;
         this._allowedModels=[...chatModels,...audioModels,...imageModels];
@@ -90,6 +95,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 return new OpenAIApi({
                     apiKey,
                     dangerouslyAllowBrowser:true,
+                    baseURL:this._apiBaseUrl
                 })
             })();
         }
