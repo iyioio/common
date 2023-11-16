@@ -37,32 +37,47 @@ export class CognitoJwtValidator implements JwtValidator
     private verifierId:CognitoJwtVerifier<any,any,any>|null=null;
     private verifierAccess:CognitoJwtVerifier<any,any,any>|null=null;
 
-    public async validateJwtAsync(jwt:string,options?:Record<string,any>):Promise<boolean>
-    {
+    private getIdVerifier():CognitoJwtVerifier<any,any,any>{
+        return this.verifierId??(this.verifierId=this.createVerifier('id'))
+    }
 
-        const tokenUse:'access'|'id'=options?.['tokenUse']??'id';
-        if(tokenUse!=='id' && tokenUse!=='access'){
-            return false;
-        }
+    private getAccessVerifier():CognitoJwtVerifier<any,any,any>{
+        return this.verifierId??(this.verifierId=this.createVerifier('access'))
+    }
 
-        const verifier=tokenUse==='id'?
-            (this.verifierId??(this.verifierId=CognitoJwtVerifier.create({
-                userPoolId:this.config.userPoolId,
-                clientId:this.config.clientId,
-                tokenUse:"id",
-            }))):
-            (this.verifierId??(this.verifierId=CognitoJwtVerifier.create({
-                userPoolId:this.config.userPoolId,
-                clientId:this.config.clientId,
-                tokenUse:"access",
-            })));
+    private createVerifier(tokenUse:'id'|'access'){
+        return CognitoJwtVerifier.create({
+            userPoolId:this.config.userPoolId,
+            clientId:this.config.clientId,
+            tokenUse,
+        });
+    }
 
+    private async verifyAsync(jwt:string,tokenUse:'id'|'access'):Promise<boolean>{
         try{
-            await verifier.verify(jwt);
+            await (tokenUse==='id'?this.getIdVerifier():this.getAccessVerifier()).verify(jwt);
             return true;
         }catch{
             return false;
         }
+    }
+
+    public async validateJwtAsync(jwt:string,options?:Record<string,any>):Promise<boolean>
+    {
+        const tokenUse:'access'|'id'=options?.['tokenUse'];
+        if(tokenUse && (tokenUse!=='id' && tokenUse!=='access')){
+            return false;
+        }
+
+        if(tokenUse){
+            return await this.verifyAsync(jwt,tokenUse);
+        }else{
+            return (
+                (await this.verifyAsync(jwt,'access')) ||
+                (await this.verifyAsync(jwt,'id'))
+            )
+        }
+
     }
 
 }
