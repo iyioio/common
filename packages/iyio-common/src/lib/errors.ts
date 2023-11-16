@@ -170,3 +170,11 @@ export class UnauthorizedError extends BaseError
         super(ErrorType.unauthorized,message);
     }
 }
+
+export class InternalServerError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.internalServerError,message);
+    }
+}
