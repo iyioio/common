@@ -458,7 +458,7 @@ const addInterface=(
     typeOut.push('');
     if(node.comment){
         typeOut.push(protoFormatTsComment(node.comment,''));
-    }
+    }z.object({}).passthrough()
 
     const interfaceIndex=typeOut.length;
     const ext=node.types.map(t=>/^_(\w+)_$/.exec(t.type)).filter(m=>m).map(m=>m?.[0]??'');
@@ -561,8 +561,7 @@ const addInterface=(
         }
     }
 
-    schemeOut.push(`})${getDescribeCall(node)};`);
-
+    schemeOut.push(`})${(ext.length && !hasCustoms)?'.passthrough()':''}${getDescribeCall(node)};`);
 
     typeOut.push(...typeRefs);
     if(typeOut.length===typeOutStartLength){
@@ -576,7 +575,7 @@ const addInterface=(
             schemeOut.push(prop);
         }
         schemeOut.push(`});`)
-        schemeOut.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.merge(__lazy__${fullName}) as any;`);
+        schemeOut.push(`export const ${fullName}:(typeof __base__${fullName})=__base__${fullName}.merge(__lazy__${fullName})${ext.length?'.passthrough()':''} as any;`);
     }
 }
 
