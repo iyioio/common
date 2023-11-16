@@ -105,7 +105,7 @@ select
 
 export const autoSeriesToRanges=(auto:AutoSeries):SeriesRange[]=>{
 
-    const ctrl=getSeriesIntervalCtrl(auto.type);
+    const ctrl=getSeriesIntervalCtrl(auto.type,auto.format,auto.useNumbers);
 
     const ranges:SeriesRange[]=[];
 

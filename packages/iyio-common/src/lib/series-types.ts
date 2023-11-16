@@ -27,6 +27,8 @@ export interface AutoSeries
     type:SeriesType;
     start?:any;
     count:number;
+    format?:string;
+    useNumbers?:boolean;
 }
 
 export interface Series<T=any>

@@ -1,17 +1,16 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { Subscription } from "rxjs/internal/Subscription";
+import { queryRecordStorePathParam } from "./QueryCtrl.deps";
 import { downloadObject } from "./client-download";
 import { unused } from "./common-lib";
 import { joinPaths } from "./fs";
-import { deepClone, deepCompare } from "./object";
+import { deepClone, deepCompare, objGetFirstValue } from "./object";
 import { defaultQueryRecordStorePath } from "./query-ctrl-lib";
 import { sortStaticQuery } from "./query-static-operators";
-import { isBaseQueryRecord, isQuery, isQueryWithData, Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator } from "./query-types";
-import { queryRecordStorePathParam } from "./QueryCtrl.deps";
+import { Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator, isBaseQueryRecord, isQuery, isQueryWithData } from "./query-types";
+import { queryClient } from "./query.deps";
 import { ReadonlySubject } from "./rxjs-types";
 import { Scope } from "./scope-types";
-import { buildQuery } from "./sql-query-builder";
-import { sqlClient } from "./sql.deps";
 import { IStore } from "./store-types";
 import { storeRoot } from "./store.deps";
 
@@ -154,7 +153,7 @@ export class QueryCtrl<T=any>
                 if(!this._state.value.loading){
                     this._state.next({loading:true});
                 }
-                data=await sqlClient().selectAsync<T>(buildQuery(query));
+                data=await queryClient().selectQueryItemsAsync<T>(query);
                 if(rId!==this.runId){return}
 
                 const ts=await this.getTotalStateAsync(query,prev);
@@ -224,7 +223,7 @@ export class QueryCtrl<T=any>
                 totalQuery:prev.totalQuery
             }
         }
-        const total=(await sqlClient().selectColAsync<number>(buildQuery(totalQuery)))[0]??undefined;
+        const total=objGetFirstValue((await queryClient().selectQueryItemsAsync(totalQuery))[0])??undefined;
         return {
             total,
             totalQuery
@@ -296,7 +295,7 @@ export class QueryCtrl<T=any>
                 query={...query};
                 delete query.offset;
                 delete query.limit;
-                data=await sqlClient().selectAsync(buildQuery(query));
+                data=await queryClient().selectQueryItemsAsync(query);
             }else if(isQueryWithData(query)){
                 data=query.table;
             }else{

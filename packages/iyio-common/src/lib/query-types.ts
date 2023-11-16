@@ -280,3 +280,8 @@ export const isBaseQueryRecord=(value:any):value is BaseQueryRecord=>{
 
 
 export type QueryOptions<T=any>=string|BaseQueryRecord|Query|QueryWithData<T>;
+
+export interface IQueryClient
+{
+    selectQueryItemsAsync<T=any>(query:Query):Promise<T[]>;
+}
