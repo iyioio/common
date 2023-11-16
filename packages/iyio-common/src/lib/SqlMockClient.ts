@@ -1,5 +1,8 @@
+import { ZodSchema } from "zod";
 import { delayAsync, unused } from "./common-lib";
 import { NoId } from "./common-types";
+import { DataTableDescription } from "./data-table";
+import { getDataTableId } from "./data-table-lib";
 import { deepCompare } from "./object";
 import { ISqlClient, SqlResult } from "./sql-types";
 import { uuid } from "./uuid";
@@ -118,18 +121,19 @@ export class SqlMockClient implements ISqlClient
 
     }
 
-    public async insertAsync<T>(table: string, values: NoId<T> | NoId<T>[]): Promise<void> {
+    public async insertAsync<T>(table: string|DataTableDescription<T>, values: NoId<T> | NoId<T>[]): Promise<void> {
         await this.insertReturnAsync(table,values);
     }
-    insertReturnAsync<T>(table: string, value: NoId<T>): Promise<T>;
-    insertReturnAsync<T>(table: string, values: NoId<T>[]): Promise<T[]>;
-    insertReturnAsync<T>(table: string, values: NoId<T> | NoId<T>[]): Promise<T | T[]>;
-    public async insertReturnAsync<T>(table: string, values: NoId<T> | NoId<T>[]): Promise<T | T[]>{
+    insertReturnAsync<T>(table: string|DataTableDescription<T>, value: NoId<T>): Promise<T>;
+    insertReturnAsync<T>(table: string|DataTableDescription<T>, values: NoId<T>[]): Promise<T[]>;
+    insertReturnAsync<T>(table: string|DataTableDescription<T>, values: NoId<T> | NoId<T>[]): Promise<T | T[]>;
+    public async insertReturnAsync<T>(table: string|DataTableDescription<T>, values: NoId<T> | NoId<T>[]): Promise<T | T[]>{
+        table=getDataTableId(table);
         await this.delayAsync();
         if(Array.isArray(values)){
             return values.map(v=>{
                 v={...v};
-                this.insertMockItem(table,v);
+                this.insertMockItem(getDataTableId(table),v);
                 return v as any;
             })
         }else{
@@ -222,6 +226,13 @@ export class SqlMockClient implements ISqlClient
         return items.map(i=>i[prop]);
 
     }
+
+    public selectFromAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T[]>{
+        return this.selectAsync(query);
+    }
+    public selectFromFirstOrDefaultAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T|undefined>{
+        return this.selectFirstOrDefaultAsync(query);
+    }
     public async execAsync(sql: string): Promise<SqlResult> {
         await this.delayAsync();
         unused(sql);
@@ -229,7 +240,9 @@ export class SqlMockClient implements ISqlClient
             updates:0,
         }
     }
-    public async updateAsync<T>(table: string, item: T, primaryKey: keyof T, onlyChanged?: T | undefined): Promise<boolean | null> {
+    public async updateAsync<T>(table: string|DataTableDescription<T>, item: T, primaryKey: keyof T, onlyChanged?: T | undefined): Promise<boolean | null> {
+
+        table=getDataTableId(table);
 
         if(onlyChanged && deepCompare(item,onlyChanged)){
             return null;
@@ -251,7 +264,9 @@ export class SqlMockClient implements ISqlClient
         return true;
     }
 
-    async deleteAsync<T>(table: string, colName: keyof T, colValue: T[keyof T]): Promise<boolean | undefined> {
+    async deleteAsync<T>(table: string|DataTableDescription<T>, colName: keyof T, colValue: T[keyof T]): Promise<boolean | undefined> {
+
+        table=getDataTableId(table);
 
         await this.delayAsync();
 

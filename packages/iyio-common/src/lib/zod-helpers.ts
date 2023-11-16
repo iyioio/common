@@ -112,6 +112,44 @@ export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{re
     }
 }
 
+export const zodCoerceNullDbValuesInObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>)=>{
+    if(!isObj(scheme)){
+        return;
+    }
+    const output:Record<string,any>={};
+    for(const e in scheme.shape){
+        const prop:ZodType<any>=scheme.shape[e];
+        const value=obj[e];
+        if(!prop || value===undefined){
+            continue;
+        }
+        if(value===null){
+            if(prop.isNullable()){
+                continue;
+            }
+            if(prop.isOptional()){
+                delete obj[e];
+                continue;
+            }
+            if(prop instanceof ZodArray){
+                obj[e]=[];
+                continue;
+            }
+            throw new Error(`Unable to coerce NULL db value. prop=${e}`);
+        }
+        // todo - add support for recursive checking of objects and array values
+    }
+
+    const parsedResult=scheme.safeParse(output);
+    if(parsedResult.success){
+        return {result:parsedResult.data};
+    }else if(parsedResult.success===false){
+        return {error:parsedResult.error}
+    }else{
+        return {}
+    }
+}
+
 
 
 export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=10):JsonScheme|undefined=>{

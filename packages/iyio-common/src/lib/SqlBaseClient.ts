@@ -1,7 +1,11 @@
+import { ZodSchema } from "zod";
 import { NoId } from "./common-types";
+import { DataTableDescription } from "./data-table";
+import { getDataTableId, getDataTableScheme } from "./data-table-lib";
 import { deepCompare, objGetFirstValue } from "./object";
 import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
 import { ISqlClient, SqlResult } from "./sql-types";
+import { zodCoerceNullDbValuesInObject } from "./zod-helpers";
 
 
 
@@ -30,8 +34,11 @@ export abstract class SqlBaseClient implements ISqlClient
      *          if the onlyChange parameter was supplied and their was no difference between it and
      *          the item parameter.
      */
-    public async updateAsync<T>(table:string, item:T, primaryKey:keyof T, onlyChanged?:T):Promise<boolean|null>
+    public async updateAsync<T>(table:string|DataTableDescription<T>, item:T, primaryKey:keyof T, onlyChanged?:T):Promise<boolean|null>
     {
+
+        table=getDataTableId(table);
+
         const changes:string[]=[];
 
         for(const e in item){
@@ -61,8 +68,10 @@ export abstract class SqlBaseClient implements ISqlClient
      * @param table The table to insert the item into.
      * @param values The items to insert into the table
      */
-    public async insertAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<void>
+    public async insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<void>
     {
+
+        table=getDataTableId(table);
         await this._insertAsync(table,values,false);
     }
 
@@ -73,7 +82,7 @@ export abstract class SqlBaseClient implements ISqlClient
      * @param table The table to insert the item into.
      * @param value The item to insert into the table
      */
-    public insertReturnAsync<T>(table:string,value:NoId<T>):Promise<T>;
+    public insertReturnAsync<T>(table:string|DataTableDescription<T>,value:NoId<T>):Promise<T>;
 
     /**
      * Inserts new items into a table and returns the newly created items with their generated ids.
@@ -81,7 +90,7 @@ export abstract class SqlBaseClient implements ISqlClient
      * @param table The table to insert the item into.
      * @param values The items to insert into the table
      */
-    public insertReturnAsync<T>(table:string,values:NoId<T>[]):Promise<T[]>;
+    public insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>[]):Promise<T[]>;
 
     /**
      * Inserts new items into a table and returns the newly created items with their generated ids.
@@ -89,9 +98,16 @@ export abstract class SqlBaseClient implements ISqlClient
      * @param table The table to insert the item into.
      * @param values The items to insert into the table
      */
-    public async insertReturnAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<T[]|T>
+    public async insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<T[]|T>
     {
-        const r=await this._insertAsync(table,values,true);
+
+        const tableName=getDataTableId(table);
+
+        const r=await this._insertAsync(tableName,values,true);
+
+        if((typeof table === 'object') && table.scheme){
+            zodCoerceNullDbValuesInObject(table.scheme,r);
+        }
 
         if(Array.isArray(values)){
             return (r.rows as any)??[];
@@ -164,6 +180,28 @@ export abstract class SqlBaseClient implements ISqlClient
     }
 
     /**
+     * Returns an array of items selected by the query.
+     * @param query A SQL query to select items with
+     */
+    public async selectFromAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T[]>
+    {
+        const rows=await this.selectAsync<T>(query);
+
+        const scheme=getDataTableScheme(tableOrScheme);
+        if(scheme){
+            for(let i=0;i<rows.length;i++){
+                const item=rows[i];
+                if(!item){continue}
+
+                zodCoerceNullDbValuesInObject(scheme,item);
+            }
+        }
+
+        return rows;
+
+    }
+
+    /**
      * Returns the first item selected by a query. In most cases the query should include a
      * "LIMIT 1" clause.
      * @param query A SQL query to select a single item
@@ -177,6 +215,27 @@ export abstract class SqlBaseClient implements ISqlClient
         }
 
         return r.rows?.[0] as any;
+
+    }
+
+    /**
+     * Returns the first item selected by a query. In most cases the query should include a
+     * "LIMIT 1" clause.
+     * @param query A SQL query to select a single item
+     */
+    public async selectFromFirstOrDefaultAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T|undefined>
+    {
+        const first=await this.selectFirstOrDefaultAsync<T>(query);
+        if(!first){
+            return first;
+        }
+
+        const scheme=getDataTableScheme(tableOrScheme);
+        if(scheme){
+            zodCoerceNullDbValuesInObject(scheme,first);
+        }
+
+        return first;
 
     }
 
@@ -207,8 +266,10 @@ export abstract class SqlBaseClient implements ISqlClient
         return ary;
     }
 
-    public async deleteAsync<T>(table:string,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>
+    public async deleteAsync<T>(table:string|DataTableDescription<T>,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>
     {
+        table=getDataTableId(table);
+
         const r=await this.execAsync(sql`
             DELETE FROM ${sqlName(table)} WHERE ${sqlName(colName.toString())} = ${colValue}
         `);

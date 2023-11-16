@@ -188,7 +188,13 @@ export const convertFieldValue=(field:Field,colMetadataTypeName?:string):any=>{
     }else if(field.doubleValue!==undefined){
         return field.doubleValue;
     }else if(field.arrayValue!==undefined){
-        return field.arrayValue;
+        const av=field.arrayValue;
+        return (
+            av.stringValues??
+            av.doubleValues??
+            av.longValues??
+            av.booleanValues
+        )
     }else{
         return null;
     }

@@ -1,4 +1,6 @@
+import { ZodSchema } from "zod";
 import { NoId } from "./common-types";
+import { DataTableDescription } from "./data-table";
 
 export interface SqlRequest
 {
@@ -29,16 +31,18 @@ export interface ISqlClient
 {
     log:boolean;
     dispose():void;
-    insertAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<void>;
-    insertReturnAsync<T>(table:string,value:NoId<T>):Promise<T>;
-    insertReturnAsync<T>(table:string,values:NoId<T>[]):Promise<T[]>;
-    insertReturnAsync<T>(table:string,values:NoId<T>|NoId<T>[]):Promise<T[]|T>;
+    insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<void>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,value:NoId<T>):Promise<T>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>[]):Promise<T[]>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<T[]|T>;
     selectAsync<T>(query:string):Promise<T[]>;
     selectFirstOrDefaultAsync<T>(query:string):Promise<T|undefined>;
+    selectFromAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T[]>;
+    selectFromFirstOrDefaultAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T|undefined>;
     selectColAsync<T>(query:string):Promise<T[]>;
-    deleteAsync<T>(table:string,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
+    deleteAsync<T>(table:string|DataTableDescription<T>,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
     execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
-    updateAsync<T>(table:string,item:T,primaryKey:keyof T,onlyChanged?:T):Promise<boolean|null>;
+    updateAsync<T>(table:string|DataTableDescription<T>,item:T,primaryKey:keyof T,onlyChanged?:T):Promise<boolean|null>;
 }
 
 export interface SqlExecCommand
