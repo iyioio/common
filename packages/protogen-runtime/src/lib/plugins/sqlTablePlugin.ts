@@ -124,6 +124,8 @@ url      = "localhost"
                             prop===table.primaryKey?type==='Int'?' @id @default(autoincrement())':' @id':''
                         }${
                             type==='String' && maxLength!==null?` @db.VarChar(${maxLength})`:''
+                        }${
+                            child.children?.['unique']?' @unique':''
                         }`)
 
                         if(child.refType){
@@ -168,6 +170,7 @@ url      = "localhost"
 const sqlTypeMap:Record<string,string>={
     string:'String',
     int:'Int',
+    time:'BigInt',
     bool:'Boolean',
     boolean:'Boolean',
     number:'Float',
