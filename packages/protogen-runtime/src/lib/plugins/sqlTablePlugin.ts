@@ -183,10 +183,15 @@ const sqlTypeMap:Record<string,string>={
     dateMap:'Json',
     bigIntMap:'Json',
     union:'String',
-    enum:'Int'
+    enum:'Int',
 }
 
 const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):string|undefined=>{
+
+    const dbType=(node.children?.['$sqlType']?.value??node.children?.['$dbType']?.value)?.trim();
+    if(dbType){
+        return dbType;
+    }
     const type=node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
     if(type || !allNodes){
         return type;
