@@ -90,6 +90,24 @@ export class DomListener
         handler.trigger(evt);
     }
 
+    public sendKeyDownEvt(evt:Omit<DomKeyEvt,'preventDefault'>){
+        this.keyDownEvtTrigger.trigger({...evt,preventDefault:()=>{
+            //
+        }});
+    }
+
+    public sendKeyUpEvt(evt:Omit<DomKeyEvt,'preventDefault'>){
+        this.keyUpEvtTrigger.trigger({...evt,preventDefault:()=>{
+            //
+        }});
+    }
+
+    public sendKeyPressEvt(evt:Omit<DomKeyEvt,'preventDefault'>){
+        this.keyPressEvtTrigger.trigger({...evt,preventDefault:()=>{
+            //
+        }});
+    }
+
 }
 
 const inputElems=['input','textarea','select'];
