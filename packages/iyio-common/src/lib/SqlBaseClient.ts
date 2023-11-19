@@ -105,16 +105,26 @@ export abstract class SqlBaseClient implements ISqlClient
 
         const r=await this._insertAsync(tableName,values,true);
 
-        if((typeof table === 'object') && table.scheme){
-            zodCoerceNullDbValuesInObject(table.scheme,r);
-        }
+
 
         if(Array.isArray(values)){
-            return (r.rows as any)??[];
+            const rows=(r.rows as any)??[];
+
+            if((typeof table === 'object') && table.scheme){
+                for(const item of rows){
+                    zodCoerceNullDbValuesInObject(table.scheme,item);
+                }
+            }
+
+            return rows;
         }else{
             const item=r.rows?.[0];
             if(!item){
                 throw new Error('No SQL Row Inserted');
+            }
+
+            if((typeof table === 'object') && table.scheme){
+                zodCoerceNullDbValuesInObject(table.scheme,item);
             }
             return item as any;
         }
