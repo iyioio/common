@@ -26,6 +26,7 @@ export interface SvgChartCtrlOptions
     autoResize?:boolean;
     removeElementsOnDispose?:boolean;
     min?:boolean;
+    showOverlaysWithMin?:boolean;
     /**
      * For bar charts if true series values are stacked on top of each other
      */

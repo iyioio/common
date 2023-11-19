@@ -22,6 +22,8 @@ export interface SeriesRange<T=any>
 
 export type SeriesType='day'|'week'|'month'|'year';
 
+export type SeriesOffset=boolean|SeriesType;
+
 export interface AutoSeries
 {
     type:SeriesType;
@@ -35,6 +37,9 @@ export interface Series<T=any>
 {
     auto?:AutoSeries;
     ranges?:SeriesRange<T>[];
+    repeat?:number;
+    offset?:SeriesOffset;
+    offsetMultiplier?:number;
 }
 
 export interface SeriesIntervalCtrl<T=any>

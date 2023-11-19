@@ -1,3 +1,4 @@
+import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { asArray } from "./array";
 import { HashMap } from "./common-types";
 import { deepClone } from "./object";
@@ -6,6 +7,15 @@ import { getSeriesIntervalCtrl } from "./series-ctrls";
 import { AutoSeries, Series, SeriesDataQuery, SeriesRange } from "./series-types";
 
 export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[]):SeriesDataQuery=>{
+
+    if(series?.repeat && !Array.isArray(seriesQueries)){
+        const ary:Query[]=[];
+        for(let i=0;i<series.repeat;i++){
+            ary.push(seriesQueries);
+        }
+        seriesQueries=ary;
+    }
+
     seriesQueries=asArray(seriesQueries);
 
     const ranges=series.ranges??(series.auto?autoSeriesToRanges(series.auto):[]);
@@ -17,6 +27,7 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
     }
 
     const seriesColNames:string[][]=[];
+    let offset=0;
 
     for(let queryIndex=0;queryIndex<seriesQueries.length;queryIndex++){
 
@@ -33,12 +44,12 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                     {
                         left:{col:{name:rangeColumn}},
                         op:'>=',
-                        right:{value:range.start}
+                        right:{value:range.start+offset}
                     },
                     {
                         left:{col:{name:rangeColumn}},
                         op:'<=',
-                        right:{value:range.end}
+                        right:{value:range.end+offset}
                     },
                 ]
             }
@@ -59,6 +70,43 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                 },
                 name:colName
             })
+        }
+
+        if(series.offset){
+            const first=ranges[0];
+            const last=ranges[ranges.length-1];
+                if(first && last && ranges.length>1){
+
+                if(series.offset===true){
+                    offset+=last.end-first.start;
+                }else{
+                    const start=new Date(first.start).getTime();
+                    const qi=queryIndex+1;
+                    const mul=series.offsetMultiplier??1;
+                    switch(series.offset){
+
+                        case 'day':
+                            offset=addDays(start,-qi*mul).getTime();
+                            offset-=start;
+                            break;
+
+                        case 'week':
+                            offset=addWeeks(start,-qi*mul).getTime();
+                            offset-=start;
+                            break;
+
+                        case 'month':
+                            offset=addMonths(start,-qi*mul).getTime();
+                            offset-=start;
+                            break;
+
+                        case 'year':
+                            offset=addYears(start,-qi*mul).getTime();
+                            offset-=start;
+                            break;
+                    }
+                }
+            }
         }
     }
 

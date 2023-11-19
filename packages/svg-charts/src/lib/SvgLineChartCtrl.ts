@@ -25,6 +25,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         super(options,svg,true);
 
         this.svg.addEventListener('mousemove',this.mouseListener);
+        this.svg.addEventListener('mouseleave',this.mouseOutListener);
 
         this.hoverPath.classList.add('svg-charts-value-line');
         this.hoverPath.style.visibility='hidden';
@@ -41,7 +42,22 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         this.svg.removeEventListener('mousemove',this.mouseListener);
     }
 
+    private readonly mouseOutListener=()=>{
+
+        for(const line of this.lines){
+            line.text.style.visibility='hidden';
+            line.dot.style.visibility='hidden';
+            this.hoverPath.style.visibility='hidden';
+        }
+
+        this.setIntersections([]);
+    }
+
     private readonly mouseListener=(e:MouseEvent)=>{
+
+        if(this.options.min && !this.options.showOverlaysWithMin){
+            return;
+        }
 
         const ro=this.renderOptions;
 
@@ -102,6 +118,10 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
             this.removeLine(this.lines[this.lines.length-1]);
         }
 
+        const flipEvenOdd=this.data.series.length>1;
+        const eoTrue=(flipEvenOdd?false:true);
+        const eoFalse=!eoTrue;
+
         for(let i=0;i<this.data.series.length;i++){
             const data=this.data.series[i];
             if(this.lines.length<=i){
@@ -111,8 +131,8 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
                 const text=document.createElementNS('http://www.w3.org/2000/svg','text');
                 const classes={
-                    [`${classNamePrefix}odd`]:i%2?false:true,
-                    [`${classNamePrefix}even`]:i%2?true:false,
+                    [`${classNamePrefix}odd`]:i%2?eoFalse:eoTrue,
+                    [`${classNamePrefix}even`]:i%2?eoTrue:eoFalse,
                     [`${classNamePrefix}${i+1}`]:true,
                 }
                 group.setAttribute('class',cn(`${classNamePrefix}line`,classes));
