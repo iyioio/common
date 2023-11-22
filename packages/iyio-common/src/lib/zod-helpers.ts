@@ -164,6 +164,8 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,o
         return undefined;
     }
 
+    const description=type.description;
+
     let optional=false;
     if(type instanceof ZodOptional){
         type=type.unwrap();
@@ -233,8 +235,8 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,o
         return undefined;
     }
 
-    if(type.description){
-        jsonType.description=type.description;
+    if(description){
+        jsonType.description=description;
     }
 
     return {jsonType,optional};
