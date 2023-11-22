@@ -1,4 +1,5 @@
-import { Observable, Subject } from "rxjs";
+import { ReadonlySubject } from "@iyio/common";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
@@ -27,6 +28,10 @@ export class Conversation
 
     private readonly _onAppend=new Subject<ConvoAppend>();
     public get onAppend():Observable<ConvoAppend>{return this._onAppend}
+
+    private readonly _activeTaskCount:BehaviorSubject<number>=new BehaviorSubject<number>(0);
+    public get activeTaskCountSubject():ReadonlySubject<number>{return this._activeTaskCount}
+    public get activeTaskCount(){return this._activeTaskCount.value}
 
     /**
      * Unregistered variables will be available during execution but will not be added to the code
@@ -94,6 +99,10 @@ export class Conversation
         return r;
     }
 
+    public appendUserMessage(message:string){
+        this.append(`> user\n${escapeConvoMessageContent(message)}`)
+    }
+
     public appendDefine(defineCode:string,description?:string):ConvoParsingResult{
         return this.append((description?convoDescriptionToComment(description)+'\n':'')+'> define\n'+defineCode);
     }
@@ -146,132 +155,138 @@ export class Conversation
         preReturnValues?:any[]
     ):Promise<ConvoCompletion>{
 
-        let append:string[]|undefined=undefined;
-        const flat=await this.flattenAsync(new ConvoExecutionContext({
-            conversation:this,
-            convoPipeSink:(value)=>{
-                if(!(typeof value === 'string')){
-                    value=value?.toString();
-                    if(!value?.trim()){
-                        return value;
+        this._activeTaskCount.next(this.activeTaskCount+1);
+
+        try{
+            let append:string[]|undefined=undefined;
+            const flat=await this.flattenAsync(new ConvoExecutionContext({
+                conversation:this,
+                convoPipeSink:(value)=>{
+                    if(!(typeof value === 'string')){
+                        value=value?.toString();
+                        if(!value?.trim()){
+                            return value;
+                        }
                     }
+                    if(!append){
+                        append=[];
+                    }
+                    append.push(value);
+                    return value;
                 }
-                if(!append){
-                    append=[];
-                }
-                append.push(value);
-                return value;
-            }
-        }));
-        if(this._isDisposed){
-            return {messages:[]}
-        }
-
-        for(const e in this.unregisteredVars){
-            flat.exe.setVar(false,this.unregisteredVars[e],e);
-        }
-
-        const completion=await getCompletion(flat);
-        if(this._isDisposed){
-            return {messages:[]};
-        }
-
-        const exe=flat.exe;
-        let cMsg:ConvoCompletionMessage|undefined=undefined;
-
-        let returnValues:any[]|undefined=undefined;
-
-        let lastResultValue:any=undefined;
-
-        for(const msg of completion){
-
-            const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
-            if(msg.content){
-                cMsg=msg;
-                this.append(`${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+            }));
+            if(this._isDisposed){
+                return {messages:[]}
             }
 
-            if(msg.callFn){
-                const result=this.append(`${tagsCode}> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
-                const callMessage=result.result?.[0];
-                if(result.result?.length!==1 || !callMessage){
-                    throw new ConvoError(
-                        'function-call-parse-count',
-                        {completion:msg},
-                        'failed to parse function call. Exactly 1 function call should have been parsed'
-                    );
-                }
-                exe.clearSharedSetters();
-                if(!callMessage.fn?.call){
-                    continue;
-                }
-                const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
-                if(this._isDisposed){
-                    return {messages:[]}
-                }
-                const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
-                const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
-                const disableAutoComplete=(
-                    exe.getVar(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
-                    containsConvoTag(target?.tags,convoTags.disableAutoComplete)
-                )
-                if(!returnValues){
-                    returnValues=[];
-                }
-                returnValues.push(callResultValue);
+            for(const e in this.unregisteredVars){
+                flat.exe.setVar(false,this.unregisteredVars[e],e);
+            }
 
-                lastResultValue=(typeof callResultValue === 'function')?undefined:callResultValue;
+            const completion=await getCompletion(flat);
+            if(this._isDisposed){
+                return {messages:[]};
+            }
 
-                const lines:string[]=['> result'];
-                if(exe.sharedSetters){
-                    for(const s of exe.sharedSetters){
-                        lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
+            const exe=flat.exe;
+            let cMsg:ConvoCompletionMessage|undefined=undefined;
+
+            let returnValues:any[]|undefined=undefined;
+
+            let lastResultValue:any=undefined;
+
+            for(const msg of completion){
+
+                const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
+                if(msg.content){
+                    cMsg=msg;
+                    this.append(`${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                }
+
+                if(msg.callFn){
+                    const result=this.append(`${tagsCode}> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
+                    const callMessage=result.result?.[0];
+                    if(result.result?.length!==1 || !callMessage){
+                        throw new ConvoError(
+                            'function-call-parse-count',
+                            {completion:msg},
+                            'failed to parse function call. Exactly 1 function call should have been parsed'
+                        );
                     }
+                    exe.clearSharedSetters();
+                    if(!callMessage.fn?.call){
+                        continue;
+                    }
+                    const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
+                    if(this._isDisposed){
+                        return {messages:[]}
+                    }
+                    const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
+                    const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
+                    const disableAutoComplete=(
+                        exe.getVar(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
+                        containsConvoTag(target?.tags,convoTags.disableAutoComplete)
+                    )
+                    if(!returnValues){
+                        returnValues=[];
+                    }
+                    returnValues.push(callResultValue);
+
+                    lastResultValue=(typeof callResultValue === 'function')?undefined:callResultValue;
+
+                    const lines:string[]=['> result'];
+                    if(exe.sharedSetters){
+                        for(const s of exe.sharedSetters){
+                            lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
+                        }
+                    }
+                    if( (typeof lastResultValue === 'string') &&
+                        lastResultValue.length>50 &&
+                        lastResultValue.includes('\n') &&
+                        !lastResultValue.includes('---')
+                    ){
+                        lines.push(`${convoResultReturnName}=---\n${lastResultValue}\n---`)
+                    }else{
+                        lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                    }
+                    lines.push('');
+                    this.append(lines.join('\n'),true);
+
+                    if(disableAutoComplete){
+                        lastResultValue=undefined;
+                    }
+
                 }
-                if( (typeof lastResultValue === 'string') &&
-                    lastResultValue.length>50 &&
-                    lastResultValue.includes('\n') &&
-                    !lastResultValue.includes('---')
-                ){
-                    lines.push(`${convoResultReturnName}=---\n${lastResultValue}\n---`)
+
+            }
+
+            if(prevCompletion){
+                completion.unshift(...prevCompletion);
+            }
+            if(preReturnValues){
+                if(returnValues){
+                    returnValues.unshift(...preReturnValues);
                 }else{
-                    lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                    returnValues=preReturnValues;
                 }
-                lines.push('');
-                this.append(lines.join('\n'),true);
+            }
 
-                if(disableAutoComplete){
-                    lastResultValue=undefined;
+            if(append){
+                for(const a of (append as string[])){
+                    this.append(a);
                 }
-
+            }else if(lastResultValue!==undefined && autoCompleteFunctionReturns){
+                return await this._completeAsync(getCompletion,false,completion,returnValues);
             }
 
-        }
-
-        if(prevCompletion){
-            completion.unshift(...prevCompletion);
-        }
-        if(preReturnValues){
-            if(returnValues){
-                returnValues.unshift(...preReturnValues);
-            }else{
-                returnValues=preReturnValues;
+            return {
+                message:cMsg,
+                messages:completion,
+                exe,
+                returnValues,
             }
-        }
-
-        if(append){
-            for(const a of (append as string[])){
-                this.append(a);
-            }
-        }else if(lastResultValue!==undefined && autoCompleteFunctionReturns){
-            return await this._completeAsync(getCompletion,false,completion,returnValues);
-        }
-
-        return {
-            message:cMsg,
-            messages:completion,
-            exe,
-            returnValues,
+        }finally{
+            this._activeTaskCount.next(this.activeTaskCount-1);
         }
     }
 
