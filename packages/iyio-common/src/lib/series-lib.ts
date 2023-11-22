@@ -2,15 +2,18 @@ import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { asArray } from "./array";
 import { HashMap } from "./common-types";
 import { deepClone } from "./object";
-import { NamedQueryValue, Query, QueryGroupCondition } from "./query-types";
+import { NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types";
 import { getSeriesIntervalCtrl } from "./series-ctrls";
 import { AutoSeries, Series, SeriesDataQuery, SeriesRange } from "./series-types";
 
 export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[]):SeriesDataQuery=>{
 
+    const repeatAry=Array.isArray(series.repeat)?series.repeat:undefined;
+
     if(series?.repeat && !Array.isArray(seriesQueries)){
         const ary:Query[]=[];
-        for(let i=0;i<series.repeat;i++){
+        const l=Array.isArray(series.repeat)?series.repeat.length+1:series.repeat;
+        for(let i=0;i<l;i++){
             ary.push(seriesQueries);
         }
         seriesQueries=ary;
@@ -28,6 +31,7 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
 
     const seriesColNames:string[][]=[];
     let offset=0;
+    const rangeType=series.rangeType??'<=>';
 
     for(let queryIndex=0;queryIndex<seriesQueries.length;queryIndex++){
 
@@ -38,20 +42,30 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
             const range=ranges[rangeIndex] as SeriesRange<any>;
             const sub:Query=deepClone(seriesQueries[queryIndex] as Query);
 
+            const conditions:QueryCondition[]=[];
+            const startCond:QueryCondition={
+                left:{col:{name:rangeColumn}},
+                op:(rangeType==='<=>' || rangeType==='>=')?'>=':'>',
+                right:{value:range.start+offset}
+            }
+            const endCond:QueryCondition={
+                left:{col:{name:rangeColumn}},
+                op:(rangeType==='<=>' || rangeType==='<=')?'<=':'<',
+                right:{value:range.end+offset}
+            }
+
+            if(rangeType==='<=>' || rangeType==='<>'){
+                conditions.push(startCond);
+                conditions.push(endCond);
+            }else if(rangeType==='<' || rangeType==='<='){
+                conditions.push(endCond);
+            }else{
+                conditions.push(startCond);
+            }
+
             const condition:QueryGroupCondition={
                 op:'and',
-                conditions:[
-                    {
-                        left:{col:{name:rangeColumn}},
-                        op:'>=',
-                        right:{value:range.start+offset}
-                    },
-                    {
-                        left:{col:{name:rangeColumn}},
-                        op:'<=',
-                        right:{value:range.end+offset}
-                    },
-                ]
+                conditions
             }
             if(sub.condition){
                 condition.conditions.push(sub.condition);
@@ -72,7 +86,9 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
             })
         }
 
-        if(series.offset){
+        if(repeatAry){
+            offset=(repeatAry[queryIndex]??0)-(ranges[0]?.start??0);
+        }else if(series.offset){
             const first=ranges[0];
             const last=ranges[ranges.length-1];
                 if(first && last && ranges.length>1){

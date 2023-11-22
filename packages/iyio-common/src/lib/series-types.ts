@@ -24,6 +24,8 @@ export type SeriesType='day'|'week'|'month'|'year';
 
 export type SeriesOffset=boolean|SeriesType;
 
+export type SeriesRangeType='<=>'|'<>'|'>'|'<'|'>='|'<=';
+
 export interface AutoSeries
 {
     type:SeriesType;
@@ -37,7 +39,12 @@ export interface Series<T=any>
 {
     auto?:AutoSeries;
     ranges?:SeriesRange<T>[];
-    repeat?:number;
+    /**
+     * Controls how range values are applied to queries
+     * @default '<=>'
+     */
+    rangeType?:SeriesRangeType;
+    repeat?:number|T[];
     offset?:SeriesOffset;
     offsetMultiplier?:number;
 }

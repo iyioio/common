@@ -114,13 +114,9 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
     private readonly lines:Line[]=[];
     protected renderData():void
     {
-        while(this.lines.length>this.renderOptions.valueCount){
+        while(this.lines.length>0/*this.renderOptions.valueCount*/){
             this.removeLine(this.lines[this.lines.length-1]);
         }
-
-        const flipEvenOdd=this.data.series.length>1;
-        const eoTrue=(flipEvenOdd?false:true);
-        const eoFalse=!eoTrue;
 
         for(let i=0;i<this.data.series.length;i++){
             const data=this.data.series[i];
@@ -131,8 +127,8 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
                 const text=document.createElementNS('http://www.w3.org/2000/svg','text');
                 const classes={
-                    [`${classNamePrefix}odd`]:i%2?eoFalse:eoTrue,
-                    [`${classNamePrefix}even`]:i%2?eoTrue:eoFalse,
+                    [`${classNamePrefix}odd`]:i%2?false:true,
+                    [`${classNamePrefix}even`]:i%2?true:false,
                     [`${classNamePrefix}${i+1}`]:true,
                 }
                 group.setAttribute('class',cn(`${classNamePrefix}line`,classes));
@@ -158,6 +154,8 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 }
                 this.canvas.appendChild(group);
                 this.lines.push(line);
+            }else{
+                this.lines[i].data=data;
             }
             this.updateLine(this.lines[i]);
         }

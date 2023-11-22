@@ -1,4 +1,4 @@
-import { BaseLayoutOuterProps, bcn } from "@iyio/common";
+import { BaseLayoutOuterProps, bcn, deepCompare } from "@iyio/common";
 import { useAlphaId } from "@iyio/react-common";
 import { SvgBaseChartCtrl, SvgChartCtrlOptions } from "@iyio/svg-charts";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -43,13 +43,15 @@ export function BaseSvgChartView({
     },[svg,id,createChart]);
 
     useEffect(()=>{
-        if(!ctrl || !options || options===currentOptions.current){
+        if(!ctrl || !options || options===currentOptions.current || deepCompare(options,currentOptions.current)){
             return;
         }
 
+        currentOptions.current=options;
+
         ctrl.options={
             id,
-            ...currentOptions.current,
+            ...options,
         }
     },[options,ctrl]);
 

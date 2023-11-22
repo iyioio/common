@@ -39,7 +39,7 @@ export abstract class SvgBaseChartCtrl
         this.render();
     }
 
-    private _options:Required<Omit<SvgChartCtrlOptions,'seriesOptions'|'data'>>;
+    private _options:Required<Omit<SvgChartCtrlOptions,'seriesOptions'|'data'|'showOverlaysWithMin'>>;
     public get options(){return {...this._options}}
     public set options(value:Partial<SvgChartCtrlOptions>){
         this.setOptions(value);
@@ -287,6 +287,10 @@ export abstract class SvgBaseChartCtrl
             }
         }
 
+        if(min>0){
+            min--;
+        }
+
         const hLineSpacingPx=this._options.hLineSpacing;
         let hLineSpacing=-1;
 
@@ -317,6 +321,9 @@ export abstract class SvgBaseChartCtrl
                 const lineCountStart=hLineCount;
                 for(let i=steps.length-1;i>=0;i--){
                     const step=steps[i];
+                    if(step<1 && diff>=1){
+                        break;
+                    }
                     if(diff/step>=hLineCount){
                         while(hLineCount*step<diff){
                             hLineCount++;
@@ -337,6 +344,15 @@ export abstract class SvgBaseChartCtrl
 
         }
 
+        if(diff>3 && diff%(hLineCount-1)){
+            const startLineCount=hLineCount;
+            while(diff%(hLineCount-1) && hLineCount){
+                hLineCount--;
+            }
+            if(!hLineCount || startLineCount-hLineCount>6){
+                hLineCount=startLineCount;
+            }
+        }
 
 
         if(hLineSpacing===-1){
