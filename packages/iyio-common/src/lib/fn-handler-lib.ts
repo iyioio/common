@@ -107,6 +107,8 @@ export const fnHandler=async ({
         sub=claims['sub'];
     }
 
+    const headers:Record<string,string>=evt.headers??{};
+    const remoteAddress:string|undefined=headers['x-forwarded-for'];
 
     const fnEvent:FnEvent={
         sourceEvent:evt,
@@ -115,9 +117,13 @@ export const fnHandler=async ({
         method,
         routePath,
         query,
-        headers:evt.headers??{},
+        headers,
         claims,
-        sub
+        sub,
+    }
+
+    if(typeof remoteAddress === 'string'){
+        fnEvent.remoteAddress=remoteAddress;
     }
 
     if(typeof evt.requestContext?.connectionId === 'string'){

@@ -54,6 +54,11 @@ export interface FnEvent
     claims:Record<string,any>;
 
     /**
+     * In most cases this is the remote IP address of the calling client
+     */
+    remoteAddress?:string;
+
+    /**
      * For websocket events this is the connection id of the socket
      */
     connectionId?:string;
