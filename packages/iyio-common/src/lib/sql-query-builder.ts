@@ -1,7 +1,7 @@
 import { asArray } from "./array";
 import { asType } from "./common-lib";
 import { applyQueryShorthands } from "./query-lib";
-import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
+import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
 import { escapeSqlName, escapeSqlValue } from "./sql-lib";
 
 /**
@@ -95,7 +95,15 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
         appendCondition(ctx,cond,depth+1);
     }
 
-
+    if(query.groupBy){
+        ctx.sql.push('group by');
+        const cols=Array.isArray(query.groupBy)?query.groupBy:[query.groupBy];
+        for(const col of cols){
+            ctx.sql.push(escapeSqlName(col));
+            ctx.sql.push(',')
+        }
+        ctx.sql.pop();
+    }
 
     if(query.orderBy){
         ctx.sql.push('order by')
@@ -134,9 +142,17 @@ const appendCondition=(ctx:QueryBuildCtx,cond:QueryConditionOrGroup,depth:number
         }
         ctx.sql.pop();
     }else if(isQueryCondition(cond)){
-        appendValue(ctx,true,cond.left,depth);
-        ctx.sql.push(cond.op);
-        appendValue(ctx,true,cond.right,depth);
+        appendValue(ctx,cond.left.value!==null,cond.left,depth);
+        if(cond.not){
+            const notOp=queryConditionNotMap[cond.op];
+            if(!notOp){
+                throw new Error(`The (${cond.op}) does not support the not modifier`);
+            }
+            ctx.sql.push(notOp);
+        }else{
+            ctx.sql.push(cond.op);
+        }
+        appendValue(ctx,cond.right.value!==null,cond.right,depth);
     }
     ctx.sql.push(')');
 }

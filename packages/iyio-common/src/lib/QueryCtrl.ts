@@ -11,6 +11,7 @@ import { Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator, isBaseQ
 import { queryClient } from "./query.deps";
 import { ReadonlySubject } from "./rxjs-types";
 import { Scope } from "./scope-types";
+import { buildQuery } from "./sql-query-builder";
 import { IStore } from "./store-types";
 import { storeRoot } from "./store.deps";
 
@@ -152,6 +153,9 @@ export class QueryCtrl<T=any>
             if(isQuery(query)){
                 if(!this._state.value.loading){
                     this._state.next({loading:true});
+                }
+                if(query.debug){
+                    console.info('QueryCtrl select:',buildQuery(query));
                 }
                 data=await queryClient().selectQueryItemsAsync<T>(query);
                 if(rId!==this.runId){return}

@@ -50,6 +50,11 @@ export interface Query
     orderBy?:OrderCol|OrderCol[];
 
     /**
+     * A column or columns to group the group by
+     */
+    groupBy?:string|string[];
+
+    /**
      * Limits the number of results returned
      */
     limit?:number;
@@ -66,6 +71,11 @@ export interface Query
     disableUserOrderBy?:boolean;
 
     isUserReadonly?:boolean;
+
+    /**
+     * If true debug information about the query should be printed
+     */
+    debug?:boolean;
 }
 export const isQuery=(value:any):value is Query=>{
     const tableType=typeof (value as Partial<Query>)?.table;
@@ -152,8 +162,20 @@ export const isQueryGroupCondition=(value:any):value is QueryGroupCondition=>{
     return (allQueryGroupConditionOps.includes(v.op as any) && v.conditions)?true:false
 }
 
+export const queryConditionNotMap:Record<string,string>={
+    '=':'!=',
+    '!=':'=',
+    '>':'<=',
+    '<':'>=',
+    '>=':'<',
+    '<=':'>',
+    'like':'not like',
+    'is':'is not',
+    'in':'not in',
+}
+Object.freeze(queryConditionNotMap);
 
-export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','not','in'] as const;
+export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','is','in'] as const;
 export type QueryConditionOp=typeof allQueryConditionOps[number];
 export interface QueryCondition
 {
@@ -166,6 +188,8 @@ export interface QueryCondition
      * The operator used for comparison
      */
     op:QueryConditionOp;
+
+    not?:boolean;
 
     /**
      * The right side of the condition
