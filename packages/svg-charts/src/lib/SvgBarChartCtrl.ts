@@ -25,7 +25,7 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
     private readonly lines:Bar[]=[];
     protected renderData():void
     {
-        while(this.lines.length>this.renderOptions.valueCount){
+        while(this.lines.length>0/*this.renderOptions.valueCount*/){
             this.removeLine(this.lines[this.lines.length-1]);
         }
 
