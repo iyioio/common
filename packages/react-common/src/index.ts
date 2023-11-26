@@ -46,6 +46,7 @@ export * from "./lib/story-lib";
 export * from "./lib/tool-tip/ToolTipBase";
 export * from "./lib/tool-tip/ToolTipContainer";
 export * from "./lib/tool-tip/tool-tip-lib";
+export * from "./lib/useDataQuery";
 export * from "./lib/useDelayedValue";
 export * from "./lib/useDragDropFiles";
 export * from "./lib/useElementSize";
