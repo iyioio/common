@@ -157,6 +157,28 @@ export const aryRandomize=<T>(ary:T[]):T[]=>
     return newAry;
 }
 
+/**
+ * Returns a random value from the given array. If the array's length is 0 an error is throw.
+ */
+export const aryRandomValue=<T>(ary:T[]):T=>
+{
+    if(!ary || !ary.length){
+        throw new Error('aryRandomValue requires the given array to have at lest 1 item');
+    }
+    return ary[Math.round(Math.random()*(ary.length-1))] as T;
+}
+
+/**
+ * Returns a random value from the given array. If the array's length is 0 undefined is returned
+ */
+export const aryRandomValueOrUndefined=<T>(ary:T[]):T|undefined=>
+{
+    if(!ary || !ary.length){
+        return undefined;
+    }
+    return ary[Math.round(Math.random()*(ary.length-1))]
+}
+
 export const arySingle=<T>(value:T[]|T):T|undefined=>{
     return Array.isArray(value)?value[0]:value;
 }
