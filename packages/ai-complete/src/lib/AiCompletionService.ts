@@ -118,6 +118,7 @@ export class AiCompletionService implements ConvoCompletionService
                 mergeResult(await provider.completeAsync(msg,request,options));
                 return true;
             }catch(ex){
+                request.debug?.(`Error - ${(ex as any)?.message}`,ex);
                 mergeResult({options:[{
                     confidence:1,
                     message:{
