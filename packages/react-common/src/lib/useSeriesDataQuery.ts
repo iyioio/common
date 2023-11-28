@@ -5,6 +5,7 @@ import { useSubject } from "./rxjs-hooks";
 interface QueryState
 {
     rangeColumn:string;
+    sumColumn?:string|null;
     series:Series;
     seriesQueries:Query|Query[];
 }
@@ -12,6 +13,7 @@ interface QueryState
 export interface SeriesDataQueryOptions
 {
     rangeColumn:string|null|undefined,
+    sumColumn?:string|null;
     series:Series|null|undefined,
     seriesQueries:Query|Query[]|null|undefined;
 }
@@ -19,6 +21,7 @@ export interface SeriesDataQueryOptions
 export const useSeriesDataQuery=(
     {
         rangeColumn,
+        sumColumn,
         series,
         seriesQueries,
     }:SeriesDataQueryOptions={rangeColumn:null,series:null,seriesQueries:null}
@@ -43,18 +46,18 @@ export const useSeriesDataQuery=(
             return;
         }
 
-        const state={rangeColumn,series,seriesQueries};
+        const state={rangeColumn,series,seriesQueries,sumColumn};
         if(lastStateRef.current && deepCompare(lastStateRef.current,state)){
             return;
         }
 
-        const sq=createSeriesQuery(rangeColumn,series,seriesQueries);
+        const sq=createSeriesQuery(rangeColumn,series,seriesQueries,sumColumn??undefined);
         lastStateRef.current=state;
         setSq(sq);
         ctrl.setLimit(Array.isArray(seriesQueries)?seriesQueries.length:1);
         ctrl.query=sq.query;
 
-    },[ctrl,seriesQueries,series,rangeColumn]);
+    },[ctrl,seriesQueries,series,rangeColumn,sumColumn]);
 
     const data=useSubject(ctrl?.data);
 

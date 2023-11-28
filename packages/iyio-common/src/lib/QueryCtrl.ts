@@ -189,7 +189,7 @@ export class QueryCtrl<T=any>
             this._data.next(data);
 
         }catch(ex){
-            console.error('query failed',{query,queryOptions},ex);
+            console.error('query failed',{query,queryOptions,sql:isQuery(query)?buildQuery(query):null},ex);
             if(rId===this.runId){
                 this._state.next({
                     error:{

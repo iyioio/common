@@ -165,7 +165,24 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
 
     let isNull=false;
 
-    if(value.col){
+    if(value.func){
+        switch(value.func){
+            case 'count':
+                ctx.sql.push('count(*)');
+                break;
+
+            case 'sum':
+                if(!value.col){
+                    throw new Error('sql sum function requires a column to be defined');
+                }
+                ctx.sql.push(`coalesce(sum(${(value.col.table?escapeSqlName(value.col.table)+'.':'')+escapeSqlName(value.col.name)}),0)`);
+                break;
+
+            default:
+                ctx.sql.push('null');
+                break;
+        }
+    }else if(value.col){
         appendCol(ctx,value.col);
     }else if(value.value!==undefined){
         ctx.sql.push(escapeSqlValue(value.value,false));
@@ -173,16 +190,6 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,value.subQuery.query,value.subQuery.condition??null);
         ctx.sql.push(')');
-    }else if(value.func){
-        switch(value.func){
-            case 'count':
-                ctx.sql.push('count(*)');
-                break;
-
-            default:
-                ctx.sql.push('null');
-                break;
-        }
     }else{
         isNull=true;
         ctx.sql.push('null');

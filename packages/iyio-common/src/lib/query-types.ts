@@ -207,7 +207,7 @@ export const isQueryCondition=(value:any):value is QueryCondition=>{
 
 export type QueryConditionOrGroup=QueryCondition|QueryGroupCondition;
 
-export type QueryFunction='count';
+export type QueryFunction='count'|'sum';
 
 /**
  * Represents any of the possible value types that can be used. Only one property of the QueryValue

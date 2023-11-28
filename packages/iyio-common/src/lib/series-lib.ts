@@ -4,9 +4,9 @@ import { HashMap } from "./common-types";
 import { deepClone } from "./object";
 import { NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types";
 import { getSeriesIntervalCtrl } from "./series-ctrls";
-import { AutoSeries, Series, SeriesDataQuery, SeriesRange } from "./series-types";
+import { AutoSeries, Series, SeriesData, SeriesDataQuery, SeriesRange } from "./series-types";
 
-export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[]):SeriesDataQuery=>{
+export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[], sumColumn?:string):SeriesDataQuery=>{
 
     const repeatAry=Array.isArray(series.repeat)?series.repeat:undefined;
 
@@ -71,9 +71,13 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                 condition.conditions.push(sub.condition);
             }
             sub.condition=condition;
-            sub.columns=[{
-                func:'count',
+            sub.columns=[sumColumn?{
+                func:'sum',
+                col:{name:sumColumn},
                 name:'count'
+            }:{
+                func:'count',
+                name:'count',
             }]
 
             const colName=`c_${queryIndex}_${rangeIndex}`;
@@ -190,3 +194,58 @@ export const autoSeriesToRanges=(auto:AutoSeries):SeriesRange[]=>{
 
 
 
+
+export interface DataDiff{
+    diff:number;
+    current:number;
+    prev?:number;
+    percent?:number;
+}
+
+export const getSeriesDiff=(data:SeriesData):DataDiff=>{
+    let current:number|undefined=undefined;
+    let prev:number|undefined=undefined;
+    if(data.series.length===0){
+        return {
+            diff:0,
+            current:0,
+        };
+    }else if(data.series.length===1){
+        const p=data.series[0];
+        if(p && p.length>1){
+            current=p[p.length-1];
+            prev=p[p.length-2];
+        }else{
+            current=p?.[0];
+        }
+    }else if(data.series.length>1){
+        const c=data.series[0];
+        const p=data.series[1];
+        if(p && c){
+            current=c[c.length-1];
+            prev=p[p.length-1];
+        }
+    }
+
+    if(current===undefined){
+        return {
+            diff:0,
+            current:0,
+        }
+    }
+
+    if(prev===undefined){
+        return {
+            diff:0,
+            current,
+        }
+    }
+
+    const diff=current-prev;
+    return {
+        diff,
+        current,
+        prev,
+        percent:current===diff?0:((diff/prev)||0),
+    }
+}

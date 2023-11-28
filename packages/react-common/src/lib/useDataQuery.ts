@@ -1,4 +1,4 @@
-import { addQueryCondition, buildQuery, deepClone, deepCompare, Query, QueryConditionOrGroup, queryCtrlFactory, SeriesData } from "@iyio/common";
+import { addQueryCondition, deepClone, deepCompare, Query, QueryConditionOrGroup, queryCtrlFactory, SeriesData } from "@iyio/common";
 import { useEffect, useMemo, useRef } from "react";
 import { useSubject } from "./rxjs-hooks";
 
@@ -99,7 +99,6 @@ export const useDataQuery=(
             }
             query=deepClone(query);
             addQueryCondition(query,cond,'and');
-            console.log('hio 👋 👋 👋 QUERY merged',buildQuery(query));
         }
 
         lastStateRef.current=state;
