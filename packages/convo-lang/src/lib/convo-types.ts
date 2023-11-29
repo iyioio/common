@@ -2,6 +2,7 @@ import { CodeParsingResult, JsonScheme } from '@iyio/common';
 import type { ZodObject, ZodType } from 'zod';
 import type { Conversation } from './Conversation';
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
+import { ConvoMdStatement } from './convo-markdown-types';
 
 export type ConvoMessageType='text'|'function';
 
@@ -64,8 +65,8 @@ export interface ConvoMessage
     content?:string;
     statement?:ConvoStatement;
     fn?:ConvoFunction;
-    tags?:ConvoTag[]
-
+    tags?:ConvoTag[];
+    markdown?:ConvoMdStatement[];
 }
 
 export interface ConvoStatement

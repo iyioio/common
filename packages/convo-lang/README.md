@@ -117,6 +117,10 @@ obj2 = {
 ```
 
 
+## Markdown support
+Text based messages in convo support a subset of the markdown syntax and the markdown structure
+is available at compile time.
+
 
 
 ## Keywords
