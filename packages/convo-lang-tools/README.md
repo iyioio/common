@@ -14,7 +14,7 @@ For use in an application install the @iyio/convo-lang package
 ``` sh
 npm i @iyio/convo-lang
 
-# To use OpenAI as a completion provider you will need to install the following to packages as well
+# To use OpenAI as a completion provider you will need to install the following packages as well
 npm i @iyio/ai-complete 
 ```
 
