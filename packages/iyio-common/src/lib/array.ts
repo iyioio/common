@@ -99,6 +99,24 @@ export const aryCount=<T>(ary:T[]|null|undefined,check:((item:T)=>boolean|null|u
     return count;
 }
 
+
+export const arySum=<T>(ary:T[]|null|undefined,getValue:(item:T)=>number|null|undefined):number=>
+{
+    if(!ary || !getValue){
+        return 0;
+    }
+
+    let value=0;
+    for(let i=0;i<ary.length;i++){
+        const v=getValue(ary[i] as T);
+        if(v){
+            value+=v;
+        }
+    }
+
+    return value;
+}
+
 export const sortStringsCallback=(a:string,b:string)=>a.localeCompare(b);
 export const sortStringsReverseCallback=(a:string,b:string)=>b.localeCompare(a);
 
