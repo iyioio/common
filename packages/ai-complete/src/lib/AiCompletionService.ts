@@ -1,7 +1,7 @@
 import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
 import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation } from '@iyio/convo-lang';
 import { ZodType, ZodTypeAny, z } from "zod";
-import { AiCompletionProviders } from "./_type.ai-complete";
+import { AiCompletionProviders, aiCompletionMaxAudioLengthParam, aiCompletionMaxImageLengthParam, aiCompletionMaxTextLengthParam } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
 import { AiCompletionCapabilityScheme, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionMessageType, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
 import { parseAiCompletionMessages } from "./ai-message-converter";
@@ -9,6 +9,9 @@ import { parseAiCompletionMessages } from "./ai-message-converter";
 export interface AiCompletionServiceOptions
 {
     providers:ProviderTypeDef<AiCompletionProvider>;
+    defaultMaxTextTokenLength?:number;
+    defaultMaxAudioTokenLength?:number;
+    defaultMaxImageTokenLength?:number;
 }
 
 export class AiCompletionService implements ConvoCompletionService
@@ -17,16 +20,30 @@ export class AiCompletionService implements ConvoCompletionService
     public static fromScope(scope:Scope){
         return new AiCompletionService({
             providers:scope.to(AiCompletionProviders),
+            defaultMaxTextTokenLength:aiCompletionMaxTextLengthParam(scope),
+            defaultMaxAudioTokenLength:aiCompletionMaxAudioLengthParam(scope),
+            defaultMaxImageTokenLength:aiCompletionMaxImageLengthParam(scope),
         })
     }
 
     private readonly providers:TypeDef<AiCompletionProvider>;
 
+
+    public readonly defaultMaxTextTokenLength:number;
+    public readonly defaultMaxAudioTokenLength:number;
+    public readonly defaultMaxImageTokenLength:number;
+
     public constructor({
-        providers
+        providers,
+        defaultMaxTextTokenLength=3000,
+        defaultMaxAudioTokenLength=3000,
+        defaultMaxImageTokenLength=3000,
     }:AiCompletionServiceOptions){
 
         this.providers=providers;
+        this.defaultMaxTextTokenLength=defaultMaxTextTokenLength;
+        this.defaultMaxAudioTokenLength=defaultMaxAudioTokenLength;
+        this.defaultMaxImageTokenLength=defaultMaxImageTokenLength;
     }
 
     private getProvider(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):AiCompletionProvider|undefined{
@@ -245,9 +262,19 @@ export class AiCompletionService implements ConvoCompletionService
     }
 
     public getMaxTokensForMessageType(messageType:AiCompletionMessageType,model?:string):number{
-        return this.providers.getFirst(null,p=>{
+        const r=this.providers.getFirst(null,p=>{
             return p.getMaxTokensForMessageType?.(messageType,model);
-        })??3000;
+        });
+
+        if(r!==undefined){
+            return r;
+        }
+
+        switch(messageType){
+            case 'audio': return this.defaultMaxAudioTokenLength;
+            case 'image': return this.defaultMaxImageTokenLength;
+            default: return this.defaultMaxTextTokenLength;
+        }
     }
 
     public getTokenEstimateForMessage(message:string,model?:string):number{

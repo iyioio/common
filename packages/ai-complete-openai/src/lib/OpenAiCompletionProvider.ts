@@ -346,7 +346,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     public getMaxTokensForMessageType?(messageType:AiCompletionMessageType,model?:string):number|undefined
     {
 
-        if(model){
+        if(!model){
             switch(messageType){
 
                 case 'text':
