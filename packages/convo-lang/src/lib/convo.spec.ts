@@ -125,8 +125,8 @@ My name is {{name}}
 
 describe('convo',()=>{
 
-    const parse=(msgCount:number,prompt:string,)=>{
-        const r=parseConvoCode(prompt);
+    const parse=(msgCount:number,prompt:string,debug?:(...args:any[])=>void)=>{
+        const r=parseConvoCode(prompt,debug);
 
         expect(r.error).toBeUndefined();
 
@@ -917,6 +917,39 @@ describe('convo',()=>{
         expect(executeConvoFunction(fn,{value:false})).toEqual('false');
         expect(executeConvoFunction(fn,{value:1})).toEqual('true');
         expect(executeConvoFunction(fn,{value:true})).toEqual('true');
+
+    })
+
+
+
+
+    it('should parse message starting without !',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > user
+            [](https://example.com/image.jpg)
+            Image above
+        `);
+
+        const msg=convo.result?.[0]?.content;
+        expect(msg).not.toBeUndefined();
+
+        expect(msg?.startsWith('[')).toBe(true);
+
+    })
+
+    it('should parse message starting with !',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > user
+            ![](https://example.com/image.jpg)
+            Image above
+        `);
+
+        const msg=convo.result?.[0]?.content;
+        expect(msg).not.toBeUndefined();
+
+        expect(msg?.startsWith('!')).toBe(true);
 
     })
 

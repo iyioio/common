@@ -1,10 +1,10 @@
 import { AiComplationMessageType, AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
-import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, secretManager, shortUuid, unused } from '@iyio/common';
+import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
 import { ImagesResponse } from 'openai/resources';
-import { ChatCompletionAssistantMessageParam, ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from 'openai/resources/chat';
-import { openAiApiKeyParam, openAiAudioModelParam, openAiBaseUrlParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam } from './_types.ai-complete-openai';
+import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from 'openai/resources/chat';
+import { openAiApiKeyParam, openAiAudioModelParam, openAiBaseUrlParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam, openAiVisionModelParam } from './_types.ai-complete-openai';
 import { OpenAiSecrets } from './ai-complete-openai-type';
 
 const defaultTokenCharLength=3.75;
@@ -17,12 +17,14 @@ export interface OpenAiCompletionProviderOptions
     chatModels?:string[];
     audioModels?:string[];
     imageModels?:string[];
+    visionModels?:string[];
     secretManager?:SecretManager;
     secretsName?:string;
 }
 
 //const dalle2Model='dall-e-2';
 const dalle3Model='dall-e-3';
+const defaultVisionModel='gpt-4-vision-preview';
 
 export class OpenAiCompletionProvider implements AiCompletionProvider
 {
@@ -36,6 +38,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             chatModels:scope.to(openAiChatModelParam).get()?.split(',').map(m=>m.trim()),
             audioModels:scope.to(openAiAudioModelParam).get()?.split(',').map(m=>m.trim()),
             imageModels:scope.to(openAiImageModelParam).get()?.split(',').map(m=>m.trim()),
+            visionModels:scope.to(openAiVisionModelParam).get()?.split(',').map(m=>m.trim()),
         })
     }
 
@@ -51,6 +54,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     private readonly _chatModel?:string;
     private readonly _audioModel?:string;
     private readonly _imageModel?:string;
+    private readonly _visionModel?:string;
 
 
     private readonly imageGenLockLow:Lock=new Lock(1)
@@ -64,15 +68,17 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         chatModels=['gpt-3.5-turbo'],
         audioModels=['whisper-1'],
         imageModels=[dalle3Model],
+        visionModels=[defaultVisionModel]
     }:OpenAiCompletionProviderOptions){
         this.apiKey=apiKey;
         this._apiBaseUrl=apiBaseUrl,
         this.secretManager=secretManager;
         this.secretsName=secretsName;
-        this._allowedModels=[...chatModels,...audioModels,...imageModels];
+        this._allowedModels=[...chatModels,...audioModels,...imageModels,...visionModels];
         this._chatModel=chatModels[0];
         this._audioModel=audioModels[0];
         this._imageModel=imageModels[0];
+        this._visionModel=visionModels[0];
     }
 
     public getAllowedModels():readonly string[]{
@@ -126,7 +132,9 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
     private async completeChatAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
-        const model=lastMessage?.model??this._chatModel;
+        const useVision=request.capabilities?.includes('vision');
+
+        const model=lastMessage?.model??(useVision?this._visionModel:this._chatModel);
         if(!model){
             throw new Error('Chat AI model not defined');
         }
@@ -136,9 +144,26 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         const oMsgs:ChatCompletionMessageParam[]=[];
         for(const m of request.messages){
             if(m.type==='text'){
+                let content:string|Array<ChatCompletionContentPart>;
+                if(useVision){
+                    const items=parseMarkdownImages(m.content??'');
+                    if(items.length===1 && (typeof items[0]?.text === 'string')){
+                        content=items[0]?.text??'';
+                    }else{
+                        content=items.map<ChatCompletionContentPart>(i=>i.image?{
+                            type:'image_url',
+                            image_url:{url:i.image.url}
+                        }:{
+                            type:'text',
+                            text:i.text??''
+                        })
+                    }
+                }else{
+                    content=m.content??'';
+                }
                 oMsgs.push(deleteUndefined(asType<ChatCompletionUserMessageParam|ChatCompletionAssistantMessageParam|ChatCompletionSystemMessageParam>({
                     role:(m.role??'user') as any,
-                    content:m.content??'',
+                    content
                 })))
             }else if(m.type==='function' && m.called){
                 const toolId=m.metadata?.['toolId']??m.called;
@@ -182,6 +207,11 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             tools:oFns?.length?oFns:undefined,
             user:lastMessage?.userId,
         };
+        if(useVision){
+            // todo - review if this is needed. Current used as workaround for issue with
+            //        preview version of vision model
+            cParams.max_tokens=4096;
+        }
         request.debug?.('snd > OpenAi.ChatCompletionCreateParams',cParams);
 
         const r=await api.chat.completions.create(cParams);

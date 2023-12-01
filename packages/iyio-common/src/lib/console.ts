@@ -51,6 +51,8 @@ export const removeConsoleListener=(listener:ConsoleListener):boolean=>
     return true;
 }
 
+let _isConsoleLogReplaced=false;
+export const isConsoleLogReplaced=()=>_isConsoleLogReplaced;
 
 let consoleIntercepted=false;
 export const enableConsoleListening=()=>
@@ -67,7 +69,7 @@ export const enableConsoleListening=()=>
     const defaultWarn=console.warn;
     const defaultError=console.error;
 
-    console['log']=(...args)=>
+    const log=(...args:any[])=>
     {
         const i=args.indexOf(ignoreConsoleListeners);
         if(i!==-1){
@@ -80,6 +82,8 @@ export const enableConsoleListening=()=>
             report(args,LogLevel.log);
         }
     }
+    console['log']=log;
+    _isConsoleLogReplaced=console['log']===log;
 
     console.info=(...args)=>
     {

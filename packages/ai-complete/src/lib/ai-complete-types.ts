@@ -150,6 +150,8 @@ export const AiCompletionResultScheme=z.object({
 })
 export type AiCompletionResult=z.infer<typeof AiCompletionResultScheme>;
 
+export const AiCompletionCapabilityScheme=z.enum(['vision']);
+export type AiCompletionCapability=z.infer<typeof AiCompletionCapabilityScheme>;
 
 export const AiCompletionRequestScheme=z.object({
 
@@ -163,6 +165,11 @@ export const AiCompletionRequestScheme=z.object({
      * transcription.
      */
     preGenerateOnly:z.boolean().optional(),
+
+    /**
+     * Array of capabilities that should be included.
+     */
+    capabilities:AiCompletionCapabilityScheme.array().optional(),
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme> & {
     debug?:(...args:any[])=>void;

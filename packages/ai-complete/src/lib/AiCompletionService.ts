@@ -3,7 +3,7 @@ import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation }
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiComplationMessageType, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
+import { AiComplationMessageType, AiCompletionCapabilityScheme, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
 import { parseAiCompletionMessages } from "./ai-message-converter";
 
 export interface AiCompletionServiceOptions
@@ -297,7 +297,21 @@ export class AiCompletionService implements ConvoCompletionService
             }
         }
 
-        const result=await this.completeAsync({messages,functions,debug:flat.debug});
+        const request:AiCompletionRequest={
+            messages,
+            functions,
+            debug:flat.debug,
+            capabilities:[],
+        }
+
+        for(const c of flat.conversation.serviceCapabilities){
+            const p=AiCompletionCapabilityScheme.safeParse(c);
+            if(p.success===true){
+                request.capabilities?.push(p.data);
+            }
+        }
+
+        const result=await this.completeAsync(request);
 
         const resultMessage=result.options[0];
         if(!resultMessage){

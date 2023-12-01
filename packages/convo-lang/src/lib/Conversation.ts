@@ -2,17 +2,20 @@ import { ReadonlySubject } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
+import { createConvoVisionFunction } from "./createConvoVisionFunction";
 
 export interface ConversationOptions
 {
     userRoles?:string[];
     roleMap?:Record<string,string>;
     completionService?:ConvoCompletionService;
+    serviceCapabilities?:ConvoCapability[];
+    capabilities?:ConvoCapability[]
 }
 
 export class Conversation
@@ -47,14 +50,38 @@ export class Conversation
 
     public readonly externFunctions:Record<string,ConvoScopeFunction>={};
 
-    public constructor({
-        userRoles=['user'],
-        roleMap={},
-        completionService=convoCompletionService.get(),
-    }:ConversationOptions={}){
+    /**
+     * Capabilities the conversation should support.
+     */
+    public readonly capabilities:ConvoCapability[];
+
+    /**
+     * Capabilities that should be enabled by the underlying completion service.
+     */
+    public readonly serviceCapabilities:ConvoCapability[];
+
+    public constructor(options:ConversationOptions={}){
+        const {
+            userRoles=['user'],
+            roleMap={},
+            completionService=convoCompletionService.get(),
+            capabilities=[],
+            serviceCapabilities=[],
+        }=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
+        this.capabilities=capabilities;
+        this.serviceCapabilities=serviceCapabilities;
+
+        if(this.capabilities.includes('vision')){
+            this.define({
+                hidden:true,
+                fn:createConvoVisionFunction({
+                    conversationOptions:options,
+                })
+            },true)
+        }
     }
 
     private _isDisposed=false;
@@ -74,15 +101,33 @@ export class Conversation
         }
     }
 
-    public append(messages:string,mergeWithPrev=false):ConvoParsingResult{
+    public append(messages:string|(ConvoMessagePart|string)[],mergeWithPrev=false):ConvoParsingResult{
+        let visibleContent:string|undefined=undefined;
+        let hasHidden=false;
+        if(Array.isArray(messages)){
+            hasHidden=messages.some(m=>(typeof m === 'object')?m.hidden:false);
+            if(hasHidden){
+                visibleContent=messages.filter(m=>(typeof m === 'string')||!m.hidden).map(m=>(typeof m === 'string')?m:m.content).join('');
+                messages=messages.map(m=>(typeof m === 'string')?m:m.content).join('');
+            }else{
+                messages=messages.map(m=>(typeof m === 'string')?m:m.content).join('');
+            }
+        }
         const r=parseConvoCode(messages);
         if(r.error){
             throw r.error
         }
-        if(mergeWithPrev && this._convo.length){
-            this._convo[this._convo.length-1]+='\n'+messages;
-        }else{
-            this._convo.push(messages);
+
+        if(hasHidden){
+            messages=visibleContent??'';
+        }
+
+        if(messages){
+            if(mergeWithPrev && this._convo.length){
+                this._convo[this._convo.length-1]+='\n'+messages;
+            }else{
+                this._convo.push(messages);
+            }
         }
 
         if(r.result){
@@ -149,7 +194,7 @@ export class Conversation
     }
 
     private async _completeAsync(
-        getCompletion:(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[],
+        getCompletion:ConvoFlatCompletionCallback,
         autoCompleteFunctionReturns=true,
         prevCompletion?:ConvoCompletionMessage[],
         preReturnValues?:any[]
@@ -224,7 +269,7 @@ export class Conversation
                     const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
                     const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
                     const disableAutoComplete=(
-                        exe.getVar(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
+                        exe.getVarEx(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
                         containsConvoTag(target?.tags,convoTags.disableAutoComplete)
                     )
                     if(!returnValues){
@@ -338,7 +383,7 @@ export class Conversation
                     if(msg.role==='result' && prev?.fn?.call){
                         flat.role='function';
                         flat.called=prev.fn;
-                        flat.calledReturn=exe.getVar(convoResultReturnName,undefined,undefined,false);
+                        flat.calledReturn=exe.getVarEx(convoResultReturnName,undefined,undefined,false);
                         flat.calledParams=exe.getConvoFunctionArgsValue(prev.fn);
                         if(prev.tags){
                             flat.tags=flat.tags?{...convoTagsToMap(prev.tags),...flat.tags}:convoTagsToMap(prev.tags)
@@ -374,7 +419,24 @@ export class Conversation
         }
 
 
-        const shouldDebug=exe.getVar(convoVars.__debug,undefined,undefined,false);
+        if(this.capabilities.includes('vision')){
+            const systemMessage=messages.find(m=>m.role==='system');
+            const content=exe.getVar(convoVars.__visionServiceSystemMessage,null,defaultConvoVisionSystemMessage);
+            if(systemMessage){
+                systemMessage.content=(
+                    (systemMessage.content?systemMessage.content+'\n\n':'')+
+                    content
+                )
+            }else{
+                messages.unshift({
+                    role:'system',
+                    content
+                })
+            }
+        }
+
+
+        const shouldDebug=exe.getVarEx(convoVars.__debug,undefined,undefined,false);
         const debug=shouldDebug?(...args:any[])=>{
             if(!args.length){
                 return;
@@ -405,7 +467,8 @@ export class Conversation
             exe,
             messages,
             conversation:this,
-            debug
+            debug,
+            capabilities:[...this.serviceCapabilities],
         }
     }
 
@@ -469,9 +532,20 @@ export class Conversation
         }
 
 
-        const out:string[]=[];
+        const outParts:(string|ConvoMessagePart)[]=[];
+        const push=(content:string,item:ConvoDefItem)=>{
+            if(item.hidden){
+                outParts.push({hidden:true,content});
+            }else{
+                outParts.push(content);
+            }
+        }
         for(let i=0;i<items.length;i++){
-            const type=items[i]?.type;
+            const item=items[i];
+            if(!item){
+                continue;
+            }
+            const type=item.type;
             if(!type || (!override && this.getAssignment(type.name))){
                 continue
             }
@@ -482,29 +556,37 @@ export class Conversation
             if(!str){
                 continue;
             }
-            out.push(str);
-            out.push('\n');
+            push(str,item);
+            push('\n',item);
             this.definitionItems.push({type});
         }
 
         for(let i=0;i<items.length;i++){
-            const v=items[i]?.var;
+            const item=items[i];
+            if(!item){
+                continue;
+            }
+            const v=item.var;
             if(!v || (!override && this.getAssignment(v.name))){
                 continue
             }
 
             validateConvoVarName(v.name);
 
-            out.push(`${v.name} = ${JSON.stringify(v.value)}`);
-            out.push('\n');
+            push(`${v.name} = ${JSON.stringify(v.value)}`,item);
+            push('\n',item);
             this.definitionItems.push({var:v});
         }
 
-        if(out.length){
-            out.unshift('> define\n')
+        if(outParts.length){
+            outParts.unshift('> define\n')
         }
 
         for(let i=0;i<items.length;i++){
+            const item=items[i];
+            if(!item){
+                continue;
+            }
             const fn=items[i]?.fn;
             if(!fn || (!override && this.getAssignment(fn.name))){
                 continue
@@ -512,8 +594,8 @@ export class Conversation
 
             validateConvoFunctionName(fn.name);
 
-            if(out.length){
-                out.push('\n');
+            if(outParts.length){
+                push('\n',item);
             }
             if(fn.registerOnly){
                 if(fn.local===false){
@@ -521,12 +603,12 @@ export class Conversation
                 }
                 this.createFunctionImpl(fn);
             }else{
-                out.push(this.createFunctionImpl(fn));
-                out.push('\n');
+                push(this.createFunctionImpl(fn),item);
+                push('\n',item);
             }
         }
 
-        return out.length?this.append(out.join('')):undefined;
+        return outParts.length?this.append(outParts):undefined;
     }
 
     public defineType(type:ConvoTypeDef,override?:boolean):ConvoParsingResult|undefined{
@@ -573,20 +655,23 @@ export class Conversation
             const returnType=fnDef.returnScheme?.name??fnDef.returnTypeName;
             return `${fnSig} ->${returnType?' '+returnType:''} (\n${fnDef.body}\n)`;
         }else{
+            let scopeFn:ConvoScopeFunction|undefined=undefined;
             if(fnDef.scopeCallback){
-                this.externFunctions[fnDef.name]=fnDef.scopeCallback;
+                scopeFn=fnDef.scopeCallback;
             }else if(fnDef.callback){
                 const callback=fnDef.callback;
                 if(fnDef.paramsJsonScheme || fnDef.paramsType){
-                    this.externFunctions[fnDef.name]=(scope)=>{
+                    scopeFn=(scope)=>{
                         return callback(convoLabeledScopeParamsToObj(scope));
                     }
                 }else{
-                    this.externFunctions[fnDef.name]=(scope)=>{
+                    scopeFn=(scope)=>{
                         return callback(scope.paramValues?.[0]);
                     }
                 }
-
+            }
+            if(scopeFn){
+                this.externFunctions[fnDef.name]=scopeFn;
             }
             return fnSig;
         }

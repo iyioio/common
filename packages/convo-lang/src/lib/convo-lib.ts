@@ -23,14 +23,56 @@ export const convoEnumFnName='enum';
 export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
 
+export const convoFunctions={
+    queryImage:'queryImage'
+} as const;
+
+/**
+ * reserved system variables
+ */
 export const convoVars={
+
+    /**
+     * In environments that have access to the filesystem __cwd defines the current working directory.
+     */
     __cwd:'__cwd',
+
+    /**
+     * When set to true debugging information will be added to conversations.
+     */
     __debug:'__debug',
+
+    /**
+     * When defined __visionSystemMessage will be injected into the system message of conversations
+     * with vision capabilities. __visionSystemMessage will override the default vision
+     * system message.
+     */
+    __visionSystemMessage:'__visionSystemMessage',
+
+    /**
+     * The default system message used for completing vision requests. Vision requests are typically
+     * completed in a separate conversation that supports vision messages. By default the system
+     * message of the conversation that triggered the vision request will be used.
+     */
+    __visionServiceSystemMessage:'__visionServiceSystemMessage',
+
+    /**
+     * Response used with the system is not able to generate a vision response.
+     */
+    __defaultVisionResponse:'__defaultVisionResponse',
 } as const;
 
 export const convoTags={
     disableAutoComplete:'disableAutoComplete'
 } as const;
+
+export const defaultConvoVisionSystemMessage=(
+    'If the user asks a question about a markdown image without a '+
+    'description or the description can not answer the user\'s question or '+
+    `complete the user\`s request call the ${convoFunctions.queryImage} function.`
+);
+
+export const defaultConvoVisionResponse='Unable to answer or respond to questions or requests for the given image or images';
 
 export const allowedConvoDefinitionFunctions=[
     convoStructFnName,

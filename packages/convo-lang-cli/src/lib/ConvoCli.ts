@@ -72,7 +72,9 @@ export class ConvoCli
     public constructor(options:ConvoCliOptions){
         this.allowExec=options.allowExec;
         this.options=options;
-        this.convo=new Conversation();
+        // todo - remove setting of capabilities here after adding the ability to
+        //        set capabilities in convo messages.
+        this.convo=new Conversation({capabilities:['vision']});
         if(options.prepend){
             this.convo.append(options.prepend);
         }

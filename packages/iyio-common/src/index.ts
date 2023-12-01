@@ -91,6 +91,8 @@ export * from './lib/jwt';
 export * from './lib/jwt-lib';
 export * from './lib/jwt.deps';
 export * from './lib/macros';
+export * from './lib/markdown-parsing';
+export * from './lib/markdown-types';
 export * from './lib/math';
 export * from './lib/mime';
 export * from './lib/numbers';

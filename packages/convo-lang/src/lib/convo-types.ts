@@ -56,6 +56,8 @@ export interface ConvoErrorReferences
     baseType?:ConvoBaseType;
 }
 
+export type ConvoCapability='vision';
+
 /**
  * Can be a text message or function definition
  */
@@ -67,6 +69,12 @@ export interface ConvoMessage
     fn?:ConvoFunction;
     tags?:ConvoTag[];
     markdown?:ConvoMdStatement[];
+}
+
+export interface ConvoMessagePart
+{
+    content:string;
+    hidden?:boolean;
 }
 
 export interface ConvoStatement
@@ -519,6 +527,7 @@ export interface FlatConvoConversation
     exe:ConvoExecutionContext;
     messages:FlatConvoMessage[];
     conversation:Conversation;
+    capabilities:ConvoCapability[];
     /**
      * If defined the debug function should be written to with debug info.
      */
@@ -609,6 +618,11 @@ export interface ConvoDefItem<T=any,R=any>
     var?:ConvoVarDef<T>;
     fn?:ConvoFunctionDef<T,R>;
 
+    /**
+     * If true the item will be registered but its code will not be added to the conversation.
+     */
+    hidden?:boolean;
+
     types?:Record<string,ConvoTypeDef['type']>;
     vars?:Record<string,ConvoVarDef['value']>;
     fns?:Record<string,Omit<ConvoFunctionDef,'name'>|((params?:any)=>any)>;
@@ -619,3 +633,10 @@ export interface ConvoAppend
     text:string;
     messages:ConvoMessage[];
 }
+
+/**
+ * Completes a flattened conversation. Flatten conversations are conversation where all template
+ * variables have been applied and the conversation is ready to be passed to an LLM or other
+ * service that will use the flatten view of the conversation.
+ */
+export type ConvoFlatCompletionCallback=(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[];

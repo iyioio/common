@@ -202,7 +202,7 @@ export class ConvoExecutionContext
                 throw new ConvoError(
                     'function-not-defined',
                     {fn},
-                    `No function defined by the name ${fn.name}`);
+                    `executeFunctionResultAsync - No function defined by the name ${fn.name}`);
             }
             args=await this.paramsToObjAsync(fn.params);
             fn=callee;
@@ -537,7 +537,7 @@ export class ConvoExecutionContext
             }
 
         }else if(statement.ref){
-            value=this.getVar(statement.ref,statement.refPath,scope);
+            value=this.getVarEx(statement.ref,statement.refPath,scope);
         }else{
             value=statement.value;
         }
@@ -640,10 +640,10 @@ export class ConvoExecutionContext
         if(!statement.ref){
             throw new ConvoError('variable-ref-required',{statement});
         }
-        return this.getVar(statement.ref,statement.refPath,scope,throwUndefined);
+        return this.getVarEx(statement.ref,statement.refPath,scope,throwUndefined);
     }
 
-    public getVar(name:string,path?:string[],scope?:ConvoScope,throwUndefined=true){
+    public getVarEx(name:string,path?:string[],scope?:ConvoScope,throwUndefined=true):any{
         let value=scope?.vars[name]??this.sharedVars[name];
         if(value===undefined && (scope?!(name in scope.vars):true) && !(name in this.sharedVars)){
             if(throwUndefined){
@@ -653,6 +653,15 @@ export class ConvoExecutionContext
             value=getValueByAryPath(value,path);
         }
         return value;
+    }
+
+    public getVar(nameOrPath:string,scope?:ConvoScope|null,defaultValue?:any):any{
+        let path:string[]|undefined=undefined;
+        if(nameOrPath.includes('.')){
+            path=nameOrPath.split('.');
+            nameOrPath=path.shift()??'';
+        }
+        return this.getVarEx(nameOrPath,path,scope??undefined,false)??defaultValue;
     }
 
     public setRefValue(statement:ConvoStatement|null|undefined,value:any,scope?:ConvoScope):any{

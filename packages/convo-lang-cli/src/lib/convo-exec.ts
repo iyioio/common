@@ -20,7 +20,7 @@ export const createConvoExec=(confirm:ConvoExecConfirmCallback)=>{
                 out.push('Access denied');
                 break;
             }
-            const cwd=exe.getVar(convoVars.__cwd,undefined,scope,false);
+            const cwd=exe.getVarEx(convoVars.__cwd,undefined,scope,false);
             const r=await execAsync({
                 cmd,
                 cwd:(typeof cwd === 'string')?cwd:undefined,
