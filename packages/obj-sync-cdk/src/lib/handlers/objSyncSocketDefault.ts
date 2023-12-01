@@ -1,4 +1,3 @@
-import { dynamoClient } from '@iyio/aws-dynamo';
 import { BadRequestError, FnEvent, FnEventEventTypeDisconnect, FnEventEventTypeMessage, asArray, createFnHandler } from '@iyio/common';
 import { ObjSyncClientCommand, ObjSyncRemoteCommand } from '@iyio/obj-sync';
 import { cleanUpSocket, createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib';
@@ -9,10 +8,6 @@ const objSyncSocketDefault=async (
     fnEvt:FnEvent,
     input:ObjSyncRemoteCommand|ObjSyncRemoteCommand[]|undefined|null
 ):Promise<void>=>{
-
-    console.log('default',fnEvt.eventType,JSON.stringify({input},null,4)); // todo - remove
-    dynamoClient().logCommandInput=true; // todo - remove
-    dynamoClient().logCommandOutput=true; // todo - remove
 
     if(!fnEvt.connectionId){
         const msg='fnEvt must define a connectionId in-order to create a new client connection';
