@@ -16,7 +16,7 @@ export interface AiCompletionProvider
 
     canComplete?(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):boolean;
 
-    getMaxTokensForMessageType?(messageType:AiComplationMessageType,model?:string):number|undefined;
+    getMaxTokensForMessageType?(messageType:AiCompletionMessageType,model?:string):number|undefined;
 
     getTokenEstimateForMessage?(message:string,model?:string):number|undefined;
 }
@@ -56,8 +56,8 @@ export const AiCompletionRoleScheme=z.enum(allAiCompletionRoles);
 export type AiCompletionRole=z.infer<typeof AiCompletionRoleScheme>;
 export const isAiCompletionRole=(value:any):value is AiCompletionRole=>allAiCompletionRoles.includes(value);
 
-export const AiComplationMessageTypeScheme=z.enum(['text','image','audio','function','function-error','error']);
-export type AiComplationMessageType=z.infer<typeof AiComplationMessageTypeScheme>;
+export const AiCompletionMessageTypeScheme=z.enum(['text','image','audio','function','function-error','error']);
+export type AiCompletionMessageType=z.infer<typeof AiCompletionMessageTypeScheme>;
 
 export const AiCompletionMessageScheme=z.object({
 
@@ -88,12 +88,12 @@ export const AiCompletionMessageScheme=z.object({
     /**
      * The type of the message
      */
-    type:AiComplationMessageTypeScheme,
+    type:AiCompletionMessageTypeScheme,
 
     /**
      * The requested message type to response with.
      */
-    requestedResponseType:AiComplationMessageTypeScheme.optional(),
+    requestedResponseType:AiCompletionMessageTypeScheme.optional(),
 
     call:AiCompletionFunctionCallScheme.optional(),
 

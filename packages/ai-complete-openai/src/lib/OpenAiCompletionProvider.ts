@@ -1,4 +1,4 @@
-import { AiComplationMessageType, AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
+import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
 import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
@@ -343,10 +343,47 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
 
 
-    public getMaxTokensForMessageType?(messageType:AiComplationMessageType,model?:string):number|undefined
+    public getMaxTokensForMessageType?(messageType:AiCompletionMessageType,model?:string):number|undefined
     {
-        unused(messageType,model);
-        // todo - check based on model
+
+        if(model){
+            switch(messageType){
+
+                case 'text':
+                    model=this._chatModel;
+                    break;
+
+                case 'image':
+                    model=this._imageModel;
+                    break;
+
+                case 'audio':
+                    model=this._audioModel;
+                    break;
+
+                default:
+                    model=this._chatModel;
+                    break;
+            }
+        }
+
+        switch(model){
+            case 'gpt-4-1106-preview': return 128000;
+            case 'gpt-4-vision-preview': return 128000;
+            case 'gpt-4': return 8192;
+            case 'gpt-4-0314': return 8192;
+            case 'gpt-4-0613': return 8192;
+            case 'gpt-4-32k': return 32768;
+            case 'gpt-4-32k-0314': return 32768;
+            case 'gpt-4-32k-0613': return 32768;
+            case 'gpt-3.5-turbo-1106': return 4096;
+            case 'gpt-3.5-turbo': return  4096;
+            case 'gpt-3.5-turbo-16k': return 16385;
+            case 'gpt-3.5-turbo-0301': return  16385;
+            case 'gpt-3.5-turbo-0613': return 16385;
+            case 'gpt-3.5-turbo-16k-0613': return  16385;
+        }
+
         return 4096;
     }
 

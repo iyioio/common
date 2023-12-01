@@ -3,7 +3,7 @@ import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation }
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders } from "./_type.ai-complete";
 import { CallAiFunctionInterfaceResult, aiCompleteDefaultModel, applyResultToAiMessage, callAiFunctionInterfaceAsync, mergeAiCompletionMessages } from "./ai-complete-lib";
-import { AiComplationMessageType, AiCompletionCapabilityScheme, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
+import { AiCompletionCapabilityScheme, AiCompletionFunction, AiCompletionFunctionInterface, AiCompletionMessage, AiCompletionMessageType, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, CompletionOptions, isAiCompletionRole } from "./ai-complete-types";
 import { parseAiCompletionMessages } from "./ai-message-converter";
 
 export interface AiCompletionServiceOptions
@@ -244,7 +244,7 @@ export class AiCompletionService implements ConvoCompletionService
         return callResult;
     }
 
-    public getMaxTokensForMessageType(messageType:AiComplationMessageType,model?:string):number{
+    public getMaxTokensForMessageType(messageType:AiCompletionMessageType,model?:string):number{
         return this.providers.getFirst(null,p=>{
             return p.getMaxTokensForMessageType?.(messageType,model);
         })??3000;
