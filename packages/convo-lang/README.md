@@ -1,43 +1,46 @@
 # convo-lang (a work in progress)
-A conversational prompting and programming language. Convo aims to provide a uniform prompting
-language that is LLM agnostic and support features such as function calling and tool usage.
+A conversational prompting and programming language. Convo-lang provides a uniform prompting
+language that is LLM agnostic and supports features such as function calling and tool usage. The
+Convo-lang ecosystem consists of a parser, runtime, Typescript/Javascript libraries, a CLI, and
+a vscode extension for syntax highlighting and in-editor script execution.
+
 
 ## Packages
-The Convo-lang ecosystem is contained in the following 3 packages.
-- @iyio/convo-lang - Contains the convo-lang parser, runtime and code to use convo in your application.
-- @iyio/convo-lang-cli - A CLI interface that allows you to execute and parse convo files.
-- @iyio/convo-lang-tools - Contains the convo-lang vscode extension which includes syntax highlighting,
-  in-editor script execution, script parser and other helpful tools for working with convo-lang
+- @iyio/convo-lang - Contains the convo-lang parser, runtime, and a Typescript/Javascript library to use convo-lang in your application.
+- @iyio/convo-lang-cli - A CLI interface that allows you to execute and parse convo-lang files.
+- @iyio/convo-lang-tools - Contains the convo-lang vscode extension, which includes syntax highlighting,
+  in-editor script execution, script parsing, and other helpful tools for working with convo-lang.
+  In most cases, you will not install this package but instead install the vscode convo-lang extension.
 
 ## Installation
 For use in an application install the @iyio/convo-lang package
 ``` sh
 npm i @iyio/convo-lang
 
-# To use OpenAI as a completion provider you will need to install the following packages as well
-npm i @iyio/ai-complete 
+# To use OpenAI as a completion provider you will need to install @iyio/ai-complete and @iyio/ai-complete-openai as well
+npm i @iyio/ai-complete @iyio/ai-complete-openai
 ```
 
 For use on the command line install the @iyio/convo-lang-cli package
 ``` sh
-npm i @iyio/convo-lang-cli @iyio/ai-complete-openai
+npm i @iyio/convo-lang-cli
 ```
 
 You will also probably want to install the vscode extension for syntax highlighting and other
-developer niceties. You can install the vscode extension by searching "convo-lang" in the
+developer niceties. You can install the vscode extension by searching for "convo-lang" in the
 vscode extension tab.
 
 https://marketplace.visualstudio.com/items?itemName=IYIO.convo-lang-tools 
 
 ## Syntax Example
-![convo](assets/code-example-1.png)
+![convo](https://raw.githubusercontent.com/iyioio/common/main/packages/convo-lang-cli/assets/code-example-1.png)
 
 
 
 ## Using convo-lang in an application
-When using convo-lang in an application you will primarily interact with Conversation objects.
-Conversation objects store the messages of a convo script and allow new messages to be appended 
-and LLMs to respond to messages form the user.
+When using convo-lang in an application, you will primarily interact with Conversation objects.
+Conversation objects store the messages of a convo script and allow new messages to be appended
+and LLMs to respond to messages from the user.
 
 ``` js
 import { Conversation } from '@iyio/convo-lang';
@@ -93,8 +96,8 @@ const main=async ()=>{
     // The convo property of the Conversation object will be updated with the answer from the LLM
     console.log(convo.convo)
 
-    // You can get a flatted view of the conversation by calling flattenAsync. The flattend version
-    // of the conversation contains messages with all templates populated and is suiteable to be 
+    // You can get a flatted view of the conversation by calling flattenAsync. The flatted version
+    // of the conversation contains messages with all templates populated and is suitable to be 
     // used to render a view of the conversation to the user.
     const flat=await convo.flattenAsync();
     console.log('flat',flat.messages);
@@ -105,14 +108,14 @@ main();
 ```
 
 ## Using the convo-lang extension
-With the convo vscode extension install you can execute convo scripts directly in vscode. Just
-press __(CMD+R)__ to run a script.
+With the convo vscode extension installed, you can execute convo scripts directly in vscode. Just
+press **(CMD+R)** to run a script.
 
 You can also run snippets of convo scripts that are embedded in other
-document types. Just highlight the convo code you want to run and open the command pallet and
-search for "Complete Convo Conversation" and press enter, then the snippet will be opened in a new
+document types. Just highlight the convo code you want to run, open the command palette, and
+search for "Complete Convo Conversation" and press enter. Then the snippet will be opened in a new
 convo file and completed. This is great for quick prototyping and testing prompts in your application
-without having to start you full application.
+without having to start your full application.
 
 ## Using the CLI
 The convo CLI can be used to execute convo scripts from the command line
@@ -153,7 +156,7 @@ following contents. Remember to replace the API key with your OpenAI api key.
 ```
 
 ## Vision
-When used with vision capable LLMs convo can execute vision based prompts. Images can be defined using
+When used with vision-capable LLMs, convo can execute vision-based prompts. Images are defined using
 the Markdown image syntax.
 
 Vision capabilities must be enabled. 
@@ -187,17 +190,17 @@ Why did The Beatles cross the road? Because they knew it was the only way to get
 ```
 
 ## The convo-lang syntax
-The convo-lang syntax is designed to be easily readable and follows a chat like message structure.
-A convo-lang script is a series of messages and those messages can either be a text based message,
-a function or a set of top-level statements. All messages start with a header which defines the
+The convo-lang syntax is designed to be easily readable and follows a chat-like message structure.
+A convo-lang script consists of a series of messages, which can be text-based messages,
+functions, or a set of top-level statements. All messages start with a header that defines the
 message's type.
 
 ### Message Header
-All message headers start with the (>) character followed by a role, keyword or identifier
+All message headers start with the (>) character followed by a role, keyword, or identifier.
 
 ### Text based messages
-Text based message start with a header that defines the message's role. The role can be any identifier
-with the exception of any top-level keyword identifiers.
+Text-based messages start with a header that defines the message's role. The role can be any identifier,
+with the exception of top-level keyword identifiers.
 
 ``` convo
 // text based message
@@ -206,14 +209,15 @@ message content
 ```
 
 ### Top-level statement messages
-Top-level statements allow you to define variables and execute statements with calling a function.
-Top-level statements must use one of the follow keywords as their identifier.
+Top-level statements allow you to define variables and execute statements without calling a function.
+Top-level statements must use one of the following keywords as their identifier:
+
 - do - Used to define variables and execute statements.
 - result - Used to store the result value of a function call. Result messages are typically created
-  by the runtime and automatically added to conversations. In most cases you will not directly
+  by the runtime and automatically added to conversations. In most cases, you will not directly
   create result messages.
-- define - Used to define variables and types. define messages are not allowed to call functions.
-- debug - Used to write debug information. In most cases you will not directly create debug messages.
+- define - Used to define variables and types. Define messages are not allowed to call functions.
+- debug - Used to write debug information. In most cases, you will not directly create debug messages.
 
 ``` convo
 // top-level statement
@@ -222,7 +226,7 @@ someVar=77
 ```
 
 ### Function messages
-Function messages start with an identifier followed by a parameter definition and optionally and 
+Function messages start with an identifier followed by a parameter definition and optionally a
 function body.
 
 ``` convo
@@ -249,18 +253,42 @@ function body.
 ```
 
 ### Extern function
-To allow convo to communicate with the rest of your application you can register extern functions
-that cal be called by functions define in convo.
+To allow convo-lang to communicate with the rest of your application, you can register extern functions
+that can be called at runtime by your convo scripts.
+
+``` js
+const convo=new Conversation();
+
+convo.defineFunction({
+    name:'turnOnOffLights',
+    description:'Turn the lights in the user\' house on or off',
+    // parameter types are defined using a Zod object
+    paramsType:z.object({
+        state:z.enum(['on','off']).describe('The set to set the lights to')
+    }),
+    callback:async ({state})=>{
+        const result=await fetch(`http://192.168.1.100:8888/api/lights/${state}`);
+        return {newState:result.state}
+    }
+})
+
+convo.append(/*convo*/`
+    > system
+    You are a home automation assistant. please assistant the user to the best or your ability
+`);
+
+// the turnOnOffLights function will be called with a state of "off"
+await convo.completeAsync(/*convo*/`
+    > user
+    It's time for bed, can you turn off the lights
+`);
+```
 
 
 ### Comments
-Comments start with either a pound character or 2 forwards slashes. Comments starting with a pound
-symbol are captured and available at run time as part of type definitions. Comments starting with
-2 forward slashes are non capturing.
-
-### Tags
-Tags start with the (@) character followed by a name and an optional value. Tags allow you to
-store metadata in the syntax tree of convo that is available at runtime.
+Comments start with either a pound character (#) or two forward slashes (//). Comments starting with a pound
+symbol are captured and available at runtime as part of type definitions. Comments starting with
+two forward slashes are non-capturing.
 
 ``` convo
 
@@ -273,10 +301,26 @@ store metadata in the syntax tree of convo that is available at runtime.
 )
 ```
 
+### Tags
+Tags start with the (@) character followed by a name and an optional value. Tags allow you to
+store metadata in the syntax tree of convo that is available at runtime and some special tags 
+control the behavior of convo-lang.
+
+``` convo
+@owner me
+> meFunc() -> (
+    
+    // the shared tag is a special tag that allows variables in functions to be defined in
+    // the shared variable scope instead of the local function scope.
+    @shared
+    somethingWeAllShouldKnow="Fish are cool"
+)
+```
+
 ### Types
-Convo support simple duck typing and allows for user defined types. Custom types are created using
+Convo supports simple duck typing and allows for user-defined types. User-defined types are created using
 the struct function. Each labeled parameter passed to the struct function will define a property.
-At runtime types are validated using the [Zod](https://github.com/colinhacks/zod). User defined
+At runtime, types are validated using [Zod](https://github.com/colinhacks/zod). User-defined
 types must start with an uppercase letter.
 
 ``` convo
@@ -297,13 +341,13 @@ Car = struct(
 
 
 ### Variable scoping
-Variables are either scoped to the function they are defined in or shared. Shared variables are 
-visible to all functions and top level statements. Top level statements can only define shared
-variables. To define a shared variable in a function tag an assignment statement with the @shared
+Variables are either scoped to the function in which they are defined or shared. Shared variables are
+visible to all functions and top-level statements. Top-level statements can only define shared
+variables. To define a shared variable in a function, tag an assignment statement with the @shared
 tag.
 
 ### JSON support
-JSON style values can be used in place of the map and array functions.
+JSON-style values can be used in place of the map and array functions.
 ``` convo
 // obj1 and obj2 are the same
 
@@ -322,7 +366,7 @@ obj2 = {
 
 
 ### Markdown support - (coming soon)
-Text based messages in convo support a subset of the markdown syntax and the markdown structure
+Text-based messages in convo support a subset of the markdown syntax, and the markdown structure
 is available at compile time.
 
 
