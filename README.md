@@ -1,105 +1,120 @@
-# IYIO - (a work in progress)
-A TypeScript application framework that tries not to get in the way 🤓. IYIO has a heavy focus on 
-convention over configuration and at the same time allows for fine tuned control over the resources
-in your application.
+# iyio (eye-y-io)
+Welcome to the iyio (eye-y-io) mono repo. iyio is an application framework and a set of general
+purpose libraries that tries not to get in the way 🤓
 
-## Core Concepts
-- Scopes
-- Type Definition - Provide metadata for the types in your application
-- Dependency injection
-- Services
-- Providers
-- Clients
-- Observability
-- Params
-- Data stores
+**Odds are you're here for convo-lang** - [click-here](packages/convo-lang/README.md)
 
-## Scopes
-Scope are independent collections of resources that share a common environnement.
+Better documentation is coming, Stay calm and code on.
 
+## Packages
 
-## Type Definitions
-Type Definitions (TypeDef&lt;T&gt;) are used to define metadata for a given type in your application
-and can even provide a default implementation for a type.
+- [@iyio/ai-complete](packages/ai-complete/README.md) - 
+  An AI service adapter and proxy
 
-### Type Definition Naming Convention
-- services - {name}Service
-- observables - current{name}
-- parameter / config - {name}Param
-- factory - Name of callback function minus Callback.
-  - Callback function = UserFactoryCallback
-  - FactoryTypeDef = UserFactory
-- setters - _set{name}
-- providers - {full type name}s
-- other - {full type name}Type
+- [@iyio/ai-complete-lambda](packages/ai-complete-lambda/README.md) -
+  Lambda function used as a @iyio/ai-complete proxy for using ai-complete in the browser
 
+- [@iyio/ai-complete-openai](packages/ai-complete-openai/README.md) -
+  OpenAi completion provider for @iyio/ai-complete
 
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
+- [@iyio/ai-complete-openai-cdk](packages/ai-complete-openai-cdk/README.md) -
+  CDK construct used to deploy @iyio/ai-complete using OpenAi as a completion provider
 
-# OLD Below
+- [@iyio/any-comp](packages/any-comp/README.md) -
+  A simplified version of story book with minimal dependencies
 
-## Type Refs
-TypeRefs are a way to reference a type using a const variable and allow for fluid type inference
-through out the framework.
+- [@iyio/any-comp-cli](packages/any-comp-cli/README.md) -
+  A CLI interface for running @iyio/any-comp
 
-## Dependency Injections
+- [@iyio/at-dot-css](packages/at-dot-css/README.md) -
+  A performant css-in-js library
 
-## Dependency Containers
+- [@iyio/aws](packages/aws/README.md) -
+  Shared aws dependencies
 
-## Services
+- [@iyio/aws-credential-providers](packages/aws-credential-providers/README.md) -
+  AWS credential provider
 
-Services are created using the createServiceRef function.
+- [@iyio/aws-dynamo](packages/aws-dynamo/README.md) -
+  A simplified AWS dynamo db client
 
-``` ts
-import { createServiceRef } from "@iyio/common";
-import { Auth } from "./Auth";
+- [@iyio/aws-lambda](packages/aws-lambda/README.md) -
+  An AWS lambda client that simplifies directly invoking lambda functions
 
-export const auth=createServiceRef<Auth>('auth',(deps)=>new Auth(deps));
+- [@iyio/aws-rds](packages/aws-rds/README.md) -
+  A simplified AWS RDS client. Handles data marshalling.
 
+- [@iyio/aws-s3](packages/aws-s3/README.md) -
+  An S3 client wrapper
 
-```
+- [@iyio/aws-secrets](packages/aws-secrets/README.md) -
+  AWS secrets management
 
-## Subjects
+- [@iyio/aws-tests](packages/aws-tests/README.md) -
+  AWS package unit tests
 
-Subjects are created using the createSubjectRef function.
+- [@iyio/cdk](packages/cdk/README.md) -
+  Used to deploy test resources
 
-``` ts
-import { createReadonlySubjectRef } from "@iyio/common";
-import { User } from "./User";
-import { setUsr } from "./_internal.app-common";
+- [@iyio/cdk-common](packages/cdk-common/README.md) -
+  A collection of useful CDK constructs
 
+- [@iyio/convo-lang](packages/convo-lang/README.md) -
+  A conversational prompting programming language
 
-export const usr=createReadonlySubjectRef<User|null>('usr',null,setUsr);
-```
+- [@iyio/convo-lang-cli](packages/convo-lang-cli/README.md) -
+  A CLI interface to parse and execute convo-lang scripts
 
-## Stores
-It's kinda like the Unix filesystem
+- [@iyio/convo-lang-tools](packages/convo-lang-tools/README.md) -
+  The vscode extension for convo-lang
 
-## App Services
-- auth
+- [@iyio/high-js](packages/high-js/README.md) -
+  Syntax highlighting for languages embedded in JavaScript and TypeScript
 
-## Special Filename Prefixes
+- [@iyio/iyio-common](packages/iyio-common/README.md) -
+  Common dependencies shared between all other iyio libraries
 
-Many of the libraries in the IYIO framework use a handful of special filename prefixes to make it
-easy to find code of importance.
+- [@iyio/iyio-util-fns](packages/iyio-util-fns/README.md) -
+  Utilities lambda functions
 
-- _config.* - Used to define configuration keys and values
-- _internal.* -  Used to define internal values for a library
-- _ref.* - Used to define TypeRefs
-- _reg.* - Used to register TypeRef implementation
-- _service.* - Used to define global services and subjects
+- [@iyio/media-common](packages/media-common/README.md) -
+  Library for handling media
 
-## Naming conventions
-- services - {name}Service
-- observables - current{name}
-- parameter / config - {name}Param
-- setters - _set{name}
-- providers - {full type name}s
-- other - {full type name}Type
+- [@iyio/nextjs-common](packages/nextjs-common/README.md) -
+  Common utilities for working with NextJs
+
+- [@iyio/node-common](packages/node-common/README.md) -
+  Common utilities for working with NodeJs
+
+- [@iyio/nx-common](packages/nx-common/README.md) -
+  Common utilities for working with Nx including an executor used to build libraries.
+
+- [@iyio/obj-sync](packages/obj-sync/README.md) -
+  A state machine that allows synchronizing plan javascript objects.
+
+- [@iyio/obj-sync-cdk](packages/obj-sync-cdk/README.md) -
+  A CDK construct that allows deploying @iyio/obj-sync as a service allowing synchronization of a javascript object across multiple clients.
+
+- [@iyio/protogen](packages/protogen/README.md) -
+  A markdown based application modeling library
+
+- [@iyio/protogen-runtime](packages/protogen-runtime/README.md) -
+  A runtime and default set of protogen plugins
+
+- [@iyio/protogen-ui](packages/protogen-ui/README.md) -
+  A visual editor for @iyio/protogen
+
+- [@iyio/react-common](packages/react-common/README.md) -
+  An unstyled React component library
+
+- [@iyio/rtxt](packages/rtxt/README.md) -
+  A rich text editor
+
+- [@iyio/svg-charts](packages/svg-charts/README.md) -
+  A chart library
+
+- [@iyio/svg-charts-react](packages/svg-charts-react/README.md) -
+  A React wrapper around @iyio/svg-charts
+
+- [@iyio/syn-taxi](packages/syn-taxi/README.md) -
+  A code editor
