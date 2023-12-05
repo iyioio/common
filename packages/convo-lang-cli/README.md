@@ -23,7 +23,7 @@ npm i @iyio/ai-complete @iyio/ai-complete-openai
 
 For use on the command line install the @iyio/convo-lang-cli package
 ``` sh
-npm i @iyio/convo-lang-cli
+npm i @iyio/convo-lang-cli -g
 ```
 
 You will also probably want to install the vscode extension for syntax highlighting and other
@@ -58,7 +58,7 @@ initRootScope(reg=>{
         "openAiChatModel":"gpt-4-1106-preview",
         "openAiVisionModel":"gpt-4-vision-preview",
         "openAiAudioModel":"whisper-1",
-        "openAiImageModel":"dall-e-3",
+        "openAiImageModel":"dall-e-3"
     })
 
     // EnvParams can optionally be used to load configuration variables from process.env
@@ -149,7 +149,7 @@ following contents. Remember to replace the API key with your OpenAI api key.
         "openAiChatModel":"gpt-4-1106-preview",
         "openAiVisionModel":"gpt-4-vision-preview",
         "openAiAudioModel":"whisper-1",
-        "openAiImageModel":"dall-e-3",
+        "openAiImageModel":"dall-e-3"
 
     }
 }
