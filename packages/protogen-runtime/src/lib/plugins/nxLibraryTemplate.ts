@@ -160,7 +160,7 @@ export default {
 `{
     "extends": "./tsconfig.lib.json",
     "compilerOptions": {
-        "module": "ES2015"
+        "module": "ES2020"
     }
 }
 `,
