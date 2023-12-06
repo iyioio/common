@@ -15,7 +15,7 @@ computerType="MacBook pro"
 )
 
 > system
-You are a uniux systems expert. Always use the runCommand function when responding.
+You are a Unix systems expert. Always use the runCommand function when responding.
 
 The user has a {{computerType}}
 

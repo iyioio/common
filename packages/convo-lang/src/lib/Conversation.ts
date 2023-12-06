@@ -282,7 +282,7 @@ export class Conversation
                     const lines:string[]=['> result'];
                     if(exe.sharedSetters){
                         for(const s of exe.sharedSetters){
-                            lines.push(`${s}=${JSON.stringify(exe.sharedVars[s])}`)
+                            lines.push(`${s}=${JSON.stringify(exe.sharedVars[s],null,4)}`)
                         }
                     }
                     if( (typeof lastResultValue === 'string') &&
@@ -292,7 +292,7 @@ export class Conversation
                     ){
                         lines.push(`${convoResultReturnName}=---\n${lastResultValue}\n---`)
                     }else{
-                        lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue)}`)
+                        lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue,null,4)}`)
                     }
                     lines.push('');
                     this.append(lines.join('\n'),true);
@@ -573,7 +573,7 @@ export class Conversation
 
             validateConvoVarName(v.name);
 
-            push(`${v.name} = ${JSON.stringify(v.value)}`,item);
+            push(`${v.name} = ${JSON.stringify(v.value,null,4)}`,item);
             push('\n',item);
             this.definitionItems.push({var:v});
         }

@@ -90,8 +90,8 @@ describe('markdown-parsing',()=>{
     });
 
     it('should parse images with new lines',()=>{
-        expectImages(parseMarkdownImages('![](https://liirnspace-bucksmediabucket70ce2cea-11rljmkq8tolk.s3.amazonaws.com/vaeCiOZeTyi2U1xyiOiNKgr5hwQ7A9TZqv_xqCvAlIoA)\n\nWhich outfit in this picture would match the best for a guest to wear to a wedding without upstaging the bride?'),[
-            {image:{url:'https://liirnspace-bucksmediabucket70ce2cea-11rljmkq8tolk.s3.amazonaws.com/vaeCiOZeTyi2U1xyiOiNKgr5hwQ7A9TZqv_xqCvAlIoA'}},
+        expectImages(parseMarkdownImages('![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)\n\nWhich outfit in this picture would match the best for a guest to wear to a wedding without upstaging the bride?'),[
+            {image:{url:'https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg'}},
             {text:'Which outfit in this picture would match the best for a guest to wear to a wedding without upstaging the bride?'}
         ])
     });

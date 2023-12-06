@@ -1,3 +1,5 @@
+import { httpClient } from "@iyio/common";
+import { ConvoError } from "./ConvoError";
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
@@ -649,6 +651,82 @@ export const defaultConvoVars={
             return Math.random();
         }
 
+    }),
+
+    httpGet:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const options=scope.paramValues?.[1];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().getAsync(url,options)
+    }),
+
+    httpGetString:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const options=scope.paramValues?.[1];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().getStringAsync(url,options)
+    }),
+
+    httpPost:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const body=scope.paramValues?.[1];
+        const options=scope.paramValues?.[2];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().postAsync(url,body,options)
+    }),
+
+    httpPut:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const body=scope.paramValues?.[1];
+        const options=scope.paramValues?.[2];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().putAsync(url,body,options)
+    }),
+
+    httpPatch:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const body=scope.paramValues?.[1];
+        const options=scope.paramValues?.[2];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().patchAsync(url,body,options)
+    }),
+
+    httpDelete:createConvoScopeFunction(async scope=>{
+        const url=scope.paramValues?.[0];
+        const options=scope.paramValues?.[1];
+
+        if(typeof url !== 'string'){
+            throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        return await httpClient().deleteAsync(url,options)
+    }),
+
+    encodeURI:createConvoScopeFunction(scope=>{
+        return encodeURI(scope.paramValues?.[0]?.toString()??'');
+    }),
+    encodeURIComponent:createConvoScopeFunction(scope=>{
+        return encodeURIComponent(scope.paramValues?.[0]?.toString()??'');
     }),
 
 } as const;

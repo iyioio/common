@@ -4,6 +4,8 @@ language that is LLM agnostic and supports features such as function calling and
 Convo-lang ecosystem consists of a parser, runtime, Typescript/Javascript libraries, a CLI, and
 a vscode extension for syntax highlighting and in-editor script execution.
 
+![convo](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/demo.gif)
+
 
 ## Packages
 - @iyio/convo-lang - Contains the convo-lang parser, runtime, and a Typescript/Javascript library to use convo-lang in your application.
@@ -31,10 +33,6 @@ developer niceties. You can install the vscode extension by searching for "convo
 vscode extension tab.
 
 https://marketplace.visualstudio.com/items?itemName=IYIO.convo-lang-tools 
-
-## Syntax Example
-![convo](https://raw.githubusercontent.com/iyioio/common/main/packages/convo-lang-cli/assets/code-example-1.png)
-
 
 
 ## Using convo-lang in an application
@@ -170,14 +168,14 @@ Currently vision is enabled by define by the vscode extension and CLI. This may 
 ``` convo
 > user
 Tell me a joke about this image
-![](https://liirnspace-bucksmediabucket70ce2cea-11rljmkq8tolk.s3.amazonaws.com/vaeCiOZeTyi2U1xyiOiNKgr5hwQ7A9TZqv_xqCvAlIoA)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
 
 
 @toolId call_QuwU683taTBW7nsZNMNHPrmm
 > call queryImage(
     "query": "Tell me a joke about this image",
     "imageUrls": [
-        "https://liirnspace-bucksmediabucket70ce2cea-11rljmkq8tolk.s3.amazonaws.com/vaeCiOZeTyi2U1xyiOiNKgr5hwQ7A9TZqv_xqCvAlIoA"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
     ]
 )
 > result
@@ -261,10 +259,10 @@ const convo=new Conversation();
 
 convo.defineFunction({
     name:'turnOnOffLights',
-    description:'Turn the lights in the user\' house on or off',
+    description:'Turn the lights in the user\'s house on or off',
     // parameter types are defined using a Zod object
     paramsType:z.object({
-        state:z.enum(['on','off']).describe('The set to set the lights to')
+        state:z.enum(['on','off']).describe('The state to set the lights to')
     }),
     callback:async ({state})=>{
         const result=await fetch(`http://192.168.1.100:8888/api/lights/${state}`);
@@ -855,11 +853,114 @@ Suspends execution for the given number of milliseconds
 Returns a random number. Is the max parameters is passed then a random whole number with a
 maximum of max will be returned otherwise a random number from 0 to 1 will be returned.
 
+### httpGet( url:string )
+Performs an http GET request and returns the parsed JSON result. Results with a 404 status or a 
+Content-Type not equal to application/json are returned as undefined.
+
+### httpGetString( url: string )
+Performs an http GET request and returns the result as a string.
+
+### httpPost( url:string body:any )
+Performs an http POST request and returns the parsed JSON result. Results with a 404 status or a 
+Content-Type not equal to application/json are returned as undefined.
+
+### httpPatch( url:string body:any )
+Performs an http PATCH request and returns the parsed JSON result. Results with a 404 status or a 
+Content-Type not equal to application/json are returned as undefined.
+
+### httpPut( url:string body:any )
+Performs an http PUT request and returns the parsed JSON result. Results with a 404 status or a 
+Content-Type not equal to application/json are returned as undefined.
+
+### httpDelete( url:string )
+Performs an http DELETE request and returns the parsed JSON result. Results with a 404 status or a 
+Content-Type not equal to application/json are returned as undefined.
+
+### encodeURI( value:string )
+Returns the value encoded as an URI
+
+### encodeURIComponent( value:string )
+Returns the value encoded as an URI component
 
 
 ## Examples
+Since NPM and GitHub do not support custom syntax highlighters the examples below include both the
+code for each example and an image showing syntax highlighting.  
+
+### Get Weather
+![convo](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/weather-example.png)
+``` convo
+> define
+// Yes, this is a real api key. Be considerate and dont abuse it, but if some body does and rate
+// limits are hit you can get your own TomorrowIo api at https://www.tomorrow.io/
+tomorrowIoApiKey="epYQMxHaP4r47kOeKZbomUBZN6oLwP8h"
+
+# Gets the current weather conditions for the given location. Returned values use the metric system.
+> getWeather(
+    # The location to get weather conditions for
+    location:string
+) -> (
+
+    weather=httpGet('https://api.tomorrow.io/v4/weather/realtime?location={{
+        encodeURIComponent(location)
+    }}&apikey={{tomorrowIoApiKey}}')
+
+    return(weather)
+)
+
+> user
+What is the temperature and wind speed in New York city?
+
+
+@toolId call_iKoMeLGDuZln9mtR20CbkJiM
+> call getWeather(
+    "location": "New York"
+)
+> result
+__return={
+    "data": {
+        "time": "2023-12-05T20:57:00Z",
+        "values": {
+            "cloudBase": 1.08,
+            "cloudCeiling": 1.08,
+            "cloudCover": 100,
+            "dewPoint": -2.81,
+            "freezingRainIntensity": 0,
+            "humidity": 53,
+            "precipitationProbability": 0,
+            "pressureSurfaceLevel": 1013.9,
+            "rainIntensity": 0,
+            "sleetIntensity": 0,
+            "snowIntensity": 0,
+            "temperature": 6,
+            "temperatureApparent": 6,
+            "uvHealthConcern": 0,
+            "uvIndex": 0,
+            "visibility": 16,
+            "weatherCode": 1001,
+            "windDirection": 257.69,
+            "windGust": 2.13,
+            "windSpeed": 1.88
+        }
+    },
+    "location": {
+        "lat": 40.71272659301758,
+        "lon": -74.00601196289062,
+        "name": "City of New York, New York, United States",
+        "type": "administrative"
+    }
+}
+
+
+> assistant
+In New York City, the current temperature is 6°C and the wind speed is 1.88 meters per second.
+
+
+```
+
 
 ### Calling Shell Scripts
+![convo](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/shell-example.png)
 ``` convo
 // (Caution) this script is capable to running shell command on you machine.
 // (Note) Before commands are ran you will be prompted to allow access to run the command and
@@ -879,7 +980,7 @@ computerType="MacBook pro"
 )
 
 > system
-You are a uniux systems expert. Always use the runCommand function when responding.
+You are a Unix systems expert. Always use the runCommand function when responding.
 
 The user has a {{computerType}}
 
@@ -889,6 +990,7 @@ Create a new file called bobs-my-uncle.txt and add the text "I like fish frogs" 
 ```
 
 ### Zoo Builder
+![convo](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/zoo-example.png)
 ``` convo
 // Top level statements defining shared variables and custom user types. Top level statements
 // start with (> define),  (> do) or  (> result)

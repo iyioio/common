@@ -541,6 +541,8 @@ describe('convo',()=>{
 
     })
 
+
+
     it('should complete multiple suspensions',async ()=>{
 
         const convo=new Conversation();
@@ -560,5 +562,47 @@ describe('convo',()=>{
         const v=await convo.callFunctionAsync('testFn',{delay:1});
         expect(typeof v).toBe('number');
     })
+
+
+
+    it('Should parse JSON with single curly bracket',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            > define
+            jsonValue={user:"jef"}
+
+            > testFn()->(
+                return(jsonValue)
+            )
+
+        `);
+
+        const v=await convo.callFunctionAsync('testFn');
+        expect(v).toEqual({user:"jef"});
+    })
+
+
+
+    // it('Should parse JSON with back-to-back curly brackets',async ()=>{
+
+    //     const convo=new Conversation();
+
+    //     convo.append(/*convo*/`
+
+    //         > define
+    //         jsonValue={user:{name:'Jeff',age:44}}
+
+    //         > testFn()->(
+    //             return(jsonValue)
+    //         )
+
+    //     `);
+
+    //     const v=await convo.callFunctionAsync('testFn');
+    //     expect(v).toEqual({user:{name:'Jeff',age:44}});
+    // })
 
 });
