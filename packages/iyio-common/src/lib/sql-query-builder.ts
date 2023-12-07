@@ -1,7 +1,7 @@
 import { asArray } from "./array";
 import { asType } from "./common-lib";
 import { applyQueryShorthands } from "./query-lib";
-import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, QueryConditionOrGroup, QueryGroupCondition, QueryValue } from "./query-types";
+import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, QueryConditionOrGroup, queryExpressionOperators, queryFunctions, QueryGroupCondition, QueryValue } from "./query-types";
 import { escapeSqlName, escapeSqlValue } from "./sql-lib";
 
 /**
@@ -156,31 +156,36 @@ const appendCondition=(ctx:QueryBuildCtx,cond:QueryConditionOrGroup,depth:number
     }
     ctx.sql.push(')');
 }
+const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQueryValue,depth:number,ignoreFunc=false,fallbackValue?:string)=>{
 
-const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQueryValue,depth:number)=>{
+    if(depth>ctx.maxDepth){
+        throw new Error(`Max query depth reached. maxDepth=${ctx.maxDepth}`);
+    }
 
     if(enclose){
         ctx.sql.push('(');
     }
 
+    const coal=value.coalesce!==undefined && !ignoreFunc;
+    if(coal){
+        ctx.sql.push('coalesce(')
+    }
+
     let isNull=false;
 
-    if(value.func){
-        switch(value.func){
-            case 'count':
-                ctx.sql.push('count(*)');
-                break;
+    if(value.func && !ignoreFunc){
+        const funcs=asArray(value.func);
+        for(const fn of funcs){
+            if(!queryFunctions.includes(fn)){
+                throw new Error(`Invalid query func - ${fn}`);
+            }
+            ctx.sql.push(`${fn}(`)
+        }
 
-            case 'sum':
-                if(!value.col){
-                    throw new Error('sql sum function requires a column to be defined');
-                }
-                ctx.sql.push(`coalesce(sum(${(value.col.table?escapeSqlName(value.col.table)+'.':'')+escapeSqlName(value.col.name)}),0)`);
-                break;
+        appendValue(ctx,false,value,depth+1,true,'*');
 
-            default:
-                ctx.sql.push('null');
-                break;
+        for(let i=0;i<funcs.length;i++){
+            ctx.sql.push(`)`)
         }
     }else if(value.col){
         appendCol(ctx,value.col);
@@ -190,15 +195,48 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,value.subQuery.query,value.subQuery.condition??null);
         ctx.sql.push(')');
+    }else if(value.expression){
+        ctx.sql.push('(');
+        for(const e of value.expression){
+            if(typeof e === 'string'){
+                if(!queryExpressionOperators.includes(e)){
+                    throw new Error(`Invalid queryExpressionOperator - ${e}`);
+                }
+                ctx.sql.push(e);
+            }else{
+                appendValue(ctx,false,e,depth+1);
+            }
+        }
+        ctx.sql.push(')');
+    }else if(value.args){
+        for(let i=0;i<value.args.length;i++){
+            const arg=value.args[i];
+            if(!arg){continue}
+            if(i>0){
+                ctx.sql.push(',');
+            }
+            appendValue(ctx,false,arg,depth+1);
+
+        }
+    }else if(fallbackValue){
+        ctx.sql.push(fallbackValue);
     }else{
         isNull=true;
         ctx.sql.push('null');
     }
 
+    if(coal){
+        ctx.sql.push(',');
+        ctx.sql.push(escapeSqlValue(value.coalesce));
+        ctx.sql.push(')');
+    }
+
     const asName=(value as NamedQueryValue).name;
-    if(asName){
+    if(asName && !ignoreFunc){
         if(isNull){
-            ctx.sql.pop();
+            if(!enclose){
+                ctx.sql.pop();
+            }
             appendCol(ctx,{name:asName});
         }else{
             ctx.sql.push('as '+escapeSqlName(asName));
@@ -210,8 +248,10 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
     }
 }
 
-const appendCol=(ctx:QueryBuildCtx,col:QueryCol)=>{
-    if(col.table){
+const appendCol=(ctx:QueryBuildCtx,col:QueryCol|string)=>{
+    if(typeof col === 'string'){
+        ctx.sql.push(escapeSqlName(col));
+    }else if(col.table){
         ctx.sql.push(escapeSqlName(col.table)+'.'+escapeSqlName(col.name));
     }else if(col.name==='*'){
         ctx.sql.push('*');

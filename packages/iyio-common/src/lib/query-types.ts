@@ -207,7 +207,20 @@ export const isQueryCondition=(value:any):value is QueryCondition=>{
 
 export type QueryConditionOrGroup=QueryCondition|QueryGroupCondition;
 
-export type QueryFunction='count'|'sum';
+export const queryFunctions=[
+    'count','sum','avg','min','max','round',
+    'lower','upper','len','trim','ltrim','rtrim','concat','replace','strcmp',
+    'reverse','coalesce'
+] as const;
+Object.freeze(queryFunctions);
+export type QueryFunction=typeof queryFunctions[number];
+
+export const queryExpressionOperators=[
+    '(',')','-','+','/','*','%','&','|','^','=','>','<','>=','>=','<>',
+    'all','and','any','between','exists','in','like','not','or','some'
+] as const;
+Object.freeze(queryExpressionOperators);
+export type QueryExpressionOperator=typeof queryExpressionOperators[number];
 
 /**
  * Represents any of the possible value types that can be used. Only one property of the QueryValue
@@ -224,7 +237,7 @@ export interface QueryValue
     /**
      * A column to use a the value
      */
-    col?:QueryCol;
+    col?:QueryCol|string;
 
     /**
      * A literal value to use as the value
@@ -234,7 +247,33 @@ export interface QueryValue
     /**
      * A predefined function to use as a value
      */
-    func?:QueryFunction;
+    func?:QueryFunction|QueryFunction[];
+
+    /**
+     * Function arguments. If args undefined the the other properties of the QueryValue will be used
+     * as the first argument of the called function
+     */
+    args?:QueryValue[];
+
+    /**
+     * When defined the value will be wrapped in a coalesce function call with the second argument
+     * being the value of the coalesce prop.
+     */
+    coalesce?:string|number|boolean|((string|number|boolean)[]);
+
+    /**
+     * An array of query values and expression operators that can be used to express complex
+     * query operators.
+     */
+    expression?:(OptionalNamedQueryValue|QueryExpressionOperator)[];
+}
+
+export interface OptionalNamedQueryValue extends QueryValue
+{
+    /**
+     * the (as) part of a column select - select tableB.price as {name}
+     */
+    name?:string;
 }
 
 export interface NamedQueryValue extends QueryValue
@@ -309,3 +348,4 @@ export interface IQueryClient
 {
     selectQueryItemsAsync<T=any>(query:Query):Promise<T[]>;
 }
+
