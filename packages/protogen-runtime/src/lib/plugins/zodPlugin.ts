@@ -285,19 +285,15 @@ const addUnion=(node:ProtoNode,schemeOut:string[],typeOut:string[],tab:string,ge
     schemeOut.push(`export const ${fullName}=z.enum([`);
 
     typeOut.push('');
-    if(comment){
-        typeOut.push(comment);
-    }
-    typeOut.push(`export type ${node.name}=(`)
+    typeOut.push(`const unionAry=[`)
 
     let added=false;
-
 
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
             if(!child.isContent && !child.special){
-                typeOut.push(`${tab}${JSON.stringify(child.name)}|`);
+                typeOut.push(`${tab}${JSON.stringify(child.name)},`);
                 schemeOut.push(`${tab}${JSON.stringify(child.name)},`);
                 added=true;
             }
@@ -312,6 +308,20 @@ const addUnion=(node:ProtoNode,schemeOut:string[],typeOut:string[],tab:string,ge
             typeOut[typeOut.length-1]=last.substring(0,last.length-1);
         }
     }
+    typeOut.push('] as const;');
+    typeOut.push(`Object.freeze(unionAry);`);
+
+    typeOut.push('');
+    if(comment){
+        typeOut.push(comment);
+    }
+    typeOut.push(`export type ${node.name}=typeof unionAry[number];`);
+
+    typeOut.push('');
+    if(comment){
+        typeOut.push(comment);
+    }
+    typeOut.push(`export const all${node.name}Ary:${node.name}[]=unionAry as any;`);
 
     const schemeComment=protoGetFullNodeComment(node,'');
     if(schemeComment){
@@ -319,7 +329,6 @@ const addUnion=(node:ProtoNode,schemeOut:string[],typeOut:string[],tab:string,ge
     }else{
         schemeOut.push(`]);`);
     }
-    typeOut.push(');');
 }
 
 const addAlias=(node:ProtoNode,out:string[],tab:string)=>{
