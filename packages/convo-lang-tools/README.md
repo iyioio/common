@@ -849,7 +849,8 @@ Returns the current date time as a timestamp. now uses Date.now() to get the cur
 
 ### dateTime( format?:string date?:string|number|Date )
 Returns the current or given date as a formatted string. The default value format string is
-"yyyy-MM-dd'T'HH:mm:ssxxx" which results in formatted dates that look like 2023-12-08T21:05:08-01:00.
+"yyyy-MM-dd'T'HH:mm:ssxxx" which is an ISO 8601 date and results in formatted dates that look
+like 2023-12-08T21:05:08-01:00. Invalid date formats will fallback to using the default date format.
 Formatting is done using date-fns - https://date-fns.org/v2.16.1/docs/format
 
 ### sleep( milliseconds:number )

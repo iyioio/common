@@ -735,7 +735,7 @@ export const defaultConvoVars={
     }),
 
     dateTime:createConvoScopeFunction(scope=>{
-        const f=scope.paramValues?.[0]??"yyyy-MM-dd'T'HH:mm:ssxxx";
+        const f=scope.paramValues?.[0]??defaultDateFormat;
         let time:Date|string|number=scope.paramValues?.[1]??new Date();
         switch(typeof time){
             case 'string':
@@ -756,12 +756,12 @@ export const defaultConvoVars={
         try{
             return format(time,f);
         }catch{
-            throw new ConvoError('invalid-args',{statement:scope.s},
-                'Invalid format string passed to dateTIme'
-            );
+            return format(time,defaultDateFormat);
         }
     }),
 
 } as const;
 
 Object.freeze(defaultConvoVars);
+
+const defaultDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx"
