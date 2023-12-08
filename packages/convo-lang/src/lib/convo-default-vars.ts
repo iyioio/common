@@ -1,4 +1,5 @@
 import { httpClient } from "@iyio/common";
+import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
@@ -729,62 +730,38 @@ export const defaultConvoVars={
         return encodeURIComponent(scope.paramValues?.[0]?.toString()??'');
     }),
 
+    now:createConvoScopeFunction(()=>{
+        return Date.now();
+    }),
+
+    dateTime:createConvoScopeFunction(scope=>{
+        const f=scope.paramValues?.[0]??"yyyy-MM-dd'T'HH:mm:ssxxx";
+        let time:Date|string|number=scope.paramValues?.[1]??new Date();
+        switch(typeof time){
+            case 'string':
+                time=new Date(time);
+                break;
+
+            case 'number':
+                break;
+
+            default:
+                if(!(time instanceof Date)){
+                    throw new ConvoError('invalid-args',{statement:scope.s},
+                        'Second arg of timeTime must be a string, number or Date object'
+                    );
+                }
+                break;
+        }
+        try{
+            return format(time,f);
+        }catch{
+            throw new ConvoError('invalid-args',{statement:scope.s},
+                'Invalid format string passed to dateTIme'
+            );
+        }
+    }),
+
 } as const;
 
 Object.freeze(defaultConvoVars);
-
-/*convo*/`
-> meFn()->(
-    map(
-        name: string
-        jeff: fart
-    )
-
-    while( true
-        callHome()
-        eatCheese()
-    )
-
-    if()
-    then()
-    else()
-    elif()
-    do()
-    in()#
-    while()#
-    return()
-
-    true
-    false
-    null
-    undefined
-
-    string
-    number
-    boolean
-    time
-    void
-
-    eq()
-    lt()
-    lte()
-    gt()
-    gte()
-
-    and()
-    or()
-
-    add()
-    sub()
-    mul()
-    div()
-    not()
-    mod()
-    pow()
-
-    queue(@teaTime)
-
-
-)
-`;
-
