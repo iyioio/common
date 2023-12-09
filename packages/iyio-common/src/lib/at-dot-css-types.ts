@@ -2,7 +2,7 @@
 import { AllBaseLayoutProps } from "./base-layout";
 import { ClassNameValue } from "./css";
 import type { StyleSheetOrder } from "./css-order";
-import { Trim, WhiteSpace } from "./typescript-util-types";
+import { Trim, UnionToIntersection, WhiteSpace } from "./typescript-util-types";
 
 
 
@@ -54,8 +54,7 @@ type GetVarsBody<S extends string>=string extends S?
         VarBody:
         '';
 
-type Example=GetVars<` @@var ;    @@ext  `>
-type Example2=GetVarsBody<` @@var ;    @@ext } @@xt `>
+
 
 export type ParseAtDotCss<S extends string,Suffix extends string='@@'>=string extends S?
     'Error':
@@ -106,9 +105,9 @@ export interface AtDotVars<T=any>
 
 export type ParseAtDotStyle<
     S extends string,
-    P=Omit<ParseAtDotCss<SplitSection<SplitLargeSection<
+    P=Omit<UnionToIntersection<ParseAtDotCss<SplitSection<SplitLargeSection<
         `@.root{};${S}`
-    >>>,'___AT_DOT_NOT_PROP___'>,
+    >>>>,'___AT_DOT_NOT_PROP___'>,
     M={
         readonly [K in keyof P as K extends string?  RemoveSuffix<K>:never ]:
             GetAtDotClassName<{[CK in P[K] extends string?Exclude<FilterVars<P[K]>,'___AT_DOT_NOT_PROP___'>:never]?:any}>

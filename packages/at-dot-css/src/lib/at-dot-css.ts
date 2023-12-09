@@ -98,6 +98,23 @@ function varsDef(
     }
 }
 
+/**
+ * Creates a new at-dot-css flavored CSS style sheet. The returned style object will contain
+ * function properties corresponding to each of the at-dot selectors defined in the style sheet.
+ *
+ * The returned style sheet will included intellisense for all at-dot-css selectors. at-dot-css
+ * selectors use the following format:
+ * @.SELECTOR_NAME
+ *
+ * The content of the style sheet is used as a Typescript type to generate intellisense. Due to a
+ * restriction in the Typescript typing engine only about 45 at-dot-css selectors can be defined
+ * before needing to add a section separator which looks like "/*- selection -*\/". The sections
+ * allow the style sheet to be parsed in sections.
+ *
+ * At least one of the function properties must be called before the style sheet is inserted into
+ * the DOM or virtual style sheet collection. When using at-dot-css in the browser style sheets
+ * are inserted into the head of the current document.
+ */
 export const atDotCss=<S extends string>(
     options:AtDotStyle<S>,
     defaults?:AtDotStyleDefaults

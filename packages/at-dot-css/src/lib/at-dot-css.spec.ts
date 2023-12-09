@@ -6,6 +6,27 @@ const st={
 
 describe('at-css',()=>{
 
+    it('Parse split style sheet',()=>{
+        const style = atDotCss({
+            name:'Example2Comp',
+            css:`
+                @.user{
+                    color:green;
+                }
+                /*- split -*/
+                @.admin{
+                    color:green;
+                }
+            `
+        });
+
+        const ctrl=getAtDotCtrl(style);
+        expect(ctrl).toBeTruthy();
+
+        expect(style.user()).toBe('Example2Comp-user');
+        expect(style.admin()).toBe('Example2Comp-admin');
+    })
+
     it('Parse style sheet',()=>{
 
         const style = atDotCss({
