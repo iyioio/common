@@ -313,7 +313,7 @@ export class AiCompletionService implements ConvoCompletionService
                     calledReturn:msg.calledReturn,
                     metadata:msg.tags,
                 })
-            }else{
+            }else if(msg.content!==undefined){
                 messages.push({
                     id:baseId+i,
                     type:'text',
