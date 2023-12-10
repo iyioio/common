@@ -63,7 +63,12 @@ export const convoVars={
 } as const;
 
 export const convoTags={
-    disableAutoComplete:'disableAutoComplete'
+    disableAutoComplete:'disableAutoComplete',
+    /**
+     * Used to indicate that a message should be evaluated at the edge of a conversation with the
+     * latest state.
+     */
+    edge:'edge',
 } as const;
 
 export const defaultConvoVisionSystemMessage=(

@@ -493,6 +493,17 @@ export interface FlatConvoMessage
      */
     calledReturn?:any;
 
+    /**
+     * If true message was generated at the edge of the conversation, meaning the template expressions
+     * where evaluated with the latest variables.
+     */
+    edge?:boolean;
+
+    /**
+     * Used with messages that set variables such as define and result messages.
+     */
+    setVars?:Record<string,any>;
+
 
     tags?:Record<string,string|undefined>;
 

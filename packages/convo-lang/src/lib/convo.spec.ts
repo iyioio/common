@@ -236,6 +236,55 @@ describe('convo',()=>{
 
 
 
+    it('should eval or statement',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn(
+                valueA: any
+                valueB: any
+                valueC: any
+            ) -> (
+                return( or(valueA valueB valueC) )
+            )
+        `);
+
+        const fn=convo.result?.[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{valueA:1,valueB:0,valueC:'ok'})).toBe(1);
+        expect(executeConvoFunction(fn,{valueA:0,valueB:false,valueC:'ok'})).toBe('ok');
+
+    })
+
+
+
+
+    it('should eval or statement with no args',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > testFn() -> (
+                return( or() )
+            )
+        `);
+
+        const fn=convo.result?.[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn)).toBeUndefined();
+
+    })
+
+
+
+
     it('should add numbers',async ()=>{
 
         const convo=parse(1,/*convo*/`

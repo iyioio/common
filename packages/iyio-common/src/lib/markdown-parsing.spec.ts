@@ -1,4 +1,4 @@
-import { parseMarkdownImages } from './markdown-parsing';
+import { objectToMarkdown, objectToMarkdownBuffer, parseMarkdownImages } from './markdown-parsing';
 import { MarkdownImageParsingItem } from './markdown-types';
 
 describe('markdown-parsing',()=>{
@@ -94,5 +94,85 @@ describe('markdown-parsing',()=>{
             {image:{url:'https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg'}},
             {text:'Which outfit in this picture would match the best for a guest to wear to a wedding without upstaging the bride?'}
         ])
+    });
+
+    it('should convert object to markdown',()=>{
+
+        expect(objectToMarkdown('abc')).toBe('abc');
+        expect(objectToMarkdown(undefined)).toBe('undefined');
+        expect(objectToMarkdown(null)).toBe('null');
+
+        expect(objectToMarkdown([
+            'abc',
+            123,
+            true,
+            false
+        ])).toBe(
+`- abc
+- 123
+- true
+- false`);
+
+        expect(objectToMarkdown({
+            name:'Biff',
+            age:'Not sure, time is broken'
+        })).toBe(
+`- name: Biff
+- age: Not sure, time is broken`);
+
+        expect(objectToMarkdown([
+            'abc',
+            123,
+            true,
+            false,
+            {
+                name:'Ricky',
+                age:39,
+                jobs:[
+                    'Race car driver',
+                    'Pizza delivery guy',
+                    'Lucky Charms runner'
+                ]
+            }
+        ])).toBe(
+`- abc
+- 123
+- true
+- false
+- \n  - name: Ricky
+  - age: 39
+  - jobs: \n    - Race car driver
+    - Pizza delivery guy
+    - Lucky Charms runner`);
+
+
+    });
+
+    it('should convert object to markdown with buffer',()=>{
+
+        const out:string[]=[];
+
+        objectToMarkdownBuffer('1 + 1 = ',out);
+        objectToMarkdownBuffer(2,out);
+
+        expect(out.join('')).toBe('1 + 1 = 2');
+
+
+    });
+
+    it('should convert object to markdown with keys',()=>{
+
+        expect(objectToMarkdown({
+            steps:[
+                {name:'Go fast',priority:'Most important'},
+                {name:'Turn left',priority:'Very important'},
+            ]
+        })).toBe(
+`- steps: \n  1. \n    - name: Go fast
+    - priority: Most important
+  2. \n    - name: Turn left
+    - priority: Very important`);
+
+
     });
 });

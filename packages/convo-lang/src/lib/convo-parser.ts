@@ -281,7 +281,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                     strStatement.params=[];
                 }
                 if(!strStatement.fn){
-                    strStatement.fn='add';
+                    strStatement.fn='md';
                     stack.push(strStatement);
                 }
                 strStatement.params.push({value:content,s:index,e:nextIndex});

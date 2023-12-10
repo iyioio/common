@@ -1,4 +1,4 @@
-import { httpClient } from "@iyio/common";
+import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer } from "@iyio/common";
 import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
@@ -32,6 +32,20 @@ const and=createConvoScopeFunction({
 },scope=>{
     const value=scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
     return value?true:false
+})
+
+const or=createConvoScopeFunction({
+    discardParams:true,
+    nextParam(scope){
+        const value=scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
+        if(value){
+            return false;
+        }else{
+            return scope.i+1;
+        }
+    }
+},scope=>{
+    return scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
 })
 
 export const defaultConvoVars={
@@ -97,18 +111,8 @@ export const defaultConvoVars={
         }
         return true;
     }),
-    and:and,
-    or:createConvoScopeFunction(scope=>{
-        if(!scope.paramValues?.length){
-            return false;
-        }
-        for(let i=0;i<scope.paramValues.length;i++){
-            if(scope.paramValues[i]){
-                return true;
-            }
-        }
-        return false;
-    }),
+    and,
+    or,
     not:createConvoScopeFunction(scope=>{
         if(!scope.paramValues?.length){
             return true;
@@ -758,6 +762,49 @@ export const defaultConvoVars={
         }catch{
             return format(time,defaultDateFormat);
         }
+    }),
+
+    md:createConvoScopeFunction(scope=>{
+        if(!scope.paramValues?.length){
+            return '';
+        }
+        const out:string[]=[];
+        for(let i=0;i<scope.paramValues.length;i++){
+            objectToMarkdownBuffer(scope.paramValues[i],out,'',5);
+        }
+        return out.join('');
+    }),
+
+    toMarkdown:createConvoScopeFunction(scope=>{
+        if(!scope.paramValues?.length){
+            return '';
+        }
+        const maxDepth=scope.paramValues[0];
+        if(typeof maxDepth !== 'number'){
+            throw new ConvoError('invalid-args',{statement:scope.s},'The first arg of toMarkdown must be a number indicating the max depth')
+        }
+        const out:string[]=[];
+        for(let i=1;i<scope.paramValues.length;i++){
+            objectToMarkdownBuffer(scope.paramValues[i],out,'',maxDepth);
+        }
+        return out.join('');
+    }),
+
+    toJson:createConvoScopeFunction(scope=>{
+        const value=scope.paramValues?.[0];
+        if(value===undefined){
+            return 'undefined';
+        }
+        return JSON.stringify(value,createJsonRefReplacer(),4);
+    }),
+
+    toJsonMdBlock:createConvoScopeFunction(scope=>{
+        const value=scope.paramValues?.[0];
+        return (
+            '``` json\n'+
+            value===undefined?'undefined':JSON.stringify(value,createJsonRefReplacer(),4)+
+            '\n```'
+        )
     }),
 
 } as const;

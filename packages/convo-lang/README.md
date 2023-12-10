@@ -200,6 +200,8 @@ All message headers start with the (>) character followed by a role, keyword, or
 Text-based messages start with a header that defines the message's role. The role can be any identifier,
 with the exception of top-level keyword identifiers.
 
+Text message can include template variables
+
 ``` convo
 // text based message
 > user
@@ -541,22 +543,23 @@ and( eq(1 1) eq(2 1) )
 
 ```
 
-### and( ...values: any )
-Returns true if any given arguments are truthy.
+### or( ...values: any )
+Returns the first truthy value or the last non truthy value if no truthy values are given. If no
+values are given undefined is returned.
 
 ``` convo
 
-// true
+// 1
 or( 1 )
 
-// false
+// 0
 or( 0 )
 
-// true
+// 1
 or( 1 2 )
 
-// true
-or( 0 1 )
+// 2
+or( 0 2 )
 
 // true
 or( eq(1 1) eq(2 2) )
@@ -889,6 +892,21 @@ Returns the value encoded as an URI
 
 ### encodeURIComponent( value:string )
 Returns the value encoded as an URI component
+
+## md( ...values:any[] )
+Concatenates all passed in values and formats the values as markdown. Recursive objects are limited
+to a depth of 5.
+
+## toMarkdown( maxDepth:int value:any)
+formats the value as markdown and allows the configuration of recursive object depth.
+
+## toJson( value:any )
+Formats the given value as json
+
+## toJsonMdBlock( value:any )
+Formats the given value as json and closes the value in a markdown json code block.
+
+
 
 
 ## Examples

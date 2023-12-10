@@ -4,7 +4,7 @@ import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoScopeFunction, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -15,7 +15,8 @@ export interface ConversationOptions
     roleMap?:Record<string,string>;
     completionService?:ConvoCompletionService;
     serviceCapabilities?:ConvoCapability[];
-    capabilities?:ConvoCapability[]
+    capabilities?:ConvoCapability[];
+    maxAutoCompleteDepth?:number;
 }
 
 export class Conversation
@@ -48,6 +49,8 @@ export class Conversation
 
     private completionService?:ConvoCompletionService;
 
+    public maxAutoCompleteDepth:number;
+
     public readonly externFunctions:Record<string,ConvoScopeFunction>={};
 
     /**
@@ -67,12 +70,14 @@ export class Conversation
             completionService=convoCompletionService.get(),
             capabilities=[],
             serviceCapabilities=[],
+            maxAutoCompleteDepth=10,
         }=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
         this.capabilities=capabilities;
         this.serviceCapabilities=serviceCapabilities;
+        this.maxAutoCompleteDepth=maxAutoCompleteDepth;
 
         if(this.capabilities.includes('vision')){
             this.define({
@@ -101,7 +106,7 @@ export class Conversation
         }
     }
 
-    public append(messages:string|(ConvoMessagePart|string)[],mergeWithPrev=false):ConvoParsingResult{
+    public append(messages:string|(ConvoMessagePart|string)[],mergeWithPrev=false,throwOnError=true):ConvoParsingResult{
         let visibleContent:string|undefined=undefined;
         let hasHidden=false;
         if(Array.isArray(messages)){
@@ -115,6 +120,9 @@ export class Conversation
         }
         const r=parseConvoCode(messages);
         if(r.error){
+            if(!throwOnError){
+                return r;
+            }
             throw r.error
         }
 
@@ -195,7 +203,7 @@ export class Conversation
 
     private async _completeAsync(
         getCompletion:ConvoFlatCompletionCallback,
-        autoCompleteFunctionReturns=true,
+        autoCompleteDepth=0,
         prevCompletion?:ConvoCompletionMessage[],
         preReturnValues?:any[]
     ):Promise<ConvoCompletion>{
@@ -320,8 +328,8 @@ export class Conversation
                 for(const a of (append as string[])){
                     this.append(a);
                 }
-            }else if(lastResultValue!==undefined && autoCompleteFunctionReturns){
-                return await this._completeAsync(getCompletion,false,completion,returnValues);
+            }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth){
+                return await this._completeAsync(getCompletion,autoCompleteDepth+1,completion,returnValues);
             }
 
             return {
@@ -359,6 +367,10 @@ export class Conversation
     ):Promise<FlatConvoConversation>{
 
         const messages:FlatConvoMessage[]=[];
+        const edgePairs:{
+            flat:FlatConvoMessage;
+            statement:ConvoStatement;
+        }[]=[];
 
         exe.loadFunctions(this._messages,this.externFunctions);
 
@@ -375,9 +387,20 @@ export class Conversation
                 if(msg.fn.local || msg.fn.call){
                     continue;
                 }else if(msg.fn.topLevel){
+                    exe.clearSharedSetters();
                     const r=exe.executeFunction(msg.fn);
                     if(r.valuePromise){
                         await r.valuePromise;
+                    }
+                    if(exe.sharedSetters.length){
+                        const varSetter:FlatConvoMessage={
+                            role:msg.role??'define',
+                        };
+                        varSetter.setVars={};
+                        for(const v of exe.sharedSetters){
+                            varSetter.setVars[v]=exe.getVar(v);
+                        }
+                        messages.push(varSetter)
                     }
                     const prev=this._messages[i-1];
                     if(msg.role==='result' && prev?.fn?.call){
@@ -397,17 +420,11 @@ export class Conversation
                     flat.fnParams=exe.getConvoFunctionArgsScheme(msg.fn);
                 }
             }else if(msg.statement){
-                const r=exe.executeStatement(msg.statement);
-                let value:any;
-                if(r.valuePromise){
-                    value=await r.valuePromise;
+                if(containsConvoTag(msg.tags,convoTags.edge)){
+                    flat.edge=true;
+                    edgePairs.push({flat,statement:msg.statement});
                 }else{
-                    value=r.value;
-                }
-                if(typeof value === 'string'){
-                    flat.content=value;
-                }else{
-                    flat.content=value?.toString()??'';
+                    await flattenMsgAsync(exe,msg.statement,flat);
                 }
 
             }else if(msg.content!==undefined){
@@ -416,6 +433,10 @@ export class Conversation
                 continue;
             }
             messages.push(flat);
+        }
+
+        for(const pair of edgePairs){
+            await flattenMsgAsync(exe,pair.statement,pair.flat);
         }
 
 
@@ -728,3 +749,18 @@ export class Conversation
     }
 }
 
+
+const flattenMsgAsync=async (exe:ConvoExecutionContext,statement:ConvoStatement,flat:FlatConvoMessage)=>{
+    const r=exe.executeStatement(statement);
+    let value:any;
+    if(r.valuePromise){
+        value=await r.valuePromise;
+    }else{
+        value=r.value;
+    }
+    if(typeof value === 'string'){
+        flat.content=value;
+    }else{
+        flat.content=value?.toString()??'';
+    }
+}
