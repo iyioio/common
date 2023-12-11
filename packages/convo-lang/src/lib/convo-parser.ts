@@ -32,6 +32,9 @@ const hereDocReplace=/\n(\s*)/g;
 const tagReg=/(\w+)\s*=?(.*)/
 
 const space=/\s/;
+const allSpace=/^\s$/;
+
+const tagOrCommentReg=/[\n\r][ \t]*[#@]/;
 
 const paramTrimPlaceHolder='{{**PLACE_HOLDER**}}';
 
@@ -195,12 +198,59 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
     }
 
     const endMsg=()=>{
+
+        const startIndex=currentMessage?.statement?.s??0;
+
         if( currentMessage?.statement &&
             !currentMessage.statement.fn &&
             (typeof currentMessage.statement.value === 'string')
         ){
             currentMessage.content=currentMessage.statement.value.trim();
             delete currentMessage.statement;
+        }
+        let end=(
+            currentMessage?.content??
+            currentMessage?.statement?.params?.[(currentMessage?.statement?.params?.length??0)-1]?.value
+        )
+        let endMatch:RegExpExecArray|undefined|null;
+        if(currentMessage && typeof end === 'string' && (endMatch=tagOrCommentReg.exec(end))){
+            debug?.('endMsg',end,currentMessage);
+            end=end.substring(0,endMatch.index).trimEnd();
+            if(allSpace.test(end)){
+                end='';
+            }
+            if(currentMessage.content!==undefined){
+                currentMessage.content=end;
+            }else if(currentMessage.statement?.params){
+                if(end){
+                    const last=currentMessage.statement.params[currentMessage.statement.params.length-1];
+                    if(last){
+                        last.value=end;
+                    }
+                }else{
+                    currentMessage.statement.params.pop();
+                }
+            }
+            let e=index-1;
+            while(true){
+                const s=code.lastIndexOf('\n',e);
+                if(s<startIndex){
+                    error='Start of captured tags and comments not found at end of text message';
+                    return false;
+                }
+                if(s===-1){
+                    break;
+                }
+
+                const line=code.substring(s,e+1).trim();
+                if(line && !line.startsWith('#') && !line.startsWith('@')){
+                    break;
+                }
+                index=s;
+                e=s-1;
+
+            }
+
         }
         if(whiteSpaceOffset){
             if(typeof currentMessage?.content === 'string'){
@@ -226,6 +276,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
         currentMessage=null;
         inMsg=false;
         stack.pop();
+        return true;
     }
 
     parsingLoop: while(index<len){
@@ -315,10 +366,10 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 if(!closeString()){
                     break parsingLoop;
                 }
-                if(isMsgString){
-                    endMsg();
+                if(isMsgString && !endMsg()){
+                    break parsingLoop;
                 }
-                debug?.('AFTER STRING',code.substring(index,index+10));
+                debug?.('AFTER STRING','|'+code.substring(index,index+30)+'|');
             }
         }else if(inMsg || inFnMsg){
 
@@ -677,7 +728,8 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                     }
                     currentMessage={
                         role:currentFn.call?'function-call':'function',
-                        fn:currentFn
+                        fn:currentFn,
+                        description:lastComment||undefined,
                     }
                     messages.push(currentMessage);
                     lastComment='';
@@ -711,6 +763,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                     currentMessage={
                         role:msgName,
                         fn:currentFn,
+                        description:lastComment||undefined,
                     }
                     messages.push(currentMessage);
                     lastComment='';
@@ -737,6 +790,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                     debug?.(`NEW ROLE ${msgName}`,lastComment,match);
                     currentMessage={
                         role:msgName,
+                        description:lastComment||undefined,
                     }
                     messages.push(currentMessage);
                     lastComment='';

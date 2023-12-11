@@ -65,6 +65,7 @@ export interface ConvoMessage
 {
     role?:string;
     content?:string;
+    description?:string;
     statement?:ConvoStatement;
     fn?:ConvoFunction;
     tags?:ConvoTag[];
