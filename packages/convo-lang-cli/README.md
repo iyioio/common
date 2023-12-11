@@ -317,6 +317,50 @@ control the behavior of convo-lang.
 )
 ```
 
+### Debugging and metadata
+Debugging information and metadata can be added the completion output using a series of system
+variables.
+
+- __debug - Causes extra debugging information to be printed as comments
+- __trackTime - Causes the @time tag to be added to messages with the date the message was appended
+- __trackTokenUsage - Causes the @tokenUsage tag to be added to messages that consume tokens
+- __trackModel - Causes the @model tag to be added to generated message with the model used to generate the message
+
+The example below enables debugging and all trackers
+``` convo
+> user
+Tell me a joke about airplanes
+
+> define
+__debug=true
+__trackTime=true
+__trackTokenUsage=true
+__trackModel=true
+
+
+> debug
+// snd > OpenAi.ChatCompletionCreateParams
+// { .... raw api message .... }
+
+> debug
+// rec < OpenAi.ChatCompletionCreateParams
+// { .... raw api message .... }
+
+@time 2023-12-11T01:31:13-05:00
+@tokenUsage 139 / 33 / $0.00238
+@model gpt-4-1106-preview
+> assistant
+Sure, here's a light-hearted airplane joke for you:
+
+Why don't airplanes ever get tired?
+
+Because they always have plenty of rest in the hangar!
+
+
+> user
+
+```
+
 ### Types
 Convo supports simple duck typing and allows for user-defined types. User-defined types are created using
 the struct function. Each labeled parameter passed to the struct function will define a property.
@@ -413,13 +457,13 @@ Car = struct(
 )
 ```
 
-## enum( ...values: any )
+### enum( ...values: any )
 Defines an enumeration
 ``` convo
 Size = enum( "sm" "md" "lg" )
 ```
 
-## is( ...value:any type:any )
+### is( ...value:any type:any )
 Checks if all of the parameters left of the last parameter are of the type of the last parameter
 ``` convo
 num = 7

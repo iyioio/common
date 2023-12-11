@@ -1,6 +1,6 @@
 {
     "name": "@iyio/convo-lang-cli",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "type": "commonjs",
     "sideEffects": false,
     "bin": {
