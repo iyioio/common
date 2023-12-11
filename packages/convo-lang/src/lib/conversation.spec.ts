@@ -56,6 +56,10 @@ describe('convo',()=>{
         })
 
         const convo=new Conversation({completionService:cs});
+        let printed=false;
+        convo.print=()=>{
+            printed=true;
+        }
 
         let r=await convo.completeAsync(/*convo*/`
             > goFast(
@@ -76,6 +80,8 @@ describe('convo',()=>{
         `);
 
         expect(r.exe?.sharedVars?.['currentSpeed']).toBe(speed);
+
+        expect(printed).toBe(true);
 
         callFn='goFaster';
         callParams=undefined;

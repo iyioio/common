@@ -4,7 +4,7 @@ import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -62,6 +62,8 @@ export class Conversation
      * Capabilities that should be enabled by the underlying completion service.
      */
     public readonly serviceCapabilities:ConvoCapability[];
+
+    public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
     public constructor(options:ConversationOptions={}){
         const {
@@ -212,7 +214,7 @@ export class Conversation
 
         try{
             let append:string[]|undefined=undefined;
-            const flat=await this.flattenAsync(new ConvoExecutionContext({
+            const flatExe=new ConvoExecutionContext({
                 conversation:this,
                 convoPipeSink:(value)=>{
                     if(!(typeof value === 'string')){
@@ -227,7 +229,9 @@ export class Conversation
                     append.push(value);
                     return value;
                 }
-            }));
+            })
+            flatExe.print=this.print;
+            const flat=await this.flattenAsync(flatExe);
             if(this._isDisposed){
                 return {messages:[]}
             }
@@ -363,8 +367,13 @@ export class Conversation
     }
 
     public async flattenAsync(
-        exe:ConvoExecutionContext=new ConvoExecutionContext({conversation:this})
+        exe?:ConvoExecutionContext
     ):Promise<FlatConvoConversation>{
+
+        if(!exe){
+            exe=new ConvoExecutionContext({conversation:this});
+            exe.print=this.print;
+        }
 
         const messages:FlatConvoMessage[]=[];
         const edgePairs:{
