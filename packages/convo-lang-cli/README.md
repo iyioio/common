@@ -893,17 +893,17 @@ Returns the value encoded as an URI
 ### encodeURIComponent( value:string )
 Returns the value encoded as an URI component
 
-## md( ...values:any[] )
+### md( ...values:any[] )
 Concatenates all passed in values and formats the values as markdown. Recursive objects are limited
 to a depth of 5.
 
-## toMarkdown( maxDepth:int value:any)
+### toMarkdown( maxDepth:int value:any)
 formats the value as markdown and allows the configuration of recursive object depth.
 
-## toJson( value:any )
+### toJson( value:any )
 Formats the given value as json
 
-## toJsonMdBlock( value:any )
+### toJsonMdBlock( value:any )
 Formats the given value as json and closes the value in a markdown json code block.
 
 
