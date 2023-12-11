@@ -511,13 +511,14 @@ export interface FlatConvoMessage
 
 }
 
-export interface ConvoCompletionMessage
+export interface ConvoCompletionMessage extends Partial<ConvoTokenUsage>
 {
     role?:string;
     content?:string;
     callFn?:string;
     callParams?:any;
     tags?:Record<string,string|undefined>;
+    model?:string;
 }
 
 export interface ConvoCompletionService
@@ -652,3 +653,11 @@ export interface ConvoAppend
  * service that will use the flatten view of the conversation.
  */
 export type ConvoFlatCompletionCallback=(flat:FlatConvoConversation)=>Promise<ConvoCompletionMessage[]>|ConvoCompletionMessage[];
+
+
+export interface ConvoTokenUsage
+{
+    inputTokens:number;
+    outputTokens:number;
+    tokenPrice:number;
+}

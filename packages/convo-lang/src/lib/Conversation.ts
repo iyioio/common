@@ -1,8 +1,8 @@
-import { ReadonlySubject } from "@iyio/common";
+import { ReadonlySubject, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, getConvoDateString, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
 import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
@@ -17,6 +17,32 @@ export interface ConversationOptions
     serviceCapabilities?:ConvoCapability[];
     capabilities?:ConvoCapability[];
     maxAutoCompleteDepth?:number;
+    /**
+     * If true time tags will be added to appended user message
+     */
+    trackTime?:boolean;
+
+    /**
+     * If true tokenUsage tags will be added to completed messages
+     */
+    trackTokens?:boolean;
+
+
+    /**
+     * If true model tags will be added to completed messages
+     */
+    trackModel?:boolean;
+
+    /**
+     * If true the conversation will not automatically be flattened when new message are appended.
+     */
+    disableAutoFlatten?:boolean;
+
+    /**
+     * Number of milliseconds to delay before flattening the conversation. The delay is used to
+     * debounce appends.
+     */
+    autoFlattenDelayMs?:number;
 }
 
 export class Conversation
@@ -36,6 +62,42 @@ export class Conversation
     private readonly _activeTaskCount:BehaviorSubject<number>=new BehaviorSubject<number>(0);
     public get activeTaskCountSubject():ReadonlySubject<number>{return this._activeTaskCount}
     public get activeTaskCount(){return this._activeTaskCount.value}
+
+    private readonly _trackTime:BehaviorSubject<boolean>;
+    public get trackTimeSubject():ReadonlySubject<boolean>{return this._trackTime}
+    public get trackTime(){return this._trackTime.value}
+    public set trackTime(value:boolean){
+        if(value==this._trackTime.value){
+            return;
+        }
+        this._trackTime.next(value);
+    }
+
+    private readonly _trackTokens:BehaviorSubject<boolean>;
+    public get trackTokensSubject():ReadonlySubject<boolean>{return this._trackTokens}
+    public get trackTokens(){return this._trackTokens.value}
+    public set trackTokens(value:boolean){
+        if(value==this._trackTokens.value){
+            return;
+        }
+        this._trackTokens.next(value);
+    }
+
+    private readonly _trackModel:BehaviorSubject<boolean>;
+    public get trackModelSubject():ReadonlySubject<boolean>{return this._trackModel}
+    public get trackModel(){return this._trackModel.value}
+    public set trackModel(value:boolean){
+        if(value==this._trackModel.value){
+            return;
+        }
+        this._trackModel.next(value);
+    }
+
+    private readonly _flat:BehaviorSubject<FlatConvoConversation|null>=new BehaviorSubject<FlatConvoConversation|null>(null);
+    public get flatSubject():ReadonlySubject<FlatConvoConversation|null>{return this._flat}
+    public get flat(){return this._flat.value}
+
+
 
     /**
      * Unregistered variables will be available during execution but will not be added to the code
@@ -63,6 +125,10 @@ export class Conversation
      */
     public readonly serviceCapabilities:ConvoCapability[];
 
+    private readonly disableAutoFlatten:boolean;
+
+    private readonly autoFlattenDelayMs:number;
+
     public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
     public constructor(options:ConversationOptions={}){
@@ -73,6 +139,11 @@ export class Conversation
             capabilities=[],
             serviceCapabilities=[],
             maxAutoCompleteDepth=10,
+            trackTime=false,
+            trackTokens=false,
+            trackModel=false,
+            disableAutoFlatten=false,
+            autoFlattenDelayMs=30,
         }=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
@@ -80,6 +151,11 @@ export class Conversation
         this.capabilities=capabilities;
         this.serviceCapabilities=serviceCapabilities;
         this.maxAutoCompleteDepth=maxAutoCompleteDepth;
+        this._trackTime=new BehaviorSubject<boolean>(trackTime);
+        this._trackTokens=new BehaviorSubject<boolean>(trackTokens);
+        this._trackModel=new BehaviorSubject<boolean>(trackModel);
+        this.disableAutoFlatten=disableAutoFlatten;
+        this.autoFlattenDelayMs=autoFlattenDelayMs;
 
         if(this.capabilities.includes('vision')){
             this.define({
@@ -151,11 +227,32 @@ export class Conversation
             messages:r.result??[]
         });
 
+        if(!this.disableAutoFlatten){
+            this.autoFlattenAsync();
+        }
+
         return r;
     }
 
+    private autoFlattenId=0;
+    private async autoFlattenAsync(){
+        const id=++this.autoFlattenId;
+        if(this.autoFlattenDelayMs>0){
+            await delayAsync(this.autoFlattenDelayMs);
+            if(this.isDisposed || id!==this.autoFlattenId){
+                return;
+            }
+        }
+
+        const flat=await this.flattenAsync();
+        if(this.isDisposed || id!==this.autoFlattenId){
+            return;
+        }
+        this._flat.next(flat);
+    }
+
     public appendUserMessage(message:string){
-        this.append(`> user\n${escapeConvoMessageContent(message)}`)
+        this.append(`${this.getPrefixTags()}> user\n${escapeConvoMessageContent(message)}`)
     }
 
     public appendDefine(defineCode:string,description?:string):ConvoParsingResult{
@@ -203,6 +300,29 @@ export class Conversation
         return c.returnValues?.[0];
     }
 
+    public getVar(nameOrPath:string,defaultValue?:any):any{
+        return this._flat.value?.exe?.getVar(nameOrPath,null,defaultValue);
+    }
+
+    private getPrefixTags(includeTokenUsage?:boolean,msg?:ConvoCompletionMessage){
+        let tags='';
+        if(this.trackTime || this.getVar(convoVars.__trackTime)){
+            tags+=`@${convoTags.time} ${getConvoDateString()}\n`;
+        }
+        if(includeTokenUsage && msg && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
+            tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(msg)}\n`;
+        }
+        if(msg?.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
+            tags+=`@${convoTags.model} ${msg.model}\n`;
+        }
+        return tags;
+    }
+
+    private setFlat(flat:FlatConvoConversation){
+        this.autoFlattenId++;
+        this._flat.next({...flat});
+    }
+
     private async _completeAsync(
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth=0,
@@ -232,6 +352,7 @@ export class Conversation
             })
             flatExe.print=this.print;
             const flat=await this.flattenAsync(flatExe);
+            const exe=flat.exe;
             if(this._isDisposed){
                 return {messages:[]}
             }
@@ -240,12 +361,13 @@ export class Conversation
                 flat.exe.setVar(false,this.unregisteredVars[e],e);
             }
 
+            this.setFlat(flat);
+
             const completion=await getCompletion(flat);
             if(this._isDisposed){
                 return {messages:[]};
             }
 
-            const exe=flat.exe;
             let cMsg:ConvoCompletionMessage|undefined=undefined;
 
             let returnValues:any[]|undefined=undefined;
@@ -254,14 +376,26 @@ export class Conversation
 
             for(const msg of completion){
 
+                let hasTokenUsage=(msg.inputTokens || msg.outputTokens)?true:false;
+
                 const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
                 if(msg.content){
                     cMsg=msg;
-                    this.append(`${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                    this.append(`${this.getPrefixTags(hasTokenUsage,msg)}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                    hasTokenUsage=false;
                 }
 
                 if(msg.callFn){
-                    const result=this.append(`${tagsCode}> call ${msg.callFn}(${msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)})`);
+                    const result=this.append(`${
+                        this.getPrefixTags(hasTokenUsage,msg)
+                    }${
+                        tagsCode
+                    }> call ${
+                        msg.callFn
+                    }(${
+                        msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
+                    })`);
+                    hasTokenUsage=false;
                     const callMessage=result.result?.[0];
                     if(result.result?.length!==1 || !callMessage){
                         throw new ConvoError(
@@ -291,7 +425,7 @@ export class Conversation
 
                     lastResultValue=(typeof callResultValue === 'function')?undefined:callResultValue;
 
-                    const lines:string[]=['> result'];
+                    const lines:string[]=[`${this.getPrefixTags()}> result`];
                     if(exe.sharedSetters){
                         for(const s of exe.sharedSetters){
                             lines.push(`${s}=${JSON.stringify(exe.sharedVars[s],null,4)}`)
@@ -313,6 +447,13 @@ export class Conversation
                         lastResultValue=undefined;
                     }
 
+                    this.setFlat(flat);
+
+                }
+
+                if(hasTokenUsage){
+                    this.append(`${this.getPrefixTags(hasTokenUsage,msg)}> define\n// token usage placeholder`);
+                    hasTokenUsage=false;
                 }
 
             }
@@ -334,6 +475,10 @@ export class Conversation
                 }
             }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth){
                 return await this._completeAsync(getCompletion,autoCompleteDepth+1,completion,returnValues);
+            }
+
+            if(!this.disableAutoFlatten){
+                this.autoFlattenAsync();
             }
 
             return {

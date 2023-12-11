@@ -218,47 +218,56 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         request.debug?.('rec < OpenAi.ChatCompletionCreateParams',r);
 
-        return {options:r.choices.map<AiCompletionOption>(c=>{
+        return {
+            outputTokens:r.usage?.completion_tokens,
+            inputTokens:r.usage?.prompt_tokens,
+            tokenPrice:(
+                this.getMaxTokenPrice('text','in',model)*(r.usage?.prompt_tokens??0)+
+                this.getMaxTokenPrice('text','out',model)*(r.usage?.completion_tokens??0)
+            ),
+            model,
+            options:r.choices.map<AiCompletionOption>(c=>{
 
-            let params:Record<string,any>|undefined;
-            let callError:AiCompletionFunctionCallError|undefined;;
+                let params:Record<string,any>|undefined;
+                let callError:AiCompletionFunctionCallError|undefined;;
 
-            const tool=c.message.tool_calls?.find(t=>t.function);
-            const toolFn=tool?.function??c.message.function_call;
-            let fnName:string|undefined=undefined;
-            const toolId=(tool && toolFn)?tool.id:undefined;
-            if(toolFn){
-                try{
+                const tool=c.message.tool_calls?.find(t=>t.function);
+                const toolFn=tool?.function??c.message.function_call;
+                let fnName:string|undefined=undefined;
+                const toolId=(tool && toolFn)?tool.id:undefined;
+                if(toolFn){
+                    try{
 
-                    fnName=toolFn.name;
-                    params=parse(toolFn.arguments??'{}');
-                }catch(ex){
-                    callError={
-                        name:toolFn.name,
-                        error:`Unable to parse arguments - ${(ex as any)?.message}\n${toolFn.arguments}`
+                        fnName=toolFn.name;
+                        params=parse(toolFn.arguments??'{}');
+                    }catch(ex){
+                        callError={
+                            name:toolFn.name,
+                            error:`Unable to parse arguments - ${(ex as any)?.message}\n${toolFn.arguments}`
+                        }
                     }
                 }
-            }
 
-            return {
-                message:{
-                    id:shortUuid(),
-                    type:callError?'function-error':fnName?'function':'text',
-                    role:c.message?.role,
-                    content:c.message?.content??'',
-                    call:(fnName && !callError)?{
-                        name:fnName,
-                        params:params??{}
-                    }:undefined,
-                    callError,
-                    errorCausedById:callError?lastMessage.id:undefined,
-                    isError:callError?true:undefined,
-                    metadata:toolId?{toolId}:undefined,
+                return {
+                    message:{
+                        id:shortUuid(),
+                        type:callError?'function-error':fnName?'function':'text',
+                        role:c.message?.role,
+                        content:c.message?.content??'',
+                        call:(fnName && !callError)?{
+                            name:fnName,
+                            params:params??{}
+                        }:undefined,
+                        callError,
+                        errorCausedById:callError?lastMessage.id:undefined,
+                        isError:callError?true:undefined,
+                        metadata:toolId?{toolId}:undefined,
 
-                },
-                confidence:1,
-            }
-        })};
+                    },
+                    confidence:1,
+                }
+            })
+        };
     }
 
     private async completeAudioAsync(lastMessage:AiCompletionMessage):Promise<AiCompletionResult>
@@ -385,6 +394,51 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         }
 
         return 4096;
+    }
+
+    public getMaxTokenPrice(messageType:AiCompletionMessageType,tokenType:'in'|'out',model?:string):number
+    {
+
+        if(!model){
+            switch(messageType){
+
+                case 'text':
+                    model=this._chatModel;
+                    break;
+
+                case 'image':
+                    model=this._imageModel;
+                    break;
+
+                case 'audio':
+                    model=this._audioModel;
+                    break;
+
+                default:
+                    model=this._chatModel;
+                    break;
+            }
+        }
+
+        const isIn=tokenType==='in';
+        switch(model){
+            case 'gpt-4-1106-preview':
+            case 'gpt-4-vision-preview': return (isIn?0.01:0.03)/1000;
+            case 'gpt-4':
+            case 'gpt-4-0314':
+            case 'gpt-4-0613': return (isIn?0.03:0.06)/1000;
+            case 'gpt-4-32k':
+            case 'gpt-4-32k-0314':
+            case 'gpt-4-32k-0613': return (isIn?0.06:0.12)/1000;
+            case 'gpt-3.5-turbo':
+            case 'gpt-3.5-turbo-0301':
+            case 'gpt-3.5-turbo-0613':
+            case 'gpt-3.5-turbo-1106': return (isIn?0.0015:0.002)/1000;
+            case 'gpt-3.5-turbo-16k':
+            case 'gpt-3.5-turbo-16k-0613': return  (isIn?0.001:0.002)/1000;
+        }
+
+        return (isIn?0.01:0.03)/1000;
     }
 
     public getTokenEstimateForMessage?(message:string,model?:string):number|undefined

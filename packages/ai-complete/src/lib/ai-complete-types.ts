@@ -147,6 +147,11 @@ export const AiCompletionResultScheme=z.object({
      */
     preGeneration:AiCompletionMessageScheme.array().optional(),
     options:AiCompletionOptionScheme.array(),
+
+    inputTokens:z.number().optional(),
+    outputTokens:z.number().optional(),
+    tokenPrice:z.number().optional(),
+    model:z.string().optional(),
 })
 export type AiCompletionResult=z.infer<typeof AiCompletionResultScheme>;
 

@@ -1,5 +1,6 @@
+import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
+import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -43,6 +44,21 @@ export const convoVars={
     __debug:'__debug',
 
     /**
+     * When set to true time tracking will be enabled.
+     */
+    __trackTime:'__trackTime',
+
+    /**
+     * When set to true token usage tracking will be enabled.
+     */
+    __trackTokenUsage:'__trackTokenUsage',
+
+    /**
+     * When set to true the model used as a completion provider will be tracked.
+     */
+    __trackModel:'__trackModel',
+
+    /**
      * When defined __visionSystemMessage will be injected into the system message of conversations
      * with vision capabilities. __visionSystemMessage will override the default vision
      * system message.
@@ -69,7 +85,28 @@ export const convoTags={
      * latest state.
      */
     edge:'edge',
+
+    /**
+     * Used to track the time messages are created.
+     */
+    time:'time',
+
+    /**
+     * Used to track the number of tokens a message used
+     */
+    tokenUsage:'tokenUsage',
+
+    /**
+     * Used to track the model used to generate completions
+     */
+    model:'model',
 } as const;
+
+export const convoDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx";
+
+export const getConvoDateString=(date:Date|number=new Date()):string=>{
+    return format(date,convoDateFormat);
+}
 
 export const defaultConvoVisionSystemMessage=(
     'If the user asks a question about a markdown image without a '+
@@ -373,5 +410,18 @@ export const validateConvoTypeName=(name:string):void=>{
             undefined,
             `${name} is an invalid Convo type name. Type names must start with an upper case letter followed by 0 to 254 more word characters`
         );
+    }
+}
+
+export const convoUsageTokensToString=(usage:Partial<ConvoTokenUsage>):string=>{
+    return `${usage.inputTokens??0} / ${usage.outputTokens??0}${usage.tokenPrice?' / $'+usage.tokenPrice:''}`;
+}
+
+export const parseConvoUsageTokens=(str:string):ConvoTokenUsage=>{
+    const parts=str.split('/');
+    return {
+        inputTokens:Number(parts[0])||0,
+        outputTokens:Number(parts[1])||0,
+        tokenPrice:Number(parts[2]?.replace('$',''))||0,
     }
 }

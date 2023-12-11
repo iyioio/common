@@ -1,7 +1,7 @@
 import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer } from "@iyio/common";
 import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
-import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDateFormat, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
 import { convoValueToZodType } from "./convo-zod";
@@ -739,7 +739,7 @@ export const defaultConvoVars={
     }),
 
     dateTime:createConvoScopeFunction(scope=>{
-        const f=scope.paramValues?.[0]??defaultDateFormat;
+        const f=scope.paramValues?.[0]??convoDateFormat;
         let time:Date|string|number=scope.paramValues?.[1]??new Date();
         switch(typeof time){
             case 'string':
@@ -760,7 +760,7 @@ export const defaultConvoVars={
         try{
             return format(time,f);
         }catch{
-            return format(time,defaultDateFormat);
+            return format(time,convoDateFormat);
         }
     }),
 
@@ -811,4 +811,3 @@ export const defaultConvoVars={
 
 Object.freeze(defaultConvoVars);
 
-const defaultDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx"

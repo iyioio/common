@@ -85,8 +85,26 @@ export class AiCompletionService implements ConvoCompletionService
         const mergeResult=(r:AiCompletionResult)=>{
             r.options.sort((a,b)=>b.confidence-a.confidence);
             if(result){
+                if(result.inputTokens===undefined){
+                    result.inputTokens=r.inputTokens;
+                }else if(r.inputTokens!==undefined){
+                    result.inputTokens+=r.inputTokens;
+                }
+                if(result.outputTokens===undefined){
+                    result.outputTokens=r.outputTokens;
+                }else if(r.outputTokens!==undefined){
+                    result.outputTokens+=r.outputTokens;
+                }
+                if(result.tokenPrice===undefined){
+                    result.tokenPrice=r.tokenPrice;
+                }else if(r.tokenPrice!==undefined){
+                    result.tokenPrice+=r.tokenPrice;
+                }
                 if(!result.preGeneration){
                     result.preGeneration=[];
+                }
+                if(r.model){
+                    result.model=r.model;
                 }
                 const prevOpt=result.options[0];
                 if(prevOpt){
@@ -350,12 +368,20 @@ export class AiCompletionService implements ConvoCompletionService
                 callFn:resultMessage.message.call.name,
                 callParams:resultMessage.message.call.params,
                 tags:resultMessage.message.metadata,
+                inputTokens:result.inputTokens,
+                outputTokens:result.outputTokens,
+                tokenPrice:result.tokenPrice,
+                model:result.model,
             }]
         }else{
             return [{
                 role:resultMessage.message.role,
                 content:resultMessage.message.content,
                 tags:resultMessage.message.metadata,
+                inputTokens:result.inputTokens,
+                outputTokens:result.outputTokens,
+                tokenPrice:result.tokenPrice,
+                model:result.model,
             }]
         }
     }
