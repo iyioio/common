@@ -26,13 +26,13 @@
             "begin": "\\${",
             "beginCaptures": {
                 "0": {
-                    "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
+                    "name": "punctuation.definition.template-expression.begin.js"
                 }
             },
             "end": "}",
             "endCaptures": {
                 "0": {
-                    "name": "punctuation.definition.interpolation.end.bracket.curly.scss punctuation.definition.template-expression.end.js"
+                    "name": "punctuation.definition.template-expression.end.js"
                 }
             },
             "name": "variable.interpolation.scss",
@@ -76,7 +76,7 @@
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|result|define|debug)",
+            "begin": "^\\s*(>)\\s*(do|result|define|debug|end)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{

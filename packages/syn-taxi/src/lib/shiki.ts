@@ -169,7 +169,7 @@ const convo={
 
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|result|define|debug)",
+            "begin": "^\\s*(>)\\s*(do|result|define|debug|end)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
