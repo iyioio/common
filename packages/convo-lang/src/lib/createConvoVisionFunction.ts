@@ -29,10 +29,15 @@ export const createConvoVisionFunction=({
                 imageUrls
             }=paramsType.parse(convoLabeledScopeParamsToObj(scope));
 
+            const srcConvo=ctx.convo.conversation;
+
             const convo=new Conversation({
                 ...conversationOptions,
                 capabilities:[],
-                serviceCapabilities:['vision']
+                serviceCapabilities:['vision'],
+                debug:srcConvo?.debugToConversation,
+                debugMode:srcConvo?.shouldDebug(),
+
             });
 
             const varMsg=ctx.getVar(convoVars.__visionServiceSystemMessage,scope);

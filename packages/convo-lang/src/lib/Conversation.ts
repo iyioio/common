@@ -43,6 +43,14 @@ export interface ConversationOptions
      * debounce appends.
      */
     autoFlattenDelayMs?:number;
+
+    /**
+     * A function that will be used to output debug values. By default debug information is written
+     * to the output of the conversation as comments
+     */
+    debug?:(...values:any[])=>void;
+
+    debugMode?:boolean;
 }
 
 export class Conversation
@@ -93,6 +101,16 @@ export class Conversation
         this._trackModel.next(value);
     }
 
+    private readonly _debugMode:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
+    public get debugModeSubject():ReadonlySubject<boolean>{return this._debugMode}
+    public get debugMode(){return this._debugMode.value}
+    public set debugMode(value:boolean){
+        if(value==this._debugMode.value){
+            return;
+        }
+        this._debugMode.next(value);
+    }
+
     private readonly _flat:BehaviorSubject<FlatConvoConversation|null>=new BehaviorSubject<FlatConvoConversation|null>(null);
     public get flatSubject():ReadonlySubject<FlatConvoConversation|null>{return this._flat}
     public get flat(){return this._flat.value}
@@ -129,6 +147,12 @@ export class Conversation
 
     private readonly autoFlattenDelayMs:number;
 
+    /**
+     * A function that will be used to output debug values. By default debug information is written
+     * to the output of the conversation as comments
+     */
+    debug?:(...values:any[])=>void;
+
     public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
     public constructor(options:ConversationOptions={}){
@@ -144,6 +168,8 @@ export class Conversation
             trackModel=false,
             disableAutoFlatten=false,
             autoFlattenDelayMs=30,
+            debug,
+            debugMode,
         }=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
@@ -156,6 +182,10 @@ export class Conversation
         this._trackModel=new BehaviorSubject<boolean>(trackModel);
         this.disableAutoFlatten=disableAutoFlatten;
         this.autoFlattenDelayMs=autoFlattenDelayMs;
+        this.debug=debug;
+        if(debugMode){
+            this.debugMode=true;
+        }
 
         if(this.capabilities.includes('vision')){
             this.define({
@@ -611,9 +641,34 @@ export class Conversation
         }
 
 
-        const shouldDebug=exe.getVarEx(convoVars.__debug,undefined,undefined,false);
-        const debug=shouldDebug?(...args:any[])=>{
-            if(!args.length){
+        const shouldDebug=this.shouldDebug(exe);
+        const debug=shouldDebug?(this.debug??this.debugToConversation):undefined;
+        if(shouldDebug){
+            exe.print=(...args:any[])=>{
+                debug?.(...args);
+                return defaultConvoPrintFunction(...args);
+            }
+        }
+
+        return {
+            exe,
+            messages,
+            conversation:this,
+            debug,
+            capabilities:[...this.serviceCapabilities],
+        }
+    }
+
+    public shouldDebug(exe?:ConvoExecutionContext)
+    {
+        return (
+            this.debugMode ||
+            (exe?exe.getVar(convoVars.__debug):this.getVar(convoVars.__debug))
+        )?true:false;
+    }
+
+    public readonly debugToConversation=(...args:any[])=>{
+        if(!args.length){
                 return;
             }
             const out:string[]=[];
@@ -630,21 +685,6 @@ export class Conversation
             }
             const debugComment=convoStringToComment(out.join('\n'));
             this.append(`> debug\n${debugComment}`);
-        }:undefined;
-        if(shouldDebug){
-            exe.print=(...args:any[])=>{
-                debug?.(...args);
-                return defaultConvoPrintFunction(...args);
-            }
-        }
-
-        return {
-            exe,
-            messages,
-            conversation:this,
-            debug,
-            capabilities:[...this.serviceCapabilities],
-        }
     }
 
     private readonly definitionItems:ConvoDefItem[]=[];
