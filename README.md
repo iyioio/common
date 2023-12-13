@@ -1,5 +1,5 @@
-# iyio (eye-y-io)
-Welcome to the iyio (eye-y-io) mono repo. iyio is an application framework and a set of general
+# IYIO ( eye·o )
+Welcome to the IYIO ( eye·o ) mono repo. IYIO is an application framework and a set of general
 purpose libraries that try not to get in the way 🤓
 
 **Odds are you're here for convo-lang** - [click-here](packages/convo-lang/README.md)
