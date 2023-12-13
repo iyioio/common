@@ -1,4 +1,4 @@
-import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult } from '@iyio/ai-complete';
+import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, getLastNonCallAiCompleteMessage } from '@iyio/ai-complete';
 import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi from 'openai';
@@ -141,6 +141,8 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const api=await this.getApiAsync();
 
+        const lastContentMessage=getLastNonCallAiCompleteMessage(request.messages);
+
         const oMsgs:ChatCompletionMessageParam[]=[];
         for(const m of request.messages){
             if(m.type==='text'){
@@ -200,8 +202,11 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             }
         })
 
+        const jsonMode=lastContentMessage?.responseFormat==='json';
+
         const cParams:ChatCompletionCreateParams={
             model,
+            response_format:jsonMode?{type:'json_object'}:undefined,
             stream:false,
             messages:oMsgs,
             tools:oFns?.length?oFns:undefined,
@@ -226,6 +231,10 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 this.getMaxTokenPrice('text','out',model)*(r.usage?.completion_tokens??0)
             ),
             model,
+            format:jsonMode?'json':undefined,
+            formatTypeName:jsonMode?lastContentMessage?.responseFormatTypeName:undefined,
+            formatIsArray:jsonMode?lastContentMessage?.responseFormatIsArray:undefined,
+            assignTo:lastContentMessage?.responseAssignTo,
             options:r.choices.map<AiCompletionOption>(c=>{
 
                 let params:Record<string,any>|undefined;

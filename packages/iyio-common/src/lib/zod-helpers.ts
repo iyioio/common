@@ -151,9 +151,18 @@ export const zodCoerceNullDbValuesInObject=<T>(scheme:ZodSchema<T>,obj:Record<st
 }
 
 
+const cacheKey=Symbol('zodHelperCacheKey');
 
-export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=10):JsonScheme|undefined=>{
-    return _zodTypeToJsonScheme(scheme,maxDepth)?.jsonType;
+export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=10,cache=true):JsonScheme|undefined=>{
+    const cached=cache?(scheme as any)[cacheKey]:undefined;
+    if(cached){
+        return cached;
+    }
+    const v=_zodTypeToJsonScheme(scheme,maxDepth)?.jsonType;
+    if(cache){
+        (scheme as any)[cacheKey]=v;
+    }
+    return v;
 }
 
 

@@ -6,6 +6,11 @@ import { ConvoBaseType, ConvoMetadata, OptionalConvoValue, isConvoBaseType, isCo
 
 const typeCacheKey=Symbol('typeCacheKey');
 
+export const convoTypeToJsonScheme=(value:any,maxDepth=100,cache=true):JsonScheme|undefined=>{
+    const zod=convoValueToZodType(value,maxDepth,cache);
+    return zodTypeToJsonScheme(zod,maxDepth,cache);
+}
+
 export const convoValueToZodType=(value:any,maxDepth=100,cache=true):ZodType<any>=>{
     if(cache && value && value[typeCacheKey]){
         return value[typeCacheKey];

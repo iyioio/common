@@ -285,6 +285,154 @@ await convo.completeAsync(/*convo*/`
 `);
 ```
 
+### JSON Mode
+When the last message in a conversation is tagged with the `@json` tag json mode is enabled for the 
+next completion. Custom user types can be used to define the scheme of the json that should
+be returned by setting the value of the @json tag to the name of the desired type - `@json TypeName`
+
+The json response can also be assigned to a variable by using the `@responseAssign` tag.
+
+#### JSON mode with no scheme
+``` convo
+@json
+@responseAssign planets
+> user
+List the planets in our solar system as a json array
+
+@format json
+@assign planets
+> assistant
+{
+    "planets": [
+        "Mercury",
+        "Venus",
+        "Earth",
+        "Mars",
+        "Jupiter",
+        "Saturn",
+        "Uranus",
+        "Neptune"
+    ]
+}
+```
+
+#### JSON mode with scheme
+``` convo
+> define
+
+Planet = struct(
+    name:string
+    milesFromSun:number
+    moonCount:number
+)
+
+@json Planet[]
+@responseAssign planets
+> user
+List the planets in our solar system as a json array
+
+@format json
+@assign planets
+> assistant
+[
+    {
+        "name": "Mercury",
+        "milesFromSun": 35980000,
+        "moonCount": 0
+    },
+    {
+        "name": "Venus",
+        "milesFromSun": 67240000,
+        "moonCount": 0
+    },
+    {
+        "name": "Earth",
+        "milesFromSun": 92960000,
+        "moonCount": 1
+    },
+    {
+        "name": "Mars",
+        "milesFromSun": 141600000,
+        "moonCount": 2
+    },
+    {
+        "name": "Jupiter",
+        "milesFromSun": 483800000,
+        "moonCount": 79
+    },
+    {
+        "name": "Saturn",
+        "milesFromSun": 890800000,
+        "moonCount": 83
+    },
+    {
+        "name": "Uranus",
+        "milesFromSun": 1784000000,
+        "moonCount": 27
+    },
+    {
+        "name": "Neptune",
+        "milesFromSun": 2795000000,
+        "moonCount": 14
+    }
+]
+```
+
+As you can see, using custom user types gives you very fine tune control over the structure of the returned json.
+
+### JSON Mode + Vision
+Json mode can also be combined with vision messages
+
+``` convo
+> define
+Person = struct(
+    name?:string
+    description?:string
+)
+
+@json Person[]
+@responseAssign dudes
+> user
+Describe each person in this picture.
+
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+
+
+@toolId call_dfpKG4bnDRA3UTBjspQr2O4s
+> call queryImage(
+    "query": "describe each person in this picture",
+    "imageUrls": [
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+    ]
+)
+> result
+__return={
+    "result": "The image shows four individuals crossing the street in single file on a zebra crossing. They are all adult males, and they appear to be dressed in distinct styles:\n\n1. The first person, walking from right to left, has long hair and is wearing a white suit. He is barefoot and steps off with his right foot onto the crossing.\n\n2. The second individual has darker hair and is wearing a black suit with a white shirt and no tie. He is also stepping off with his right foot, wearing black shoes.\n\n3. The third man is wearing a suit as well, looking somewhat casually dressed compared to the second person. He has a beard and long hair and is wearing an open neck shirt with a black suit, and he is mid-step onto the zebra with his left foot forward, wearing black shoes.\n\n4. The fourth man brings up the rear and is dressed most casually. He wears a denim jacket and jeans with a white shirt underneath. He has shoulder-length hair and is taking a step with his right foot, wearing dark-colored shoes.\n\nThe setting appears to be a quiet, tree-lined street with cars parked on either side, and there is a white Volkswagen Beetle and a black car visible behind them, among other vehicles. The architecture in the background suggests this might be a residential area. The image has a calm, orderly feel, indicative of an everyday urban scene albeit with a touch of timeless style."
+}
+
+
+@format json
+@assign dudes
+> assistant
+[
+    {
+        "name": "first person",
+        "description": "The first person, walking from right to left, has long hair and is wearing a white suit. He is barefoot and steps off with his right foot onto the crossing."
+    },
+    {
+        "name": "second person",
+        "description": "The second individual has darker hair and is wearing a black suit with a white shirt and no tie. He is also stepping off with his right foot, wearing black shoes."
+    },
+    {
+        "name": "third person",
+        "description": "The third man is wearing a suit as well, looking somewhat casually dressed compared to the second person. He has a beard and long hair and is wearing an open neck shirt with a black suit, and he is mid-step onto the zebra with his left foot forward, wearing black shoes."
+    },
+    {
+        "name": "fourth person",
+        "description": "The fourth man brings up the rear and is dressed most casually. He wears a denim jacket and jeans with a white shirt underneath. He has shoulder-length hair and is taking a step with his right foot, wearing dark-colored shoes."
+    }
+]
+```
 
 ### Comments
 Comments start with either a pound character (#) or two forward slashes (//). Comments starting with a pound
@@ -1234,3 +1382,6 @@ Here's a sneak peek:
 Would you like to add anything else to our new zoo?
 
 ```
+
+### More examples
+More examples can be found at https://github.com/iyioio/common/tree/main/packages/convo-lang-tools/examples

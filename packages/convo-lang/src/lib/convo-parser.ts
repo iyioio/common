@@ -1,5 +1,6 @@
 import { CodeParsingError } from "@iyio/common";
-import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTestFnName } from "./convo-lib";
+import { parse as parseJson5 } from "json5";
+import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTags, convoTestFnName, getConvoTag, isValidConvoIdentifier } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'---'|'>';
@@ -272,6 +273,35 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 }
             }
         }
+
+        if(currentMessage){
+            const formatTag=getConvoTag(currentMessage.tags,convoTags.format);
+            if(formatTag?.value==='json'){
+                if(currentMessage.content===undefined){
+                    index=startIndex;
+                    error='Messages that contain embeds can not use @format json';
+                    return false;
+                }
+                try{
+                    currentMessage.jsonValue=parseJson5(currentMessage.content);
+                }catch(ex){
+                    index=startIndex;
+                    error=`Message contains invalid json - ${(ex as any)?.message}`;
+                    return false;
+                }
+            }
+
+            const assignTag=getConvoTag(currentMessage.tags,convoTags.assign);
+            if(assignTag?.value){
+                if(!isValidConvoIdentifier(assignTag.value)){
+                    index=startIndex;
+                    error='Invalid assign var name';
+                    return false;
+                }
+                currentMessage.assignTo=assignTag.value;
+            }
+        }
+
         msgName=null;
         currentMessage=null;
         inMsg=false;

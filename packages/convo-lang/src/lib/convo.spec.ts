@@ -1318,6 +1318,28 @@ describe('convo',()=>{
 
     })
 
+
+    it('should parse json message',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+
+            @format json
+            > user
+            {
+                "name":"alf",
+                "age":103
+            }
+
+        `);
+
+        expect(convo.result?.[0]?.jsonValue).toEqual({
+            "name":"alf",
+            "age":103
+        })
+
+
+    })
+
 });
 
 

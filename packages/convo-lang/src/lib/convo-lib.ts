@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
 import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
@@ -100,6 +101,32 @@ export const convoTags={
      * Used to track the model used to generate completions
      */
     model:'model',
+
+    /**
+     * Sets the format as message should be responded to with.
+     */
+    responseFormat:'responseFormat',
+
+    /**
+     * Causes the response of the tagged message to be assigned to a variable
+     */
+    responseAssign:'responseAssign',
+
+    /**
+     * When used with a message the json tag is short and for "@responseFormat json"
+     */
+    json:'json',
+
+    /**
+     * The format of a message
+     */
+    format:'format',
+
+    /**
+     * Used to assign the content or jsonValue of a message to a variable
+     */
+    assign:'assign'
+
 } as const;
 
 export const convoDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx";
@@ -220,6 +247,19 @@ export const containsConvoTag=(tags:ConvoTag[]|null|undefined,tagName:string):bo
     return false;
 }
 
+export const getConvoTag=(tags:ConvoTag[]|null|undefined,tagName:string):ConvoTag|undefined=>{
+    if(!tags){
+        return undefined;
+    }
+    for(let i=0;i<tags.length;i++){
+        const tag=tags[i];
+        if(tag?.name===tagName){
+            return tag;
+        }
+    }
+    return undefined;
+}
+
 export const convoTagsToMap=(tags:ConvoTag[]):Record<string,string|undefined>=>{
     const map:Record<string,string|undefined>={};
     for(const t of tags){
@@ -293,6 +333,10 @@ export const isValidConvoRole=(role:string)=>{
     return /^\w+$/.test(role);
 }
 
+export const isValidConvoIdentifier=(role:string)=>{
+    return /^[a-z]\w*$/.test(role);
+}
+
 export const formatConvoMessage=(role:string,content:string,prefix=''):string=>{
     if(!isValidConvoRole(role)){
         throw new ConvoError('invalid-role',undefined,`(${role}) is not a valid role`);
@@ -304,6 +348,8 @@ export const formatConvoMessage=(role:string,content:string,prefix=''):string=>{
 }
 
 export const escapeConvoMessageContent=(content:string,isStartOfMessage=true):string=>{
+    // todo escape tags at end of message
+
     if(content.includes('{{')){
         content=content.replace(/\{\{/g,'\\{{');
     }
@@ -452,4 +498,13 @@ export const parseConvoUsageTokens=(str:string):ConvoTokenUsage=>{
         outputTokens:Number(parts[1])||0,
         tokenPrice:Number(parts[2]?.replace('$',''))||0,
     }
+}
+
+
+export const parseConvoJsonMessage=(json:string):any=>{
+    return parseJson5(json
+        .replace(/^\s*`+\s*\w*/,'')
+        .replace(/`+\s*$/,'')
+        .trim()
+    );
 }

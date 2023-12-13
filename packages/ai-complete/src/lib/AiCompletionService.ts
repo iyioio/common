@@ -338,6 +338,10 @@ export class AiCompletionService implements ConvoCompletionService
                     role:isAiCompletionRole(msg.role)?msg.role:'user',
                     content:msg.content,
                     metadata:msg.tags,
+                    responseFormat:msg.responseFormat,
+                    responseFormatTypeName:msg.responseFormatTypeName,
+                    responseFormatIsArray:msg.responseFormatIsArray,
+                    responseAssignTo:msg.responseAssignTo,
                 });
             }
         }
@@ -382,6 +386,10 @@ export class AiCompletionService implements ConvoCompletionService
                 outputTokens:result.outputTokens,
                 tokenPrice:result.tokenPrice,
                 model:result.model,
+                format:result.format,
+                formatTypeName:result.formatTypeName,
+                formatIsArray:result.formatIsArray,
+                assignTo:result.assignTo,
             }]
         }
     }

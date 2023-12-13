@@ -74,6 +74,12 @@ export const AiCompletionMessageScheme=z.object({
 
     content:z.string().optional(),
 
+    responseFormat:z.string().optional(),
+
+    responseFormatTypeName:z.string().optional(),
+    responseFormatIsArray:z.boolean().optional(),
+    responseAssignTo:z.string().optional(),
+
     url:z.string().optional(),
 
     metadata:z.record(z.string().optional()).optional(),
@@ -152,6 +158,10 @@ export const AiCompletionResultScheme=z.object({
     outputTokens:z.number().optional(),
     tokenPrice:z.number().optional(),
     model:z.string().optional(),
+    format:z.string().optional(),
+    formatTypeName:z.string().optional(),
+    formatIsArray:z.boolean().optional(),
+    assignTo:z.string().optional(),
 })
 export type AiCompletionResult=z.infer<typeof AiCompletionResultScheme>;
 

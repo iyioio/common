@@ -571,6 +571,36 @@ describe('convo',()=>{
 
 
 
+    it('should assign message content',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            @assign var1
+            > user
+            abc
+
+            @assign var2
+            @format json
+            > user
+            {
+                name:"Ricky",
+                age:39
+            }
+
+        `);
+
+        await convo.flattenAsync();
+        expect(convo.getVar('var1')).toBe('abc');
+        expect(convo.getVar('var2')).toEqual({
+            name:"Ricky",
+            age:39
+        });
+    })
+
+
+
     it('Should parse JSON with single curly bracket',async ()=>{
 
         const convo=new Conversation();

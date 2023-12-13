@@ -2,10 +2,10 @@ import { ReadonlySubject, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, parseConvoJsonMessage, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
 import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
-import { schemeToConvoTypeString } from "./convo-zod";
+import { convoTypeToJsonScheme, schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
 
@@ -204,6 +204,7 @@ export class Conversation
         if(this._isDisposed){
             return;
         }
+        this.autoFlattenId++;
         this._isDisposed=true;
     }
 
@@ -274,11 +275,11 @@ export class Conversation
             }
         }
 
-        const flat=await this.flattenAsync();
+        const flat=await this.flattenAsync(undefined,false);
         if(this.isDisposed || id!==this.autoFlattenId){
             return;
         }
-        this._flat.next(flat);
+        this.setFlat(flat,false);
     }
 
     public appendUserMessage(message:string,options?:ConvoMessagePrefixOptions){
@@ -344,21 +345,34 @@ export class Conversation
 
     private getPrefixTags(options?:ConvoMessagePrefixOptions){
         let tags='';
+        const msg=options?.msg;
         if(this.trackTime || this.getVar(convoVars.__trackTime)){
             tags+=`@${convoTags.time} ${getConvoDateString()}\n`;
         }
-        if(options?.includeTokenUsage && options?.msg && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
-            tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(options?.msg)}\n`;
+        if(!msg){
+            return tags;
         }
-        if(options?.msg?.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
-            tags+=`@${convoTags.model} ${options?.msg.model}\n`;
+        if(options?.includeTokenUsage && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
+            tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(msg)}\n`;
+        }
+        if(msg.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
+            tags+=`@${convoTags.model} ${msg.model}\n`;
+        }
+        if(msg.format){
+            tags+=`@${convoTags.format} ${msg.format}\n`
+        }
+        if(msg.assignTo){
+            tags+=`@${convoTags.assign} ${msg.assignTo}\n`
         }
         return tags;
     }
 
-    private setFlat(flat:FlatConvoConversation){
+    private setFlat(flat:FlatConvoConversation,dup=true){
+        if(this.isDisposed){
+            return;
+        }
         this.autoFlattenId++;
-        this._flat.next({...flat});
+        this._flat.next(dup?{...flat}:flat);
     }
 
     private async _completeAsync(
@@ -389,7 +403,7 @@ export class Conversation
                 }
             })
             flatExe.print=this.print;
-            const flat=await this.flattenAsync(flatExe);
+            const flat=await this.flattenAsync(flatExe,false);
             const exe=flat.exe;
             if(this._isDisposed){
                 return {messages:[]}
@@ -417,6 +431,15 @@ export class Conversation
                 let includeTokenUsage=(msg.inputTokens || msg.outputTokens)?true:false;
 
                 const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
+
+                if(msg.format==='json' && msg.content){
+                    let json=parseConvoJsonMessage(msg.content);
+                    if(msg.formatIsArray && !Array.isArray(json) && Array.isArray(json.values)){
+                        json=json.values;
+                    }
+                    msg.content=JSON.stringify(json,null,4)
+                }
+
                 if(msg.content){
                     cMsg=msg;
                     this.append(`${this.getPrefixTags({includeTokenUsage,msg})}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
@@ -550,7 +573,8 @@ export class Conversation
     }
 
     public async flattenAsync(
-        exe?:ConvoExecutionContext
+        exe?:ConvoExecutionContext,
+        setCurrent=true
     ):Promise<FlatConvoConversation>{
 
         if(!exe){
@@ -561,7 +585,7 @@ export class Conversation
         const messages:FlatConvoMessage[]=[];
         const edgePairs:{
             flat:FlatConvoMessage;
-            statement:ConvoStatement;
+            msg:ConvoMessage;
         }[]=[];
 
         exe.loadFunctions(this._messages,this.externFunctions);
@@ -614,7 +638,7 @@ export class Conversation
             }else if(msg.statement){
                 if(containsConvoTag(msg.tags,convoTags.edge)){
                     flat.edge=true;
-                    edgePairs.push({flat,statement:msg.statement});
+                    edgePairs.push({flat,msg:msg});
                 }else{
                     await flattenMsgAsync(exe,msg.statement,flat);
                 }
@@ -624,11 +648,18 @@ export class Conversation
             }else{
                 continue;
             }
+
+            if(!flat.edge){
+                this.applyTags(msg,flat,exe);
+            }
             messages.push(flat);
         }
 
         for(const pair of edgePairs){
-            await flattenMsgAsync(exe,pair.statement,pair.flat);
+            if(pair.msg.statement){
+                await flattenMsgAsync(exe,pair.msg.statement,pair.flat);
+            }
+            this.applyTags(pair.msg,pair.flat,exe);
         }
 
 
@@ -658,13 +689,95 @@ export class Conversation
             }
         }
 
-        return {
+        const flat={
             exe,
             messages,
             conversation:this,
             debug,
             capabilities:[...this.serviceCapabilities],
         }
+
+        if(setCurrent){
+            this.setFlat(flat);
+        }
+
+        return flat;
+    }
+
+    private applyTags(msg:ConvoMessage,flat:FlatConvoMessage,exe:ConvoExecutionContext)
+    {
+        if(msg.assignTo){
+            exe.setVar(true,msg.jsonValue??flat.content,msg.assignTo);
+        }
+        if(!msg.tags){
+            return;
+        }
+        let responseFormat:string|undefined;
+        for(const tag of msg.tags){
+            if(tag.name===convoTags.responseFormat){
+                responseFormat=tag.value;
+            }else if(tag.name===convoTags.json){
+                responseFormat=tag.value?'json '+tag.value:'json';
+            }else if(tag.name===convoTags.responseAssign){
+                flat.responseAssignTo=tag.value;
+            }
+        }
+        if(responseFormat){
+            this.applyResponseFormat(msg,flat,responseFormat,exe);
+        }
+    }
+    private applyResponseFormat(msg:ConvoMessage,flat:FlatConvoMessage,format:string,exe:ConvoExecutionContext)
+    {
+        if(!flat.content){
+            return;
+        }
+
+        const parts=format.trim().split(' ');
+        flat.responseFormat=parts[0];
+
+        let typeName=parts[1]??'';
+        if(!typeName){
+            return;
+        }
+        const isArray=typeName.endsWith('[]')
+        if(isArray){
+            typeName=typeName.substring(0,typeName.length-2);
+        }
+
+        flat.responseFormatTypeName=typeName;
+        flat.responseFormatIsArray=isArray;
+
+        if(flat.responseFormat!=='json'){
+            return;
+        }
+
+        const type=exe.getVar(typeName);
+
+        let scheme=convoTypeToJsonScheme(type);
+
+        if(!scheme){
+            throw new ConvoError('invalid-message-response-scheme',{message:msg},`${typeName} does not point to a convo type object `);
+        }
+
+        if(isArray){
+            scheme={
+                type:'object',
+                required:['values'],
+                properties:{
+                    values:{
+                        type:'array',
+                        items:scheme
+                    }
+                }
+            }
+        }
+
+        flat.content+=`\n\nReturn an object that conforms to the JSON Schema below.\n:${
+            JSON.stringify(scheme)
+        }`;
+
+
+
     }
 
     public shouldDebug(exe?:ConvoExecutionContext)

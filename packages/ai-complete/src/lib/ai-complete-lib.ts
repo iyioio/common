@@ -126,3 +126,13 @@ export const applyResultToAiMessage=(message:AiCompletionMessage,result:CallAiFu
         message.callError=callError;
     }
 }
+
+export const getLastNonCallAiCompleteMessage=(messages:AiCompletionMessage[]):AiCompletionMessage|undefined=>{
+    for(let i=messages.length-1;i>=0;i--){
+        const msg=messages[i];
+        if(msg && !msg.called && !msg.call){
+            return msg;
+        }
+    }
+    return undefined;
+}

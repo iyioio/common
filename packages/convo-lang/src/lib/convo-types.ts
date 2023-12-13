@@ -48,7 +48,8 @@ export type ConvoErrorType=(
     'invalid-type-name'|
     'invalid-register-only-function'|
     'invalid-role'|
-    'use-of-reserved-role-not-allowed'
+    'use-of-reserved-role-not-allowed'|
+    'invalid-message-response-scheme'
 );
 
 export interface ConvoErrorReferences
@@ -75,6 +76,16 @@ export interface ConvoMessage
     fn?:ConvoFunction;
     tags?:ConvoTag[];
     markdown?:ConvoMdStatement[];
+
+    /**
+     * A variable to assign the content or jsonValue of the message to
+     */
+    assignTo?:string;
+
+    /**
+     * The value of the message parsed as json
+     */
+    jsonValue?:any;
 }
 
 export interface ConvoMessagePart
@@ -513,6 +524,11 @@ export interface FlatConvoMessage
 
     tags?:Record<string,string|undefined>;
 
+    responseFormat?:string;
+    responseFormatTypeName?:string;
+    responseFormatIsArray?:boolean;
+    responseAssignTo?:string;
+
 
 }
 
@@ -524,6 +540,10 @@ export interface ConvoCompletionMessage extends Partial<ConvoTokenUsage>
     callParams?:any;
     tags?:Record<string,string|undefined>;
     model?:string;
+    format?:string;
+    formatTypeName?:string;
+    formatIsArray?:boolean;
+    assignTo?:string;
 }
 
 export interface ConvoCompletionService
