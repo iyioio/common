@@ -1,6 +1,6 @@
 {
     "name": "@iyio/convo-lang",
-    "version": "0.5.5",
+    "version": "0.5.6",
     "type": "commonjs",
     "sideEffects": false,
     "license": "Apache-2.0",
