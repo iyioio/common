@@ -113,6 +113,7 @@ const convo={
                 { "include": "#msgStringBackslash"},
                 { "include": "#embedEscape" },
                 { "include": "#embed" },
+                { "include": "#markdownImage" },
                 { "include": "#comment" },
                 { "include": "#tag" }
             ]
@@ -409,6 +410,19 @@ const convo={
                 {"include":"#embedEscape"},
                 {"include":"#embed"}
             ]
+        },
+        "markdownImage":{
+            "begin":"!\\[",
+            "end":"(\\]\\()([^\\)]*)(\\))",
+            "beginCaptures":{
+                "0":{"name":"keyword.control"}
+            },
+            "endCaptures":{
+                "1":{"name":"keyword.control"},
+                "2":{"name":"string"},
+                "3":{"name":"keyword.control"}
+            },
+            "contentName":"comment"
         },
         "stringBackslash":{
             "match":"(\\\\)\\\\",
