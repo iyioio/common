@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag } from "./convo-types";
+import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -285,8 +285,36 @@ export const convoLabeledScopeParamsToObj=(scope:ConvoScope):Record<string,any>=
     return obj;
 }
 
-export const escapeConvoMessageContent=(content:string):string=>{
-    // todo - add escape sequence for \n\s*>
+export const isReservedConvoRole=(role:string)=>{
+    return convoReservedRoles.includes(role as any);
+}
+
+export const isValidConvoRole=(role:string)=>{
+    return /^\w+$/.test(role);
+}
+
+export const formatConvoMessage=(role:string,content:string,prefix=''):string=>{
+    if(!isValidConvoRole(role)){
+        throw new ConvoError('invalid-role',undefined,`(${role}) is not a valid role`);
+    }
+    if(isReservedConvoRole(role)){
+        throw new ConvoError('use-of-reserved-role-not-allowed',undefined,`${role} is a reserved role`);
+    }
+    return `${prefix}> ${role}\n${escapeConvoMessageContent(content)}`;
+}
+
+export const escapeConvoMessageContent=(content:string,isStartOfMessage=true):string=>{
+    if(content.includes('{{')){
+        content=content.replace(/\{\{/g,'\\{{');
+    }
+    if(content.includes('>')){
+        content=content.replace(
+            // the non start of message reg should be the same except no start of input char should be included
+            isStartOfMessage?
+                /((?:\n|\r|^)[ \t]*\\*)>/g:
+                /((?:\n|\r)[ \t]*\\*)>/g,
+            (_,space)=>`${space}\\>`);
+    }
     return content;
 }
 

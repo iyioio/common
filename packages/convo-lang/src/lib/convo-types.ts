@@ -12,6 +12,9 @@ export type ConvoValueConstant=(typeof convoValueConstants)[number];
 export const convoNonFuncKeywords=['in'] as const;
 export type ConvoNonFuncKeyword=(typeof convoNonFuncKeywords)[number];
 
+export const convoReservedRoles=['call','do','result','define','debug','end'] as const;
+export type ConvoReservedRole=(typeof convoReservedRoles)[number];
+
 
 export const convoObjFlag='**convo**'
 
@@ -43,7 +46,9 @@ export type ConvoErrorType=(
     'invalid-variable-name'|
     'invalid-function-name'|
     'invalid-type-name'|
-    'invalid-register-only-function'
+    'invalid-register-only-function'|
+    'invalid-role'|
+    'use-of-reserved-role-not-allowed'
 );
 
 export interface ConvoErrorReferences
@@ -660,4 +665,10 @@ export interface ConvoTokenUsage
     inputTokens:number;
     outputTokens:number;
     tokenPrice:number;
+}
+
+export interface ConvoMessagePrefixOptions
+{
+    includeTokenUsage?:boolean;
+    msg?:ConvoCompletionMessage;
 }

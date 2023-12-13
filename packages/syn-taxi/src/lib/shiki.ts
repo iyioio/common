@@ -109,6 +109,9 @@ const convo={
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
+                { "include": "#msgStringStartMsg"},
+                { "include": "#msgStringBackslash"},
+                { "include": "#embedEscape" },
                 { "include": "#embed" },
                 { "include": "#comment" },
                 { "include": "#tag" }
@@ -152,6 +155,14 @@ const convo={
                 }
             }
         },
+        "embedEscape":{
+            "match":"(\\\\){\\{",
+            "captures": {
+                "1":{
+                    "name":"constant.character.escape"
+                }
+            }
+        },
         "embed":{
             "begin":"\\{\\{",
             "end":"\\}\\}",
@@ -166,7 +177,6 @@ const convo={
                 }
             },
             "patterns":[{"include":"#lineExpression"}]
-
         },
         "topLevelStatements":{
             "begin": "^\\s*(>)\\s*(do|result|define|debug|end)",
@@ -373,6 +383,7 @@ const convo={
             "end":"\"",
             "name":"string",
             "patterns":[
+                {"include":"#stringBackslash"},
                 {
                     "match":"(\\\\)(\")",
                     "captures":{
@@ -387,6 +398,7 @@ const convo={
             "end":"'",
             "name":"string",
             "patterns":[
+                {"include":"#stringBackslash"},
                 {
                     "match":"(\\\\)(')",
                     "captures":{
@@ -394,8 +406,27 @@ const convo={
                         "2":{"name":"string"}
                     }
                 },
+                {"include":"#embedEscape"},
                 {"include":"#embed"}
             ]
+        },
+        "stringBackslash":{
+            "match":"(\\\\)\\\\",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
+        },
+        "msgStringBackslash":{
+            "match":"(\\\\)\\\\(?=\\{\\{)",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
+        },
+        "msgStringStartMsg":{
+            "match":"^[ \\t]*(\\\\)\\\\*>",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
         },
         "typeKeyword":{
             "match":"\\b(string|number|int|boolean|time|void|any|map|array)\\b",

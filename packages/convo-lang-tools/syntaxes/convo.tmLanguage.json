@@ -16,6 +16,9 @@
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
+                { "include": "#msgStringStartMsg"},
+                { "include": "#msgStringBackslash"},
+                { "include": "#embedEscape" },
                 { "include": "#embed" },
                 { "include": "#comment" },
                 { "include": "#tag" }
@@ -26,13 +29,13 @@
             "begin": "\\${",
             "beginCaptures": {
                 "0": {
-                    "name": "punctuation.definition.template-expression.begin.js"
+                    "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
                 }
             },
             "end": "}",
             "endCaptures": {
                 "0": {
-                    "name": "punctuation.definition.template-expression.end.js"
+                    "name": "punctuation.definition.interpolation.end.bracket.curly.scss punctuation.definition.template-expression.end.js"
                 }
             },
             "name": "variable.interpolation.scss",
@@ -56,6 +59,14 @@
                 },
                 "3":{
                     "name":"entity.name.type"
+                }
+            }
+        },
+        "embedEscape":{
+            "match":"(\\\\){\\{",
+            "captures": {
+                "1":{
+                    "name":"constant.character.escape"
                 }
             }
         },
@@ -280,6 +291,7 @@
             "end":"\"",
             "name":"string",
             "patterns":[
+                {"include":"#stringBackslash"},
                 {
                     "match":"(\\\\)(\")",
                     "captures":{
@@ -294,6 +306,7 @@
             "end":"'",
             "name":"string",
             "patterns":[
+                {"include":"#stringBackslash"},
                 {
                     "match":"(\\\\)(')",
                     "captures":{
@@ -301,8 +314,27 @@
                         "2":{"name":"string"}
                     }
                 },
+                {"include":"#embedEscape"},
                 {"include":"#embed"}
             ]
+        },
+        "stringBackslash":{
+            "match":"(\\\\)\\\\",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
+        },
+        "msgStringBackslash":{
+            "match":"(\\\\)\\\\(?=\\{\\{)",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
+        },
+        "msgStringStartMsg":{
+            "match":"^[ \\t]*(\\\\)\\\\*>",
+            "captures":{
+                "1":{"name":"constant.character.escape"}
+            }
         },
         "typeKeyword":{
             "match":"\\b(string|number|int|boolean|time|void|any|map|array)\\b",

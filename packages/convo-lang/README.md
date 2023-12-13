@@ -218,6 +218,7 @@ Top-level statements must use one of the following keywords as their identifier:
   create result messages.
 - define - Used to define variables and types. Define messages are not allowed to call functions.
 - debug - Used to write debug information. In most cases, you will not directly create debug messages.
+- end - Explicitly ends a message and can be used to set variables related to the ended message.
 
 ``` convo
 // top-level statement
@@ -315,6 +316,57 @@ control the behavior of convo-lang.
     @shared
     somethingWeAllShouldKnow="Fish are cool"
 )
+```
+
+### Strings
+There are 3 types of string in convo.
+
+#### ( " ) Double quote
+Double quote strings are the simplest strings in convo, they start and end with a double 
+quote character. To include a double quote character in a double quote string escape it with a
+back slash. Double quote strings can span multiple lines.
+
+``` convo
+> define
+var1="here is a double quote string"
+var2="Here is a double quote string with a (\") double quote character"
+var3="Here is a string with a newline
+in it"
+```
+
+#### ( ' ) Single quote
+Single quote strings are similar to double quote but also support embedded statements. Embedded
+statements are surrounded with double curly bracket pairs and contain any valid convo statement
+
+``` convo
+> define
+name="Ricky Bobby"
+var0='I need to tell you something {{name}}. You can walk.'
+
+var1='here is a single quote string'
+var2='Here is a single quote string with a (\') single quote character'
+var3='Here is a string with a newline
+in it'
+```
+
+#### Heredoc
+Heredoc strings begin and end with 3 dashes and the contents of the string are highlighted with the
+convo-lang syntax highlighter but are not. They are useful when defining strings with conversation
+messages in them.
+
+``` convo
+> define
+var1=---
+Here is a heredoc string with an conversation in it
+
+> user
+Tell me a joke about airplanes
+
+> assistant
+Why don't airlines ever play hide and seek?
+
+Because good luck hiding a plane!
+---
 ```
 
 ### Debugging and metadata

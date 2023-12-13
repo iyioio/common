@@ -2,8 +2,56 @@ import { asType } from '@iyio/common';
 import { ZodObject } from 'zod';
 import { ConvoError } from './ConvoError';
 import { ConvoExecutionContext, executeConvoFunction } from './ConvoExecutionContext';
+import { escapeConvoMessageContent } from './convo-lib';
 import { parseConvoCode } from './convo-parser';
-import { ConvoErrorType } from './convo-types';
+import { ConvoErrorType, ConvoParsingResult } from './convo-types';
+
+const varShouldBe=(convo:ConvoParsingResult,varName:string,value:string)=>{
+    const statement=convo.result?.[1]?.fn?.body?.find(s=>s.set===varName);
+    if(!statement){
+        throw new Error(`No var found by name ${varName}`);
+    }
+
+    const eq=statement.value===value;
+    if(!eq){
+        console.error(`${varName} not equal to |${value}|`)
+    }
+
+    expect(statement.value).toBe(value);
+}
+
+const msgShouldBe=(convo:ConvoParsingResult,index:number,value:string|any[])=>{
+    const msg=convo.result?.[index];
+    if(!msg){
+        throw new Error(`No message found at index ${index}`)
+    }
+    if(typeof value === 'string'){
+        const content=msg.content;
+        if(!content){
+            throw new Error(`No message content found at index ${index}`);
+        }
+
+        const eq=content.trim()===value;
+        if(!eq){
+            console.error(`message ${index} content |${content.trim()}| should equal |${value}|`)
+        }
+
+        expect(content.trim()).toBe(value);
+    }else{
+        for(let i=0;i<value.length;i++){
+            const v=value[i];
+            let sv=msg.statement?.params?.[i]?.value;
+            if(typeof sv === 'string'){
+                sv=sv.trim();
+            }
+            if(v!==sv){
+                console.error(`message index: ${index}, statement index:${i}, |${value}| !== |${sv}|`,JSON.stringify(msg,null,4))
+            }
+            expect(v).toBe(sv);
+
+        }
+    }
+}
 
 const defaultPrompt=/*convo*/`
 
@@ -125,12 +173,14 @@ My name is {{name}}
 
 describe('convo',()=>{
 
-    const parse=(msgCount:number,prompt:string,debug?:(...args:any[])=>void)=>{
+    const parse=(msgCount:number|null,prompt:string,debug?:(...args:any[])=>void)=>{
         const r=parseConvoCode(prompt,debug);
 
         expect(r.error).toBeUndefined();
 
-        expect(r.result?.length).toBe(msgCount);
+        if(msgCount!==null){
+            expect(r.result?.length).toBe(msgCount);
+        }
 
         return r;
     }
@@ -1121,7 +1171,155 @@ describe('convo',()=>{
         expect(messages?.[2]?.content).toBe('bye');
         expect(messages?.[3]?.content).toBe('👋');
 
+    });
+
+    it('should escapeConvoMessageContent',()=>{
+        expect(escapeConvoMessageContent('>')).toBe('\\>');
+        expect(escapeConvoMessageContent('\\>')).toBe('\\\\>');
+        expect(escapeConvoMessageContent('\\\\>')).toBe('\\\\\\>');
+        expect(escapeConvoMessageContent('\\\\> >')).toBe('\\\\\\> >');
+        expect(escapeConvoMessageContent('\\\\> \\>')).toBe('\\\\\\> \\>');
+
+        expect(escapeConvoMessageContent('\n>')).toBe('\n\\>');
+        expect(escapeConvoMessageContent('\n\\>')).toBe('\n\\\\>');
+        expect(escapeConvoMessageContent('\n\\\\>')).toBe('\n\\\\\\>');
+
+        expect(escapeConvoMessageContent('   >')).toBe('   \\>');
+        expect(escapeConvoMessageContent('   \\>')).toBe('   \\\\>');
+        expect(escapeConvoMessageContent('\n   \\\\>')).toBe('\n   \\\\\\>');
+
+        expect(escapeConvoMessageContent('\n   >')).toBe('\n   \\>');
+        expect(escapeConvoMessageContent('\n   \\>')).toBe('\n   \\\\>');
+        expect(escapeConvoMessageContent('\n   \\\\>')).toBe('\n   \\\\\\>');
+    });
+
+
+    it('should parse escaped strings',async ()=>{
+
+        const esc1='{{777}}';
+        const esc2='>';
+        const esc3='> >';
+        const esc4='> \\>';
+        const esc5='\\> \\>';
+        const esc6='\\\\> \\>';
+
+        const convo=parse(null,/*convo*/`
+
+            > testFn(value:any) -> (
+                return({
+                    a:'\\{{value}}',
+                    b:'\\\\{{value}}'
+                })
+            )
+
+            > define
+            var0="\\\\"
+            var1='\\\\'
+            var2='\\{{123}}'
+            var3='\\''
+            var4="\\""
+
+            > user
+            hi \\ \\{{jeff
+
+            > user
+            bye \\\\{{123}}
+> user
+{{456}}hi \\\\{{'abc'}}
+
+            > user
+            ${escapeConvoMessageContent(esc1)}
+
+            > user
+            \\>
+
+            > user
+            \\\\>
+
+            > user
+            \\\\\\>
+
+            > user
+            ${escapeConvoMessageContent(esc2)}
+
+            > user
+            \\> >
+
+            > user
+            \\\\> >
+
+            > user
+            \\\\\\> >
+
+            > user
+            \\> \\>
+
+            > user
+            \\\\> \\>
+
+            > user
+            \\\\\\> \\>
+
+            > user
+            ${escapeConvoMessageContent(esc3)}
+
+            > user
+            ${escapeConvoMessageContent(esc4)}
+
+            > user
+            ${escapeConvoMessageContent(esc5)}
+
+            > user
+            ${escapeConvoMessageContent(esc6)}
+
+            > user
+            big boy {{3000}} >
+
+        `);
+
+        const fn=convo.result?.[0]?.fn;
+
+        expect(fn).not.toBeUndefined();
+        if(!fn){
+            return;
+        }
+
+        expect(executeConvoFunction(fn,{value:'abc'})).toEqual({
+            a:'{{value}}',
+            b:'\\abc'
+        });
+
+        varShouldBe(convo,'var0','\\');
+        varShouldBe(convo,'var1','\\');
+        varShouldBe(convo,'var2','{{123}}');
+        varShouldBe(convo,'var3','\'');
+        varShouldBe(convo,'var4','"');
+
+        let n=2
+        msgShouldBe(convo,n++,'hi \\ {{jeff');
+        msgShouldBe(convo,n++,['bye \\',123]);
+        msgShouldBe(convo,n++,['',456,'hi \\','abc']);
+        msgShouldBe(convo,n++,esc1);
+        msgShouldBe(convo,n++,'>');
+        msgShouldBe(convo,n++,'\\>');
+        msgShouldBe(convo,n++,'\\\\>');
+        msgShouldBe(convo,n++,esc2);
+        msgShouldBe(convo,n++,'> >');
+        msgShouldBe(convo,n++,'\\> >');
+        msgShouldBe(convo,n++,'\\\\> >');
+        msgShouldBe(convo,n++,'> \\>');
+        msgShouldBe(convo,n++,'\\> \\>');
+        msgShouldBe(convo,n++,'\\\\> \\>');
+        msgShouldBe(convo,n++,esc3);
+        msgShouldBe(convo,n++,esc4);
+        msgShouldBe(convo,n++,esc5);
+        msgShouldBe(convo,n++,esc6);
+        msgShouldBe(convo,n++,['big boy',3000,'>']);
+
     })
 
 });
+
+
+
 

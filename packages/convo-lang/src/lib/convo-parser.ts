@@ -308,7 +308,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 endStringIndex=e.index;
                 nextIndex=(isMsgString && !embedFound)?e.index+e[0].length-1:e.index+e[0].length;
 
-                if(embedFound || isMsgString){
+                if(isMsgString && !embedFound){
                     escaped=false;
                 }else{
                     let backslashCount=0;
@@ -325,6 +325,8 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
             let content=code.substring(index,endStringIndex);
             if(inFnMsg){
                 content=unescapeStr(content);
+            }else{
+                content=unescapeMsgStr(content);
             }
 
             if(embedFound){
@@ -357,6 +359,9 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                     if(strStatement.params){// has embeds
                         if(content){
                             strStatement.params.push({value:content,s:index,e:nextIndex});
+                        }
+                        if(isMsgString){
+                            removeBackslashes(strStatement.params);
                         }
                     }else{
                         strStatement.value=content;
@@ -876,3 +881,30 @@ const unescapeStr=(str:string):string=>str.replace(/\\(.)/g,(_,char)=>{
 
     return char;
 });
+
+const unescapeMsgStr=(str:string):string=>{
+
+    if(str.includes('{{')){
+        str=str.replace(/\\\{\{/g,'{{')
+    }
+    if(str.includes('>')){
+        str=str.replace(/((?:\n|\r|^)[ \t]*)\\(\\*)>/g,(_,_2,bs)=>bs+'>');
+    }
+
+    return str;
+}
+
+const removeBackslashes=(params:ConvoStatement[])=>{
+
+    const l=params.length-1;
+    for(let i=0;i<l;i+=2){
+        const s=params[i];
+        if( s?.value &&
+            (typeof s.value === 'string') &&
+            s.value.endsWith('\\\\')
+        ){
+            s.value=s.value.substring(0,s.value.length-1);
+        }
+
+    }
+}

@@ -2,9 +2,9 @@ import { ReadonlySubject, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, getConvoDateString, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 import { schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -281,8 +281,16 @@ export class Conversation
         this._flat.next(flat);
     }
 
-    public appendUserMessage(message:string){
-        this.append(`${this.getPrefixTags()}> user\n${escapeConvoMessageContent(message)}`)
+    public appendUserMessage(message:string,options?:ConvoMessagePrefixOptions){
+        this.append(formatConvoMessage('user',message,this.getPrefixTags(options)));
+    }
+
+    public appendAssistantMessage(message:string,options?:ConvoMessagePrefixOptions){
+        this.append(formatConvoMessage('assistant',message,this.getPrefixTags(options)));
+    }
+
+    public appendMessage(role:string,message:string,options?:ConvoMessagePrefixOptions){
+        this.append(formatConvoMessage(role,message,this.getPrefixTags(options)));
     }
 
     public appendDefine(defineCode:string,description?:string):ConvoParsingResult{
@@ -334,16 +342,16 @@ export class Conversation
         return this._flat.value?.exe?.getVar(nameOrPath,null,defaultValue);
     }
 
-    private getPrefixTags(includeTokenUsage?:boolean,msg?:ConvoCompletionMessage){
+    private getPrefixTags(options?:ConvoMessagePrefixOptions){
         let tags='';
         if(this.trackTime || this.getVar(convoVars.__trackTime)){
             tags+=`@${convoTags.time} ${getConvoDateString()}\n`;
         }
-        if(includeTokenUsage && msg && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
-            tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(msg)}\n`;
+        if(options?.includeTokenUsage && options?.msg && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
+            tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(options?.msg)}\n`;
         }
-        if(msg?.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
-            tags+=`@${convoTags.model} ${msg.model}\n`;
+        if(options?.msg?.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
+            tags+=`@${convoTags.model} ${options?.msg.model}\n`;
         }
         return tags;
     }
@@ -406,18 +414,18 @@ export class Conversation
 
             for(const msg of completion){
 
-                let hasTokenUsage=(msg.inputTokens || msg.outputTokens)?true:false;
+                let includeTokenUsage=(msg.inputTokens || msg.outputTokens)?true:false;
 
                 const tagsCode=msg.tags?convoTagMapToCode(msg.tags,'\n'):'';
                 if(msg.content){
                     cMsg=msg;
-                    this.append(`${this.getPrefixTags(hasTokenUsage,msg)}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
-                    hasTokenUsage=false;
+                    this.append(`${this.getPrefixTags({includeTokenUsage,msg})}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                    includeTokenUsage=false;
                 }
 
                 if(msg.callFn){
                     const result=this.append(`${
-                        this.getPrefixTags(hasTokenUsage,msg)
+                        this.getPrefixTags({includeTokenUsage,msg})
                     }${
                         tagsCode
                     }> call ${
@@ -425,7 +433,7 @@ export class Conversation
                     }(${
                         msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
                     })`);
-                    hasTokenUsage=false;
+                    includeTokenUsage=false;
                     const callMessage=result.result?.[0];
                     if(result.result?.length!==1 || !callMessage){
                         throw new ConvoError(
@@ -481,9 +489,9 @@ export class Conversation
 
                 }
 
-                if(hasTokenUsage){
-                    this.append(`${this.getPrefixTags(hasTokenUsage,msg)}> define\n// token usage placeholder`);
-                    hasTokenUsage=false;
+                if(includeTokenUsage){
+                    this.append(`${this.getPrefixTags({includeTokenUsage,msg})}> define\n// token usage placeholder`);
+                    includeTokenUsage=false;
                 }
 
             }
