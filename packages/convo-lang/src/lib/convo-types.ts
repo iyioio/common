@@ -551,8 +551,11 @@ export interface ConvoCompletionService
     completeConvoAsync(flat:FlatConvoConversation):Promise<ConvoCompletionMessage[]>;
 }
 
+export type ConvoCompletionStatus='complete'|'busy'|'error'|'disposed';
+
 export interface ConvoCompletion
 {
+    status:ConvoCompletionStatus;
     message?:ConvoCompletionMessage;
     messages:ConvoCompletionMessage[];
     error?:any;

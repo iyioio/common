@@ -302,43 +302,6 @@ export class Conversation
         return this.append((description?convoDescriptionToComment(description)+'\n':'')+'> do\n'+defineCode);
     }
 
-    /**
-     * Submits the current conversation and optionally appends messages to the conversation before
-     * submitting.
-     * @param append Optional message to append before submitting
-     */
-    public async completeAsync(append?:string):Promise<ConvoCompletion>{
-        if(append){
-            this.append(append);
-        }
-
-        const completionService=this.completionService;
-
-        return await this._completeAsync(flat=>completionService?.completeConvoAsync(flat)??[])
-
-    }
-
-    public async callFunctionAsync(fn:ConvoFunction|string,args:Record<string,any>={}):Promise<any>
-    {
-        const c=await this._completeAsync(flat=>{
-
-            if(typeof fn === 'object'){
-                flat.exe.loadFunctions([{
-                    fn,
-                    role:'function'
-                }])
-            }
-
-            return [{
-                callFn:typeof fn==='string'?fn:fn.name,
-                callParams:args
-
-            }]
-        })
-
-        return c.returnValues?.[0];
-    }
-
     public getVar(nameOrPath:string,defaultValue?:any):any{
         return this._flat.value?.exe?.getVar(nameOrPath,null,defaultValue);
     }
@@ -375,9 +338,71 @@ export class Conversation
         this._flat.next(dup?{...flat}:flat);
     }
 
-    private async _completeAsync(
+    public async callFunctionAsync(fn:ConvoFunction|string,args:Record<string,any>={}):Promise<any>
+    {
+        const c=await this.tryCompleteAsync(flat=>{
+
+            if(typeof fn === 'object'){
+                flat.exe.loadFunctions([{
+                    fn,
+                    role:'function'
+                }])
+            }
+
+            return [{
+                callFn:typeof fn==='string'?fn:fn.name,
+                callParams:args
+
+            }]
+        })
+
+        return c.returnValues?.[0];
+    }
+
+    /**
+     * Submits the current conversation and optionally appends messages to the conversation before
+     * submitting.
+     * @param append Optional message to append before submitting
+     */
+    public async completeAsync(append?:string):Promise<ConvoCompletion>{
+        if(append){
+            this.append(append);
+        }
+
+        const completionService=this.completionService;
+
+        return await this.tryCompleteAsync(flat=>completionService?.completeConvoAsync(flat)??[])
+    }
+
+    private async tryCompleteAsync(
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth=0,
+        prevCompletion?:ConvoCompletionMessage[],
+        preReturnValues?:any[]
+    ):Promise<ConvoCompletion>{
+
+        if(this._isCompleting.value){
+            return {
+                status:'busy',
+                messages:[],
+            }
+        }else{
+            this._isCompleting.next(true);
+            try{
+                return await this._completeAsync(getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
+            }finally{
+                this._isCompleting.next(false);
+            }
+        }
+    }
+
+    private readonly _isCompleting:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
+    public get isCompletingSubject():ReadonlySubject<boolean>{return this._isCompleting}
+    public get isCompleting(){return this._isCompleting.value}
+
+    private async _completeAsync(
+        getCompletion:ConvoFlatCompletionCallback,
+        autoCompleteDepth:number,
         prevCompletion?:ConvoCompletionMessage[],
         preReturnValues?:any[]
     ):Promise<ConvoCompletion>{
@@ -406,7 +431,7 @@ export class Conversation
             const flat=await this.flattenAsync(flatExe,false);
             const exe=flat.exe;
             if(this._isDisposed){
-                return {messages:[]}
+                return {messages:[],status:'disposed'}
             }
 
             for(const e in this.unregisteredVars){
@@ -417,7 +442,7 @@ export class Conversation
 
             const completion=await getCompletion(flat);
             if(this._isDisposed){
-                return {messages:[]};
+                return {messages:[],status:'disposed'};
             }
 
             let cMsg:ConvoCompletionMessage|undefined=undefined;
@@ -471,7 +496,7 @@ export class Conversation
                     }
                     const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
                     if(this._isDisposed){
-                        return {messages:[]}
+                        return {messages:[],status:'disposed'}
                     }
                     const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
                     const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
@@ -543,6 +568,7 @@ export class Conversation
             }
 
             return {
+                status:'complete',
                 message:cMsg,
                 messages:completion,
                 exe,
