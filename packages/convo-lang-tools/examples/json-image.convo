@@ -1,9 +1,3 @@
-> define
-Person = struct(
-    name?:string
-    description?:string
-)
-
 @json
 > user
 Describe each person in this picture.
