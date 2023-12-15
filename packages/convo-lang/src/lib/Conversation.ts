@@ -625,6 +625,9 @@ export class Conversation
                 role:this.getMappedRole(msg.role),
                 tags:msg.tags?convoTagsToMap(msg.tags):undefined,
             }
+            if(this.userRoles.includes(flat.role)){
+                flat.isUser=true;
+            }
             if(msg.fn){
                 if(msg.fn.local || msg.fn.call){
                     continue;
@@ -676,7 +679,7 @@ export class Conversation
             }
 
             if(!flat.edge){
-                this.applyTags(msg,flat,exe);
+                this.applyTagsAndState(msg,flat,exe);
             }
             messages.push(flat);
         }
@@ -685,7 +688,7 @@ export class Conversation
             if(pair.msg.statement){
                 await flattenMsgAsync(exe,pair.msg.statement,pair.flat);
             }
-            this.applyTags(pair.msg,pair.flat,exe);
+            this.applyTagsAndState(pair.msg,pair.flat,exe);
         }
 
 
@@ -730,22 +733,39 @@ export class Conversation
         return flat;
     }
 
-    private applyTags(msg:ConvoMessage,flat:FlatConvoMessage,exe:ConvoExecutionContext)
+    private applyTagsAndState(msg:ConvoMessage,flat:FlatConvoMessage,exe:ConvoExecutionContext)
     {
         if(msg.assignTo){
             exe.setVar(true,msg.jsonValue??flat.content,msg.assignTo);
         }
+
+        const model=flat.isUser?exe.getVar(convoVars.__model):undefined;
+        if(model){
+            flat.responseModel=model;
+        }
+
         if(!msg.tags){
             return;
         }
         let responseFormat:string|undefined;
         for(const tag of msg.tags){
-            if(tag.name===convoTags.responseFormat){
-                responseFormat=tag.value;
-            }else if(tag.name===convoTags.json){
-                responseFormat=tag.value?'json '+tag.value:'json';
-            }else if(tag.name===convoTags.responseAssign){
-                flat.responseAssignTo=tag.value;
+            switch(tag.name){
+
+                case convoTags.responseFormat:
+                    responseFormat=tag.value;
+                    break;
+
+                case convoTags.json:
+                    responseFormat=tag.value?'json '+tag.value:'json';
+                    break;
+
+                case convoTags.responseAssign:
+                    flat.responseAssignTo=tag.value;
+                    break;
+
+                case convoTags.responseModel:
+                    flat.responseModel=tag.value;
+                    break;
             }
         }
         if(responseFormat){

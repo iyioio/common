@@ -1,3 +1,4 @@
+import { ConvoCapability } from "@iyio/convo-lang";
 
 export type ConvoExecAllowMode='disable'|'ask'|'allow'
 
@@ -8,6 +9,16 @@ export interface ConvoCliConfig
      * Contains how shell command execution is allowed
      */
     allowExec?:ConvoExecAllowMode|ConvoExecConfirmCallback;
+
+    /**
+     * If true values of the env property with override process.env values
+     */
+    overrideEnv?:boolean;
+
+    /**
+     * @default ["vision"]
+     */
+    capabilities?:ConvoCapability[];
 }
 
 export interface ConvoCliOptions

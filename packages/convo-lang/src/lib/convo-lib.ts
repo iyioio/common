@@ -45,6 +45,11 @@ export const convoVars={
     __debug:'__debug',
 
     /**
+     * Sets the default model
+     */
+    __model:'__model',
+
+    /**
      * When set to true time tracking will be enabled.
      */
     __trackTime:'__trackTime',
@@ -103,6 +108,11 @@ export const convoTags={
     model:'model',
 
     /**
+     * Sets the requested model to complete a message with
+     */
+    responseModel:'responseModel',
+
+    /**
      * Sets the format as message should be responded to with.
      */
     responseFormat:'responseFormat',
@@ -136,9 +146,10 @@ export const getConvoDateString=(date:Date|number=new Date()):string=>{
 }
 
 export const defaultConvoVisionSystemMessage=(
-    'If the user asks a question about a markdown image without a '+
+    'If the user references a markdown image without a '+
     'description or the description can not answer the user\'s question or '+
-    `complete the user\`s request call the ${convoFunctions.queryImage} function.`
+    `complete the user\`s request call the ${convoFunctions.queryImage} function. `+
+    'Do not use the URL of the image to make any assumptions about the image.'
 );
 
 export const defaultConvoVisionResponse='Unable to answer or respond to questions or requests for the given image or images';

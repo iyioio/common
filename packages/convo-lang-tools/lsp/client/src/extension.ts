@@ -1,7 +1,7 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { Lock } from '@iyio/common';
 import { convoResultErrorName, parseConvoCode } from '@iyio/convo-lang';
-import { ConvoCli } from '@iyio/convo-lang-cli';
+import { createConvoCliAsync } from '@iyio/convo-lang-cli';
 import * as path from 'path';
 import { ExtensionContext, ProgressLocation, Range, commands, window, workspace } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
@@ -219,7 +219,9 @@ const registerCommands=(context:ExtensionContext)=>{
                 let msg=`\n\n// completing...`;
                 await setCodeAsync(msg,false,true);
 
-                const cli=new ConvoCli({
+
+
+                const cli=await createConvoCliAsync({
                     inline:src,
                     bufferOutput:true,
                     exeCwd:document.uri.scheme==='file'?path.dirname(document.uri.fsPath):undefined,

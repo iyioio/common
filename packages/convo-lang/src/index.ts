@@ -3,6 +3,7 @@ export * from './lib/Conversation';
 export * from './lib/ConvoError';
 export * from './lib/ConvoExecutionContext';
 export * from './lib/convo-default-vars';
+export * from './lib/convo-from-scope';
 export * from './lib/convo-lib';
 export * from './lib/convo-markdown';
 export * from './lib/convo-markdown-types';

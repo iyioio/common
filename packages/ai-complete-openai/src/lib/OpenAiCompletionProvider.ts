@@ -134,14 +134,14 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     {
         const useVision=request.capabilities?.includes('vision');
 
-        const model=lastMessage?.model??(useVision?this._visionModel:this._chatModel);
-        if(!model){
-            throw new Error('Chat AI model not defined');
-        }
-
         const api=await this.getApiAsync();
 
         const lastContentMessage=getLastNonCallAiCompleteMessage(request.messages);
+
+        const model=lastContentMessage?.model??(useVision?this._visionModel:this._chatModel);
+        if(!model){
+            throw new Error('Chat AI model not defined');
+        }
 
         const oMsgs:ChatCompletionMessageParam[]=[];
         for(const m of request.messages){
@@ -210,7 +210,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             stream:false,
             messages:oMsgs,
             tools:oFns?.length?oFns:undefined,
-            user:lastMessage?.userId,
+            user:lastContentMessage?.userId,
         };
         if(useVision){
             // todo - review if this is needed. Current used as workaround for issue with

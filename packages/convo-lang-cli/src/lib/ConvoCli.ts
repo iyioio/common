@@ -1,7 +1,7 @@
 import { aiCompleteConvoModule } from '@iyio/ai-complete';
 import { openAiModule } from '@iyio/ai-complete-openai';
 import { EnvParams, initRootScope, rootScope } from "@iyio/common";
-import { Conversation, convoVars, parseConvoCode } from "@iyio/convo-lang";
+import { Conversation, convoVars, createConversationFromScope, parseConvoCode } from "@iyio/convo-lang";
 import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync, readStdInLineAsync } from "@iyio/node-common";
 import { writeFile } from "fs/promises";
 import { homedir } from 'node:os';
@@ -41,10 +41,13 @@ const _initAsync=async (options:ConvoCliOptions):Promise<ConvoCliOptions>=>
     const config=await getConvoCliConfigAsync(options);
 
     initRootScope(reg=>{
-        if(config.env){
+        if(config.env && !config.overrideEnv){
             reg.addParams(config.env);
         }
         reg.addParams(new EnvParams());
+        if(config.env && config.overrideEnv){
+            reg.addParams(config.env);
+        }
         reg.use(nodeCommonModule);
         reg.use(openAiModule);
         reg.use(aiCompleteConvoModule);
@@ -53,6 +56,9 @@ const _initAsync=async (options:ConvoCliOptions):Promise<ConvoCliOptions>=>
     return config;
 }
 
+/**
+ * Initializes the ConvoCli environment the returns a new ConvoCli object
+ */
 export const createConvoCliAsync=async (options:ConvoCliOptions):Promise<ConvoCli>=>{
     await initConvoCliAsync(options);
     return new ConvoCli(options);
@@ -72,9 +78,7 @@ export class ConvoCli
     public constructor(options:ConvoCliOptions){
         this.allowExec=options.allowExec;
         this.options=options;
-        // todo - remove setting of capabilities here after adding the ability to
-        //        set capabilities in convo messages.
-        this.convo=new Conversation({capabilities:['vision']});
+        this.convo=createConversationFromScope(rootScope,{capabilities:['vision']});
         if(options.prepend){
             this.convo.append(options.prepend);
         }
@@ -117,7 +121,6 @@ export class ConvoCli
     public async executeAsync():Promise<void>
     {
         const config=await initConvoCliAsync(this.options);
-        this.convo.autoUpdateCompletionService();
         if(!this.allowExec){
             this.allowExec=config.allowExec??'ask';
         }

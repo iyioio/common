@@ -330,6 +330,7 @@ export class AiCompletionService implements ConvoCompletionService
                     calledParams:msg.calledParams,
                     calledReturn:msg.calledReturn,
                     metadata:msg.tags,
+                    model:msg.responseModel,
                 })
             }else if(msg.content!==undefined){
                 messages.push({
@@ -342,6 +343,7 @@ export class AiCompletionService implements ConvoCompletionService
                     responseFormatTypeName:msg.responseFormatTypeName,
                     responseFormatIsArray:msg.responseFormatIsArray,
                     responseAssignTo:msg.responseAssignTo,
+                    model:msg.responseModel,
                 });
             }
         }
@@ -426,6 +428,6 @@ const checkModelAccess=(model:string,provider:AiCompletionProvider,options:Compl
     const expanded=expandModels(options?.allowedModels,allowed);
 
     if(!allowed.includes(model) || !expanded.includes(model)){
-        throw new UnauthorizedError(`User does not have access to model (${model})`);
+        throw new UnauthorizedError(`User does not have access to model (${model}). Allowed Models = ${[...allowed,...expanded].join(', ')}`);
     }
 }

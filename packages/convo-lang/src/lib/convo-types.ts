@@ -62,7 +62,8 @@ export interface ConvoErrorReferences
     baseType?:ConvoBaseType;
 }
 
-export type ConvoCapability='vision';
+export const allConvoCapabilityAry=['vision'] as const;
+export type ConvoCapability=typeof allConvoCapabilityAry[number];
 
 /**
  * Can be a text message or function definition
@@ -485,6 +486,9 @@ export const isConvoType=(value:any):value is ConvoType=>(value as ConvoType)?.[
 export interface FlatConvoMessage
 {
     role:string;
+
+    isUser?:boolean;
+
     content?:string;
 
     /**
@@ -523,6 +527,11 @@ export interface FlatConvoMessage
 
 
     tags?:Record<string,string|undefined>;
+
+    /**
+     * The model the message has been requested to be completed with.
+     */
+    responseModel?:string;
 
     responseFormat?:string;
     responseFormatTypeName?:string;
