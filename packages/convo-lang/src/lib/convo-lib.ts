@@ -50,6 +50,11 @@ export const convoVars={
     __model:'__model',
 
     /**
+     * Sets the default completion endpoint
+     */
+    __endpoint:'__endpoint',
+
+    /**
      * When set to true time tracking will be enabled.
      */
     __trackTime:'__trackTime',
@@ -111,6 +116,16 @@ export const convoTags={
      * Sets the requested model to complete a message with
      */
     responseModel:'responseModel',
+
+    /**
+     * Used to track the endpoint to generate completions
+     */
+    endpoint:'endpoint',
+
+    /**
+     * Sets the requested endpoint to complete a message with
+     */
+    responseEndpoint:'responseEndpoint',
 
     /**
      * Sets the format as message should be responded to with.

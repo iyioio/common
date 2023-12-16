@@ -85,28 +85,24 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         return this._allowedModels;
     }
 
-    private apiPromise:Promise<OpenAIApi>|null=null;
-    private async getApiAsync()
+    private apiPromises:Record<string,Promise<OpenAIApi>>={};
+    private async getApiAsync(endpoint=''):Promise<OpenAIApi>
     {
-        if(!this.apiPromise){
-            this.apiPromise=(async ()=>{
-                let apiKey=this.apiKey;
-                if(!apiKey && this.secretManager && this.secretsName){
-                    const {apiKey:key}=await this.secretManager.requireSecretTAsync<OpenAiSecrets>(this.secretsName,true);
-                    apiKey=key;
-                }
-                if(!apiKey){
-                    throw new Error('Unable to get OpenAi apiKey');
-                }
-                return new OpenAIApi({
-                    apiKey,
-                    dangerouslyAllowBrowser:true,
-                    baseURL:this._apiBaseUrl
-                })
-            })();
-        }
-
-        return await this.apiPromise;
+        return await (this.apiPromises[endpoint]??(this.apiPromises[endpoint]=(async ()=>{
+            let apiKey=this.apiKey;
+            if(!apiKey && this.secretManager && this.secretsName){
+                const {apiKey:key}=await this.secretManager.requireSecretTAsync<OpenAiSecrets>(this.secretsName,true);
+                apiKey=key;
+            }
+            if(!apiKey){
+                throw new Error('Unable to get OpenAi apiKey');
+            }
+            return new OpenAIApi({
+                apiKey,
+                dangerouslyAllowBrowser:true,
+                baseURL:endpoint||this._apiBaseUrl
+            })
+        })()));
     }
 
     public async completeAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
@@ -134,7 +130,9 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     {
         const useVision=request.capabilities?.includes('vision');
 
-        const api=await this.getApiAsync();
+        const endpoint=lastMessage.endpoint;
+
+        const api=await this.getApiAsync(endpoint);
 
         const lastContentMessage=getLastNonCallAiCompleteMessage(request.messages);
 
@@ -231,6 +229,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 this.getMaxTokenPrice('text','out',model)*(r.usage?.completion_tokens??0)
             ),
             model,
+            endpoint:endpoint,
             format:jsonMode?'json':undefined,
             formatTypeName:jsonMode?lastContentMessage?.responseFormatTypeName:undefined,
             formatIsArray:jsonMode?lastContentMessage?.responseFormatIsArray:undefined,

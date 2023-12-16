@@ -321,6 +321,9 @@ export class Conversation
         if(msg.model && (this.trackModel || this.getVar(convoVars.__trackModel))){
             tags+=`@${convoTags.model} ${msg.model}\n`;
         }
+        if(msg.endpoint){
+            tags+=`@${convoTags.endpoint} ${msg.endpoint}\n`
+        }
         if(msg.format){
             tags+=`@${convoTags.format} ${msg.format}\n`
         }
@@ -739,10 +742,21 @@ export class Conversation
             exe.setVar(true,msg.jsonValue??flat.content,msg.assignTo);
         }
 
-        const model=flat.isUser?exe.getVar(convoVars.__model):undefined;
-        if(model){
-            flat.responseModel=model;
+        let value:any;
+        if(flat.isUser){
+
+            value=exe.getVar(convoVars.__model);
+            if(value && (typeof value === 'string')){
+                flat.responseModel=value;
+            }
+
+            value=exe.getVar(convoVars.__endpoint);
+            if(value && (typeof value === 'string')){
+                flat.responseEndpoint=value;
+            }
         }
+
+
 
         if(!msg.tags){
             return;
@@ -765,6 +779,10 @@ export class Conversation
 
                 case convoTags.responseModel:
                     flat.responseModel=tag.value;
+                    break;
+
+                case convoTags.responseEndpoint:
+                    flat.responseEndpoint=tag.value;
                     break;
             }
         }

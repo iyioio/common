@@ -331,6 +331,7 @@ export class AiCompletionService implements ConvoCompletionService
                     calledReturn:msg.calledReturn,
                     metadata:msg.tags,
                     model:msg.responseModel,
+                    endpoint:msg.responseEndpoint,
                 })
             }else if(msg.content!==undefined){
                 messages.push({
@@ -344,6 +345,7 @@ export class AiCompletionService implements ConvoCompletionService
                     responseFormatIsArray:msg.responseFormatIsArray,
                     responseAssignTo:msg.responseAssignTo,
                     model:msg.responseModel,
+                    endpoint:msg.responseEndpoint,
                 });
             }
         }
@@ -378,6 +380,7 @@ export class AiCompletionService implements ConvoCompletionService
                 outputTokens:result.outputTokens,
                 tokenPrice:result.tokenPrice,
                 model:result.model,
+                endpoint:result.endpoint,
             }]
         }else{
             return [{
@@ -392,6 +395,7 @@ export class AiCompletionService implements ConvoCompletionService
                 formatTypeName:result.formatTypeName,
                 formatIsArray:result.formatIsArray,
                 assignTo:result.assignTo,
+                endpoint:result.endpoint,
             }]
         }
     }

@@ -533,6 +533,8 @@ export interface FlatConvoMessage
      */
     responseModel?:string;
 
+    responseEndpoint?:string;
+
     responseFormat?:string;
     responseFormatTypeName?:string;
     responseFormatIsArray?:boolean;
@@ -553,6 +555,7 @@ export interface ConvoCompletionMessage extends Partial<ConvoTokenUsage>
     formatTypeName?:string;
     formatIsArray?:boolean;
     assignTo?:string;
+    endpoint?:string;
 }
 
 export interface ConvoCompletionService

@@ -131,6 +131,11 @@ export const AiCompletionMessageScheme=z.object({
     model:z.string().optional(),
 
     /**
+     * The requested endpoint to complete the message with
+     */
+    endpoint:z.string().optional(),
+
+    /**
      * An optional Id that can be used to help track abuse.
      */
     userId:z.string().optional(),
@@ -158,6 +163,7 @@ export const AiCompletionResultScheme=z.object({
     outputTokens:z.number().optional(),
     tokenPrice:z.number().optional(),
     model:z.string().optional(),
+    endpoint:z.string().optional(),
     format:z.string().optional(),
     formatTypeName:z.string().optional(),
     formatIsArray:z.boolean().optional(),
