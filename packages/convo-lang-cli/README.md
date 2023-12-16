@@ -464,7 +464,29 @@ control the behavior of convo-lang.
     @shared
     somethingWeAllShouldKnow="Fish are cool"
 )
+
+@responseFormat json
+> user
+How many fish are in the sea
 ```
+
+### Reserved tags
+- @disableAutoComplete - When applied to a function the return value of the function will not be 
+  used to generate a new assistant message.
+- @edge - Used to indicate that a message should be evaluated at the edge of a conversation with 
+  the latest state. @edge is most commonly used with system message to ensure that all injected values
+  are updated with the latest state of the conversation.
+- @time - Used to track the time messages are created.
+- @tokenUsage - Used to track the number of tokens a message used
+- @model - Used to track the model used to generate completions
+- @responseModel - Sets the requested model to complete a message with
+- @endpoint - Used to track the endpoint to generate completions
+- @responseEndpoint - Sets the requested endpoint to complete a message with
+- @responseFormat - Sets the format as message should be responded to with.
+- @responseAssign - Causes the response of the tagged message to be assigned to a variable
+- @json - When used with a message the json tag is short and for "@responseFormat json"
+- @format - The format of a message
+- @assign - Used to assign the content or jsonValue of a message to a variable
 
 ### Strings
 There are 3 types of string in convo.
@@ -517,14 +539,24 @@ Because good luck hiding a plane!
 ---
 ```
 
-### Debugging and metadata
-Debugging information and metadata can be added the completion output using a series of system
-variables.
+### Runtime configuration variables
+Many of the configuration options of convo can be configure at runtime in directly in a convo file,
+including debugging and metadata information.
 
 - __debug - Causes extra debugging information to be printed as comments
 - __trackTime - Causes the @time tag to be added to messages with the date the message was appended
 - __trackTokenUsage - Causes the @tokenUsage tag to be added to messages that consume tokens
 - __trackModel - Causes the @model tag to be added to generated message with the model used to generate the message
+- __endpoint - Sets the default completion endpoint
+- __cwd - In environments that have access to the filesystem __cwd defines the current working directory.
+- __model - Sets the default completion model
+- __visionSystemMessage - When defined __visionSystemMessage will be injected into the system message of conversations 
+  with vision capabilities. __visionSystemMessage will override the default vision system message.
+- __visionServiceSystemMessage - The default system message used for completing vision requests. Vision requests are typically
+  completed in a separate conversation that supports vision messages. By default the system
+  message of the conversation that triggered the vision request will be used.
+- __defaultVisionResponse - Response used with the system is not able to generate a vision response.
+
 
 The example below enables debugging and all trackers
 ``` convo
@@ -1150,7 +1182,17 @@ Formats the given value as json
 ### toJsonMdBlock( value:any )
 Formats the given value as json and closes the value in a markdown json code block.
 
+### toJsonScheme( type:struct )
+Prints a struct as a JSON scheme.
 
+### toCsv( value:any[] )
+Prints an array of values a as CSV.
+
+### toCsvMdBlock
+Prints an array of values a as CSV inside of a markdown code block.
+
+### merge( ...values:any[] )
+Merges all passed in parameters into a single object. merge is similar to Javascript's spread operator.
 
 
 ## Examples

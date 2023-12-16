@@ -1,10 +1,10 @@
-import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer } from "@iyio/common";
+import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
 import { format } from "date-fns";
 import { ConvoError } from "./ConvoError";
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDateFormat, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
-import { convoValueToZodType } from "./convo-zod";
+import { convoTypeToJsonScheme, convoValueToZodType } from "./convo-zod";
 
 const ifFalse=Symbol();
 const ifTrue=Symbol();
@@ -805,6 +805,46 @@ export const defaultConvoVars={
             value===undefined?'undefined':JSON.stringify(value,createJsonRefReplacer(),4)+
             '\n```'
         )
+    }),
+
+    toJsonScheme:createConvoScopeFunction(scope=>{
+        const value=scope.paramValues?.[0];
+        return JSON.stringify(convoTypeToJsonScheme(value))
+    }),
+
+    toCsv:createConvoScopeFunction(scope=>{
+        const value=scope.paramValues?.[0];
+        if(!Array.isArray(value)){
+            return '"!Invalid CSV Data"'
+        }
+        return toCsvLines(value);
+    }),
+
+    toCsvMdBlock:createConvoScopeFunction(scope=>{
+        const value=scope.paramValues?.[0];
+        if(!Array.isArray(value)){
+            return '"!Invalid CSV Data"'
+        }
+        return '``` csv\n'+toCsvLines(value)+'\n```';
+    }),
+
+    merge:createConvoScopeFunction(scope=>{
+        const value:Record<string,any>={}
+        if(scope.paramValues){
+            for(let i=0;i<scope.paramValues.length;i++){
+                const item=scope.paramValues[i];
+                if(item && (typeof item === 'object')){
+                    for(const e in item){
+                        const v=item[e];
+                        if(v!==undefined){
+                            value[e]=v;
+                        }
+                    }
+                }
+
+            }
+        }
+        return value;
     }),
 
 } as const;

@@ -90,10 +90,16 @@ export const convoVars={
 } as const;
 
 export const convoTags={
+
+    /**
+     * When applied to a function the return value of the function will not be used to generate a
+     * new assistant message.
+     */
     disableAutoComplete:'disableAutoComplete',
     /**
      * Used to indicate that a message should be evaluated at the edge of a conversation with the
-     * latest state.
+     * latest state. @edge is most commonly used with system message to ensure that all injected values
+     * are updated with the latest state of the conversation.
      */
     edge:'edge',
 
