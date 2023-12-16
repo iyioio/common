@@ -294,8 +294,6 @@ one method of enabled vision is required.
 const convo=new Conversation({capabilities:['vision']});
 ```
 
-Currently vision is enabled by define by the vscode extension and CLI. This may change soon.
-
 (note - the image in the example below is the cover of Abbey Road by The Beatles)
 ``` convo
 // the @enableVision tag enables vision in the conversation
