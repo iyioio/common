@@ -1,6 +1,6 @@
 [project]
 name = "convo_lang"
-version = "0.5.10"
+version = "0.5.11"
 authors = [
   { name="Scott Vance", email="scott@iyio.io" },
 ]
@@ -14,6 +14,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[tool.hatch.build]
+ignore-vcs = true
 
 [build-system]
 requires = ["hatchling"]
