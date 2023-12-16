@@ -2,6 +2,6 @@
 set -e
 cd "$(dirname "$0")"
 
-./build
+./build.sh
 
 python3 -m twine upload dist/*
