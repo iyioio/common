@@ -308,3 +308,14 @@ export const aryUnshiftUniqueMany=<T>(ary:T[]|null|undefined,values:T[]):number=
     }
     return count;
 }
+
+export const aryUnique=<T>(ary:T[]):T[]=>{
+    const unique:T[]=[]
+    for(let i=0;i<ary.length;i++){
+        const item=ary[i] as T;
+        if(!unique.includes(item)){
+            unique.push(item)
+        }
+    }
+    return unique;
+}

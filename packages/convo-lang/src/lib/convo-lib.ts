@@ -144,7 +144,7 @@ export const convoTags={
     responseAssign:'responseAssign',
 
     /**
-     * When used with a message the json tag is short and for "@responseFormat json"
+     * When used with a message the json tag is short and for `@responseFormat json`
      */
     json:'json',
 
@@ -156,7 +156,20 @@ export const convoTags={
     /**
      * Used to assign the content or jsonValue of a message to a variable
      */
-    assign:'assign'
+    assign:'assign',
+
+    /**
+     * Used to enable capabilities. The capability tag can only be used on the first message of the
+     * conversation if used on any other message it is ignored. Multiple capability tags can be
+     * applied to a message and multiple capabilities can be specified by separating them with a
+     * comma.
+     */
+    capability:'capability',
+
+    /**
+     * Shorthand for `@capability vision`
+     */
+    enableVision:'enableVision'
 
 } as const;
 

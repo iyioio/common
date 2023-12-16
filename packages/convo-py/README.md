@@ -38,7 +38,13 @@ a CLI, and a vscode extension for syntax highlighting and in-editor script execu
 
 
 ## Installation
-For use in an application install the @iyio/convo-lang package
+
+For use in python projects
+``` sh
+python -m pip install convo-lang
+```
+
+For use in a Javascript application install the @iyio/convo-lang package
 ``` sh
 npm i @iyio/convo-lang
 
@@ -51,11 +57,6 @@ For use on the command line install the @iyio/convo-lang-cli package
 npm i @iyio/convo-lang-cli -g
 ```
 
-For use in python projects
-``` sh
-python -m pip install convo-lang
-```
-
 ## VSCode extension
 You will also probably want to install the vscode extension for syntax highlighting and other
 developer niceties. You can install the vscode extension by searching for "convo-lang" in the
@@ -63,76 +64,6 @@ vscode extension tab.
 
 https://marketplace.visualstudio.com/items?itemName=IYIO.convo-lang-tools 
 
-
-## Using convo-lang in a Javascript application
-When using convo-lang in a javascript application, you will primarily interact with Conversation objects.
-Conversation objects store the messages of a convo script and allow new messages to be appended
-and LLMs to respond to messages from the user.
-
-``` js
-import { Conversation } from '@iyio/convo-lang';
-import { initRootScope, EnvParams } from '@iyio/common';
-import { aiCompleteConvoModule } from '@iyio/ai-complete';
-import { openAiModule } from '@iyio/ai-complete-openai';
-
-// initRootScope is used to configure services and configuration variables
-initRootScope(reg=>{
-
-    // register OpenAI configuration variables. These variates could also be stored as environment
-    // variables and loaded using reg.addParams(new EnvParams()).
-    reg.addParams({
-        "openAiApiKey":"YOUR_OPEN_AI_KEY",
-        "openAiChatModel":"gpt-4-1106-preview",
-        "openAiVisionModel":"gpt-4-vision-preview",
-        "openAiAudioModel":"whisper-1",
-        "openAiImageModel":"dall-e-3"
-    })
-
-    // EnvParams can optionally be used to load configuration variables from process.env
-    reg.addParams(new EnvParams());
-
-    // Registers the AiComplete module that is used to relay messages to LLMs
-    reg.use(aiCompleteConvoModule);
-
-    // Registers the OpenAI module that will relay messages to OpenAI
-    reg.use(openAiModule);
-
-    // aiCompleteLambdaModule can be used to relay messages to a lambda function for use in the browser
-    //reg.use(aiCompleteLambdaModule);
-})
-
-const main=async ()=>{
-    const convo=new Conversation();
-
-    // adding /*convo*/ before a template literal will give you convo syntax highlighting when you have
-    // the convo-lang vscode extension installed.
-
-    convo.append(/*convo*/`
-        > system
-        You are a friendly and very skilled fisherman. Taking a group of tourist on a fishing expedition
-        off the coast of Maine.
-
-        > user
-        What kind of clothes should I wear?
-    `);
-
-    // Calling completeAsync will answer the user's question using the configured LLM
-    await convo.completeAsync();
-
-
-    // The convo property of the Conversation object will be updated with the answer from the LLM
-    console.log(convo.convo)
-
-    // You can get a flatted view of the conversation by calling flattenAsync. The flatted version
-    // of the conversation contains messages with all templates populated and is suitable to be 
-    // used to render a view of the conversation to the user.
-    const flat=await convo.flattenAsync();
-    console.log('flat',flat.messages);
-}
-
-main();
-
-```
 
 
 ## Using convo-lang in a Python application
@@ -221,6 +152,82 @@ print(convo.syntaxMessages)
 
 print('\n\n------ result ------')
 print(resultMessage['content'])
+
+```
+
+
+## A quick note about all the Javascript
+Most of the code examples not written in convo-lang are written in Javascript. I just
+added support for Python and more Python specific examples and docs are coming.
+
+
+## Using convo-lang in a Javascript application
+When using convo-lang in a javascript application, you will primarily interact with Conversation objects.
+Conversation objects store the messages of a convo script and allow new messages to be appended
+and LLMs to respond to messages from the user.
+
+``` js
+import { Conversation } from '@iyio/convo-lang';
+import { initRootScope, EnvParams } from '@iyio/common';
+import { aiCompleteConvoModule } from '@iyio/ai-complete';
+import { openAiModule } from '@iyio/ai-complete-openai';
+
+// initRootScope is used to configure services and configuration variables
+initRootScope(reg=>{
+
+    // register OpenAI configuration variables. These variates could also be stored as environment
+    // variables and loaded using reg.addParams(new EnvParams()).
+    reg.addParams({
+        "openAiApiKey":"YOUR_OPEN_AI_KEY",
+        "openAiChatModel":"gpt-4-1106-preview",
+        "openAiVisionModel":"gpt-4-vision-preview",
+        "openAiAudioModel":"whisper-1",
+        "openAiImageModel":"dall-e-3"
+    })
+
+    // EnvParams can optionally be used to load configuration variables from process.env
+    reg.addParams(new EnvParams());
+
+    // Registers the AiComplete module that is used to relay messages to LLMs
+    reg.use(aiCompleteConvoModule);
+
+    // Registers the OpenAI module that will relay messages to OpenAI
+    reg.use(openAiModule);
+
+    // aiCompleteLambdaModule can be used to relay messages to a lambda function for use in the browser
+    //reg.use(aiCompleteLambdaModule);
+})
+
+const main=async ()=>{
+    const convo=new Conversation();
+
+    // adding /*convo*/ before a template literal will give you convo syntax highlighting when you have
+    // the convo-lang vscode extension installed.
+
+    convo.append(/*convo*/`
+        > system
+        You are a friendly and very skilled fisherman. Taking a group of tourist on a fishing expedition
+        off the coast of Maine.
+
+        > user
+        What kind of clothes should I wear?
+    `);
+
+    // Calling completeAsync will answer the user's question using the configured LLM
+    await convo.completeAsync();
+
+
+    // The convo property of the Conversation object will be updated with the answer from the LLM
+    console.log(convo.convo)
+
+    // You can get a flatted view of the conversation by calling flattenAsync. The flatted version
+    // of the conversation contains messages with all templates populated and is suitable to be 
+    // used to render a view of the conversation to the user.
+    const flat=await convo.flattenAsync();
+    console.log('flat',flat.messages);
+}
+
+main();
 
 ```
 
@@ -523,14 +530,14 @@ Person = struct(
 > user
 Describe each person in this picture.
 
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 @toolId call_dfpKG4bnDRA3UTBjspQr2O4s
 > call queryImage(
     "query": "describe each person in this picture",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

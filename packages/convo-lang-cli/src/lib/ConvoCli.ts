@@ -1,9 +1,10 @@
 import { aiCompleteConvoModule } from '@iyio/ai-complete';
-import { openAiModule } from '@iyio/ai-complete-openai';
-import { EnvParams, initRootScope, rootScope } from "@iyio/common";
-import { Conversation, convoVars, createConversationFromScope, parseConvoCode } from "@iyio/convo-lang";
-import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync, readStdInLineAsync } from "@iyio/node-common";
+import { openAiApiKeyParam, openAiAudioModelParam, openAiBaseUrlParam, openAiChatModelParam, openAiImageModelParam, openAiModule, openAiSecretsParam, openAiVisionModelParam } from '@iyio/ai-complete-openai';
+import { EnvParams, createJsonRefReplacer, deleteUndefined, initRootScope, rootScope } from "@iyio/common";
+import { Conversation, ConvoScope, convoCapabilitiesParams, convoVars, createConversationFromScope, defaultConvoVars, parseConvoCode } from "@iyio/convo-lang";
+import { nodeCommonModule, pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync, readStdInAsStringAsync, readStdInLineAsync, startReadingStdIn } from "@iyio/node-common";
 import { writeFile } from "fs/promises";
+import { parse as parseJson5 } from 'json5';
 import { homedir } from 'node:os';
 import { ConvoCliConfig, ConvoCliOptions, ConvoExecAllowMode, ConvoExecConfirmCallback } from "./convo-cli-types";
 import { createConvoExec } from './convo-exec';
@@ -16,6 +17,14 @@ export const getConvoCliConfigAsync=(options:ConvoCliOptions):Promise<ConvoCliCo
 
 const _getConfigAsync=async (options:ConvoCliOptions):Promise<ConvoCliConfig>=>
 {
+    if(options.inlineConfig){
+        const inlineConfig:ConvoCliConfig=parseJson5(options.inlineConfig);
+        if(inlineConfig.overrideEnv===undefined){
+            inlineConfig.overrideEnv=true;
+        }
+        return inlineConfig;
+    }
+
     let configPath=options.config??'~/.config/convo/convo.json';
 
     if(configPath.startsWith('~')){
@@ -41,13 +50,30 @@ const _initAsync=async (options:ConvoCliOptions):Promise<ConvoCliOptions>=>
     const config=await getConvoCliConfigAsync(options);
 
     initRootScope(reg=>{
+
         if(config.env && !config.overrideEnv){
             reg.addParams(config.env);
         }
-        reg.addParams(new EnvParams());
+
+        if(!options.config && !options.inlineConfig){
+            reg.addParams(new EnvParams());
+        }
+
         if(config.env && config.overrideEnv){
             reg.addParams(config.env);
         }
+
+        reg.addParams(deleteUndefined({
+            [openAiApiKeyParam.typeName]:config.apiKey,
+            [openAiBaseUrlParam.typeName]:config.apiBaseUrl,
+            [openAiChatModelParam.typeName]:config.chatModel,
+            [openAiAudioModelParam.typeName]:config.audioModel,
+            [openAiImageModelParam.typeName]:config.imageModel,
+            [openAiVisionModelParam.typeName]:config.visionModel,
+            [openAiSecretsParam.typeName]:config.secrets,
+            [convoCapabilitiesParams.typeName]:config.capabilities,
+        }) as Record<string,string>);
+
         reg.use(nodeCommonModule);
         reg.use(openAiModule);
         reg.use(aiCompleteConvoModule);
@@ -64,6 +90,21 @@ export const createConvoCliAsync=async (options:ConvoCliOptions):Promise<ConvoCl
     return new ConvoCli(options);
 }
 
+const appendOut=(prefix:string|null,value:any,out:string[])=>{
+    if(typeof value !== 'string'){
+        value=JSON.stringify(value,createJsonRefReplacer(),4);
+    }
+    if(!prefix){
+        out.push(value+'\n');
+    }else{
+        const ary=value.split('\n');
+        for(let i=0;i<ary.length;i++){
+            out.push(prefix+ary[i]+'\n');
+
+        }
+    }
+}
+
 export class ConvoCli
 {
 
@@ -78,7 +119,11 @@ export class ConvoCli
     public constructor(options:ConvoCliOptions){
         this.allowExec=options.allowExec;
         this.options=options;
-        this.convo=createConversationFromScope(rootScope,{capabilities:['vision']});
+        this.convo=createConversationFromScope(rootScope);
+        if(options.cmdMode){
+            this.convo.dynamicFunctionCallback=this.dynamicFunctionCallback;
+            startReadingStdIn();
+        }
         if(options.prepend){
             this.convo.append(options.prepend);
         }
@@ -98,7 +143,81 @@ export class ConvoCli
         this.convo.dispose();
     }
 
-    private out(...chunks:string[]){
+    private readonly dynamicFunctionCallback=(scope:ConvoScope)=>{
+        return new Promise<any>((r,j)=>{
+            readStdInLineAsync().then(v=>{
+                if(v.startsWith('ERROR:')){
+                    j(v.substring(6).trim())
+                    return;
+                }
+                if(v.startsWith('RESULT:')){
+                    v=v.substring(7)
+                }
+                v=v.trim();
+                try{
+                    r(JSON.parse(v))
+                }catch(ex){
+                    j(ex as any);
+                }
+            })
+
+            const fn=scope.s.fn??'function';
+            globalThis.process?.stdout.write(`CALL:${JSON.stringify({fn,args:scope.paramValues??[]})}\n`);
+
+        });
+    }
+
+    private async outAsync(...chunks:string[]){
+
+        const {prefixOutput,cmdMode}=this.options;
+
+        if(prefixOutput){
+            const str=chunks.join('');
+            chunks=[];
+            appendOut(':',str,chunks);
+        }
+
+        if(this.options.printFlat || this.options.printState){
+            await this.convo.flattenAsync();
+        }
+
+        if(this.options.printFlat){
+            const messages=this.convo.flat?.messages??[];
+            for(const m of messages){
+                if(m.fn?.body){
+                    delete m.fn.body;
+                }
+            }
+            if(cmdMode){
+                chunks.push('FLAT:\n');
+            }
+            appendOut(prefixOutput?'f:':null,messages,chunks);
+        }
+
+        if(this.options.printState){
+            const state={...this.convo.flat?.exe.sharedVars}
+            delete state['convo'];
+            for(const e in defaultConvoVars){
+                delete state[e];
+            }
+            if(cmdMode){
+                chunks.push('STATE:\n');
+            }
+            appendOut(prefixOutput?'s:':null,state,chunks);
+        }
+
+        if(this.options.printMessages){
+            const messages=this.convo.messages;
+            if(cmdMode){
+                chunks.push('MESSAGES:\n');
+            }
+            appendOut(prefixOutput?'m:':null,messages,chunks);
+        }
+
+        if(cmdMode){
+            chunks.push('END:\n');
+        }
+
         if(this.options.out || this.options.bufferOutput){
             if(typeof this.options.out==='function'){
                 this.options.out(...chunks);
@@ -108,10 +227,10 @@ export class ConvoCli
         }else{
             if(globalThis?.process?.stdout){
                 for(let i=0;i<chunks.length;i++){
-                    globalThis.process.stdout.write(chunks[i]??'')
+                    globalThis.process.stdout.write(chunks[i]??'');
                 }
             }else{
-                console.log(...chunks);
+                console.log(chunks.join(''));
             }
         }
     }
@@ -127,15 +246,17 @@ export class ConvoCli
 
         if(this.options.inline){
             if(this.options.parse){
-                this.parseCode(this.options.inline);
+                await this.parseCodeAsync(this.options.inline);
             }else{
                 await this.executeSourceCode(this.options.inline);
             }
             this.writeOutputAsync();
-        }else if(this.options.source){
-            const source=await readFileAsStringAsync(this.options.source);
+        }else if(this.options.source || this.options.stdin){
+            const source=this.options.stdin?
+                await readStdInAsStringAsync():
+                await readFileAsStringAsync(this.options.source??'');
             if(this.options.parse){
-                this.parseCode(source);
+                await this.parseCodeAsync(source);
             }else{
                 await this.executeSourceCode(source);
             }
@@ -169,15 +290,15 @@ export class ConvoCli
         if(r.error){
             throw r.error;
         }
-        this.out(this.convo.convo);
+        await this.outAsync(this.convo.convo);
     }
 
-    private parseCode(code:string){
+    private async parseCodeAsync(code:string){
         const r=parseConvoCode(code);
         if(r.error){
             throw r.error;
         }
-        this.out(JSON.stringify(r.result,null,this.options.parseFormat));
+        await this.outAsync(JSON.stringify(r.result,null,this.options.parseFormat));
     }
 
     private async writeOutputAsync()

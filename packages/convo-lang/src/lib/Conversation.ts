@@ -4,7 +4,7 @@ import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, parseConvoJsonMessage, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, isConvoCapability } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -147,6 +147,8 @@ export class Conversation
 
     private readonly autoFlattenDelayMs:number;
 
+    public dynamicFunctionCallback:ConvoScopeFunction|undefined;
+
     /**
      * A function that will be used to output debug values. By default debug information is written
      * to the output of the conversation as comments
@@ -154,6 +156,8 @@ export class Conversation
     debug?:(...values:any[])=>void;
 
     public print:ConvoPrintFunction=defaultConvoPrintFunction;
+
+    private readonly defaultOptions:ConversationOptions;
 
     public constructor(options:ConversationOptions={}){
         const {
@@ -171,10 +175,11 @@ export class Conversation
             debug,
             debugMode,
         }=options;
+        this.defaultOptions=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
-        this.capabilities=capabilities;
+        this.capabilities=[...capabilities];
         this.serviceCapabilities=serviceCapabilities;
         this.maxAutoCompleteDepth=maxAutoCompleteDepth;
         this._trackTime=new BehaviorSubject<boolean>(trackTime);
@@ -186,15 +191,52 @@ export class Conversation
         if(debugMode){
             this.debugMode=true;
         }
+    }
 
-        if(this.capabilities.includes('vision')){
-            this.define({
-                hidden:true,
-                fn:createConvoVisionFunction({
-                    conversationOptions:options,
-                })
-            },true)
+    private runtimeInited=false;
+    /**
+     * Initializes runtime features and capabilities. initRuntime is called just before the first
+     * completion.
+     */
+    private initRuntime(){
+        if(this.runtimeInited){
+            return;
         }
+        const msg=this.messages[0]
+        if(!msg){
+            return;
+        }
+        this.runtimeInited=true;
+
+        if(msg.tags){
+            for(const tag of msg.tags){
+                switch(tag.name){
+
+                    case convoTags.capability:
+                        if(tag.value){
+                            const caps=tag.value.split(',');
+                            for(const c of caps){
+                                const cap=c.trim();
+                                if(isConvoCapability(cap) && !this.capabilities.includes(cap)){
+                                    this.capabilities.push(cap);
+                                }
+                            }
+                        }
+                        break;
+
+                    case convoTags.enableVision:
+                        if(!this.capabilities.includes('vision')){
+                            this.capabilities.push('vision');
+                        }
+
+                }
+            }
+        }
+
+        for(const cap of this.capabilities){
+            this.enableCapability(cap);
+        }
+
     }
 
     private _isDisposed=false;
@@ -206,6 +248,28 @@ export class Conversation
         }
         this.autoFlattenId++;
         this._isDisposed=true;
+    }
+
+
+
+    private readonly enabledCapabilities:ConvoCapability[]=[];
+    public enableCapability(cap:ConvoCapability)
+    {
+        if(this.enabledCapabilities.includes(cap)){
+            return;
+        }
+        this.enabledCapabilities.push(cap);
+        if(!this.capabilities.includes(cap)){
+            this.capabilities.push(cap);
+        }
+        switch(cap){
+            case 'vision':
+                this.define({
+                    hidden:true,
+                    fn:createConvoVisionFunction({conversationOptions:this.defaultOptions})
+                },true)
+                break;
+        }
     }
 
     public autoUpdateCompletionService()
@@ -410,27 +474,15 @@ export class Conversation
         preReturnValues?:any[]
     ):Promise<ConvoCompletion>{
 
+        if(!this.runtimeInited){
+            this.initRuntime();
+        }
+
         this._activeTaskCount.next(this.activeTaskCount+1);
 
         try{
-            let append:string[]|undefined=undefined;
-            const flatExe=new ConvoExecutionContext({
-                conversation:this,
-                convoPipeSink:(value)=>{
-                    if(!(typeof value === 'string')){
-                        value=value?.toString();
-                        if(!value?.trim()){
-                            return value;
-                        }
-                    }
-                    if(!append){
-                        append=[];
-                    }
-                    append.push(value);
-                    return value;
-                }
-            })
-            flatExe.print=this.print;
+            const append:string[]=[];
+            const flatExe=this.createConvoExecutionContext(append);
             const flat=await this.flattenAsync(flatExe,false);
             const exe=flat.exe;
             if(this._isDisposed){
@@ -558,7 +610,7 @@ export class Conversation
                 }
             }
 
-            if(append){
+            if(append.length){
                 for(const a of (append as string[])){
                     this.append(a);
                 }
@@ -601,15 +653,28 @@ export class Conversation
         return this.roleMap[role]??role;
     }
 
+    public createConvoExecutionContext(append:string[]=[]):ConvoExecutionContext{
+        const flatExe=new ConvoExecutionContext({
+            conversation:this,
+            convoPipeSink:(value)=>{
+                if(!(typeof value === 'string')){
+                    value=value?.toString();
+                    if(!value?.trim()){
+                        return value;
+                    }
+                }
+                append.push(value);
+                return value;
+            }
+        })
+        flatExe.print=this.print;
+        return flatExe;
+    }
+
     public async flattenAsync(
-        exe?:ConvoExecutionContext,
+        exe:ConvoExecutionContext=this.createConvoExecutionContext(),
         setCurrent=true
     ):Promise<FlatConvoConversation>{
-
-        if(!exe){
-            exe=new ConvoExecutionContext({conversation:this});
-            exe.print=this.print;
-        }
 
         const messages:FlatConvoMessage[]=[];
         const edgePairs:{

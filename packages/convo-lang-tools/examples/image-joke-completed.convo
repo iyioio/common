@@ -1,13 +1,14 @@
+@enableVision
 > user
 Tell me a joke about this image
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 @toolId call_Q8foCtL5TvFqm9ybmnA9cksb
 > call queryImage(
     "query": "joke",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result
@@ -25,7 +26,7 @@ Is anybody in the picture waring a white suite?
 > call queryImage(
     "query": "Is anyone in the picture wearing a white suit?",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

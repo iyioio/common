@@ -71,7 +71,7 @@
         "example-exec": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-lang-cli/tsconfig.lib.json packages/convo-lang-cli/src/bin/convo.ts packages/convo-lang-cli/examples/run-command.convo"
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-lang-cli/tsconfig.lib.json packages/convo-lang-cli/src/bin/convo.ts packages/convo-lang-cli/examples/exec.convo"
             }
         }
     },

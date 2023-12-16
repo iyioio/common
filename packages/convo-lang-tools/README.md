@@ -1,10 +1,31 @@
 # convo-lang (a work in progress)
-A conversational prompting and programming language. Convo-lang provides a uniform prompting
-language that is LLM agnostic and supports features such as function calling and tool usage. The
-Convo-lang ecosystem consists of a parser, runtime, Typescript/Javascript libraries, a CLI, and
-a vscode extension for syntax highlighting and in-editor script execution.
+A conversational prompting and programming language.
 
 ![convo](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/demo.gif)
+
+# What is Convo-lang?
+Convo-lang is a mixture between a procedural programming language, prompting template system and 
+conversation state management system. You can execute convo-lang in Javascript, Python,
+from the command line or directly in VSCode.
+
+Convo-lang aims to provided a uniform prompting syntax that is LLM agnostic and allows you to
+store both prompts, metadata and tradition programming logic in a single file or template string.
+
+The convo-lang syntax supports advanced features such as function calling, tool usage and vision.
+The Convo-lang ecosystem consists of a parser, interpreter, Typescript/Javascript/Python libraries,
+a CLI, and a vscode extension for syntax highlighting and in-editor script execution.
+
+## Releases
+- 0.5.10
+  - Started adding release notes 😅
+  - **Breaking change** - The CLI and vscode extension no longer enable vision support by default. 
+  Use the `@enableVision` tag or add vision to the list capabilities in you config file.
+  - Capabilities can be enabled directly in convo scripts by using the `@capability` tag at the root
+  of a convo script. `@enableVision` is shorthand for `@capability vision`
+  - Added command mode to CLI. This allows the python package and other tools more easily to
+  interactively communicate with the CLI.
+  - Conversations can now dynamically invoke extern functions via the `dynamicFunctionCallback` property
+  - Added embedded string template highlighting in Python
 
 
 ## Packages
@@ -13,6 +34,8 @@ a vscode extension for syntax highlighting and in-editor script execution.
 - @iyio/convo-lang-tools - Contains the convo-lang vscode extension, which includes syntax highlighting,
   in-editor script execution, script parsing, and other helpful tools for working with convo-lang.
   In most cases, you will not install this package but instead install the vscode convo-lang extension.
+- (pypi) convo-lang - Python package for executing convo-lang
+
 
 ## Installation
 For use in an application install the @iyio/convo-lang package
@@ -28,6 +51,12 @@ For use on the command line install the @iyio/convo-lang-cli package
 npm i @iyio/convo-lang-cli -g
 ```
 
+For use in python projects
+``` sh
+python -m pip install convo-lang
+```
+
+## VSCode extension
 You will also probably want to install the vscode extension for syntax highlighting and other
 developer niceties. You can install the vscode extension by searching for "convo-lang" in the
 vscode extension tab.
@@ -35,8 +64,8 @@ vscode extension tab.
 https://marketplace.visualstudio.com/items?itemName=IYIO.convo-lang-tools 
 
 
-## Using convo-lang in an application
-When using convo-lang in an application, you will primarily interact with Conversation objects.
+## Using convo-lang in a Javascript application
+When using convo-lang in a javascript application, you will primarily interact with Conversation objects.
 Conversation objects store the messages of a convo script and allow new messages to be appended
 and LLMs to respond to messages from the user.
 
@@ -105,6 +134,96 @@ main();
 
 ```
 
+
+## Using convo-lang in a Python application
+When using convo-lang in a Python application, you will primarily interact with Conversation objects.
+Internally the Python package uses the convo-lang CLI and requires NodeJs to be installed for the CLI to function.
+
+``` python
+from datetime import datetime
+from convo_lang import Conversation
+
+convo=Conversation({
+    # Can be omitted when using an apiBaseUrl that does not require an API key
+    "apiKey":"YOUR_OPEN_AI_KEY",
+
+    # Can be used to connect to OpenAi compatible APIs such as LMStudio - https://lmstudio.ai/ 
+    #"apiBaseUrl":"http://localhost:1234/v1",
+
+    # Sets the models that are allowed to be used. The first model will be the default
+    "chatModel":"gpt-4-1106-preview,gpt-3.5-turbo-1106,gpt-3.5-turbo",
+
+    # Sets the model that will be used for audio tasks. The first model will be the default.
+    "audioModel":"whisper-1",
+
+    # Sets the model that will be used to image generation. The first model will be the default.
+    "imageModel":"dall-e-3",
+
+    # Sets the model that will be used to implement vision capabilities. The first model will be the default.
+    "visionModel":"gpt-4-vision-preview"
+})
+
+
+def setPinHigh(state):
+
+    print('Setting pin state to ',state)
+
+    # do some io stuff here
+
+    return {
+        "state":"on" if state else "off",
+        "time":str(datetime.now())
+    }
+
+# adding setPinHigh to the conversation's callbacks allows setPinHigh to be called by functions
+# defined in convo-lang
+convo.callbacks['setPinHigh']=setPinHigh
+
+convo.append(
+"""*convo*
+> define
+//__model='gpt-3.5-turbo-1106'
+__trackModel=true
+
+# Turn the lights in the user's house on or off
+> turnOnOffLights(
+    # The state to set the lights to
+    state: enum("on" "off")
+) -> (
+
+    // setPinHigh will call the setPinHigh function defined in python
+    return(setPinHigh(eq(state "on")))
+)
+
+> system
+You are a home automation assistant. please assistant the user to the best or your ability.
+
+The current date and time is {{dateTime()}}
+
+> user
+It's time for bed, can you turn off the lights
+
+""")
+
+resultMessage=convo.completeAsync()
+
+print('------ convo ------')
+print(convo.convo)
+
+print('\n\n------ messages ------')
+print(convo.messages)
+
+print('\n\n------ state ------')
+print(convo.state)
+
+print('\n\n------ syntaxMessages ------')
+print(convo.syntaxMessages)
+
+print('\n\n------ result ------')
+print(resultMessage['content'])
+
+```
+
 ## Using the convo-lang extension
 With the convo vscode extension installed, you can execute convo scripts directly in vscode. Just
 press **(CMD+R)** to run a script.
@@ -154,10 +273,16 @@ following contents. Remember to replace the API key with your OpenAI api key.
 ```
 
 ## Vision
-When used with vision-capable LLMs, convo can execute vision-based prompts. Images are defined using
-the Markdown image syntax.
+Vision capabilities can be added to any LLM that supports function calling. When vision is enabled
+the convo-lang runtime will add the queryImage function to the current conversation and inject 
+instructions on how to use the function into the system prompt.
 
-Vision capabilities must be enabled. 
+When the queryImage function is called an model with vision support is prompted and the result
+is returned back to the non-vision capable model.
+
+Vision capabilities must be enabled. In the example below visible is both enabled in the 
+constructor the Conversation and in the prompt using the `@enableVision`, but in practice only 
+one method of enabled vision is required.
 ``` js
 const convo=new Conversation({capabilities:['vision']});
 ```
@@ -166,16 +291,18 @@ Currently vision is enabled by define by the vscode extension and CLI. This may 
 
 (note - the image in the example below is the cover of Abbey Road by The Beatles)
 ``` convo
+// the @enableVision tag enables vision in the conversation
+@enableVision
 > user
 Tell me a joke about this image
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 @toolId call_QuwU683taTBW7nsZNMNHPrmm
 > call queryImage(
     "query": "Tell me a joke about this image",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result
@@ -384,6 +511,7 @@ As you can see, using custom user types gives you very fine tune control over th
 Json mode can also be combined with vision messages
 
 ``` convo
+@enableVision
 > define
 Person = struct(
     name?:string
@@ -484,9 +612,13 @@ How many fish are in the sea
 - @responseEndpoint - Sets the requested endpoint to complete a message with
 - @responseFormat - Sets the format as message should be responded to with.
 - @responseAssign - Causes the response of the tagged message to be assigned to a variable
-- @json - When used with a message the json tag is short and for "@responseFormat json"
+- @json - When used with a message the json tag is short and for `@responseFormat json`
 - @format - The format of a message
 - @assign - Used to assign the content or jsonValue of a message to a variable
+- @capability - Used to enable capabilities. The capability tag can only be used on the first 
+  message of the conversation if used on any other message it is ignored. Multiple capability tags
+  can be applied to a message and multiple capabilities can be specified by separating them with a comma.
+- @enableVision - Shorthand for `@capability vision`
 
 ### Strings
 There are 3 types of string in convo.

@@ -64,6 +64,7 @@ export interface ConvoErrorReferences
 
 export const allConvoCapabilityAry=['vision'] as const;
 export type ConvoCapability=typeof allConvoCapabilityAry[number];
+export const isConvoCapability=(value:any):value is ConvoCapability=>allConvoCapabilityAry.includes(value);
 
 /**
  * Can be a text message or function definition

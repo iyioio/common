@@ -1,4 +1,4 @@
-import { Interface, createInterface } from "node:readline";
+import { Interface, ReadLineOptions, createInterface } from "node:readline";
 
 export type StdLineReadCallback=(line:string)=>void;
 
@@ -7,13 +7,15 @@ const callbackBuffer:StdLineReadCallback[]=[];
 
 
 let rl:Interface|null=null;
-export const startReadingStdIn=()=>{
+export const startReadingStdIn=(options?:Partial<ReadLineOptions>)=>{
     if(rl){
         return;
     }
     rl=createInterface({
         input:process.stdin,
         output:process.stdout,
+        terminal:true,
+        ...options,
     });
     rl.on('line',line=>{
         if(callbackBuffer.length){

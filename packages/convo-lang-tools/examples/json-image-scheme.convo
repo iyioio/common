@@ -1,3 +1,4 @@
+@enableVision
 > define
 Person = struct(
     name?:string
@@ -9,7 +10,7 @@ Person = struct(
 > user
 Describe each person in this picture.
 
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 
@@ -18,7 +19,7 @@ Describe each person in this picture.
 > call queryImage(
     "query": "describe each person in this picture",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

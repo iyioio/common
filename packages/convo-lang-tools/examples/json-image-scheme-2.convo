@@ -1,3 +1,4 @@
+@enableVision
 > define
 Person = struct(
 
@@ -15,7 +16,7 @@ Person = struct(
 > user
 Describe each person in this picture.
 
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 
@@ -24,7 +25,7 @@ Describe each person in this picture.
 > call queryImage(
     "query": "Describe the clothing, specifically the pants and shirt, for each person in this picture, including the colors and types of these items.",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

@@ -47,6 +47,8 @@ export class ConvoExecutionContext
 
     public print:ConvoPrintFunction=defaultConvoPrintFunction;
 
+    public dynamicFunctionCallback:ConvoScopeFunction|undefined;
+
     public constructor(convo?:Partial<ConvoGlobal>)
     {
         this.convo={
@@ -405,7 +407,7 @@ export class ConvoExecutionContext
             const fn=scope[convoScopeFnKey]??(scope[convoScopeFnKey]=statement.fnPath?
                 getValueByAryPath(this.sharedVars,statement.fnPath)?.[statement.fn]:
                 this.sharedVars[statement.fn]
-            );
+            )??this.dynamicFunctionCallback??this.convo.conversation?.dynamicFunctionCallback;
             if(typeof fn !== 'function'){
                 const errPath=statement.fnPath?statement.fnPath.join('.')+'.'+statement.fn:statement.fn;
                 setConvoScopeError(scope,`${errPath} is not a function`);

@@ -1,10 +1,11 @@
+@enableVision
 @json
 > user
 Describe each person in this picture.
 
 Return a json array
 
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 
@@ -13,7 +14,7 @@ Return a json array
 > call queryImage(
     "query": "Describe each person in the picture.",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

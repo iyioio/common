@@ -1,3 +1,4 @@
+@enableVision
 > define
 __trackTime=true
 __trackTokenUsage=true

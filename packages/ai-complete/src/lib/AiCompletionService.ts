@@ -1,4 +1,4 @@
-import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
+import { ProviderTypeDef, Scope, TypeDef, UnauthorizedError, aryUnique, shortUuid, zodTypeToJsonScheme } from "@iyio/common";
 import { ConvoCompletionMessage, ConvoCompletionService, FlatConvoConversation } from '@iyio/convo-lang';
 import { ZodType, ZodTypeAny, z } from "zod";
 import { AiCompletionProviders, aiCompletionMaxAudioLengthParam, aiCompletionMaxImageLengthParam, aiCompletionMaxTextLengthParam } from "./_type.ai-complete";
@@ -432,6 +432,6 @@ const checkModelAccess=(model:string,provider:AiCompletionProvider,options:Compl
     const expanded=expandModels(options?.allowedModels,allowed);
 
     if(!allowed.includes(model) || !expanded.includes(model)){
-        throw new UnauthorizedError(`User does not have access to model (${model}). Allowed Models = ${[...allowed,...expanded].join(', ')}`);
+        throw new UnauthorizedError(`User does not have access to model (${model}). Allowed Models = ${aryUnique([...allowed,...expanded]).join(', ')}`);
     }
 }

@@ -112,3 +112,28 @@ export const readFileAsJsonAsync=async <T>(
     const json=await readFileAsStringAsync(path,options);
     return JSON.parse(json);
 }
+
+export const readStdInAsStringAsync=():Promise<string>=>{
+    return new Promise<string>((r)=>{
+        const chucks:string[]=[];
+        const onData=(data:any)=>{
+            if(typeof data === 'string'){
+                chucks.push(data);
+            }else{
+                try{
+                    chucks.push(data?.toString()??'');
+                }catch{
+                    //
+                }
+            }
+        }
+        const onEnd=()=>{
+            process.stdin.removeListener('data',onData);
+            process.stdin.removeListener('end',onEnd);
+            r(chucks.join(''));
+        }
+
+        process.stdin.addListener('data',onData);
+        process.stdin.addListener('end',onEnd);
+    });
+}

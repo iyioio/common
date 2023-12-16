@@ -50,3 +50,6 @@ Thumbs.db
 
 # Next.js
 .next
+
+# Python
+__pycache__

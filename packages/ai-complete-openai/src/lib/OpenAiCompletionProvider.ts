@@ -35,10 +35,10 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             apiBaseUrl:scope.to(openAiBaseUrlParam).get(),
             secretManager:scope.to(secretManager).get(),
             secretsName:scope.to(openAiSecretsParam).get(),
-            chatModels:scope.to(openAiChatModelParam).get()?.split(',').map(m=>m.trim()),
-            audioModels:scope.to(openAiAudioModelParam).get()?.split(',').map(m=>m.trim()),
-            imageModels:scope.to(openAiImageModelParam).get()?.split(',').map(m=>m.trim()),
-            visionModels:scope.to(openAiVisionModelParam).get()?.split(',').map(m=>m.trim()),
+            chatModels:scope.to(openAiChatModelParam).get()?.split(',').map(m=>m.trim()).filter(m=>m),
+            audioModels:scope.to(openAiAudioModelParam).get()?.split(',').map(m=>m.trim()).filter(m=>m),
+            imageModels:scope.to(openAiImageModelParam).get()?.split(',').map(m=>m.trim()).filter(m=>m),
+            visionModels:scope.to(openAiVisionModelParam).get()?.split(',').map(m=>m.trim()).filter(m=>m),
         })
     }
 
@@ -95,7 +95,11 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 apiKey=key;
             }
             if(!apiKey){
-                throw new Error('Unable to get OpenAi apiKey');
+                if(this._apiBaseUrl){
+                    apiKey=this._apiBaseUrl;
+                }else{
+                    throw new Error('Unable to get OpenAi apiKey');
+                }
             }
             return new OpenAIApi({
                 apiKey,

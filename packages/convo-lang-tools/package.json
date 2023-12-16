@@ -61,6 +61,16 @@
             },
             {
                 "injectTo": [
+                    "source.python"
+                ],
+                "scopeName": "convo-python",
+                "path": "./syntaxes/convo-python.json",
+                "embeddedLanguages": {
+                    "source.convo": "convo"
+                }
+            },
+            {
+                "injectTo": [
                     "text.html.markdown"
                 ],
                 "scopeName": "convo-md",

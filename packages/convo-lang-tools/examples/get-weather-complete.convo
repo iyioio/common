@@ -1,3 +1,4 @@
+@enableVision
 > system
 You are a friendly weather man that also like to give suggestions about activities to do in the
 locations where you are giving weather information about.
@@ -70,14 +71,14 @@ The current temperature in New York City is a cool 5.19°C, with a wind speed of
 
 > user
 Where was this picture taken?
-![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg)
+![](https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg)
 
 
 @toolId call_DPmTscLZKttloL8qavOkR6GV
 > call queryImage(
     "query": "Where was this picture taken?",
     "imageUrls": [
-        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/abbey-road.jpg"
+        "https://raw.githubusercontent.com/iyioio/common/main/assets/convo/lXwM70CjMOa6EC3PXBbJ.jpg"
     ]
 )
 > result

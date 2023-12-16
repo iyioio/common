@@ -1,4 +1,3 @@
-import { ConvoCapability } from "@iyio/convo-lang";
 
 export type ConvoExecAllowMode='disable'|'ask'|'allow'
 
@@ -16,9 +15,16 @@ export interface ConvoCliConfig
     overrideEnv?:boolean;
 
     /**
-     * @default ["vision"]
+     * @default "vision"
      */
-    capabilities?:ConvoCapability[];
+    capabilities?:string;
+    apiKey?:string;
+    apiBaseUrl?:string;
+    chatModel?:string;
+    audioModel?:string;
+    imageModel?:string;
+    visionModel?:string;
+    secrets?:string;
 }
 
 export interface ConvoCliOptions
@@ -29,14 +35,51 @@ export interface ConvoCliOptions
     config?:string;
 
     /**
+     * Inline configuration as json
+     */
+    inlineConfig?:string;
+
+    /**
      * Path to a source convo file
      */
     source?:string;
 
     /**
+     * If true the source will be read from stdin
+     */
+    stdin?:boolean;
+
+    /**
      * Inline convo code
      */
     inline?:string;
+
+    /**
+     * If true the CLI will operate in command mode which will allow function calling to be passed
+     * though stdin and stdout
+     */
+    cmdMode?:boolean;
+
+    /**
+     * If true each line of output will be prefixed with characters to indicating what the output
+     * is related to.
+     */
+    prefixOutput?:boolean;
+
+    /**
+     * If true the shared variable state will be printed
+     */
+    printState?:boolean;
+
+    /**
+     * If true the flattened messages will be printed
+     */
+    printFlat?:boolean;
+
+    /**
+     * If true the messages will be printed
+     */
+    printMessages?:boolean;
 
     /**
      * If true the give convo code will be parsed and output as JSON instead of executing the
