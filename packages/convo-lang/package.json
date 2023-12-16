@@ -4,6 +4,7 @@
     "type": "commonjs",
     "sideEffects": false,
     "license": "Apache-2.0",
+    "keywords": ["prompt", "prompt-engineering", "open-ai", "ai", "convo-lang"],
     "repository": {
         "type": "git",
         "url": "https://github.com/iyioio/common.git",

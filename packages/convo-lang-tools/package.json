@@ -7,6 +7,7 @@
     "sideEffects": false,
     "publisher": "IYIO",
     "icon": "assets/convo.png",
+    "keywords": ["prompt", "prompt-engineering", "open-ai", "ai", "convo-lang"],
     "engines": {
         "vscode": "^1.75.0"
     },
