@@ -1,6 +1,6 @@
 {
     "name": "@iyio/ai-complete-openai-cdk",
-    "version": "0.5.4",
+    "version": "0.5.10",
     "type": "commonjs",
     "sideEffects": false
 }

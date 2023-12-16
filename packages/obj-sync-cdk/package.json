@@ -1,6 +1,6 @@
 {
     "name": "@iyio/obj-sync-cdk",
-    "version": "0.5.3",
+    "version": "0.5.10",
     "type": "commonjs",
     "sideEffects": false
 }
