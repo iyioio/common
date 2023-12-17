@@ -72,6 +72,9 @@ export const protoGetFullNodeTsComment=(node:ProtoNode,tab:string):string=>{
     if(node.children){
         for(const c in node.children){
             const child=node.children[c];
+            if(!child){
+                continue;
+            }
             comment=child?.comment?.trim();
             if(comment && !child.special && !child.isContent){
                 out.push(`${tab} * `);
@@ -99,6 +102,9 @@ export const protoGetFullNodeComment=(node:ProtoNode,tab:string):string=>{
     if(node.children){
         for(const c in node.children){
             const child=node.children[c];
+            if(!child){
+                continue;
+            }
             comment=child?.comment?.trim();
             if(comment && !child.special && !child.isContent){
                 out.push('');

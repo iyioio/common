@@ -9,6 +9,9 @@ export const secretCdkTemplate=(constructName:string,infos:SecretInfoTemplate[],
     const imports:string[]=[];
     for(let i=0;i<infos.length;i++){
         const t=infos[i];
+        if(!t){
+            continue;
+        }
         imports.push(`import { ${t.arnParam} as _param${i}} from '${importMap[t.arnParam]}';`);
     }
 

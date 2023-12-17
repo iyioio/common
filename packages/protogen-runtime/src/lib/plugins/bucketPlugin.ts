@@ -94,7 +94,5 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                 }),importMap)
             })
         }
-
-        // todo - write a client file that can be used with iyio/auth and currentBaseUser -> currentUser
     }
 }

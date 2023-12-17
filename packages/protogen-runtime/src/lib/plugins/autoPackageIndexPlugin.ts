@@ -41,6 +41,9 @@ export const autoPackageIndexPlugin:ProtoPipelineConfigurablePlugin<typeof AutoP
 
         for(const packageName in packagePaths){
             const ary=packagePaths[packageName];
+            if(!ary){
+                continue;
+            }
 
             for(const path of ary){
 

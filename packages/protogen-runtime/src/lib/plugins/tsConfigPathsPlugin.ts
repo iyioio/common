@@ -44,6 +44,9 @@ export const tsConfigPlugin:ProtoPipelineConfigurablePlugin<typeof TsConfigPlugi
         let added=false;
         for(const pkg in packagePaths){
             const paths=packagePaths[pkg];
+            if(!paths){
+                continue;
+            }
             for(const path of paths){
                 added=true;
                 log(`${pkg} > ${path}`);

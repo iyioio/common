@@ -221,6 +221,9 @@ export const generateProtoTable=async ({
             out.push(`${tab}indexes:[`)
             for(let i=0;i<indexes.length;i++){
                 const index=indexes[i];
+                if(!index){
+                    continue;
+                }
                 const indexName=index.value||'index'+i;
                 indexOut.push(`${tab}${JSON.stringify(indexName)}:${name}Table.indexes?.[${i}] as DataTableIndex,`)
                 out.push(`${tab}${tab}{`);

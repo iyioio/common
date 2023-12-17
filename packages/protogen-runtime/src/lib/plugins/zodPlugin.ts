@@ -257,6 +257,9 @@ const addEnum=(node:ProtoNode,schemeOut:string[],typeOut:string[],tab:string,get
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
+            if(!child){
+                continue;
+            }
             if(!child.isContent && !child.special){
                 typeOut.push(`${tab}${child.name}${child.type?'='+child.type:''},`);
             }
@@ -292,6 +295,9 @@ const addUnion=(node:ProtoNode,schemeOut:string[],typeOut:string[],tab:string,ge
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
+            if(!child){
+                continue;
+            }
             if(!child.isContent && !child.special){
                 typeOut.push(`${tab}${JSON.stringify(child.name)},`);
                 schemeOut.push(`${tab}${JSON.stringify(child.name)},`);
@@ -341,7 +347,7 @@ const addAlias=(node:ProtoNode,out:string[],tab:string)=>{
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
-            if(child.isContent || child.special){
+            if(!child || child.isContent || child.special){
                 continue;
             }
 
@@ -397,7 +403,7 @@ const addArray=(node:ProtoNode,out:string[],tab:string)=>{
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
-            if(child.isContent || child.special){
+            if(!child || child.isContent || child.special){
                 continue;
             }
             out.push(`${tab}${JSON.stringify(child.name)},`);
@@ -422,7 +428,7 @@ const addMap=(node:ProtoNode,out:string[],tab:string)=>{
     if(node.children){
         for(const name in node.children){
             const child=node.children[name];
-            if(child.isContent || child.special){
+            if(!child || child.isContent || child.special){
                 continue;
             }
             out.push(`${tab}${JSON.stringify(child.name)}:${JSON.stringify(child.value||child.name)},`);

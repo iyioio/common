@@ -9,6 +9,9 @@ export const sqlMigrationCdkTemplate=(constructName:string,tables:TableNameParam
     const imports:string[]=[];
     for(let i=0;i<tables.length;i++){
         const t=tables[i];
+        if(!t){
+            continue;
+        }
         imports.push(`import { ${t.name} as _table${i}} from '${importMap[t.name]}';`);
     }
 

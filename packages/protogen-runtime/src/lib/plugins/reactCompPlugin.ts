@@ -130,7 +130,7 @@ const generateComponentAsync=async (node:ProtoNode,{
         out.push('{')
         for(const name in props){
             const p=props[name];
-            if(p.special || p.isContent){
+            if(!p || p.special || p.isContent){
                 continue;
             }
             const type=protoGetTsType(p.type);
@@ -157,7 +157,7 @@ const generateComponentAsync=async (node:ProtoNode,{
     if(props){
         for(const name in props){
             const p=props[name];
-            if(p.special || p.isContent){
+            if(!p || p.special || p.isContent){
                 continue;
             }
             const defaultValue=p.children?.['default']?.value;

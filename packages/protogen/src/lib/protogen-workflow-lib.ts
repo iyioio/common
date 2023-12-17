@@ -16,6 +16,9 @@ export const parseProtoAction=(node:ProtoNode):ProtoAction=>{
     if(workerNodes){
         for(const e in workerNodes){
             const worker=workerNodes[e];
+            if(!worker){
+                continue;
+            }
             const address=worker.types[0]?.path
             if(address){
                 workerAddresses[worker.name]=address.join('.');

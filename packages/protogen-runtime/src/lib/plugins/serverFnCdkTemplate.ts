@@ -10,6 +10,9 @@ export const serverFnCdkTemplate=(constructName:string,infos:FnInfoTemplate[],im
     const imports:string[]=[];
     for(let i=0;i<infos.length;i++){
         const t=infos[i];
+        if(!t){
+            continue;
+        }
         imports.push(`import { ${t.arnParam} as _fnParam${i}} from '${importMap[t.arnParam]}';`);
         if(t.urlParam){
             imports.push(`import { ${t.urlParam} as _fnUrlParam${i}} from '${importMap[t.urlParam]}';`);

@@ -75,6 +75,9 @@ export const paramPlugin:ProtoPipelineConfigurablePlugin<typeof ParamPluginConfi
         const types:ProtoParamType[]=[];
         for(const paramName in paramMap){
             const paramType=paramMap[paramName];
+            if(!paramType){
+                continue;
+            }
             if(!types.includes(paramType)){
                 types.push(paramType);
             }

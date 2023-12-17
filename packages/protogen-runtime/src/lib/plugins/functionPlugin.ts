@@ -111,7 +111,9 @@ export const functionPlugin:ProtoPipelineConfigurablePlugin<typeof FunctionPlugi
                 out.push(`export const ${name}=${isAsync?'async ':''}(`);
                 for(let a=0;a<args.length;a++){
                     const arg=args[a];
-                    out.push(`${tab}${arg.name}${arg.optional?'?':''}:${arg.type}${arg.types?.[0]?.isArray?'[]':''}${a===args.length-1?'':','}`)
+                    if(arg){
+                        out.push(`${tab}${arg.name}${arg.optional?'?':''}:${arg.type}${arg.types?.[0]?.isArray?'[]':''}${a===args.length-1?'':','}`)
+                    }
                 }
                 out.push(`):${returnType}=>{`);
             }

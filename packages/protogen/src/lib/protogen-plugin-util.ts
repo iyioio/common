@@ -177,6 +177,9 @@ export const protoNodeChildrenToGrantAccessRequests=(parentName:string,node:Prot
 
     for(const c in node.children){
         const child=node.children[c];
+        if(!child){
+            continue;
+        }
         const types=child.name.split('-') as CommonAccessType[];
         for(const type of child.types){
             const all=type.type==='all';

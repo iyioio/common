@@ -12,6 +12,9 @@ export const bucketCdkTemplate=(constructName:string,buckets:BucketInfoTemplate[
 
     for(let i=0;i<buckets.length;i++){
         const b=buckets[i];
+        if(!b){
+            continue;
+        }
         if(b.arnParam){
             imports.push(`import { ${b.arnParam} as _param${i}} from '${importMap[b.arnParam]}';`);
         }

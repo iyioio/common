@@ -199,7 +199,7 @@ export default {
 
     return Object.keys(outputs).map<ProtoOutput>(name=>({
         path:joinPaths(path,name),
-        content:outputs[name],
+        content:outputs[name]??'',
         overwrite:false,
     }));
 

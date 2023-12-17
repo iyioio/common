@@ -80,6 +80,9 @@ export const runProtogenCliAsync=async ({
         for(const p of plugins){
 
             const [source,_name,...paths]=p.split(':');
+            if(source===undefined){
+                continue;
+            }
             const name=_name||'default';
 
             log(`Load plugin ${name} from ${source}`);
@@ -125,6 +128,9 @@ export const runProtogenCliAsync=async ({
         if(config.disablePlugins){
             for(let i=0;i<pipeline.plugins.length;i++){
                 const p=pipeline.plugins[i];
+                if(!p){
+                    continue;
+                }
                 if(config.disablePlugins.includes(p.name)){
                     log(`disabling plugin ${p.name}`);
                     pipeline.plugins.splice(i,1);
