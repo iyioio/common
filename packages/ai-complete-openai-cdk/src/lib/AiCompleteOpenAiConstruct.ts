@@ -1,6 +1,6 @@
 import { aiCompletionFnArnParam } from '@iyio/ai-complete';
 import { openAiSecretsParam } from '@iyio/ai-complete-openai';
-import { FnsBuilder, ManagedProps, NodeFn, NodeFnProps } from '@iyio/cdk-common';
+import { FnsBuilder, ManagedProps, NodeFn, NodeFnProps, getDefaultManagedProps } from '@iyio/cdk-common';
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
@@ -20,7 +20,7 @@ export class AiCompleteOpenAiConstruct extends Construct
     public readonly fnBuilder:FnsBuilder;
 
     public constructor(scope:Construct,id:string,{
-        managed={},
+        managed=getDefaultManagedProps(),
         defaultFnProps,
         fnName="OpenAiCompletionFn",
         grantAccess

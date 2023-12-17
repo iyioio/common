@@ -2,7 +2,7 @@ import { ParamTypeDef } from "@iyio/common";
 import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
 import { AccessGranter, AccessRequest, AccessRequestDescription, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget, SiteContentSourceDescription } from "./cdk-types";
 
@@ -53,7 +53,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             accessManager,
             siteContentSources,
             fns:managedFns
-        }={},
+        }=getDefaultManagedProps(),
     }:FnsBuilderProps){
 
         super(scope,name);

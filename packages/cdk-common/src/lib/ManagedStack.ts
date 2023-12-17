@@ -4,7 +4,7 @@ import { Construct } from 'constructs';
 import { AccessManager } from "./AccessManager";
 import { ManagedProps } from './ManagedProps';
 import { ParamOutput } from "./ParamOutput";
-import { NamedBucket, NamedFn, SiteContentSource } from './cdk-types';
+import { NamedBucket, NamedFn, NamedQueue, SiteContentSource } from './cdk-types';
 
 export class ManagedStack extends cdk.Stack
 {
@@ -18,6 +18,10 @@ export class ManagedStack extends cdk.Stack
     protected readonly fns:NamedFn[]=[];
 
     protected readonly buckets:NamedBucket[]=[];
+
+    protected readonly queues:NamedQueue[]=[];
+
+    protected readonly beforeOutputs:((managed:ManagedProps)=>void)[]=[];
 
     public readonly managed:ManagedProps;
 
@@ -35,11 +39,16 @@ export class ManagedStack extends cdk.Stack
             siteContentSources:this.siteContentSources,
             fns:this.fns,
             buckets:this.buckets,
+            queues:this.queues,
+            beforeOutputs:this.beforeOutputs,
         };
     }
 
     protected generateOutputs()
     {
+        for(const b of this.beforeOutputs){
+            b(this.managed);
+        }
         this.params.generateOutputs(this);
     }
 }

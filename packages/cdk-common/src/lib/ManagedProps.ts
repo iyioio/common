@@ -1,6 +1,6 @@
-import type { AccessManager } from "./AccessManager";
-import type { ParamOutput } from "./ParamOutput";
-import { NamedBucket, NamedFn, SiteContentSource } from "./cdk-types";
+import { AccessManager } from "./AccessManager";
+import { ParamOutput } from "./ParamOutput";
+import { NamedBucket, NamedFn, NamedQueue, SiteContentSource } from "./cdk-types";
 
 export interface ManagedProps
 {
@@ -8,11 +8,23 @@ export interface ManagedProps
 
     readonly accessManager?:AccessManager;
 
-    readonly siteContentSources?:SiteContentSource[];
+    readonly siteContentSources:SiteContentSource[];
 
-    readonly fns?:NamedFn[];
+    readonly fns:NamedFn[];
 
-    readonly buckets?:NamedBucket[];
+    readonly buckets:NamedBucket[];
+
+    readonly queues:NamedQueue[];
+
+    readonly beforeOutputs:((managed:ManagedProps)=>void)[]
 
 
 }
+
+export const getDefaultManagedProps=():ManagedProps=>({
+    siteContentSources:[],
+    fns:[],
+    buckets:[],
+    queues:[],
+    beforeOutputs:[],
+})

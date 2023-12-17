@@ -5,7 +5,7 @@ import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
 import { grantTableQueryPerms, grantTableScanPerms } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
-import { ManagedProps } from "./ManagedProps";
+import { getDefaultManagedProps, ManagedProps } from "./ManagedProps";
 
 export interface TableBuilderProps
 {
@@ -37,7 +37,7 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
-        }={},
+        }=getDefaultManagedProps(),
     }:TableBuilderProps)
     {
 

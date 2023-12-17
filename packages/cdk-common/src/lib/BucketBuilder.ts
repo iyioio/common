@@ -5,7 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { createBucket } from "./createBucket";
 
@@ -63,7 +63,7 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
             params,
             accessManager,
             buckets:namedBuckets
-        }={},
+        }=getDefaultManagedProps(),
     }:BucketBuilderProps)
     {
 

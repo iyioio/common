@@ -4,7 +4,7 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
-import { ManagedProps } from './ManagedProps';
+import { ManagedProps, getDefaultManagedProps } from './ManagedProps';
 import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
 
 export type TriggerMap={
@@ -35,7 +35,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             params,
             accessManager,
             fns,
-        }={},
+        }=getDefaultManagedProps(),
         triggers,
         authorizedAccessRequests,
         unauthorizedAccessRequests,

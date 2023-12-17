@@ -1,4 +1,4 @@
-import { ManagedProps, NodeFn, NodeFnProps, TableBuilder, WebsocketApi, WebsocketApiProps, grantTableQueryPerms } from '@iyio/cdk-common';
+import { ManagedProps, NodeFn, NodeFnProps, TableBuilder, WebsocketApi, WebsocketApiProps, getDefaultManagedProps, grantTableQueryPerms } from '@iyio/cdk-common';
 import { ObjSyncConnectionTable, ObjSyncObjStateTable, objSyncClientConnectionTableParam, objSyncCreateDefaultStateFnArnParam, objSyncEndpointParam, objSyncObjStateTableParam, objSyncTransformClientConnectionFnArnParam } from '@iyio/obj-sync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -25,7 +25,7 @@ export class ObjSyncConstruct extends Construct
     public readonly handlerFn:NodeFn;
 
     public constructor(scope:Construct,id:string,{
-        managed={},
+        managed=getDefaultManagedProps(),
         defaultFnProps,
         webApiProps,
         createDefaultStateFn,

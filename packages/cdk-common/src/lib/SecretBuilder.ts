@@ -1,7 +1,7 @@
 import { ParamTypeDef } from "@iyio/common";
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 
 export interface SecretBuilderProps
@@ -34,7 +34,7 @@ export class SecretBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
-        }={},
+        }=getDefaultManagedProps(),
     }:SecretBuilderProps)
     {
 

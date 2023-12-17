@@ -8,7 +8,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { ParamOutput } from "./ParamOutput";
 import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
 import { BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types";
@@ -56,7 +56,7 @@ export class StaticWebSite extends Construct {
         additionalSources=[],
         bucketSources=[],
         redirectHandler,
-    }:StaticWebSiteProps,managed:ManagedProps={}){
+    }:StaticWebSiteProps,managed:ManagedProps=getDefaultManagedProps()){
 
         super(scope, name);
 

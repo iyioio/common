@@ -3,6 +3,7 @@ import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import { ParamOutput } from "./ParamOutput";
 
@@ -162,4 +163,10 @@ export interface NamedBucket
     name:string;
     bucket:s3.Bucket;
     public:boolean;
+}
+
+export interface NamedQueue
+{
+    name:string;
+    queue:sqs.Queue;
 }

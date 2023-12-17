@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { StaticWebSite, StaticWebSiteProps } from "./StaticWebSite";
 
 export interface SiteBuilderProps
@@ -28,7 +28,7 @@ export class SiteBuilder extends Construct
 
     public constructor(scope:Construct, name:string, {
         sites,
-        managed={},
+        managed=getDefaultManagedProps(),
     }:SiteBuilderProps)
     {
 

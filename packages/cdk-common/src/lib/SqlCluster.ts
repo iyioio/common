@@ -4,7 +4,7 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from "aws-cdk-lib/aws-rds";
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { SqlDbMigrator, SqlDbMigratorOptions } from "./SqlDbMigrator";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 
@@ -39,7 +39,7 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
         managed:{
             params,
             accessManager,
-        }={}
+        }=getDefaultManagedProps()
     }:SqlClusterOptions){
 
         super(scope,id);
