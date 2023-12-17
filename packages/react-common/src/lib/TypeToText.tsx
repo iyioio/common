@@ -80,7 +80,7 @@ export function TypeToText({
                     return;
                 }
                 const char=ary[i];
-                if(long.includes(char)){
+                if(char && long.includes(char)){
                     if(longI===0){
                         txt+=char;
                         elem.innerText=txt+cursor;

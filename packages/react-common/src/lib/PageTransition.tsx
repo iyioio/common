@@ -50,7 +50,10 @@ export function PageTransition({
             };
         }
     }
-    childCache.current[pathKey].children=children;
+    const cachedCurrent=childCache.current[pathKey]
+    if(cachedCurrent){
+        cachedCurrent.children=children;
+    }
 
     const dur=useRef(duration);
     dur.current=duration;
@@ -85,7 +88,7 @@ export function PageTransition({
 
 interface ChildViewProps
 {
-    child:ChildRef;
+    child:ChildRef|undefined;
 }
 
 function ChildView({
@@ -93,8 +96,8 @@ function ChildView({
 }:ChildViewProps){
 
     return (
-        <RouteCtx.Provider value={child.routeInfo}>
-            {child.children}
+        <RouteCtx.Provider value={child?.routeInfo??null}>
+            {child?.children}
         </RouteCtx.Provider>
     )
 

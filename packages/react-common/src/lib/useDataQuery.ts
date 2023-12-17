@@ -40,8 +40,8 @@ export const useDataQuery=(
     const ctrl=useMemo(()=>enabled?queryCtrlFactory():null,[enabled]);
     const data=useSubject(ctrl?.data);
 
-    const vc=valueColumn??query?.columns?.[0].name;
-    const lc=labelColumn??query?.columns?.[1].name;
+    const vc=valueColumn??query?.columns?.[0]?.name;
+    const lc=labelColumn??query?.columns?.[1]?.name;
 
     const lastStateRef=useRef<QueryState|null>(null);
 

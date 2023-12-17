@@ -48,7 +48,10 @@ export const useDragDropFiles=(active=true,target?:HTMLElement|Window|null|'wind
             const files:File[]=[];
             if(fileList){
                 for(let i=0;i<fileList.length;i++){
-                    files.push(fileList[i])
+                    const file=fileList[i];
+                    if(file){
+                        files.push(file);
+                    }
                 }
             }
             setFiles(files);

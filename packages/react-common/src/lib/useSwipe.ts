@@ -26,12 +26,12 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
 
         const touchDown=(e:TouchEvent)=>{
             useTouch=true;
-            down({x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY})
+            down({x:e.changedTouches[0]?.clientX??0,y:e.changedTouches[0]?.clientY??0})
         }
 
         const touchUp=(e:TouchEvent)=>{
             useTouch=true;
-            up({x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY},e)
+            up({x:e.changedTouches[0]?.clientX??0,y:e.changedTouches[0]?.clientY??0},e)
         }
 
         const mouseDown=(e:MouseEvent)=>{
