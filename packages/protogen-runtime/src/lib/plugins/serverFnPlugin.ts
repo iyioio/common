@@ -167,6 +167,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
 
             const inputNode=node.children?.['input'];
             const outputNode=node.children?.['output'];
+            const allowParallelInvoke=node.children?.['allowParallelInvoke']?true:false;
             const inputTypeInfo=inputNode?.types[0];
             const outputTypeInfo=outputNode?.types[0];
             const inputIsArray=inputTypeInfo?.isArray??false;
@@ -332,6 +333,9 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             if(outputPackage){
                 imports.push(outputType+'Scheme');
                 out.push(`${tab}outputScheme:${outputScheme},`)
+            }
+            if(allowParallelInvoke){
+                out.push(`${tab}allowParallelInvoke:true,`)
             }
             out.push('});');
             protoLabelOutputLines(out,'handlerExport',startI);
