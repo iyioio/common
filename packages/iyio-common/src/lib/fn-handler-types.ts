@@ -29,6 +29,8 @@ export interface FnBaseHandlerOptions
     inputProp?:string;
     inputParseProp?:string;
     httpLike?:boolean;
+    allowParallelInvoke?:boolean;
+    inputOverride?:any;
 }
 
 export interface FnHandlerOptions extends FnBaseHandlerOptions

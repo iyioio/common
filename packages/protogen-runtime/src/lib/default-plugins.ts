@@ -13,6 +13,7 @@ import { nextJsAppPlugin } from "./plugins/nextJsAppPlugin";
 import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin";
 import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
+import { queuePlugin } from "./plugins/queuePlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
 import { secretPlugin } from "./plugins/secretPlugin";
 import { serverFnPlugin } from "./plugins/serverFnPlugin";
@@ -126,6 +127,12 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:bucketPlugin
+        },
+        {
+            name:'queuePlugin',
+            source:'@',
+            paths:[],
+            plugin:queuePlugin
         },
         {
             name:'sqlClusterPlugin',

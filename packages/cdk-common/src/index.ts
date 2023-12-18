@@ -5,6 +5,7 @@ export * from './lib/ManagedProps';
 export * from './lib/ManagedStack';
 export * from './lib/NodeFn';
 export * from './lib/ParamOutput';
+export * from './lib/QueueBuilder';
 export * from './lib/RedirectApi';
 export * from './lib/SecretBuilder';
 export * from './lib/SiteBuilder';

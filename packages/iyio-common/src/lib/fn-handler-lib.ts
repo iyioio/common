@@ -6,25 +6,82 @@ import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
 import { getObjKeyCount, queryParamsToObject } from './object';
-import { zodCoerceObject } from './zod-helpers';
+import { isZodArray, zodCoerceObject } from './zod-helpers';
 
-export const fnHandler=async ({
-    evt,
-    context,
-    handler,
-    logRequest,
-    returnsHttpResponse,
-    inputScheme,
-    outputScheme,
-    httpLike,
-    defaultHttpMethod=httpLike?'POST':undefined,
-    defaultHttpPath=httpLike?'/':undefined,
-    defaultQueryString,
-    inputProp,
-    inputParseProp=httpLike?'body':undefined,
-}:FnHandlerOptions)=>{
+export const fnHandler=async (options:FnHandlerOptions)=>{
+
+    const {
+        evt,
+        context,
+        handler,
+        logRequest,
+        returnsHttpResponse,
+        inputScheme,
+        outputScheme,
+        httpLike,
+        defaultHttpMethod=httpLike?'POST':undefined,
+        defaultHttpPath=httpLike?'/':undefined,
+        defaultQueryString,
+        inputProp,
+        inputParseProp=httpLike?'body':undefined,
+        allowParallelInvoke,
+    }=options;
+
+    let {
+        inputOverride
+    }=options;
+
     if(logRequest){
         console.info('serverlessHandler',evt);
+    }
+
+    const eventRecords:any[]|undefined=(
+        evt.Records &&
+        Array.isArray(evt.Records) &&
+        (inputProp?evt[inputProp]===undefined:true) &&
+        (inputParseProp?evt[inputParseProp]===undefined:true)?
+        evt.Records:undefined
+    );
+
+
+    if(eventRecords){
+
+        if(inputScheme && !isZodArray(inputScheme)){
+            if(allowParallelInvoke){
+                await Promise.all(eventRecords.map(e=>fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'})))
+            }else{
+                for(const e of eventRecords){
+                    await fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'});
+                }
+            }
+            return undefined;
+        }
+
+        if(inputOverride===undefined){
+            inputOverride=eventRecords.map(v=>{
+                let input=inputProp?v[inputProp]:undefined;
+                if(input!==undefined){
+                    return input;
+                }
+
+                input=inputParseProp?v[inputParseProp]:undefined;
+                if(input!==undefined){
+                    return (typeof input === 'string')?
+                        JSON.parse(input):
+                        input;
+                }
+
+                input=v.body??v.Body;
+                if(typeof input === 'string'){
+                    try{
+                        return JSON.parse(input)
+                    }catch{
+                        return input;
+                    }
+                }
+                return input;
+            });
+        }
     }
 
     const fnInvokeEvent=isFnInvokeEvent(evt)?evt:undefined;
@@ -61,7 +118,9 @@ export const fnHandler=async ({
     const responseDefaults={cors};
 
     let input=(
-        inputProp?
+        inputOverride!==undefined?
+            inputOverride
+        :inputProp?
             evt[inputProp]
         :inputParseProp?
             (typeof evt[inputParseProp]==='string')?JSON.parse(evt[inputParseProp]):undefined

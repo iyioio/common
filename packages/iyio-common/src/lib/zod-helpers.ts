@@ -1,4 +1,4 @@
-import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion } from "zod";
+import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion } from "zod";
 import { JsonScheme } from "./json-scheme";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
@@ -9,6 +9,31 @@ export const getZodErrorMessage=(zodError:ZodError):string=>{
 export const zodTypeToPrimitiveType=(type:ZodTypeAny):TsPrimitiveType|undefined=>{
 
     return _zodTypeToPrimitiveType(type,10);
+}
+
+export const isZodArray=(type:ZodTypeAny):boolean=>{
+    return unwrapZodType(type) instanceof ZodArray;
+}
+
+export const unwrapZodType=(type:ZodTypeAny,maxUnwrap=20):ZodTypeAny=>{
+    for(let i=0;i<maxUnwrap;i++){
+        let updated=false;
+
+        if(type instanceof ZodOptional){
+            type=type.unwrap();
+            updated=true;
+        }
+
+        if(type instanceof ZodNullable){
+            type=type.unwrap();
+            updated=true;
+        }
+
+        if(!updated){
+            break;
+        }
+    }
+    return type;
 }
 
 const _zodTypeToPrimitiveType=(type:ZodTypeAny,depth:number):TsPrimitiveType|undefined=>{
