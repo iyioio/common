@@ -1,6 +1,7 @@
 import { DeleteMessageBatchCommand, DeleteMessageCommand, ReceiveMessageCommand, SQSClient, SQSClientConfig, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
 import { AuthDependentClient, IQueueClient, QueueMessage, QueueMessageCollection, QueuePullRequest, QueuePushRequest, QueuePushResult, Scope, ValueCache, authService } from "@iyio/common";
+import { getSqsUrl } from "./sqs-lib";
 
 export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQueueClient
 {
@@ -32,8 +33,12 @@ export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQ
 
     public async pushAsync(request:QueuePushRequest):Promise<QueuePushResult|null>
     {
+        const url=getSqsUrl(request.queueName);
+        if(!url){
+            return null;
+        }
         const r=await this.getClient().send(new SendMessageCommand({
-            QueueUrl:request.queueName,
+            QueueUrl:url,
             MessageBody:JSON.stringify(request.value)
         }));
 
@@ -48,10 +53,14 @@ export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQ
         autoDelete,
         timeoutSeconds=20,
         hideSeconds=20,
-    }:QueuePullRequest):Promise<QueueMessageCollection>
+    }:QueuePullRequest):Promise<QueueMessageCollection|null>
     {
+        const url=getSqsUrl(queueName);
+        if(!url){
+            return null;
+        }
         const r=await this.getClient().send(new ReceiveMessageCommand({
-            QueueUrl:queueName,
+            QueueUrl:url,
             MaxNumberOfMessages:maxValueCount,
             WaitTimeSeconds:timeoutSeconds,
             VisibilityTimeout:hideSeconds
@@ -72,7 +81,7 @@ export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQ
         const deleteMessageAsync=async (message:QueueMessage):Promise<void>=>{
             try{
                 await this.getClient().send(new DeleteMessageCommand({
-                    QueueUrl:queueName,
+                    QueueUrl:url,
                     ReceiptHandle:message.handle,
                 }));
             }catch(ex){
@@ -85,7 +94,7 @@ export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQ
             }
             try{
                 await this.getClient().send(new DeleteMessageBatchCommand({
-                    QueueUrl:queueName,
+                    QueueUrl:url,
                     Entries:r.Messages.map((message)=>({
                         Id:message.MessageId,
                         ReceiptHandle:message.ReceiptHandle,
