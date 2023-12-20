@@ -665,7 +665,7 @@ const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>
 
     let noAutoLength=attChildren['email']?true:false;
 
-    if(propType==='string' && !attChildren['email'] && /(^e|E)mail($|[A-Z\d_])/.test(prop.name)){
+    if(propType==='string' && !attChildren['email'] && (prop.name==='email' || prop.name.endsWith('Email'))){
         call+='.email()';
         noAutoLength=true;
     }
