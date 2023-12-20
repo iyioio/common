@@ -170,6 +170,20 @@ export const deleteUndefined=<T>(obj:T):T=>
     return obj;
 }
 
+export const deleteUndefinedOrNull=<T>(obj:T):T=>
+{
+    if(!obj){
+        return obj;
+    }
+    for(const e in obj){
+        const v=obj[e];
+        if(v===undefined || v===null){
+            delete obj[e];
+        }
+    }
+    return obj;
+}
+
 /**
  * Deletes all properties of an object
  */
