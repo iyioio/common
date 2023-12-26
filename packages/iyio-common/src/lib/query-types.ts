@@ -349,3 +349,25 @@ export interface IQueryClient
     selectQueryItemsAsync<T=any>(query:Query):Promise<T[]>;
 }
 
+/**
+* The function and selected column to run the function on.
+* Omitting this will default to counting the query
+*/
+export interface funcColumn
+{
+    /**
+     * A predefined function to use as a value
+     */
+    func:QueryFunction;
+
+    /**
+     * the (as) part of a column select - select tableB.price as {name}
+     */
+    name:string;
+
+    /**
+     * The column to run the function on
+     */
+    col:string;
+}
+

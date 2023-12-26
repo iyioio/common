@@ -2,11 +2,12 @@ import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { asArray } from "./array";
 import { HashMap } from "./common-types";
 import { deepClone } from "./object";
-import { NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types";
+import { NamedQueryValue, Query, QueryCondition, QueryGroupCondition, funcColumn } from "./query-types";
 import { getSeriesIntervalCtrl } from "./series-ctrls";
 import { AutoSeries, Series, SeriesData, SeriesDataQuery, SeriesRange } from "./series-types";
+import { buildQuery } from "./sql-query-builder";
 
-export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[], sumColumn?:string):SeriesDataQuery=>{
+export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[], funcColumn?:funcColumn):SeriesDataQuery=>{
 
     const repeatAry=Array.isArray(series.repeat)?series.repeat:undefined;
 
@@ -33,14 +34,52 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
     let offset=0;
     const rangeType=series.rangeType??'<=>';
 
+    let index = 0;
+
+    if(series.debug){
+        console.info(
+            'createSeriesQuery - before main loop',
+            {seriesQueriesLength:seriesQueries.length,seriesQueries}
+        );
+    }
+
     for(let queryIndex=0;queryIndex<seriesQueries.length;queryIndex++){
+
+        index=queryIndex;
 
         const names:string[]=[];
         seriesColNames.push(names);
 
+        if(series.debug){
+            console.info(
+                'createSeriesQuery - before inner loop',
+                {queryIndex,rangesLength:ranges.length,ranges}
+            );
+        }
+
         for(let rangeIndex=0;rangeIndex<ranges.length;rangeIndex++){
             const range=ranges[rangeIndex] as SeriesRange<any>;
+            // issue is here
             const sub:Query=deepClone(seriesQueries[queryIndex] as Query);
+
+            if(series.debug){
+                console.info(
+                    'inner loop'
+                );
+            }
+
+            if(series.debug&&(typeof sub.table!=='string')){
+                console.info(
+                    '--- before updated ---\n',
+                    sub,
+                    '\nColumns',
+                    sub.columns,
+                    '\nTable Columns',
+                    sub.table?.columns,
+                    '\n',
+                    buildQuery(sub),
+                );
+            }
 
             const conditions:QueryCondition[]=[];
             const startCond:QueryCondition={
@@ -71,14 +110,27 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                 condition.conditions.push(sub.condition);
             }
             sub.condition=condition;
-            sub.columns=[sumColumn?{
-                func:'sum',
-                col:{name:sumColumn},
-                name:'count'
+            sub.columns=[funcColumn?{
+                func:funcColumn.func,
+                col:{name:funcColumn.col},
+                name:funcColumn.name
             }:{
                 func:'count',
                 name:'count',
             }]
+
+            if(series.debug&&(typeof sub.table!=='string')){
+                console.info(
+                    '--- after updated ---\n',
+                    sub,
+                    '\nColumns',
+                    sub.columns,
+                    '\nTable Columns',
+                    sub.table?.columns,
+                    '\n',
+                    buildQuery(sub),
+                );
+            }
 
             const colName=`c_${queryIndex}_${rangeIndex}`;
             names.push(colName);
@@ -154,7 +206,7 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
                 labels,
                 series,
             }
-        }
+        },
     }
 
 }
@@ -249,3 +301,11 @@ export const getSeriesDiff=(data:SeriesData):DataDiff=>{
         percent:current===diff?0:((diff/prev)||0),
     }
 }
+
+export interface SeriesDataQueryOptions {
+    rangeColumn: string | null | undefined;
+    funcColumn?: funcColumn | null;
+    series: Series | null | undefined;
+    seriesQueries: Query | Query[] | null | undefined;
+}
+export declare const useSeriesDataQuery: ({ rangeColumn, funcColumn, series, seriesQueries, }?: SeriesDataQueryOptions) => SeriesData | undefined;
