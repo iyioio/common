@@ -310,6 +310,10 @@ export const areShallowEqual=<T=any>(a:T, b:T, shouldTestKey?:(key:keyof T)=>boo
     if(!a || !b)
         return false;
 
+    if(!(b && (typeof b === 'object')) || !(a && (typeof a === 'object'))){
+        return a===b;
+    }
+
     for(const key in a) {
         if(shouldTestKey && !shouldTestKey(key as any)){
             continue;
