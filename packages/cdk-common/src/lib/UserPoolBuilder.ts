@@ -5,13 +5,15 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
 import { ManagedProps, getDefaultManagedProps } from './ManagedProps';
-import { AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
+import { AccessGranter, AccessRequest, AccessRequestDescription, IAccessRequestGroup } from './cdk-types';
 
 export type TriggerMap={
     [prop in keyof cognito.UserPoolTriggers]:string|lambda.IFunction;
 };
 
 export interface UserPoolBuilderProps{
+    name?:string;
+    grantAccess?:boolean;
     managed?:ManagedProps;
     authorizedAccessRequests?:AccessRequestDescription[];
     unauthorizedAccessRequests?:AccessRequestDescription[];
@@ -33,6 +35,8 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
 
     public readonly accessRequests:AccessRequest[]=[];
 
+    public readonly accessGrants:AccessGranter[]=[];
+
 
 
     public constructor(scope_:Construct,id:string,{
@@ -41,6 +45,8 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             accessManager,
             fns,
         }=getDefaultManagedProps(),
+        name,
+        grantAccess,
         triggers,
         authorizedAccessRequests,
         unauthorizedAccessRequests,
@@ -261,6 +267,18 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
                     grantee:anonCognitoUserRole
                 })
             }
+        }
+
+
+        if(name && grantAccess){
+            this.accessGrants.push({
+                grantName:name,
+                grant:request=>{
+                    if(request.types?.includes('auth')){
+                        userPool.grant(request.grantee,'cognito-idp:*');
+                    }
+                }
+            })
         }
 
         accessManager?.addGroup(this);

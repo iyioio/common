@@ -52,7 +52,7 @@ export type Grantee = iam.IGrantable & {
     addToPolicy?(statement:iam.PolicyStatement):void;
 }
 
-export const allCommonAccessTypes=['read','write','delete','invoke','list','scan','query'] as const;
+export const allCommonAccessTypes=['read','write','delete','invoke','list','scan','query','auth'] as const;
 export type CommonAccessType=typeof allCommonAccessTypes[number];
 
 

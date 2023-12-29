@@ -83,6 +83,8 @@ export const userPoolPlugin:ProtoPipelineConfigurablePlugin<typeof UserPoolPlugi
             outputs.push({
                 path:userPoolCdkConstructFile,
                 content:userPoolCdkTemplate(userPoolCdkConstructClassName,{
+                    name:node.name,
+                    grantAccess:true,
                     authorizedAccessRequests:access?protoNodeChildrenToAccessRequests(access):undefined,
                     unauthorizedAccessRequests:anon?protoNodeChildrenToAccessRequests(anon):undefined,
                     triggers,
