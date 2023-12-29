@@ -33,6 +33,7 @@
             "@iyio/cdk-common": ["packages/cdk-common/src/index.ts"],
             "@iyio/convo-lang": ["packages/convo-lang/src/index.ts"],
             "@iyio/convo-lang-cli": ["packages/convo-lang-cli/src/index.ts"],
+            "@iyio/convo-lang-react": ["packages/convo-lang-react/src/index.ts"],
             "@iyio/common": ["packages/iyio-common/src/index.ts"],
             "@iyio/nextjs-common": ["packages/nextjs-common/src/index.ts"],
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
