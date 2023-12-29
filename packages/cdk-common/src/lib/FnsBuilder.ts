@@ -15,6 +15,7 @@ export interface FnInfoAndNodeFn
 export interface FnInfo
 {
     name:string;
+    grantName?:string;
     createProps:NodeFnProps;
     arnParam?:ParamTypeDef<string>;
     urlParam?:ParamTypeDef<string>;
@@ -92,7 +93,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
 
             if(info.grantAccess){
                 this.accessGrants.push({
-                    grantName:info.name,
+                    grantName:info.grantName??info.name,
                     passiveGrants:info.grantAccessRequests,
                     grant:request=>{
                         if(request.types?.includes('invoke')){
