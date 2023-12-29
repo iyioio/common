@@ -16,6 +16,11 @@ export interface UserPoolBuilderProps{
     authorizedAccessRequests?:AccessRequestDescription[];
     unauthorizedAccessRequests?:AccessRequestDescription[];
     triggers?:TriggerMap;
+    domainPrefix?:string;
+    providers?:string[];
+    googleClientId?:string;
+    googleClientSecret?:string;
+    oAuthCallbackUrls?:string[];
 }
 
 export class UserPoolBuilder extends Construct implements IAccessRequestGroup
@@ -39,6 +44,11 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         triggers,
         authorizedAccessRequests,
         unauthorizedAccessRequests,
+        domainPrefix,
+        providers,
+        googleClientId,
+        googleClientSecret,
+        oAuthCallbackUrls=domainPrefix?[`https://${domainPrefix}`]:undefined
     }:UserPoolBuilderProps){
 
         super(scope_,id);
@@ -88,6 +98,31 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             lambdaTriggers
         });
 
+        if(domainPrefix){
+            userPool.addDomain('default',{
+                cognitoDomain:{
+                    domainPrefix
+                }
+            })
+        }
+        const useGoogle=providers?.includes('google');
+        if(useGoogle){
+            googleClientId=googleClientId??process.env['GOOGLE_CLIENT_ID'];
+            googleClientSecret=googleClientSecret??process.env['GOOGLE_CLIENT_SECRET'];
+            if(googleClientId && googleClientSecret){
+                new cognito.UserPoolIdentityProviderGoogle(this,'Google',{
+                    userPool,
+                    clientId:googleClientId,
+                    clientSecretValue:cdk.SecretValue.unsafePlainText(googleClientSecret),
+                    scopes:['email'],
+                    attributeMapping:{
+                        email:cognito.ProviderAttribute.GOOGLE_EMAIL,
+                        givenName:cognito.ProviderAttribute.GOOGLE_NAME,
+                    }
+                })
+            }
+        }
+
         const standardCognitoAttributes:cognito.StandardAttributesMask = {
             givenName: true,
             familyName: true,
@@ -135,9 +170,13 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
                 },
                 supportedIdentityProviders: [
                     cognito.UserPoolClientIdentityProvider.COGNITO,
-                ],
+                    useGoogle?cognito.UserPoolClientIdentityProvider.GOOGLE:undefined,
+                ].filter(v=>v) as cognito.UserPoolClientIdentityProvider[],
                 readAttributes: clientReadAttributes,
                 writeAttributes: clientWriteAttributes,
+                oAuth:(useGoogle && oAuthCallbackUrls)?{
+                    callbackUrls:oAuthCallbackUrls
+                }:undefined
             }
         );
 
