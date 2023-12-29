@@ -1,0 +1,5 @@
+POST https://api-inference.huggingface.co/models/meta-llama/Llama-2-70b-chat-hf
+content-type: application/json
+Authorization: Bearer ____
+
+"<s>[INST] <<SYS>>\nYou are a cool dude\n<</SYS>>\n\nWhat is the coolest thing you have ever done [/INST]"
