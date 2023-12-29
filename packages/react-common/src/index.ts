@@ -14,6 +14,7 @@ export * from "./lib/ImageContainer";
 export * from "./lib/JsonView";
 export * from "./lib/LazyImage";
 export * from "./lib/LazyView";
+export * from "./lib/LoadingDots";
 export * from "./lib/LoadingIndicator";
 export * from "./lib/LoadingOverlay";
 export * from "./lib/LockScreenRenderer";

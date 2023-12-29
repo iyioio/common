@@ -4,9 +4,8 @@ import { LazyCodeInput } from "@iyio/syn-taxi";
 import { atDotCss } from "@iyio/at-dot-css";
 import { createJsonRefReplacer } from "@iyio/common";
 import { ConversationUiCtrl, ConvoEditorMode, parseConvoCode } from "@iyio/convo-lang";
-import { ScrollView, SlimButton, useSubject } from "@iyio/react-common";
+import { LoadingDots, ScrollView, SlimButton, useSubject } from "@iyio/react-common";
 import { useCallback, useEffect, useState } from "react";
-import { LoadingDots } from "./LoadingDots";
 import { useConversation, useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
 
 export interface MessagesSourceViewProps

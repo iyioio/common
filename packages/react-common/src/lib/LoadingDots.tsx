@@ -2,15 +2,17 @@ import { atDotCss } from "@iyio/at-dot-css";
 
 export interface LoadingDotsProps
 {
+    className?:string;
     disabled?:boolean;
 }
 
 export function LoadingDots({
+    className,
     disabled,
 }:LoadingDotsProps){
 
     return (
-        <svg className={style.root({disabled})} width="41" height="10" viewBox="0 0 41 10" fill="none">
+        <svg className={style.root({disabled},className)} width="41" height="10" viewBox="0 0 41 10" fill="none">
             <circle style={style.vars({order:0})} cx="5.76367" cy="5" r="5" fill="white"/>
             <circle style={style.vars({order:1})} cx="20.7637" cy="5" r="5" fill="white"/>
             <circle style={style.vars({order:2})} cx="35.7637" cy="5" r="5" fill="white"/>

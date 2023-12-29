@@ -1,9 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
 import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoMessage } from "@iyio/convo-lang";
-import { ScrollView, useSubject } from "@iyio/react-common";
+import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
-import { LoadingDots } from "./LoadingDots";
 import { useConversationMessages, useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
 
 const renderResult=(result:ConvoMessageRenderResult,i:number,showSystemMessages:boolean,showFunctions:boolean):any=>{
