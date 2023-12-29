@@ -1,5 +1,5 @@
 import { TriggerMap } from "@iyio/cdk-common";
-import { protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
+import { protoGetChildrenByNameOrUndefined, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
 import { userPoolCdkTemplate } from "./userPoolCdkTemplate";
 
@@ -58,11 +58,14 @@ export const userPoolPlugin:ProtoPipelineConfigurablePlugin<typeof UserPoolPlugi
 
 
 
-        if(userPoolCdkConstructFile){
+        const node=supported[0];
 
-            const access=supported[0]?.children?.['$access'];
-            const anon=supported[0]?.children?.['$anon-access'];
-            const triggersNode=supported[0]?.children?.['$userPoolTriggers'];
+        if(userPoolCdkConstructFile && node){
+
+            const access=node.children?.['$access'];
+            const anon=node.children?.['$anon-access'];
+            const triggersNode=node.children?.['$userPoolTriggers'];
+            const config=node.children?.['$user-pool'];
             const triggers:TriggerMap|undefined=triggersNode?{}:undefined;
             if(triggersNode?.children && triggers){
                 for(const name in triggersNode.children){
@@ -82,7 +85,11 @@ export const userPoolPlugin:ProtoPipelineConfigurablePlugin<typeof UserPoolPlugi
                 content:userPoolCdkTemplate(userPoolCdkConstructClassName,{
                     authorizedAccessRequests:access?protoNodeChildrenToAccessRequests(access):undefined,
                     unauthorizedAccessRequests:anon?protoNodeChildrenToAccessRequests(anon):undefined,
-                    triggers
+                    triggers,
+                    domainPrefix:config?.children?.['domainPrefix']?.value,
+                    oAuthCallbackUrls:protoGetChildrenByNameOrUndefined(config,'oAuthCallbackUrl',false)?.map(c=>c.value).filter(v=>v) as string[],
+                    providers:protoGetChildrenByNameOrUndefined(config,'provider',false)?.map(c=>c.value).filter(v=>v) as string[],
+
                 })
             })
         }
