@@ -1,6 +1,8 @@
 import { atDotCss } from '@iyio/at-dot-css';
 import { baseLayoutCn, BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, escapeHtml, strLineCount } from '@iyio/common';
+import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { Lang } from 'shiki';
 import { dt } from '../lib/lib-design-tokens';
 import { LineNumbers } from './LineNumbers';
 import { useShiki } from './shiki';
@@ -31,6 +33,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
     lineStartRegIndex?:number;
     lineNumbers?:boolean;
     errors?:(CodeParsingError|number)[];
+    fillScrollHeight?:boolean;
 
     parser?:CodeParser<P>;
     parsingDelayMs?:number;
@@ -62,6 +65,7 @@ export function CodeInput<P=any>({
     parsingDelayMs=700,
     debugParser,
     bottomPadding=500,
+    fillScrollHeight,
     ...props
 }:CodeInputProps<P>){
 
@@ -78,7 +82,7 @@ export function CodeInput<P=any>({
 
         setParsingErrors(undefined);
 
-        if(!code || !sh || !textArea){
+        if(!code || !sh || !textArea || !sh.getLoadedLanguages().includes(language as Lang)){
             return;
         }
 
@@ -213,34 +217,39 @@ export function CodeInput<P=any>({
         }
     },[textArea,tab,onChange,onSubmit,onNewLine,disabled,lineStartReg,lineStartRegIndex])
 
-    const pad=<div className="CodeInput-bottomMargin" style={{height:bottomPadding}}/>
-
     return (
-        <div className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}>
+        <>
+            <div
+                className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}
+                style={{
+                    minHeight:fillScrollHeight?`var(${scrollViewContainerMinHeightCssVar})`:undefined
+                }}
+            >
 
-            {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} pad={pad} />}
+                {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} />}
 
-            <div className="CodeInput-content">
-                <div>
-                    <div
-                        key={language}
-                        ref={setCode}
-                        className={cn("no-select",language==='auto'?undefined:`language-${language}`)}
-                    />
+                <div className="CodeInput-content">
+                    <div>
+                        <div
+                            key={language}
+                            ref={setCode}
+                            className={cn("no-select",language==='auto'?undefined:`language-${language}`)}
+                            style={{marginBottom:bottomPadding}}
+                        />
 
-                    <textarea
-                        spellCheck={false}
-                        ref={setTextArea}
-                        onKeyDown={onKeyDown}
-                        onChange={e=>onChange?.(e.target.value)}
-                        onBlur={e=>onBlur?.(e.target.value)}
-                        value={value}
-                        readOnly={readOnly}
-                    />
-                    {pad}
+                        <textarea
+                            spellCheck={false}
+                            ref={setTextArea}
+                            onKeyDown={onKeyDown}
+                            onChange={e=>onChange?.(e.target.value)}
+                            onBlur={e=>onBlur?.(e.target.value)}
+                            value={value}
+                            readOnly={readOnly}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     )
 
 }
@@ -321,6 +330,7 @@ const style=atDotCss({name:'CodeInput',css:`
     }
     .CodeInput-content > div{
         position:relative;
+        min-height:100%;
     }
     .CodeInput.lineNumbers .CodeInput-content > div{
         margin-left:0.5rem !important;
@@ -348,5 +358,4 @@ const style=atDotCss({name:'CodeInput',css:`
         top:0;
         color:#ff000088;
     }
-
 `});
