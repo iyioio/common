@@ -86,10 +86,12 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
     }
 
     private apiPromises:Record<string,Promise<OpenAIApi>>={};
-    private async getApiAsync(endpoint=''):Promise<OpenAIApi>
+    private async getApiAsync(apiKeyOverride:string|undefined,endpoint:string|undefined):Promise<OpenAIApi>
     {
-        return await (this.apiPromises[endpoint]??(this.apiPromises[endpoint]=(async ()=>{
-            let apiKey=this.apiKey;
+
+        const key=`${endpoint??'.'}:::${apiKeyOverride??'.'}`
+        return await (this.apiPromises[key]??(this.apiPromises[key]=(async ()=>{
+            let apiKey=apiKeyOverride??this.apiKey;
             if(!apiKey && this.secretManager && this.secretsName){
                 const {apiKey:key}=await this.secretManager.requireSecretTAsync<OpenAiSecrets>(this.secretsName,true);
                 apiKey=key;
@@ -119,10 +121,10 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 return await this.completeChatAsync(lastMessage,request);
 
             case 'audio':
-                return await this.completeAudioAsync(lastMessage);
+                return await this.completeAudioAsync(lastMessage,request);
 
             case 'image':
-                return await this.completeImageAsync(lastMessage);
+                return await this.completeImageAsync(lastMessage,request);
 
             default:
                 return {options:[]}
@@ -136,7 +138,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const endpoint=lastMessage.endpoint;
 
-        const api=await this.getApiAsync(endpoint);
+        const api=await this.getApiAsync(request.apiKey,endpoint);
 
         const lastContentMessage=getLastNonCallAiCompleteMessage(request.messages);
 
@@ -282,14 +284,14 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         };
     }
 
-    private async completeAudioAsync(lastMessage:AiCompletionMessage):Promise<AiCompletionResult>
+    private async completeAudioAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
         const model=lastMessage?.model??this._audioModel;
         if(!model){
             throw new Error('Audio AI model not defined');
         }
 
-        const api=await this.getApiAsync();
+        const api=await this.getApiAsync(request.apiKey,lastMessage.endpoint);
 
         const type=lastMessage.dataContentType??'audio/mp3';
 
@@ -304,23 +306,27 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const text=(typeof r === 'string')?r:r.text;
 
-        return {options:[],preGeneration:[{
-            id:shortUuid(),
-            type:'text',
-            role:lastMessage.role,
-            content:text,
-            replaceId:lastMessage.id,
-        }]}
+        return {
+            tokenPrice:1,// todo - use real price - for now just say $1, which is very high
+            options:[],
+            preGeneration:[{
+                id:shortUuid(),
+                type:'text',
+                role:lastMessage.role,
+                content:text,
+                replaceId:lastMessage.id,
+            }]
+        }
     }
 
-    private async completeImageAsync(lastMessage:AiCompletionMessage):Promise<AiCompletionResult>
+    private async completeImageAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
         const model=lastMessage?.model??this._imageModel;
         if(!model){
             throw new Error('Image AI model not defined');
         }
 
-        const api=await this.getApiAsync();
+        const api=await this.getApiAsync(request.apiKey,lastMessage.endpoint);
 
         let r:ImagesResponse|undefined=undefined;
 
@@ -351,15 +357,18 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             throw new Error('Image not generated');
         }
 
-        return {options:[{
-            message:{
-                role:'assistant',
-                id:shortUuid(),
-                type:'image',
-                url:r.data[0]?.url,
-            },
-            confidence:1,
-        }]}
+        return {
+            options:[{
+                message:{
+                    role:'assistant',
+                    id:shortUuid(),
+                    type:'image',
+                    url:r.data[0]?.url,
+                },
+                confidence:1,
+            }],
+            tokenPrice:1,// todo - use real price - for now just say $1, which is very high
+        }
     }
 
 
@@ -447,7 +456,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             case 'gpt-3.5-turbo-0613':
             case 'gpt-3.5-turbo-1106': return (isIn?0.0015:0.002)/1000;
             case 'gpt-3.5-turbo-16k':
-            case 'gpt-3.5-turbo-16k-0613': return  (isIn?0.001:0.002)/1000;
+            case 'gpt-3.5-turbo-16k-0613': return (isIn?0.001:0.002)/1000;
         }
 
         return (isIn?0.01:0.03)/1000;

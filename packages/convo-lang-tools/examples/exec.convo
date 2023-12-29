@@ -20,4 +20,4 @@ You are a Unix systems expert. Always use the runCommand function when respondin
 The user has a {{computerType}}
 
 > user
-what is the current working directory?
+How much space do I have left on my hard drive?

@@ -250,6 +250,12 @@ export class Conversation
         this._isDisposed=true;
     }
 
+    private _defaultApiKey:string|null=null;
+    public setDefaultApiKey(key:string|null){
+        this._defaultApiKey=key;
+    }
+    public getDefaultApiKey(){return this._defaultApiKey}
+
 
 
     private readonly enabledCapabilities:ConvoCapability[]=[];
@@ -379,7 +385,7 @@ export class Conversation
         if(!msg){
             return tags;
         }
-        if(options?.includeTokenUsage && (this.trackTimeSubject || this.getVar(convoVars.__trackTokenUsage))){
+        if(options?.includeTokenUsage && (this.trackTokens || this.getVar(convoVars.__trackTokenUsage))){
             tags+=`@${convoTags.tokenUsage} ${convoUsageTokensToString(msg)}\n`;
         }
         if(msg.model && (this.trackModel || this.getVar(convoVars.__trackModel))){

@@ -1,3 +1,4 @@
+import { safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
 import { AiCompletionInfo, aiCompletionCdkTemplate } from "./aiCompletionCdkTemplate";
@@ -112,6 +113,8 @@ export const aiCompletionPlugin:ProtoPipelineConfigurablePlugin<typeof AiComplet
         for(const node of supported){
             infos.push({
                 fnName:node.name,
+                anonUsdCap:safeParseNumberOrUndefined(node.children?.['anonUsdCap']?.value),
+                anonUsdCapTotal:safeParseNumberOrUndefined(node.children?.['anonUsdCapTotal']?.value),
             });
         }
 

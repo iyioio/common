@@ -5,8 +5,6 @@ Person = struct(
     personality:string
 )
 
-__debug=true
-
 @json Person[]
 > user
 List 4 funny people

@@ -355,6 +355,7 @@ export class AiCompletionService implements ConvoCompletionService
             functions,
             debug:flat.debug,
             capabilities:[],
+            apiKey:flat.conversation.getDefaultApiKey()??undefined
         }
 
         for(const c of flat.conversation.serviceCapabilities){

@@ -191,6 +191,8 @@ export const AiCompletionRequestScheme=z.object({
      * Array of capabilities that should be included.
      */
     capabilities:AiCompletionCapabilityScheme.array().optional(),
+
+    apiKey:z.string().optional(),
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme> & {
     debug?:(...args:any[])=>void;
@@ -208,3 +210,12 @@ export interface AiCompletionFunctionInterface<Z extends ZodTypeAny=ZodType<any>
     callback?:(params:T,aiService:AiCompletionService)=>C;
     render?:(params:T,callbackResult:Awaited<C>,aiService:AiCompletionService)=>V;
 }
+
+
+export const TokenQuotaScheme=z.object({
+    id:z.string(),
+    usage:z.number(),
+    cap:z.number().optional(),
+})
+
+export type TokenQuota=z.infer<typeof TokenQuotaScheme>;

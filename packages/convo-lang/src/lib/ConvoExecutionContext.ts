@@ -61,6 +61,15 @@ export class ConvoExecutionContext
         this.sharedVars={...defaultConvoVars,[convoGlobalRef]:this.convo}
     }
 
+    public getUserSharedVars(){
+        const vars={...this.sharedVars}
+        delete vars['convo'];
+        for(const e in defaultConvoVars){
+            delete vars[e];
+        }
+        return vars;
+    }
+
     public loadFunctions(messages:ConvoMessage[],externFunctions?:Record<string,ConvoScopeFunction>)
     {
         for(const msg of messages){

@@ -1,14 +1,14 @@
 
 export interface AiCompletionInfo{
     fnName:string;
+    anonUsdCap?:number;
+    anonUsdCapTotal?:number;
 }
 
 export const aiCompletionCdkTemplate=(constructName:string,infos:AiCompletionInfo[])=>{
 
-    const names=infos.map(n=>n.fnName);
-
     return `import { Construct } from "constructs";
-import { AiCompleteOpenAiConstruct } from "@iyio/ai-complete-openai-cdk";
+import { AiCompleteOpenAiConstruct, AiCompleteOpenAiConstructOptions } from "@iyio/ai-complete-openai-cdk";
 import { ManagedProps, NodeFnProps } from "@iyio/cdk-common";
 
 export interface ${constructName}Props
@@ -30,18 +30,18 @@ export class ${constructName} extends Construct
 
         super(scope,name);
 
-        this.instances=names.map(name=>new AiCompleteOpenAiConstruct(this,name,{
+        this.instances=infos.map(options=>new AiCompleteOpenAiConstruct(this,name,{
             managed,
             grantAccess:true,
-            fnName:name,
-            defaultFnProps
+            defaultFnProps,
+            ...options
         }));
 
     }
 
 }
 
-const names=${JSON.stringify(names,null,4)};
+const infos:AiCompleteOpenAiConstructOptions[]=${JSON.stringify(infos,null,4)};
 
 `
 }

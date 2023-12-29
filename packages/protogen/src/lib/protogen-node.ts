@@ -130,6 +130,16 @@ export const protoGetChildrenByName=(
     return protoFindChildren(parent,recursive,c=>c.name===name,appendTo);
 }
 
+export const protoGetChildrenByNameOrUndefined=(
+    parent:ProtoNode|null|undefined,
+    name:string,
+    recursive:boolean,
+    appendTo?:ProtoNode[]
+):ProtoNode[]|undefined=>{
+    const children=protoFindChildren(parent,recursive,c=>c.name===name,appendTo);
+    return children.length?children:undefined
+}
+
 export const protoGetNodeParent=(node:ProtoNode|null|undefined):ProtoNode|undefined=>(node as any)?.[parentKey];
 
 export const protoApplyParent=(node:ProtoNode)=>{

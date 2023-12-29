@@ -9,6 +9,7 @@ export const aiComplete=defineService('aiComplete',scope=>AiCompletionService.fr
 export const httpAiCompletionUrlParam=defineStringParam('httpAiCompletionUrl','/api/complete');
 
 export const aiCompletionFnArnParam=defineStringParam('aiCompletionFnArn');
+export const aiCompletionGetTokenQuotaFnArnParam=defineStringParam('aiCompletionGetTokenQuotaFnArn');
 
 export const aiCompletionMaxTextLengthParam=defineNumberParam('aiCompletionMaxTextLength',3000);
 export const aiCompletionMaxAudioLengthParam=defineNumberParam('aiCompletionMaxAudioLength',3000);

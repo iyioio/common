@@ -5,7 +5,7 @@ convo=Conversation({
     # Can be omitted when using an apiBaseUrl that does not require an API key
     "apiKey":"YOUR_OPEN_AI_KEY",
 
-    # Can be used to connect to OpenAi compatible APIs such as LMStudio - https://lmstudio.ai/ 
+    # Can be used to connect to OpenAi compatible APIs such as LMStudio - https://lmstudio.ai/
     #"apiBaseUrl":"http://localhost:1234/v1",
 
     # Sets the models that are allowed to be used. The first model will be the default

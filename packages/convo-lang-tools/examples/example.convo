@@ -8,7 +8,7 @@
     email?: string
 
     # The users job
-    job: array(map(
+    job: array(struct(
         name: string
     ))
 
@@ -67,14 +67,14 @@
 
 # Returns a header system message
 > local getHeader( age:number ) -> (
-    return("James is a funky monkey {{age}} years old")
+    return('James is a funky monkey {{age}} years old')
 )
 
 > dude
 I'm okxc
 
 > system
-You are a friendly ghost. {{getHeader()}}
+You are a friendly ghost. {{getHeader(age:22)}}
 
 > user
 My name is {{name}}
