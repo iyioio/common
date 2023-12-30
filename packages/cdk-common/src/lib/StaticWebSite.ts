@@ -167,6 +167,14 @@ export class StaticWebSite extends Construct {
                         if(uri.endsWith('/')){
                             uri=uri.substring(0,uri.length-1);
                         }
+                        var qi=uri.indexOf('?');
+                        var q;
+                        if(qi===-1){
+                            q='';
+                        }else{
+                            q=uri.substring(qi);
+                            uri=uri.substring(0,qi);
+                        }
                         for(var i=0;i<map.length;i++){
                             var r=map[i];
                             if(r.match.test(uri)){${'\n'+matchHandler}
@@ -190,7 +198,7 @@ export class StaticWebSite extends Construct {
                     functionName:getStackItemName(this,'RedirectFn'),
 
                     code:cf.FunctionCode.fromInline(redirectBody(false,/*ts*/`
-                        request.uri=+r.path;
+                        request.uri=r.path+q;
                     `))
                 }
             );
@@ -241,7 +249,7 @@ export class StaticWebSite extends Construct {
                                         request.headers['host']=[{key:'host',value:'${redirectHandler.domain}'}];
                                         request.headers['x-site-original-origin-uri']=[{key:'x-site-original-origin-uri',value:request.uri}];
                                         request.headers['x-site-bucket-arn']=[{key:'x-site-bucket-arn',value:'${bucket.bucketArn}'}];
-                                        request.uri=encodeURI(r.path);
+                                        request.uri=encodeURI(r.path+q);
                                     `)),
                                     handler:'index.handler',
                                     runtime:lambda.Runtime.NODEJS_18_X,
