@@ -1,6 +1,7 @@
 import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { HttpBaseUrlPrefixNotFoundError } from "./errors";
+import { encodeURIFormBody } from "./http-lib";
 import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
 import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps";
 import { JwtProvider } from "./jwt";
@@ -115,6 +116,8 @@ export class HttpClient
             returnUndefinedFor404=true,
             returnFetchResponse=false,
             parseResponse=true,
+            urlEncodeBody=false,
+            noAuth,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -130,19 +133,19 @@ export class HttpClient
             }
         }
 
-        const jwt=this.options.jwtProviders?.getFirst(null,p=>p(uri));
+        const jwt=noAuth?undefined:this.options.jwtProviders?.getFirst(null,p=>p(uri));
 
         const baseRequest:BaseHttpRequest={
             uri,
             method,
-            body:body===undefined?undefined:JSON.stringify(body),
+            body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
             headers:deleteUndefined<any>({
                 "Authorization":jwt?'Bearer '+jwt:undefined,
-                "Content-Type":body?'application/json':undefined,
+                "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
             })
         }
 
-        if(getUriProtocol(uri)){
+        if(!noAuth && getUriProtocol(uri)){
             const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
             if(signer){
                 await signer.sign(baseRequest);

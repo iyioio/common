@@ -162,4 +162,20 @@ export interface AuthProvider extends IOpInit, IOpDisposable
      */
     setNewPasswordAsync?(identity:string,code:string,newPassword:string):Promise<boolean>;
 
+    /**
+     * Signs the user in with a toke object with a format that is specific to the provider.
+     */
+    signInWithTokenAsync?(token:any):Promise<AuthSignInResult>;
+
+    /**
+     * Signs the user in with a tmp code. This is used by many oath flows that return a code and the
+     * end of their flow that can then be used to generate a sign-in token.
+     */
+    signInWithCodeAsync?(code:string):Promise<AuthSignInResult>;
+
+    /**
+     * Returns a link that can be used to sign-in using the given oauth provider
+     */
+    getOAuthSignInLinkUrl?(provider:string,options:Record<string,any>):string|undefined;
+
 }

@@ -1,9 +1,9 @@
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, currentBaseUser, parseConfigBool, parseJwt, promiseFromErrorResultCallback } from '@iyio/common';
-import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
-import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, authServicePopupOAuthSignOutMessageId, currentBaseUser, getPopupWindowMessageAsync, getUriProtocol, httpClient, parseConfigBool, parseJwt, promiseFromErrorResultCallback } from '@iyio/common';
+import { AuthenticationDetails, CognitoAccessToken, CognitoIdToken, CognitoRefreshToken, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
+import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoOAuthRedirectUriParam, cognitoOAuthScopesParams, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
 const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
 
@@ -196,6 +196,27 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         }
     }
 
+    private async getIdentitiesAsync(user:CognitoUser):Promise<Ident[]|undefined>{
+        try{
+            const atts=await promiseFromErrorResultCallback<CognitoUserAttribute[]|undefined>(cb=>user.getUserAttributes(cb));
+            if(!atts){
+                return undefined;
+            }
+            const idAtt=atts.find(a=>a.Name==='identities');
+            if(!idAtt){
+                return undefined;
+            }
+            try{
+                const identities=JSON.parse(idAtt.Value);
+                return identities??((typeof identities==='object')?identities:undefined);
+            }catch{
+                return undefined;
+            }
+        }catch{
+            return undefined;
+        }
+    }
+
     public async getUserAsync(data: UserAuthProviderData):Promise<BaseUser|null> {
         const user:CognitoUser|undefined=data.providerData?.[userKey];
         if(!user){
@@ -233,6 +254,29 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
         if(!cUser){
             return;
         }
+        const prefix=cognitoDomainPrefixParam.get();
+        if(prefix){
+            const ids=await this.getIdentitiesAsync(cUser);
+            if(ids){
+                const url=(
+                    `https://${
+                        prefix
+                    }.auth.${
+                        awsRegionParam()
+                    }.amazoncognito.com/logout?client_id=${
+                        cognitoUserPoolClientIdParam()
+                    }&logout_uri=${
+                        this.getOAuthRedirectUri()
+                    }`
+                )
+                await getPopupWindowMessageAsync({
+                    url,
+                    triggerOnSameHost:true,
+                    timeoutMs:30000,
+                    messageId:authServicePopupOAuthSignOutMessageId
+                });
+            }
+        }
         await new Promise<void>((resolve)=>{
             cUser.signOut(()=>resolve())
         });
@@ -249,6 +293,102 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
             return null;
         }
         return parseJwt(jwt);
+    }
+
+    public async signInWithTokenAsync(token:any):Promise<AuthSignInResult>
+    {
+
+        const idToken=token?.IdToken??token?.id_token;
+        const accessToken=token?.AccessToken??token?.access_token;
+        const refreshToken=token?.RefreshToken??token?.refresh_token;
+
+        const session=new CognitoUserSession({
+            IdToken:(typeof idToken === 'string')?new CognitoIdToken({IdToken:idToken}):idToken,
+            AccessToken:(typeof accessToken === 'string')?new CognitoAccessToken({AccessToken:accessToken}):accessToken,
+            RefreshToken:(typeof refreshToken === 'string')?new CognitoRefreshToken({RefreshToken:refreshToken}):refreshToken,
+        });
+
+        if(!session.isValid()){
+            return {
+                success:false,
+                message:'Invalid session from token'
+            }
+        }
+
+
+
+        const cognitoUser=new CognitoUser({
+            Username:session.getAccessToken().payload['username']??'user',
+            Pool:this.userPool,
+        })
+
+        cognitoUser.setSignInUserSession(session);
+
+
+        const user=await this.convertCognitoUserAsync(cognitoUser);
+        return {
+            success:true,
+            user,
+        }
+
+    }
+
+    private getOAuthRedirectUri()
+    {
+        let redirectUri=cognitoOAuthRedirectUriParam();
+        if(!getUriProtocol(redirectUri)){
+            if(redirectUri.startsWith('/')){
+                redirectUri=redirectUri.substring(1);
+            }
+            redirectUri=`${globalThis.location?.protocol??'https:'}//${globalThis.location?.host??'localhost'}/${redirectUri}`
+        }
+        return redirectUri;
+    }
+
+    public async signInWithCodeAsync(code:string):Promise<AuthSignInResult>
+    {
+
+        const token=await httpClient().postAsync<any>(
+            `https://${cognitoDomainPrefixParam()}.auth.${awsRegionParam()}.amazoncognito.com/oauth2/token`,
+            {
+                code,
+                client_id:cognitoUserPoolClientIdParam(),
+                grant_type:'authorization_code',
+                redirect_uri:this.getOAuthRedirectUri(),
+            },{
+                urlEncodeBody:true,
+                noAuth:true,
+
+            }
+        )
+
+        return await this.signInWithTokenAsync(token);
+
+    }
+
+    public getOAuthSignInLinkUrl(provider:string,options:Record<string,any>):string|undefined
+    {
+        const prefix=cognitoDomainPrefixParam.get();
+        if(!prefix){
+            return undefined;
+        }
+
+        const scopes:string|undefined=(typeof options['scopes'] === 'string')?options['scopes']:undefined;
+
+        return (
+            `https://${
+                prefix
+            }.auth.${
+                awsRegionParam()
+            }.amazoncognito.com/oauth2/authorize?client_id=${
+                cognitoUserPoolClientIdParam()
+            }&response_type=code&scope=${
+                encodeURIComponent((scopes??cognitoOAuthScopesParams()).split(',').map(s=>s.trim()).join(' '))
+            }&redirect_uri=${
+                encodeURIComponent(this.getOAuthRedirectUri())
+            }`
+        )
+
     }
 
     public async signInEmailPasswordAsync(email: string, password: string, newPassword?:string): Promise<AuthSignInResult> {
@@ -500,3 +640,9 @@ export class CognitoAuthProvider implements AuthProvider, AwsAuthProvider
 
 }
 
+interface Ident{
+    userId?:string|null;
+    providerName?:string|null;
+    providerType?:string|null;
+    [key:string]:any;
+}

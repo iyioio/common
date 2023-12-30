@@ -1,5 +1,7 @@
 import { BaseUser } from "./BaseUser";
+import { CancelToken } from "./CancelToken";
 import { DisposeContainer } from "./DisposeContainer";
+import { getPopupWindowMessageAsync, sendPopupWindowMessage } from "./PopupWindow";
 import { RouterStore } from "./RouterStore";
 import { ScopedSetter } from "./Setter";
 import { ValueCache } from "./ValueCache";
@@ -14,6 +16,9 @@ import { storeRoot } from "./store.deps";
 import { isValidEmail } from "./validation";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
+
+export const authServicePopupOAuthCodeMessageId='AuthService/OAuthCode';
+export const authServicePopupOAuthSignOutMessageId='AuthService/OAuthSignOut';
 
 export interface AuthServiceOptions
 {
@@ -298,4 +303,61 @@ export class AuthService implements IDisposable, IInit
             return false;
         }
     }
+
+    public async signInWithTokenAsync(token:any):Promise<AuthSignInResult>{
+        return await this.handlerSignInResultAsync(
+            await this.authProviders.getFirstAsync(null,async provider=>{
+                return await provider.signInWithTokenAsync?.(token);
+            })
+        );
+    }
+
+    public async signInWithCodeAsync(code:string):Promise<AuthSignInResult>{
+        return await this.handlerSignInResultAsync(
+            await this.authProviders.getFirstAsync(null,async provider=>{
+                return await provider.signInWithCodeAsync?.(code);
+            })
+        );
+    }
+
+    public getOAuthSignInLinkUrl(provider:string,options:Record<string,any>={}):string|undefined{
+        return this.authProviders.getFirst(null,p=>{
+            return p.getOAuthSignInLinkUrl?.(provider,options);
+        })
+    }
+
+    public async signInWithOAuthUrlAsync(url:string,cancel:CancelToken=new CancelToken()):Promise<AuthSignInResult|undefined>{
+
+        let code:string;
+
+        try{
+            code=await getPopupWindowMessageAsync({
+                url,
+                queryParamTrigger:'code',
+                messageId:authServicePopupOAuthCodeMessageId,
+            },cancel);
+        }catch{
+            return {
+                success:false,
+                message:'Sign-in window popup blocked'
+            }
+        }
+
+        if(!code){
+            return undefined;
+        }
+
+        return await this.signInWithCodeAsync(code);
+    }
+
+    public async setOAuthCallbackCodeAsync(code:string):Promise<void>{
+        sendPopupWindowMessage(authServicePopupOAuthCodeMessageId,code);
+    }
+
+    public async setOAuthCallbackSignOutAsync():Promise<void>{
+        sendPopupWindowMessage(authServicePopupOAuthSignOutMessageId,true);
+    }
 }
+
+
+

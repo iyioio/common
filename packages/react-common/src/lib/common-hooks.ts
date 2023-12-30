@@ -65,6 +65,6 @@ export const useRouteRedirectFallback=(enabled=true)=>{
 
         redirectFallbackChecked=true;
 
-        uiRouterService().push(globalThis?.window?.location.pathname??'/');
+        uiRouterService().push((globalThis?.window?.location.pathname??'/')+(globalThis.location?.search??''));
     },[enabled]);
 }

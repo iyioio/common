@@ -43,6 +43,13 @@ export interface HttpClientRequestOptions
      * @default true
      */
     parseResponse?:boolean;
+
+    /**
+     * If true the body object of the request will be converted into a URL encoded form body
+     */
+    urlEncodeBody?:boolean;
+
+    noAuth?:boolean;
 }
 
 export interface HttpFetcher{

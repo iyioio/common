@@ -1,4 +1,4 @@
-import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from '@iyio/aws-credential-providers';
+import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from '@iyio/aws-credential-providers';
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -54,7 +54,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         providers,
         googleClientId,
         googleClientSecret,
-        oAuthCallbackUrls=domainPrefix?[`https://${domainPrefix}`]:undefined
+        oAuthCallbackUrls
     }:UserPoolBuilderProps){
 
         super(scope_,id);
@@ -105,6 +105,9 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         });
 
         if(domainPrefix){
+            if(params){
+                params.setParam(cognitoDomainPrefixParam,domainPrefix);
+            }
             userPool.addDomain('default',{
                 cognitoDomain:{
                     domainPrefix
@@ -120,10 +123,16 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
                     userPool,
                     clientId:googleClientId,
                     clientSecretValue:cdk.SecretValue.unsafePlainText(googleClientSecret),
-                    scopes:['email'],
+                    scopes:['email','openid','profile'],
                     attributeMapping:{
                         email:cognito.ProviderAttribute.GOOGLE_EMAIL,
                         givenName:cognito.ProviderAttribute.GOOGLE_NAME,
+                        nickname:cognito.ProviderAttribute.GOOGLE_NAME,
+                        familyName:cognito.ProviderAttribute.GOOGLE_FAMILY_NAME,
+                        custom:{
+                            email_verified:cognito.ProviderAttribute.other('email_verified'),
+                        }
+
                     }
                 })
             }
@@ -175,13 +184,14 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
                     userSrp: true,
                 },
                 supportedIdentityProviders: [
-                    cognito.UserPoolClientIdentityProvider.COGNITO,
+                    useGoogle?undefined:cognito.UserPoolClientIdentityProvider.COGNITO,
                     useGoogle?cognito.UserPoolClientIdentityProvider.GOOGLE:undefined,
                 ].filter(v=>v) as cognito.UserPoolClientIdentityProvider[],
                 readAttributes: clientReadAttributes,
                 writeAttributes: clientWriteAttributes,
                 oAuth:(useGoogle && oAuthCallbackUrls)?{
-                    callbackUrls:oAuthCallbackUrls
+                    callbackUrls:oAuthCallbackUrls,
+                    logoutUrls:oAuthCallbackUrls,
                 }:undefined
             }
         );
