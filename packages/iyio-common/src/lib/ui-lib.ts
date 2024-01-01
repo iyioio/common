@@ -9,26 +9,27 @@ export const removeOnUiReadyDelayedClassName='iyio-removeOnUiReadyDelayed';
 export const uiReadyClassName='iyio-uiReady';
 export const uiReadyDelayedClassName='iyio-uiReadyDelayed';
 
-export interface UiActionItem
+export interface UiActionItem<TIcon=string,TData=any>
 {
     id?:string;
     title?:string;
-    icon?:string;
+    icon?:TIcon;
+    iconColor?:string;
     to?:string;
     type?:string;
     action?:(item:UiActionItem)=>void;
     linkTarget?:string;
-    data?:any;
+    data?:TData;
 }
 
-export interface UiActionSubItem extends UiActionItem
+export interface UiActionSubItem<TIcon=string,TData=any> extends UiActionItem<TIcon,TData>
 {
-    sub?:UiActionItem[];
+    sub?:UiActionItem<TIcon,TData>[];
 }
 
-export interface UiActionRecursiveSubItem extends UiActionItem
+export interface UiActionRecursiveSubItem<TIcon=string,TData=any> extends UiActionItem<TIcon,TData>
 {
-    sub?:UiActionRecursiveSubItem[];
+    sub?:UiActionRecursiveSubItem<TIcon,TData>[];
 }
 
 export type RouteQuery=HashMap<string|string[]>;
