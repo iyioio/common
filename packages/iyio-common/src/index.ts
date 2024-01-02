@@ -73,6 +73,7 @@ export * from './lib/date';
 export * from './lib/dom';
 export * from './lib/dom-listener-types';
 export * from './lib/dom-listener.deps';
+export * from './lib/error-lib';
 export * from './lib/errors';
 export * from './lib/evt';
 export * from './lib/file-reader';
