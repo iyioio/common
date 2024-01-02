@@ -105,7 +105,7 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
         }
 
         if(cancel?.isCanceled){
-            return;
+            return undefined;
         }
 
         if(r.Body){
@@ -131,6 +131,18 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
                 Bucket:formatBucketName(bucket),
                 Body:JSON.stringify(value),
                 ContentType:'application/json',
+            })
+        )
+    }
+
+    public async putStringAsync(bucket:string,key:string,contentType:string,value:string):Promise<void>
+    {
+        await this.getClient().send(
+            new PutObjectCommand({
+                Key:key,
+                Bucket:formatBucketName(bucket),
+                Body:value,
+                ContentType:contentType,
             })
         )
     }

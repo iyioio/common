@@ -43,6 +43,9 @@ export class S3StoreAdapter<T=any> extends BaseStore<T>
     public async getAsync(key:string,cancel?:CancelToken):Promise<T|undefined>
     {
         const {mappedBucket,mappedKey}=this.parseKey(key);
+        if(!mappedBucket || !mappedKey){
+            return undefined;
+        }
         return await this.client.getAsync(mappedBucket,mappedKey,cancel);
     }
 
@@ -50,12 +53,18 @@ export class S3StoreAdapter<T=any> extends BaseStore<T>
     public async putAsync(key:string,value:T):Promise<void>
     {
         const {mappedBucket,mappedKey}=this.parseKey(key);
+        if(!mappedBucket || !mappedKey){
+            return undefined;
+        }
         await this.client.putAsync(mappedBucket,mappedKey,value);
     }
 
     public async deleteAsync(key:string):Promise<boolean|undefined>
     {
         const {mappedBucket,mappedKey}=this.parseKey(key);
+        if(!mappedBucket || !mappedKey){
+            return undefined;
+        }
         return await this.client.deleteAsync(mappedBucket,mappedKey);
     }
 }
