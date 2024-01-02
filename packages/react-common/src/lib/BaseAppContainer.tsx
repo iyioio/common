@@ -1,4 +1,4 @@
-import { HashMap, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
+import { HashMap, initBaseLayout, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
 import { useRouteRedirectFallback } from "./common-hooks";
@@ -11,6 +11,7 @@ export interface BaseAppContainerProps
     children?:any;
     afterAll?:any;
     style?:BaseLayoutStyleSheetProps;
+    skipInitBaseLayout?:boolean;
     scopeInit?:boolean|((reg:ScopeRegistration)=>void);
     onScopeInited?:(scope:Scope)=>void;
     scope?:Scope;
@@ -38,7 +39,12 @@ export function BaseAppContainer({
     staticEnvVars,
     afterAll,
     enableRouteRedirectFallback,
+    skipInitBaseLayout,
 }:BaseAppContainerProps){
+
+    if(!skipInitBaseLayout){
+        initBaseLayout(style);
+    }
 
     const stateRef=useRef({scopeInit,staticEnvVars});
     const [inited,setInited]=useState(false);

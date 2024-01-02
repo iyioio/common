@@ -46,6 +46,7 @@ export * from './lib/base-layout';
 export * from './lib/base-layout-defaults';
 export * from './lib/base-layout-generator';
 export * from './lib/base-layout-generator-types';
+export * from './lib/base-layout-init';
 export * from './lib/base-layout-theme-generator';
 export * from './lib/base64';
 export * from './lib/blob-lib';
