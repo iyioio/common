@@ -1,5 +1,5 @@
 import { atDotCss } from '@iyio/at-dot-css';
-import { baseLayoutCn, BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, escapeHtml, strLineCount } from '@iyio/common';
+import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, escapeHtml, strLineCount } from '@iyio/common';
 import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { Lang } from 'shiki';
@@ -69,7 +69,6 @@ export function CodeInput<P=any>({
     ...props
 }:CodeInputProps<P>){
 
-    style.root();
 
     const sh=useShiki(language);
 
@@ -220,7 +219,7 @@ export function CodeInput<P=any>({
     return (
         <>
             <div
-                className={cn("CodeInput",{tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},baseLayoutCn(props))}
+                className={style.root({loading:!sh,tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},null,props)}
                 style={{
                     minHeight:fillScrollHeight?`var(${scrollViewContainerMinHeightCssVar})`:undefined
                 }}
@@ -312,6 +311,9 @@ const style=atDotCss({name:'CodeInput',css:`
         outline:none;
         outline-width:0;
         cursor:text;
+    }
+    .CodeInput.loading textarea{
+        color:unset;
     }
     .CodeInput.readOnly textarea{
         pointer-events:none;
