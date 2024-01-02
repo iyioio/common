@@ -189,6 +189,8 @@ export const scrollViewContainerMinHeightCssVar='--scroll-view-container-min-hei
 const style=atDotCss({name:'ScrollView',css:`
     @.root{
         position:relative;
+        max-width:100%;
+        max-height:100%;
     }
     @.root.scroll-y > div{
         position:absolute;
