@@ -553,3 +553,31 @@ export const parseConvoJsonMessage=(json:string):any=>{
         .trim()
     );
 }
+
+const danglingReg=/[\r\n^](\s*>\s*user\s*)$/;
+
+export const removeDanglingConvoUserMessage=(code:string):string=>{
+    const dm=danglingReg.exec(code);
+    if(!dm){
+        return code;
+    }
+    return code.substring(0,code.length-(dm[1]??'').length).trim();
+}
+
+export const concatConvoCode=(a:string,b:string):string=>{
+    const dm=danglingReg.exec(a);
+    if(!dm){
+        return a+b;
+    }
+    return a.substring(0,a.length-(dm[1]??'').length)+b;
+}
+
+
+export const concatConvoCodeAndAppendEmptyUserMessage=(a:string,b:string):string=>{
+    const code=concatConvoCode(a,b);
+    if(!danglingReg.test(code)){
+        return code+'\n\n> user\n';
+    }else{
+        return code;
+    }
+}

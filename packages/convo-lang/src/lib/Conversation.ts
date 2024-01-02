@@ -692,7 +692,7 @@ export class Conversation
 
         for(let i=0;i<this._messages.length;i++){
             const msg=this._messages[i];
-            if(!msg){
+            if(!msg || (msg.role==='user' && !msg.content)){
                 continue;
             }
             const flat:FlatConvoMessage={

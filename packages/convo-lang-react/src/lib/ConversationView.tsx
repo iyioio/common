@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { ConversationUiCtrl, ConvoEditorMode } from '@iyio/convo-lang';
+import { ConversationUiCtrl, ConversationUiCtrlOptions, ConvoEditorMode, removeDanglingConvoUserMessage } from '@iyio/convo-lang';
 import { useShallowCompareItem, useSubject } from "@iyio/react-common";
 import { useContext, useEffect, useMemo } from "react";
 import { ConversationInput, ConversationInputProps } from "./ConversationInput";
@@ -12,6 +12,8 @@ export interface ConversationViewProps
 {
     className?:string;
     ctrl?:ConversationUiCtrl;
+    ctrlOptions?:ConversationUiCtrlOptions,
+    content?:string;
     enabledSlashCommands?:boolean;
     renderInput?:(ctrl:ConversationUiCtrl)=>any;
     inputProps?:ConversationInputProps;
@@ -23,6 +25,8 @@ export interface ConversationViewProps
 export function ConversationView({
     className,
     ctrl:ctrlProp,
+    ctrlOptions,
+    content,
     enabledSlashCommands,
     renderInput,
     inputProps,
@@ -33,7 +37,16 @@ export function ConversationView({
 
     const ctxCtrl=useContext(ConversationUiContext);
     const defaultCtrl=ctrlProp??ctxCtrl;
-    const ctrl=useMemo(()=>defaultCtrl??new ConversationUiCtrl(),[defaultCtrl]);
+    const ctrl=useMemo(()=>defaultCtrl??new ConversationUiCtrl(ctrlOptions),[defaultCtrl,ctrlOptions]);
+
+    useEffect(()=>{
+        if(content &&
+            removeDanglingConvoUserMessage(content).trim()!==
+            removeDanglingConvoUserMessage(ctrl.convo?.convo??'').trim()
+        ){
+            ctrl.replace(content);
+        }
+    },[ctrl,content]);
 
     useEffect(()=>{
         if(enabledSlashCommands!==undefined){

@@ -4,6 +4,7 @@ import { Conversation, ConversationOptions } from "./Conversation";
 import { LocalStorageConvoDataStore } from "./LocalStorageConvoDataStore";
 import { getConvoPromptImageUrl } from "./convo-lang-ui-lib";
 import { ConvoDataStore, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
+import { removeDanglingConvoUserMessage } from "./convo-lib";
 import { FlatConvoMessage } from "./convo-types";
 
 export type ConversationUiCtrlTask='completing'|'loading'|'clearing'|'disposed';
@@ -21,6 +22,7 @@ export interface ConversationUiCtrlOptions
     initConvo?:(convo:Conversation)=>void;
     autoSave?:boolean;
     store?:null|'localStorage'|ConvoDataStore;
+    removeDanglingUserMessages?:boolean;
 }
 
 export class ConversationUiCtrl
@@ -35,6 +37,10 @@ export class ConversationUiCtrl
     private readonly convoOptions?:ConversationOptions;
     private readonly initConvo?:(convo:Conversation)=>void;
 
+    private readonly _lastCompletion:BehaviorSubject<string|null>=new BehaviorSubject<string|null>(null);
+    public get lastCompletionSubject():ReadonlySubject<string|null>{return this._lastCompletion}
+    public get lastCompletion(){return this._lastCompletion.value}
+
     private readonly tasks:ConversationUiCtrlTask[]=[];
     private readonly _currentTask:BehaviorSubject<ConversationUiCtrlTask|null>=new BehaviorSubject<ConversationUiCtrlTask|null>(null);
     public get currentTaskSubject():ReadonlySubject<ConversationUiCtrlTask|null>{return this._currentTask}
@@ -48,6 +54,16 @@ export class ConversationUiCtrl
             return;
         }
         this._template.next(value);
+    }
+
+    private readonly _removeDanglingUserMessages:BehaviorSubject<boolean>;;
+    public get removeDanglingUserMessagesSubject():ReadonlySubject<boolean>{return this._removeDanglingUserMessages}
+    public get removeDanglingUserMessages(){return this._removeDanglingUserMessages.value}
+    public set removeDanglingUserMessages(value:boolean){
+        if(value==this._removeDanglingUserMessages.value){
+            return;
+        }
+        this._removeDanglingUserMessages.next(value);
     }
 
     private readonly _convo:BehaviorSubject<Conversation|null>;
@@ -129,10 +145,13 @@ export class ConversationUiCtrl
         convoOptions,
         template,
         autoSave=false,
+        removeDanglingUserMessages=false,
         store='localStorage',
     }:ConversationUiCtrlOptions={}){
 
         this.id=id??shortUuid();
+
+        this._removeDanglingUserMessages=new BehaviorSubject<boolean>(removeDanglingUserMessages)
 
         this.convoOptions=convoOptions;
         this.initConvo=initConvo;
@@ -238,8 +257,17 @@ export class ConversationUiCtrl
             return false;
         }
 
+        if(this.removeDanglingUserMessages){
+            convo=removeDanglingConvoUserMessage(convo);
+        }
+
+
         const c=this.createConvo(false);
-        c.append(convo);
+        try{
+            c.append(convo);
+        }catch{
+            return false;
+        }
 
         this._convo.next(c);
 
@@ -261,6 +289,7 @@ export class ConversationUiCtrl
 
         try{
             await this.convo?.completeAsync();
+            this._lastCompletion.next(this.convo?.convo??null);
         }finally{
             this.popTask('completing');
         }
@@ -327,6 +356,7 @@ export class ConversationUiCtrl
                 convo.appendUserMessage(message);
             }
             await convo.completeAsync();
+            this._lastCompletion.next(convo.convo??null);
             if(this.autoSave){
                 this.queueAutoSave();
             }
