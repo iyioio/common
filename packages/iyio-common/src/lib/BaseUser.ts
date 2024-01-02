@@ -134,4 +134,13 @@ export class BaseUser implements IDisposable, IInit
     {
         return await this.provider.getJwtAsync?.(this.providerData)??null
     }
+
+    public getClaim(name:string):any{
+        return this._claims.value[name];
+    }
+
+    public getStringClaim(name:string):string|undefined{
+        const v=this._claims.value[name];
+        return (typeof v === 'string')?v:undefined;
+    }
 }
