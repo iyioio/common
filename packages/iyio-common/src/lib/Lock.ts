@@ -38,6 +38,15 @@ export class Lock
         }
     }
 
+    public async waitOrCancelAsync(cancel?:CancelToken):Promise<(()=>void)|null>
+    {
+        try{
+            return await this.waitAsync(cancel);
+        }catch{
+            return null;
+        }
+    }
+
     private release()
     {
         this._count--;
