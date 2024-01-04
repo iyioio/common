@@ -344,7 +344,10 @@ export class AuthService implements IDisposable, IInit
         }
 
         if(!code){
-            return undefined;
+            return {
+                success:false,
+                message:'Sign-in code not returned'
+            }
         }
 
         return await this.signInWithCodeAsync(code);
