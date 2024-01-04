@@ -23,6 +23,7 @@ export interface ConversationUiCtrlOptions
     autoSave?:boolean;
     store?:null|'localStorage'|ConvoDataStore;
     removeDanglingUserMessages?:boolean;
+    enableSlashCommand?:boolean;
 }
 
 export class ConversationUiCtrl
@@ -109,7 +110,7 @@ export class ConversationUiCtrl
         this._showFunctions.next(value);
     }
 
-    private readonly _enabledSlashCommands:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
+    private readonly _enabledSlashCommands:BehaviorSubject<boolean>;
     public get enabledSlashCommandsSubject():ReadonlySubject<boolean>{return this._enabledSlashCommands}
     /**
      * If messages appended to the conversation using the appendUiMessage will be checked for messages
@@ -147,11 +148,13 @@ export class ConversationUiCtrl
         autoSave=false,
         removeDanglingUserMessages=false,
         store='localStorage',
+        enableSlashCommand=false,
     }:ConversationUiCtrlOptions={}){
 
         this.id=id??shortUuid();
 
-        this._removeDanglingUserMessages=new BehaviorSubject<boolean>(removeDanglingUserMessages)
+        this._removeDanglingUserMessages=new BehaviorSubject<boolean>(removeDanglingUserMessages);
+        this._enabledSlashCommands=new BehaviorSubject(enableSlashCommand);
 
         this.convoOptions=convoOptions;
         this.initConvo=initConvo;
@@ -299,6 +302,11 @@ export class ConversationUiCtrl
         }
         return true;
     }
+
+    public isSlashCommand(message:string){
+        return cmdReg.test(message);
+    }
+
     public async appendUiMessageAsync(message:string):Promise<boolean|'command'>{
 
         if(this.isDisposed){

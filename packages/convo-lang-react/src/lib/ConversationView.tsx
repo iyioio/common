@@ -16,6 +16,7 @@ export interface ConversationViewProps
     content?:string;
     enabledSlashCommands?:boolean;
     renderInput?:(ctrl:ConversationUiCtrl)=>any;
+    noInput?:boolean;
     inputProps?:ConversationInputProps;
     theme?:ConvoLangTheme|'dark'|'light';
     showSource?:boolean;
@@ -29,6 +30,7 @@ export function ConversationView({
     content,
     enabledSlashCommands,
     renderInput,
+    noInput,
     inputProps,
     theme:_theme='light',
     sourceMode,
@@ -82,7 +84,7 @@ export function ConversationView({
                     <MessagesView ctrl={ctrl} />
                 }
 
-                {!showSource && (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)}
+                {!showSource && !noInput && (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)}
 
             </div>
         </ConversationUiContext.Provider>
