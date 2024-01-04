@@ -53,6 +53,7 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
             r=await this.getClient().send(new GetObjectCommand({
                 Key:key,
                 Bucket:formatBucketName(bucket),
+                ResponseCacheControl:"no-cache"
             }));
         }catch(ex){
             if((ex as any)?.Code==='NoSuchKey'){
@@ -96,6 +97,7 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
             r=await this.getClient().send(new GetObjectCommand({
                 Key:key,
                 Bucket:formatBucketName(bucket),
+                ResponseCacheControl:"no-cache"
             }));
         }catch(ex){
             if((ex as any)?.Code==='NoSuchKey'){
