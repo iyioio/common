@@ -48,6 +48,10 @@ export const strFirstToLower=(str:string)=>
 
 
 export const addSpacesToCamelCase=(value:string):string=>{
+    return camelCaseToSnakeCase(value,' ');
+}
+
+export const camelCaseToSnakeCase=(value:string,separator='_',toCase?:'upper'|'lower'):string=>{
     if(!value){
         return value;
     }
@@ -58,12 +62,19 @@ export const addSpacesToCamelCase=(value:string):string=>{
         const ch=value[i] as string;
         const upper=ch.toUpperCase()===ch;
         if(!wasUpper && upper){
-            value=value.substr(0,i)+' '+value.substr(i);
-            i+=2;
+            value=value.substring(0,i)+separator+value.substring(i);
+            i+=1+separator.length;
             wasUpper=true;
         }else{
             i++;
             wasUpper=upper;
+        }
+    }
+    if(toCase){
+        if(toCase==='lower'){
+            value=value.toLowerCase();
+        }else{
+            value=value.toUpperCase();
         }
     }
     return value;
