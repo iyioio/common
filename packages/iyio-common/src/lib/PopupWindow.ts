@@ -142,7 +142,11 @@ export class PopupWindow
             let lastLocationTrigger:string|null=null;
             this.iv=setInterval(()=>{
                 try{
-                    const location=this.window?.location?.toString();
+                    if(this.isWindowClosed()){
+                        this.trigger(undefined);
+                        this.dispose();
+                    }
+                    const location=this.getWindowLocation();
                     if(!location || lastLocationTrigger===location){
                         return;
                     }
@@ -183,6 +187,22 @@ export class PopupWindow
         }
     }
 
+    public getWindowLocation():string|undefined{
+        try{
+            return this.window.location.toString();
+        }catch{
+            return undefined;
+        }
+    }
+
+    public isWindowClosed():boolean|undefined{
+        try{
+            return this.window.closed;
+        }catch{
+            return undefined;
+        }
+    }
+
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
     public dispose()
@@ -194,10 +214,22 @@ export class PopupWindow
         clearTimeout(this.timeoutIv);
         clearInterval(this.iv);
         if(this.window){
-            this.window.removeEventListener('message',this.messageListener);
-            this.window.removeEventListener('close',this.closeListener);
+            try{
+                this.window.removeEventListener('message',this.messageListener);
+            }catch{
+                //
+            }
+            try{
+                this.window.removeEventListener('close',this.closeListener);
+            }catch{
+                //
+            }
             if(!this.options.keepOpen){
-                this.window.close();
+                try{
+                    this.window.close();
+                }catch{
+                    //
+                }
             }
         }
     }
