@@ -8,6 +8,7 @@ interface CodeViewProps
     wrap?:boolean;
     children?:string;
     language?:string;
+    noBg?:boolean;
 }
 
 export function CodeView({
@@ -15,6 +16,7 @@ export function CodeView({
     wrap,
     children,
     language,
+    noBg,
 }:CodeViewProps){
 
     style.root();
@@ -29,8 +31,11 @@ export function CodeView({
             return;
         }
         elem.innerHTML=sh.codeToHtml(code,{lang:language});
+        if(noBg){
+            elem.querySelectorAll('pre').forEach(e=>e.style.backgroundColor='transparent')
+        }
 
-    },[sh,code,elem,language]);
+    },[sh,code,elem,language,noBg]);
 
     return (
         <pre className="CodeView" style={style.vars({wrap:wrap?'pre-wrap':'pre'})}><code ref={setElem}/></pre>
