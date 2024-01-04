@@ -1,3 +1,5 @@
+import { getFileExt } from "./fs";
+
 const defaultContentType='application/octet-stream';
 
 const extMappings={
@@ -96,4 +98,8 @@ export function getContentType(
         path=path.substring(i+1);
     }
     return (extMappings as any)[path]||defaultType
+}
+
+export const getContentTypeWithTextFallback=(path:string|null|undefined):string=>{
+    return getContentType(path,'text/'+(getFileExt(path)||'plain'))
 }
