@@ -22,7 +22,7 @@ export interface ScrollViewProps extends ViewProps
     autoScrollXOffset?:number;
     autoScrollYOffset?:number;
     containerFill?:boolean;
-
+    byPass?:boolean;
 }
 
 export function ScrollView({
@@ -44,6 +44,7 @@ export function ScrollView({
     autoScrollXOffset,
     autoScrollYOffset,
     containerFill,
+    byPass,
     ...props
 }:ScrollViewProps){
 
@@ -139,7 +140,11 @@ export function ScrollView({
     },[containerRef,container]);
 
     const containerMinWidth=containerProps?.style?.minWidth??(containerFill?rootSize.width:undefined);
-    const containerMinHeight=containerProps?.style?.minHeight??(containerFill?rootSize.height:undefined)
+    const containerMinHeight=containerProps?.style?.minHeight??(containerFill?rootSize.height:undefined);
+
+    if(byPass){
+        return children;
+    }
 
     return (
         <View
