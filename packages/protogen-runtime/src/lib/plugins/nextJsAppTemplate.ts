@@ -66,24 +66,6 @@ export const nextJsAppTemplate=({
     }
 }
 `,
-"components/Page.tsx":
-/*tsx*/`export interface PageProps
-{
-    children?:any;
-}
-
-export function Page({
-    children
-}:PageProps){
-
-    return (
-        <div className="Page">
-            {children}
-        </div>
-    )
-
-}
-`,
 "index.d.ts":
 /*ts*/`/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module '*.svg' {
