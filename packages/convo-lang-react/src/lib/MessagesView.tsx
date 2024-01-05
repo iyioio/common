@@ -234,5 +234,6 @@ const style=atDotCss({name:'MessagesView',css:`
     @.table.singleItem > *:first-child{
         font-size:1rem;
         font-weight:bold;
+        padding-bottom:0;
     }
 `});
