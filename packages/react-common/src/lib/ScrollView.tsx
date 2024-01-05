@@ -22,7 +22,19 @@ export interface ScrollViewProps extends ViewProps
     autoScrollXOffset?:number;
     autoScrollYOffset?:number;
     containerFill?:boolean;
-    byPass?:boolean;
+    /**
+     * When true the children of the scroll view will be returned by passing the scroll view layout
+     * completely. When set to keepContainers the layout of the scroll view will be changed so that
+     * it acts as a non-scrolling container but will prevent the children of the scroll view from
+     * being remounted when switching between modes.
+     */
+    byPass?:boolean|'keepContainers';
+
+    /**
+     * If true and by passing is enabled but not true all of the elements of the scroll view will
+     * be flex columns with a flex value set to 1.
+     */
+    byPassFlex1?:boolean;
 }
 
 export function ScrollView({
@@ -45,6 +57,7 @@ export function ScrollView({
     autoScrollYOffset,
     containerFill,
     byPass,
+    byPassFlex1,
     ...props
 }:ScrollViewProps){
 
@@ -142,14 +155,17 @@ export function ScrollView({
     const containerMinWidth=containerProps?.style?.minWidth??(containerFill?rootSize.width:undefined);
     const containerMinHeight=containerProps?.style?.minHeight??(containerFill?rootSize.height:undefined);
 
-    if(byPass){
+    if(byPass===true){
         return children;
     }
 
     return (
         <View
             elemRef={v=>{elemRef?.(v);setRoot(v)}}
-            className={style.root({[`scroll-${direction}`]:true},className)}
+            className={byPass?
+                style.byPassRoot({byPassFlex1},className):
+                style.root({[`scroll-${direction}`]:true},className)
+            }
             style={{
                 maxHeight:(fitToMaxSize && (direction==='y'||direction==='both'))?fitToMaxSize:undefined,
                 maxWidth:(fitToMaxSize && (direction==='x'||direction==='both'))?fitToMaxSize:undefined,
@@ -160,13 +176,19 @@ export function ScrollView({
             {...props}
         >
 
-            <div ref={v=>{overflowRef?.(v);setOverflowContainer(v)}}>
+            <div
+                className={byPass?style.byPassOverflow({byPassFlex1}):undefined}
+                ref={v=>{overflowRef?.(v);setOverflowContainer(v)}}
+            >
                 <View
                     row={row}
                     col={col}
-                    className={style.container(null,[containerClassName,containerProps?.className])}
+                    className={byPass?
+                        style.byPassContainer({byPassFlex1}):
+                        style.container(null,[containerClassName,containerProps?.className])
+                    }
                     {...containerProps}
-                    style={{
+                    style={byPass?containerProps?.style:{
                         ...containerProps?.style,
                         minWidth:containerMinWidth,
                         minHeight:containerMinHeight,
@@ -224,6 +246,26 @@ const style=atDotCss({name:'ScrollView',css:`
     }
     @.container{
         position:relative;
+    }
+
+
+    @.byPassRoot{
+        position:relative;
+    }
+    @.byPassRoot.byPassFlex1{
+        display:flex;
+        flex-direction:column;
+        flex:1;
+    }
+    @.byPassOverflow.byPassFlex1{
+        display:flex;
+        flex-direction:column;
+        flex:1;
+    }
+    @.byPassContainer.byPassFlex1{
+        display:flex;
+        flex-direction:column;
+        flex:1;
     }
 
 `});
