@@ -1,6 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { ConversationUiCtrl } from "@iyio/convo-lang";
-import { useState } from "react";
+import { Form } from "@iyio/react-common";
+import { useEffect, useRef, useState } from "react";
 import { useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
 
 export interface ConversationInputProps
@@ -11,6 +12,7 @@ export interface ConversationInputProps
     inputType?:string;
     inputClassName?:string;
     placeholder?:string;
+    submitTrigger?:any;
 }
 
 export function ConversationInput({
@@ -20,27 +22,35 @@ export function ConversationInput({
     className,
     inputClassName,
     placeholder='Enter message',
+    submitTrigger,
 }:ConversationInputProps){
 
     const ctrl=useConversationUiCtrl(_ctrl);
-
     const theme=useConversationTheme(_ctrl);
-
     const [value,setValue]=useState('');
 
+    const submit=()=>{
+        if(ctrl.currentTask){
+            return;
+        }
+        setValue('');
+        ctrl.appendUiMessageAsync(value);
+    }
+
+    const refs=useRef({submit});
+    refs.current.submit=submit;
+
+    useEffect(()=>{
+        if(submitTrigger!==undefined){
+            refs.current.submit();
+        }
+    },[submitTrigger]);
 
     return (
-        <form
+        <Form
             className={style.root(null,className)}
             style={style.vars(theme)}
-            onSubmit={e=>{
-                e.preventDefault();
-                if(ctrl.currentTask){
-                    return;
-                }
-                setValue('');
-                ctrl.appendUiMessageAsync(value);
-            }}
+            onSubmit={submit}
         >
 
             <input
@@ -52,7 +62,7 @@ export function ConversationInput({
                 onChange={e=>setValue(e.target.value)}
             />
 
-        </form>
+        </Form>
     )
 
 }
