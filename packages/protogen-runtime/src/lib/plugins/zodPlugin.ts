@@ -670,6 +670,10 @@ const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>
         noAutoLength=true;
     }
 
+    if(prop.name==='url' || prop.name.endsWith('Url') || prop.name.endsWith('URL')){
+        noAutoLength=true;
+    }
+
     if( !noAutoLength &&
         propType==='string' &&
         !attChildren['max'] &&
