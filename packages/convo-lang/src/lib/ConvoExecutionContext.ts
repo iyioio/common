@@ -164,6 +164,13 @@ export class ConvoExecutionContext
             for(const e in args){
                 this.setVar(false,args[e],e,undefined,scope);
             }
+            if(scheme.shape){
+                for(const e in scheme.shape){
+                    if(vars[e]===undefined){
+                        this.setVar(false,undefined,e,undefined,scope);
+                    }
+                }
+            }
         }else{
             if(typeof this.sharedVars[fn.name] !== 'function'){
                 throw new ConvoError('function-not-defined',{fn},`No function defined by name ${fn.name}`)
