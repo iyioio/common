@@ -119,6 +119,7 @@ export * from './lib/queue-types';
 export * from './lib/queue.deps';
 export * from './lib/resource-refs';
 export * from './lib/roles-helper';
+export * from './lib/rxjs-array-helpers';
 export * from './lib/rxjs-helpers';
 export * from './lib/rxjs-types';
 export * from './lib/scope-lib';
