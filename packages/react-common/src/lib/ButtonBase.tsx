@@ -24,7 +24,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     style?:CSSProperties;
     description?:string;
     title?:string;
-    extraProps?:Record<string,string>
+    extraProps?:Record<string,string|undefined>
 }
 
 export interface ButtonBaseInternalProps extends ButtonBaseProps

@@ -20,6 +20,7 @@ export interface UiActionItem<TIcon=string,TData=any>
     action?:(item:UiActionItem)=>void;
     linkTarget?:string;
     data?:TData;
+    mapKey?:string|number|null;
 }
 
 export interface UiActionSubItem<TIcon=string,TData=any> extends UiActionItem<TIcon,TData>

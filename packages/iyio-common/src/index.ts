@@ -5,6 +5,7 @@ export * from './lib/BaseUser';
 export * from './lib/Binding';
 export * from './lib/BrowserUiRouter';
 export * from './lib/CancelToken';
+export * from './lib/ContextMenuCtrl';
 export * from './lib/DisposeContainer';
 export * from './lib/DomListener';
 export * from './lib/ElementSizeObserver';

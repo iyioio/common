@@ -42,3 +42,22 @@ export const useIncrementSubject=(subject:BehaviorSubject<number>,active:boolean
         }
     },[subject,active]);
 }
+
+export function useRenderSubject(subject:Observable<any>|null|undefined):number
+{
+    const [value,setValue]=useState(0);
+
+    useEffect(()=>{
+        if(!subject){
+            return;
+        }
+        const sub=subject.subscribe(()=>{
+            setValue(v=>v+1);
+        })
+        return ()=>{
+            sub.unsubscribe();
+        }
+    },[subject]);
+
+    return value;
+}

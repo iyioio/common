@@ -1,6 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutInnerProps, DisposeCallback, aryRemoveItem, bcn, cn, domListener } from "@iyio/common";
 import { useEffect, useId, useRef, useState } from "react";
+import { DomPortal, DomPortalProps } from "./DomPortal";
+import { getEventCaptureProps } from "./EventCaptureContainer";
 import { Portal } from "./Portal";
 import { PortalProps } from "./portal-lib";
 
@@ -37,6 +39,13 @@ export interface ModalBaseProps extends ModalOpenCloseProps, PortalProps, BaseLa
      * Disable to escape key listener that closes the modal when escape is pressed
      */
     disableEscapeListener?:boolean;
+
+    /**
+     * If true a DomPortal will be used instead of a Portal
+     */
+    useDomPortal?:boolean;
+
+    domPortalProps?:DomPortalProps;
 }
 
 export function ModalBase({
@@ -57,6 +66,8 @@ export function ModalBase({
     keepMounted,
     renderInline,
     disableEscapeListener,
+    useDomPortal,
+    domPortalProps,
     ...props
 }:ModalBaseProps){
 
@@ -109,26 +120,37 @@ export function ModalBase({
         return null;
     }
 
-    return (
-        <>
+    const modalContent=(
+        <div
+            {...(useDomPortal?getEventCaptureProps():undefined)}
+            ref={elemRef}
+            style={{zIndex}}
+            data-modal-id={modalId}
+            className={bcn(
+                props,
+                'ModelBase',
+                open?'ModelBase-open':'ModelBase-closed',
+                !show&&'hidden',
+                noDefaultTransition?undefined:(open?'ModelBase-defaultIn':'ModelBase-defaultOut'),
+                {center,scrollable,hideScrollBarOnOut,renderInline}
+            )}
+        >
+            <div className={cn("ModelBase-bg",bgClassName)} style={{background}} onClick={()=>closeRequested?.(false)}/>
+
+            <div className={cn("ModelBase-content",contentClassName)}>
+                {children}
+            </div>
+        </div>
+    )
+
+    return (useDomPortal?
+            <DomPortal renderInline={renderInline} {...domPortalProps}>
+                {modalContent}
+            </DomPortal>
+        :
             <Portal rendererId={rendererId} renderInline={renderInline}>
-                <div ref={elemRef} style={{zIndex}} data-modal-id={modalId} className={bcn(
-                    props,
-                    'ModelBase',
-                    open?'ModelBase-open':'ModelBase-closed',
-                    !show&&'hidden',
-                    noDefaultTransition?undefined:(open?'ModelBase-defaultIn':'ModelBase-defaultOut'),
-                    {center,scrollable,hideScrollBarOnOut,renderInline}
-                )}>
-
-                    <div className={cn("ModelBase-bg",bgClassName)} style={{background}} onClick={()=>closeRequested?.(false)}/>
-
-                    <div className={cn("ModelBase-content",contentClassName)}>
-                        {children}
-                    </div>
-                </div>
+                {modalContent}
             </Portal>
-        </>
     )
 
 }
