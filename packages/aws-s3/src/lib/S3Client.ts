@@ -151,10 +151,17 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
 
     public async deleteAsync(bucket:string,key:string):Promise<boolean|undefined>
     {
-        await this.getClient().send(new DeleteObjectCommand({
-            Key:key,
-            Bucket:formatBucketName(bucket),
-        }));
+        try{
+            await this.getClient().send(new DeleteObjectCommand({
+                Key:key,
+                Bucket:formatBucketName(bucket),
+            }));
+        }catch(ex){
+            if((ex as any)?.Code==='NoSuchKey'){
+                return false;
+            }
+            throw ex;
+        }
 
         return true;
     }
