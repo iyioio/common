@@ -21,6 +21,7 @@ export interface ConversationViewProps
     theme?:ConvoLangTheme|'dark'|'light';
     showSource?:boolean;
     sourceMode?:ConvoEditorMode;
+    showInputWithSource?:boolean;
 }
 
 export function ConversationView({
@@ -35,6 +36,7 @@ export function ConversationView({
     theme:_theme='light',
     sourceMode,
     showSource:_showSource,
+    showInputWithSource,
 }:ConversationViewProps){
 
     const ctxCtrl=useContext(ConversationUiContext);
@@ -84,7 +86,7 @@ export function ConversationView({
                     <MessagesView ctrl={ctrl} />
                 }
 
-                {!showSource && !noInput && (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)}
+                {(!showSource || showInputWithSource) && !noInput && (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)}
 
             </div>
         </ConversationUiContext.Provider>
@@ -92,7 +94,7 @@ export function ConversationView({
 
 }
 
-const style=atDotCss({name:'ConversationView',css:`
+const style=atDotCss({name:'ConversationView',order:'framework',namespace:'iyio',css:`
     @.root{
         display:flex;
         flex-direction:column;

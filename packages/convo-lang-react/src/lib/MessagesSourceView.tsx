@@ -93,7 +93,7 @@ export function MessagesSourceView({
 
 }
 
-const style=atDotCss({name:'MessagesSourceView',css:`
+const style=atDotCss({name:'MessagesSourceView',order:'framework',namespace:'iyio',css:`
     @.root{
         display:flex;
         flex-direction:column;

@@ -67,7 +67,7 @@ export function ConversationInput({
 
 }
 
-const style=atDotCss({name:'ConversationInput',css:`
+const style=atDotCss({name:'ConversationInput',order:'framework',namespace:'iyio',css:`
     @.root{
         display:flex;
         flex-direction:row;

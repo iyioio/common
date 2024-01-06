@@ -166,7 +166,7 @@ export function MessagesView({
 
 }
 
-const style=atDotCss({name:'MessagesView',css:`
+const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css:`
     @.root{
         flex:1;
         display:flex;
