@@ -1,6 +1,7 @@
-import { CSSProperties, useMemo } from "react";
+import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { EventCaptureContainer } from "./EventCaptureContainer";
+import { DomPortalRenderTarget, domPortalRenderers } from "./dom-portal-lib";
 
 export interface DomPortalProps
 {
@@ -32,6 +33,10 @@ export interface DomPortalProps
     captureContainerStyle?:CSSProperties;
 
     portalKey?:string;
+
+    rendererId?:string;
+
+    parentContainer?:Element;
 }
 
 export function DomPortal({
@@ -43,15 +48,34 @@ export function DomPortal({
     captureEvents,
     captureContainerClassName,
     captureContainerStyle,
-    portalKey
+    portalKey,
+    rendererId,
 }:DomPortalProps){
 
-    const targetElem=useMemo(()=>
+    const [renderTarget,setRenderTarget]=useState<DomPortalRenderTarget|null>(null);
+    useEffect(()=>{
+        if(rendererId===undefined){
+            return;
+        }
+
+        const sub=domPortalRenderers.subscribe(targets=>{
+            setRenderTarget(targets.find(t=>t.id===rendererId)??null);
+        })
+
+        return ()=>{
+            sub.unsubscribe();
+        }
+
+    },[rendererId]);
+
+    const targetSelection=useMemo(()=>
         target??(targetSelector?
             (globalThis.document?.querySelector(targetSelector)??undefined):
             globalThis?.document?.body
         )
-    ,[target,targetSelector])
+    ,[target,targetSelector]);
+
+    const targetElem=rendererId?renderTarget?.node:targetSelection;
 
     if(disabled){
         return null;
