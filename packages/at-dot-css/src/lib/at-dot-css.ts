@@ -79,7 +79,7 @@ function varsDef(
         }
         for(const e in vars){
             const v=vars[e];
-            if(v===undefined){
+            if(v===undefined || (typeof v === 'object')){
                 styleOrElem.style.removeProperty(`--${this.name}-${e}`);
             }else{
                 styleOrElem.style.setProperty(`--${this.name}-${e}`,v);
@@ -92,6 +92,10 @@ function varsDef(
         }
         const obj:any=styleOrElem?{...styleOrElem}:{};
         for(const e in vars){
+            const v=vars[e];
+            if(v===undefined || (typeof v === 'object')){
+                continue;
+            }
             obj[`--${this.name}-${e}`]=vars[e];
         }
         return obj;
