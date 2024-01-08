@@ -105,7 +105,7 @@ export function CodeInput<P=any>({
         if(parser){
             const iv=setTimeout(()=>{
                 try{
-                    const r=parser(value,debugParser===true?console.info:(debugParser||undefined));
+                    const r=parser(value,debugParser?debugParser===true?{debug:console.info}:{debug:debugParser}:undefined);
                     if(logParsed){
                         console.info('CodeInput parsing result',r)
                     }

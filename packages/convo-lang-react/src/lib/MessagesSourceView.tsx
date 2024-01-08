@@ -24,7 +24,7 @@ export function MessagesSourceView({
 
     const convo=useConversation(_ctrl);
 
-    const varsFlat=useSubject(mode==='vars'?convo?.flatSubject:undefined);
+    const flatConvo=useSubject((mode==='vars' || mode==='flat')?convo?.flatSubject:undefined);
 
     const theme=useConversationTheme(_ctrl);
 
@@ -70,8 +70,17 @@ export function MessagesSourceView({
                 <LazyCodeInput
                     lineNumbers
                     fillScrollHeight
-                    language={mode==='vars'?'json':'convo'}
-                    value={mode==='vars'?JSON.stringify(varsFlat?.exe.getUserSharedVars()??{},createJsonRefReplacer(),4):code}
+                    language={mode==='code'?'convo':'json'}
+                    value={
+                        mode==='vars'?
+                            JSON.stringify(flatConvo?.exe.getUserSharedVars()??{},createJsonRefReplacer(),4)
+                        :mode==='flat'?
+                            JSON.stringify(flatConvo?.messages??[],null,4)
+                        :mode==='tree'?
+                            JSON.stringify(convo?.messages??[],null,4)
+                        :
+                            code
+                    }
                     readOnly={!!currentTask || mode!=='code'}
                     onChange={setCode}
                     parser={mode==='code'?parseConvoCode:undefined}
@@ -84,10 +93,10 @@ export function MessagesSourceView({
                 <LoadingDots disabled={!currentTask}/>
             </div>
 
-            <div className={style.shortcut()}>
+            {mode==='code' && <div className={style.shortcut()}>
                 <SlimButton onClick={()=>submit(code)}>Submit</SlimButton>
                 <span>( ctrl + enter )</span>
-            </div>
+            </div>}
         </div>
     )
 

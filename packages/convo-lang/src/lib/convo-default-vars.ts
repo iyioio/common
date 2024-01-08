@@ -1,10 +1,11 @@
 import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
 import { format } from "date-fns";
+import { ZodObject } from "zod";
 import { ConvoError } from "./ConvoError";
 import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDateFormat, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
 import { ConvoIterator, ConvoScope } from "./convo-types";
-import { convoTypeToJsonScheme, convoValueToZodType } from "./convo-zod";
+import { convoTypeToJsonScheme, convoValueToZodType, describeConvoScheme } from "./convo-zod";
 
 const ifFalse=Symbol();
 const ifTrue=Symbol();
@@ -47,6 +48,14 @@ const or=createConvoScopeFunction({
 },scope=>{
     return scope.paramValues?scope.paramValues[scope.paramValues.length-1]:undefined;
 })
+
+const describeStruct=createConvoScopeFunction(scope=>{
+    const type=convoValueToZodType(scope.paramValues?.[0]);
+    if(!(type instanceof ZodObject)){
+        throw new ConvoError('invalid-args',{statement:scope.s},'The first arg of new should be a type variable')
+    }
+    return describeConvoScheme(type,scope.paramValues?.[1]);
+});
 
 export const defaultConvoVars={
 
@@ -764,13 +773,14 @@ export const defaultConvoVars={
         }
     }),
 
-    md:createConvoScopeFunction(scope=>{
+    md:createConvoScopeFunction((scope)=>{
         if(!scope.paramValues?.length){
             return '';
         }
         const out:string[]=[];
         for(let i=0;i<scope.paramValues.length;i++){
-            objectToMarkdownBuffer(scope.paramValues[i],out,'',5);
+            const value=scope.paramValues[i];
+            objectToMarkdownBuffer(value,out,'',5);
         }
         return out.join('');
     }),
@@ -847,7 +857,23 @@ export const defaultConvoVars={
         return value;
     }),
 
+    ['new']:createConvoScopeFunction(scope=>{
+        const type=convoValueToZodType(scope.paramValues?.[0]);
+        if(!(type instanceof ZodObject)){
+            throw new ConvoError('invalid-args',{statement:scope.s},'The first arg of new should be a type variable')
+        }
+        const r=type.safeParse(scope.paramValues?.[1]??{});
+        if(r.success){
+            return r.data;
+        }else{
+            throw new ConvoError('missing-defaults',{statement:scope.s},'The type has missing property defaults and can not be used with the new function - '+r.error.message);
+        }
+    }),
+
+    describeStruct,
+
 } as const;
 
 Object.freeze(defaultConvoVars);
+
 

@@ -3,7 +3,7 @@ import { BehaviorSubject } from "rxjs";
 import { Conversation, ConversationOptions } from "./Conversation";
 import { LocalStorageConvoDataStore } from "./LocalStorageConvoDataStore";
 import { getConvoPromptImageUrl } from "./convo-lang-ui-lib";
-import { ConvoDataStore, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
+import { ConvoDataStore, ConvoEditorMode, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
 import { removeDanglingConvoUserMessage } from "./convo-lib";
 import { FlatConvoMessage } from "./convo-types";
 
@@ -82,6 +82,16 @@ export class ConversationUiCtrl
             return;
         }
         this._showSource.next(value);
+    }
+
+    private readonly _editorMode:BehaviorSubject<ConvoEditorMode>=new BehaviorSubject<ConvoEditorMode>('code');
+    public get editorModeSubject():ReadonlySubject<ConvoEditorMode>{return this._editorMode}
+    public get editorMode(){return this._editorMode.value}
+    public set editorMode(value:ConvoEditorMode){
+        if(value==this._editorMode.value){
+            return;
+        }
+        this._editorMode.next(value);
     }
 
     private readonly _showSystemMessages:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(false);
@@ -322,7 +332,23 @@ export class ConversationUiCtrl
             switch(message){
 
                 case '/source':
-                    this.showSource=!this.showSource;
+                    this.showSource=this.editorMode==='code'?!this.showSource:true;
+                    this.editorMode='code';
+                    break;
+
+                case '/vars':
+                    this.showSource=this.editorMode==='vars'?!this.showSource:true;
+                    this.editorMode='vars';
+                    break;
+
+                case '/flat':
+                    this.showSource=this.editorMode==='flat'?!this.showSource:true;
+                    this.editorMode='flat';
+                    break;
+
+                case '/tree':
+                    this.showSource=this.editorMode==='tree'?!this.showSource:true;
+                    this.editorMode='tree';
                     break;
 
                 case '/system':

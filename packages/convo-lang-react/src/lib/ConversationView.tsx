@@ -34,7 +34,7 @@ export function ConversationView({
     noInput,
     inputProps,
     theme:_theme='light',
-    sourceMode,
+    sourceMode:_sourceMode,
     showSource:_showSource,
     showInputWithSource,
 }:ConversationViewProps){
@@ -74,6 +74,9 @@ export function ConversationView({
     const showSourceCtrl=useSubject(ctrl.showSourceSubject);
     const showSource=_showSource??showSourceCtrl;
 
+    const sourceModeCtrl=useSubject(ctrl.editorModeSubject);
+    const sourceMode=_sourceMode??sourceModeCtrl;
+
     return (
 
         <ConversationUiContext.Provider value={ctrl}>
@@ -86,7 +89,11 @@ export function ConversationView({
                     <MessagesView ctrl={ctrl} />
                 }
 
-                {(!showSource || showInputWithSource) && !noInput && (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)}
+                {
+                    (!showSource || showInputWithSource) &&
+                    !noInput &&
+                    (renderInput?renderInput(ctrl):<ConversationInput ctrl={ctrl} {...inputProps} />)
+                }
 
             </div>
         </ConversationUiContext.Provider>

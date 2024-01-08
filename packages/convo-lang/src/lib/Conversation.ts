@@ -1,10 +1,10 @@
-import { ReadonlySubject, delayAsync } from "@iyio/common";
+import { ReadonlySubject, delayAsync, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, parseConvoJsonMessage, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, isConvoCapability } from "./convo-types";
+import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, isConvoCapability } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -116,6 +116,11 @@ export class Conversation
     public get flat(){return this._flat.value}
 
 
+    private readonly _subTasks:BehaviorSubject<ConvoSubTask[]>=new BehaviorSubject<ConvoSubTask[]>([]);
+    public get subTasksSubject():ReadonlySubject<ConvoSubTask[]>{return this._subTasks}
+    public get subTasks(){return this._subTasks.value}
+
+
 
     /**
      * Unregistered variables will be available during execution but will not be added to the code
@@ -148,6 +153,7 @@ export class Conversation
     private readonly autoFlattenDelayMs:number;
 
     public dynamicFunctionCallback:ConvoScopeFunction|undefined;
+
 
     /**
      * A function that will be used to output debug values. By default debug information is written
@@ -345,7 +351,7 @@ export class Conversation
             }
         }
 
-        const flat=await this.flattenAsync(undefined,false);
+        const flat=await this.flattenAsync(undefined,{setCurrent:false});
         if(this.isDisposed || id!==this.autoFlattenId){
             return;
         }
@@ -411,9 +417,12 @@ export class Conversation
         this._flat.next(dup?{...flat}:flat);
     }
 
-    public async callFunctionAsync(fn:ConvoFunction|string,args:Record<string,any>={}):Promise<any>
-    {
-        const c=await this.tryCompleteAsync(flat=>{
+    public async callFunctionAsync(
+        fn:ConvoFunction|string,
+        args:Record<string,any>={},
+        options?:ConvoCompletionOptions
+    ):Promise<any>{
+        const c=await this.tryCompleteAsync(options?.task,flat=>{
 
             if(typeof fn === 'object'){
                 flat.exe.loadFunctions([{
@@ -437,32 +446,42 @@ export class Conversation
      * submitting.
      * @param append Optional message to append before submitting
      */
-    public async completeAsync(append?:string):Promise<ConvoCompletion>{
-        if(append){
-            this.append(append);
+    public async completeAsync(appendOrOptions?:string|ConvoCompletionOptions):Promise<ConvoCompletion>{
+        if(typeof appendOrOptions === 'string'){
+            this.append(appendOrOptions);
+            appendOrOptions=undefined;
+        }
+
+        if(appendOrOptions?.append){
+            this.append(appendOrOptions.append);
         }
 
         const completionService=this.completionService;
 
-        return await this.tryCompleteAsync(flat=>completionService?.completeConvoAsync(flat)??[])
+        return await this.tryCompleteAsync(
+            appendOrOptions?.task,
+            flat=>completionService?.completeConvoAsync(flat)??[]
+        )
     }
 
     private async tryCompleteAsync(
+        task:string|undefined,
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth=0,
         prevCompletion?:ConvoCompletionMessage[],
-        preReturnValues?:any[]
+        preReturnValues?:any[],
     ):Promise<ConvoCompletion>{
 
         if(this._isCompleting.value){
             return {
                 status:'busy',
                 messages:[],
+                task:task??defaultConvoTask,
             }
         }else{
             this._isCompleting.next(true);
             try{
-                return await this._completeAsync(getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
+                return await this._completeAsync(task,getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
             }finally{
                 this._isCompleting.next(false);
             }
@@ -474,11 +493,18 @@ export class Conversation
     public get isCompleting(){return this._isCompleting.value}
 
     private async _completeAsync(
+        task:string|undefined,
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth:number,
         prevCompletion?:ConvoCompletionMessage[],
-        preReturnValues?:any[]
+        preReturnValues?:any[],
+        templates?:ConvoMessageTemplate[]
     ):Promise<ConvoCompletion>{
+
+        if(task===undefined){
+            task=defaultConvoTask;
+        }
+        const isDefaultTask=task===defaultConvoTask;
 
         if(!this.runtimeInited){
             this.initRuntime();
@@ -489,21 +515,30 @@ export class Conversation
         try{
             const append:string[]=[];
             const flatExe=this.createConvoExecutionContext(append);
-            const flat=await this.flattenAsync(flatExe,false);
+            const flat=await this.flattenAsync(flatExe,{
+                setCurrent:false,
+                task,
+                discardTemplates:!isDefaultTask || templates!==undefined
+            });
+            if(flat.templates && !templates){
+                templates=flat.templates;
+            }
             const exe=flat.exe;
             if(this._isDisposed){
-                return {messages:[],status:'disposed'}
+                return {messages:[],status:'disposed',task}
             }
 
             for(const e in this.unregisteredVars){
                 flat.exe.setVar(false,this.unregisteredVars[e],e);
             }
 
-            this.setFlat(flat);
+            if(isDefaultTask){
+                this.setFlat(flat);
+            }
 
             const completion=await getCompletion(flat);
             if(this._isDisposed){
-                return {messages:[],status:'disposed'};
+                return {messages:[],status:'disposed',task};
             }
 
             let cMsg:ConvoCompletionMessage|undefined=undefined;
@@ -528,12 +563,14 @@ export class Conversation
 
                 if(msg.content){
                     cMsg=msg;
-                    this.append(`${this.getPrefixTags({includeTokenUsage,msg})}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                    if(isDefaultTask){
+                        this.append(`${this.getPrefixTags({includeTokenUsage,msg})}${tagsCode}> ${this.getReversedMappedRole(msg.role)}\n${escapeConvoMessageContent(msg.content)}\n`);
+                    }
                     includeTokenUsage=false;
                 }
 
                 if(msg.callFn){
-                    const result=this.append(`${
+                    const callMsg=`${
                         this.getPrefixTags({includeTokenUsage,msg})
                     }${
                         tagsCode
@@ -541,7 +578,8 @@ export class Conversation
                         msg.callFn
                     }(${
                         msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
-                    })`);
+                    })`
+                    const result=isDefaultTask?this.append(callMsg):parseConvoCode(callMsg);
                     includeTokenUsage=false;
                     const callMessage=result.result?.[0];
                     if(result.result?.length!==1 || !callMessage){
@@ -557,11 +595,12 @@ export class Conversation
                     }
                     const callResult=await exe.executeFunctionResultAsync(callMessage.fn);
                     if(this._isDisposed){
-                        return {messages:[],status:'disposed'}
+                        return {messages:[],status:'disposed',task}
                     }
                     const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
                     const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
                     const disableAutoComplete=(
+                        !isDefaultTask ||
                         exe.getVarEx(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
                         containsConvoTag(target?.tags,convoTags.disableAutoComplete)
                     )
@@ -588,17 +627,21 @@ export class Conversation
                         lines.push(`${convoResultReturnName}=${JSON.stringify(lastResultValue,null,4)}`)
                     }
                     lines.push('');
-                    this.append(lines.join('\n'),true);
+                    if(isDefaultTask){
+                        this.append(lines.join('\n'),true);
+                    }
 
                     if(disableAutoComplete){
                         lastResultValue=undefined;
                     }
 
-                    this.setFlat(flat);
+                    if(isDefaultTask){
+                        this.setFlat(flat);
+                    }
 
                 }
 
-                if(includeTokenUsage){
+                if(includeTokenUsage && isDefaultTask){
                     this.append(`${this.getPrefixTags({includeTokenUsage,msg})}> define\n// token usage placeholder`);
                     includeTokenUsage=false;
                 }
@@ -617,15 +660,26 @@ export class Conversation
             }
 
             if(append.length){
-                for(const a of (append as string[])){
-                    this.append(a);
+                if(isDefaultTask){
+                    for(const a of (append as string[])){
+                        this.append(a);
+                    }
                 }
             }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth){
-                return await this._completeAsync(getCompletion,autoCompleteDepth+1,completion,returnValues);
+                return await this._completeAsync(task,getCompletion,autoCompleteDepth+1,completion,returnValues,templates);
             }
 
-            if(!this.disableAutoFlatten){
+            if(isDefaultTask && templates?.length){
+                this.writeTemplates(templates,flat);
+            }
+
+            if(!this.disableAutoFlatten && isDefaultTask){
                 this.autoFlattenAsync();
+            }
+
+
+            if(flat.taskTriggers?.[convoTaskTriggers.onResponse]){
+                this.startSubTasks(flat,convoTaskTriggers.onResponse,getCompletion,autoCompleteDepth+1);
             }
 
             return {
@@ -634,11 +688,92 @@ export class Conversation
                 messages:completion,
                 exe,
                 returnValues,
+                task
             }
         }finally{
             this._activeTaskCount.next(this.activeTaskCount-1);
         }
     }
+
+    private writeTemplates(
+        templates:ConvoMessageTemplate[],
+        flat:FlatConvoConversation
+    ){
+        for(let i=0;i<templates.length;i++){
+            const tmpl=templates[i];
+            if(!tmpl?.watchPath || !tmpl.message.statement?.source){continue}
+
+            const value=flat.exe.getVar(tmpl.watchPath);
+            if( value!==tmpl.startValue &&
+                (tmpl.matchValue===undefined?
+                    true:
+                    (value?.toString()??'')===tmpl.matchValue
+                )
+            ){
+
+                const tags:string[]=[];
+                if(tmpl.message.tags){
+                    for(let t=0;t<tmpl.message.tags.length;t++){
+                        const tag=tmpl.message.tags[t];
+                        if(!tag || tag.name===convoTags.template){continue}
+                        tags.push(`@${tag.name}${tag.value?' '+tag.value:''}\n`)
+
+                    }
+                }
+
+                const tmplMsg=`@${convoTags.sourceTemplate}${
+                    tmpl.name?' '+tmpl.name:''
+                }\n${
+                    tags.join('')
+                }${
+                    tmpl.message.statement.source
+                }`;
+
+                this.append(tmplMsg);
+            }
+
+        }
+    }
+
+    private startSubTasks(
+        flat:FlatConvoConversation,
+        trigger:string,
+        getCompletion:ConvoFlatCompletionCallback,
+        autoCompleteDepth:number)
+    {
+        const tasks=flat.taskTriggers?.[trigger];
+        if(!tasks?.length){
+            return;
+        }
+
+        let added=false;
+        const remove:ConvoSubTask[]=[];
+
+        const subs=tasks.map<ConvoSubTask>(task=>{
+            const promise=this._completeAsync(task,getCompletion,autoCompleteDepth);
+            const sub:ConvoSubTask={
+                name:task,
+                promise
+            }
+
+            promise.then(()=>{
+                if(added){
+                    removeBehaviorSubjectAryValue(this._subTasks,sub);
+                }else{
+                    remove.push(sub);
+                }
+            })
+
+            return sub;
+        });
+
+        pushBehaviorSubjectAryMany(this._subTasks,subs);
+        added=true;
+        if(remove.length){
+            removeBehaviorSubjectAryValueMany(this._subTasks,remove);
+        }
+    }
+
 
     public getReversedMappedRole(role:string|null|undefined):string{
         if(!role){
@@ -679,8 +814,14 @@ export class Conversation
 
     public async flattenAsync(
         exe:ConvoExecutionContext=this.createConvoExecutionContext(),
-        setCurrent=true
+        {
+            task=defaultConvoTask,
+            setCurrent=task===defaultConvoTask,
+            discardTemplates,
+        }:FlattenConvoOptions={}
     ):Promise<FlatConvoConversation>{
+
+        const isDefaultTask=task===defaultConvoTask;
 
         const messages:FlatConvoMessage[]=[];
         const edgePairs:{
@@ -689,15 +830,64 @@ export class Conversation
         }[]=[];
 
         exe.loadFunctions(this._messages,this.externFunctions);
+        let hasNonDefaultTasks=false;
+        let maxTaskMsgCount=-1;
+        let taskTriggers:Record<string,string[]>|undefined;
+        let templates:ConvoMessageTemplate[]|undefined;
 
         for(let i=0;i<this._messages.length;i++){
             const msg=this._messages[i];
             if(!msg || (msg.role==='user' && !msg.content)){
                 continue;
             }
+
+            const template=getConvoTag(msg.tags,convoTags.template)?.value;
+            if(template){
+                if(discardTemplates){
+                    continue;
+                }
+                const tmpl=parseConvoMessageTemplate(msg,template);
+                if(!templates){
+                    templates=[];
+                }
+                templates.push(tmpl);
+                continue;
+            }
+
             const flat:FlatConvoMessage={
                 role:this.getMappedRole(msg.role),
                 tags:msg.tags?convoTagsToMap(msg.tags):undefined,
+            }
+
+            if(msg.component!==undefined){
+                flat.component=msg.component;
+            }
+            if(msg.renderOnly){
+                flat.renderOnly=true;
+            }
+
+            const msgTask=getConvoTag(msg.tags,convoTags.task)?.value??defaultConvoTask;
+            if(msgTask!==defaultConvoTask){
+                hasNonDefaultTasks=true;
+                flat.task=msgTask;
+                if(isDefaultTask){
+                    const trigger=getConvoTag(msg.tags,convoTags.taskTrigger)?.value;
+                    if(trigger){
+                        if(!taskTriggers){
+                            taskTriggers={}
+                        }
+                        const ary=taskTriggers[trigger]??(taskTriggers[trigger]=[]);
+                        if(!ary.includes(msgTask)){
+                            ary.push(msgTask);
+                        }
+                    }
+                }
+            }
+            if(msgTask===task){
+                const maxTasks=getConvoTag(msg.tags,convoTags.maxTaskMessageCount)?.value;
+                if(maxTasks){
+                    maxTaskMsgCount=safeParseNumber(maxTasks,maxTaskMsgCount);
+                }
             }
             if(this.userRoles.includes(flat.role)){
                 flat.isUser=true;
@@ -766,7 +956,7 @@ export class Conversation
         }
 
 
-        if(this.capabilities.includes('vision')){
+        if(this.capabilities.includes('vision') && isDefaultTask){
             const systemMessage=messages.find(m=>m.role==='system');
             const content=exe.getVar(convoVars.__visionServiceSystemMessage,null,defaultConvoVisionSystemMessage);
             if(systemMessage){
@@ -792,12 +982,95 @@ export class Conversation
             }
         }
 
-        const flat={
+        if(!isDefaultTask || hasNonDefaultTasks){
+
+            if(isDefaultTask){
+                for(let i=0;i<messages.length;i++){
+                    const msg=messages[i];
+                    if((msg?.task??defaultConvoTask)!==defaultConvoTask){
+                        messages.splice(i,1);
+                        i--;
+                    }
+                }
+            }else{
+                const taskMsgs:FlatConvoMessage[]=[];
+                let taskHasSystem=false;
+                let otherMsgCount=0;
+
+                for(let i=0;i<messages.length;i++){
+                    const msg=messages[i];
+                    if(!msg){
+                        continue;
+                    }
+                    if(msg.task===task){
+                        if(msg.role==='system'){
+                            taskHasSystem=true;
+                        }
+                        taskMsgs.push(msg);
+                        messages.splice(i,1);
+                        i--;
+                    }else if(msg.fn || msg.called){
+                        messages.splice(i,1);
+                        i--;
+                    }else if(msg.role!=='system'){
+                        otherMsgCount++;
+                    }
+                }
+
+                if(taskHasSystem){
+                    for(let i=0;i<messages.length;i++){
+                        const msg=messages[i];
+                        if(msg?.role==='system'){
+                            messages.splice(i,1);
+                            i--;
+                        }
+                    }
+                }
+
+                if(maxTaskMsgCount!==-1 && otherMsgCount>maxTaskMsgCount){
+                    let index=0;
+                    while(otherMsgCount>maxTaskMsgCount && index<messages.length){
+                        const msg=messages[index];
+                        if(!msg || msg.role==='system'){
+                            index++;
+                            continue;
+                        }
+                        messages.splice(index,1);
+                        otherMsgCount--;
+                    }
+                }
+                for(let i=0;i<taskMsgs.length;i++){
+                    const msg=taskMsgs[i];
+                    if(msg){
+                        messages.push(msg);
+                    }
+                }
+            }
+        }
+
+        let capabilities=[...this.serviceCapabilities];
+        if(!isDefaultTask){
+            capabilities=capabilities.filter(c=>c!=='vision');
+        }
+
+        if(templates){
+            for(let i=0;i<templates.length;i++){
+                const tmpl=templates[i];
+                if(!tmpl || !tmpl.watchPath){continue}
+
+                tmpl.startValue=exe.getVar(tmpl.watchPath);
+            }
+        }
+
+        const flat:FlatConvoConversation={
             exe,
             messages,
             conversation:this,
+            task,
+            taskTriggers,
+            templates,
             debug,
-            capabilities:[...this.serviceCapabilities],
+            capabilities,
         }
 
         if(setCurrent){

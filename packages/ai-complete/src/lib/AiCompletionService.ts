@@ -310,7 +310,7 @@ export class AiCompletionService implements ConvoCompletionService
 
         for(let i=0;i<flat.messages.length;i++){
             const msg=flat.messages[i];
-            if(!msg){
+            if(!msg || msg.renderOnly){
                 continue;
             }
             if(msg.fn){

@@ -174,7 +174,7 @@ My name is {{name}}
 describe('convo',()=>{
 
     const parse=(msgCount:number|null,prompt:string,debug?:(...args:any[])=>void)=>{
-        const r=parseConvoCode(prompt,debug);
+        const r=parseConvoCode(prompt,{debug});
 
         expect(r.error).toBeUndefined();
 
@@ -407,6 +407,23 @@ describe('convo',()=>{
 
 
 
+
+    it('should parse string with no statement',async ()=>{
+
+        const convo=parse(1,/*convo*/`
+            > user
+            hi bob
+        `);
+
+        const msg=convo.result?.[0];
+
+        expect(msg).not.toBeUndefined();
+        if(!msg){
+            return;
+        }
+
+        expect(msg.statement).toBeUndefined();
+    })
 
     it('should embed strings',async ()=>{
 

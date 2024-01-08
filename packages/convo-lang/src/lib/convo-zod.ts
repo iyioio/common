@@ -1,4 +1,4 @@
-import { JsonScheme, zodTypeToJsonScheme } from "@iyio/common";
+import { JsonScheme, wordToSingular, zodTypeToJsonScheme } from "@iyio/common";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { convoDescriptionToCommentOut, convoMetadataKey } from "./convo-lib";
@@ -182,7 +182,10 @@ const _jsonSchemeToConvoTypeString=(
         out.push('\n');
     }
     const open=label?`${tab}${label}${required?'':'?'}: `:tab;
-    if(scheme.type){
+
+    if(scheme.enum){
+        out.push(open,'enum(',scheme.enum.map(v=>JSON.stringify(v)).join(' '),')');
+    }else if(scheme.type){
         switch(scheme.type){
             case 'object':
                 out.push(open,nameOverride??'struct','(\n');
@@ -230,8 +233,103 @@ const _jsonSchemeToConvoTypeString=(
                 throw new ConvoError('unknown-json-scheme-type',undefined,`${scheme.type} is an unknown json scheme type to convo`);
 
         }
+    }else{
+        throw new ConvoError('unknown-json-scheme-type',undefined,`json scheme type did not define a type or enum values`);
+    }
+}
+
+
+
+export const describeConvoScheme=(scheme:JsonScheme|ZodTypeAny,value:any,nameOverride?:string):string=>{
+    if(scheme instanceof ZodType){
+        const json=zodTypeToJsonScheme(scheme);
+        if(!json){
+            throw new ConvoError('invalid-scheme-type');
+        }
+        scheme=json;
+    }
+    const out:string[]=[];
+    _describeScheme('unset',scheme,out,'',null,nameOverride,false,20,value);
+    return out.join('');
+}
+
+const descTabSize='  ';
+
+const _describeScheme=(
+    undefinedValue:string,
+    scheme:JsonScheme,
+    out:string[],
+    tab:string,
+    label:string|null,
+    nameOverride:string|undefined,
+    required:boolean,
+    maxDepth:number,
+    value:any,
+)=>{
+    if(maxDepth<0){
+        throw new ConvoError('max-type-conversion-depth-reached');
+    }
+    maxDepth--;
+    const open=label?`${tab}- ${label}: `:tab;
+    if(scheme.type){
+        switch(scheme.type){
+            case 'object':
+                if(label){
+                    out.push(open,'- :\n');
+                }
+                if(scheme.properties){
+                    for(const e in scheme.properties){
+                        const prop=scheme.properties[e];
+                        if(!prop){continue}
+                        _describeScheme(
+                            undefinedValue,
+                            prop,
+                            out,
+                            tab+(label?descTabSize:''),
+                            e,
+                            undefined,
+                            scheme.required?.includes(e)?true:false,
+                            maxDepth,
+                            value?.[e]
+                        );
+                        out.push('\n')
+                    }
+                }
+                //out.push(tab,')');
+                break;
+
+            case 'array':{
+                const length=value?.length??0;
+                const n=label??'items';
+                out.push(open,`${length} ${length===1?wordToSingular(n):n}\n`);
+                if(scheme.items && Array.isArray(value)){
+                    for(let i=0;i<value.length;i++){
+                        const item=value[i];
+                        _describeScheme(
+                            undefinedValue,
+                            scheme.items,
+                            out,
+                            tab+(label?descTabSize:''),
+                            (i+1).toString(),
+                            undefined,
+                            false,
+                            maxDepth,
+                            item
+                        );
+
+                    }
+                    _describeScheme(undefinedValue,scheme.items,out,tab+descTabSize,null,undefined,false,maxDepth,value);
+                }
+                break;
+            }
+
+            default:
+                out.push(open,`${value===null?'null':value===undefined?undefinedValue:value}`)
+                break;
+
+        }
     }else if(scheme.enum){
-        out.push(tab,'enum(',scheme.enum.map(v=>JSON.stringify(v)).join(' '),')');
+        out.push(open,`${value===null?'null':value===undefined?undefinedValue:value}`);
     }else{
         throw new ConvoError('unknown-json-scheme-type',undefined,`json scheme type did not define a type or enum values`);
     }

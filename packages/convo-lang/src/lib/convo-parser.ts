@@ -1,6 +1,6 @@
-import { CodeParsingError } from "@iyio/common";
+import { CodeParser, CodeParsingOptions, getCodeParsingError } from '@iyio/common';
 import { parse as parseJson5 } from "json5";
-import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTags, convoTestFnName, getConvoTag, isValidConvoIdentifier } from "./convo-lib";
+import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTags, convoTestFnName, getConvoStatementSource, getConvoTag, isValidConvoIdentifier, parseConvoBooleanTag } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
 
 type StringType='"'|"'"|'---'|'>';
@@ -39,7 +39,7 @@ const tagOrCommentReg=/[\n\r][ \t]*[#@]/;
 
 const paramTrimPlaceHolder='{{**PLACE_HOLDER**}}';
 
-const getInvalidSwitchStatement=(statement:ConvoStatement,):ConvoStatement|undefined=>{
+const getInvalidSwitchStatement=(statement:ConvoStatement):ConvoStatement|undefined=>{
     if(!statement.params){
         return undefined;
     }
@@ -78,7 +78,9 @@ const trimLeft=(value:string,count:number):string=>{
 
 }
 
-export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoParsingResult=>{
+export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:CodeParsingOptions):ConvoParsingResult=>{
+
+    const debug=options?.debug;
 
     code=code+'\n';
 
@@ -95,7 +97,7 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
     let inString:StringType|null=null;
     let lastComment='';
     let tags:ConvoTag[]=[];
-    let index=0;
+    let index=options?.startIndex??0;
     let currentMessage:ConvoMessage|null=null;
     let currentFn:ConvoFunction|null=null;
     let error:string|undefined=undefined;
@@ -207,7 +209,6 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
             (typeof currentMessage.statement.value === 'string')
         ){
             currentMessage.content=currentMessage.statement.value.trim();
-            delete currentMessage.statement;
         }
         let end=(
             currentMessage?.content??
@@ -300,8 +301,11 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
                 }
                 currentMessage.assignTo=assignTag.value;
             }
-        }
 
+            if(currentMessage.statement){
+                currentMessage.statement.e=index;
+            }
+        }
         msgName=null;
         currentMessage=null;
         inMsg=false;
@@ -860,43 +864,54 @@ export const parseConvoCode=(code:string,debug?:(...args:any[])=>void):ConvoPars
         }
     }
 
-
-
-    return {result: messages,endIndex:index,error:error?getConvoParsingError(code,index,error):undefined};
-
-}
-
-const getConvoParsingError=(code:string,index:number,message:string):CodeParsingError=>{
-
-    let lineNumber=1;
-    for(let i=0;i<=index;i++){
-        if(code[i]==='\n'){
-            lineNumber++;
+    finalPass: for(let i=0;i<messages.length;i++){
+        const msg=messages[i];
+        if(!msg){
+            error=`Undefined message in result messages at index ${i}`;
+            break;
         }
+
+        if(msg.tags){
+
+            for(let t=0;t<msg.tags.length;t++){
+                const tag=msg.tags[t];
+                if(!tag){continue}
+                switch(tag.name){
+
+                    case convoTags.template:
+                        if(!msg.statement){
+                            error=`template message missing statement ${JSON.stringify(msg,null,4)}`;
+                            break finalPass;
+                        }
+                        msg.statement.source=getConvoStatementSource(msg.statement,code);
+                        break;
+
+                    case convoTags.component:
+                        msg.component=tag.value||true;
+                        if(msg.renderOnly===undefined){
+                            msg.renderOnly=true;
+                        }
+                        break;
+
+                    case convoTags.renderOnly:
+                        msg.renderOnly=parseConvoBooleanTag(tag.value);
+                        break;
+                }
+
+            }
+        }
+
+        if(msg.content!==undefined && msg.statement?.source===undefined){
+            delete msg.statement;
+        }
+
     }
 
-    const s=Math.max(0,code.lastIndexOf('\n',index));
-    let e=code.indexOf('\n',index);
-    if(e===-1){
-        e=code.length;
-    }
+    return {result: messages,endIndex:index,error:error?getCodeParsingError(code,index,error):undefined};
 
-    const neg=Math.min(index,10);
-
-    return {
-        message,
-        index,
-        lineNumber,
-        line:code.substring(s,e).trim(),
-        col:index-s,
-        near:(
-            code
-            .substring(index-10,index+20)
-            .replace(/[\n]/g,'↩︎').replace(/[\s]/g,'•')
-            +'\n'+' '.repeat(neg)+'^'
-        ),
-    }
 }
+
+
 
 const unescapeStr=(str:string):string=>str.replace(/\\(.)/g,(_,char)=>{
 

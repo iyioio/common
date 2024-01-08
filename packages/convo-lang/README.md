@@ -312,6 +312,12 @@ Why did The Beatles cross the road? Because they knew it was the only way to get
 
 ```
 
+## Templates
+add documentation
+
+## Tasks
+add documentation
+
 ## The convo-lang syntax
 The convo-lang syntax is designed to be easily readable and follows a chat-like message structure.
 A convo-lang script consists of a series of messages, which can be text-based messages,
@@ -597,26 +603,35 @@ How many fish are in the sea
 ```
 
 ### Reserved tags
-- @disableAutoComplete - When applied to a function the return value of the function will not be 
+- `@disableAutoComplete` - When applied to a function the return value of the function will not be 
   used to generate a new assistant message.
-- @edge - Used to indicate that a message should be evaluated at the edge of a conversation with 
+- `@edge` - Used to indicate that a message should be evaluated at the edge of a conversation with 
   the latest state. @edge is most commonly used with system message to ensure that all injected values
   are updated with the latest state of the conversation.
-- @time - Used to track the time messages are created.
-- @tokenUsage - Used to track the number of tokens a message used
-- @model - Used to track the model used to generate completions
-- @responseModel - Sets the requested model to complete a message with
-- @endpoint - Used to track the endpoint to generate completions
-- @responseEndpoint - Sets the requested endpoint to complete a message with
-- @responseFormat - Sets the format as message should be responded to with.
-- @responseAssign - Causes the response of the tagged message to be assigned to a variable
-- @json - When used with a message the json tag is short and for `@responseFormat json`
-- @format - The format of a message
-- @assign - Used to assign the content or jsonValue of a message to a variable
-- @capability - Used to enable capabilities. The capability tag can only be used on the first 
+- `@time` - Used to track the time messages are created.
+- `@tokenUsage` - Used to track the number of tokens a message used
+- `@model` - Used to track the model used to generate completions
+- `@responseModel` - Sets the requested model to complete a message with
+- `@endpoint` - Used to track the endpoint to generate completions
+- `@responseEndpoint` - Sets the requested endpoint to complete a message with
+- `@responseFormat` - Sets the format as message should be responded to with.
+- `@responseAssign` - Causes the response of the tagged message to be assigned to a variable
+- `@json` - When used with a message the json tag is short and for `@responseFormat json`
+- `@format` - The format of a message
+- `@assign` - Used to assign the content or jsonValue of a message to a variable
+- `@capability` - Used to enable capabilities. The capability tag can only be used on the first 
   message of the conversation if used on any other message it is ignored. Multiple capability tags
   can be applied to a message and multiple capabilities can be specified by separating them with a comma.
-- @enableVision - Shorthand for `@capability vision`
+- `@enableVision` - Shorthand for `@capability vision`
+- `@task` - Sets the task a message is part of. By default messages are part of the "default" task
+- `@maxTaskMessageCount` - Sets the max number of non-system messages that should be included in a task completion
+- `@taskTrigger` - Defines what triggers a task
+- `@template` - Defines a message as a template
+- `@sourceTemplate` - used to track the name of templates used to generate messages
+- `@component` - Used to mark a message as a component. The value of the tag is used as the component name.
+               If no value is provided then the component will be unnamed. By default components will
+               be considered renderOnly
+- `@renderOnly` - When applied to a message the message should be rendered but not sent to LLMs
 
 ### Strings
 There are 3 types of string in convo.
@@ -1132,6 +1147,12 @@ value = customMath(a:4 b:3)
 print(value)
 
 ```
+
+### new( type:Struct )
+Creates a new object with defaults based on the given type
+
+### describeStruct( type:Struct value:any )
+Returns the given value as a markdown formatted string
 
 ### eq( ...values:any )
 Returns true if all given values are equal. Object equality is checked by by reference. Values must

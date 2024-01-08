@@ -1,4 +1,4 @@
-import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion } from "zod";
+import { ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion, z } from "zod";
 import { JsonScheme } from "./json-scheme";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
@@ -27,6 +27,14 @@ export const unwrapZodType=(type:ZodTypeAny,maxUnwrap=20):ZodTypeAny=>{
         if(type instanceof ZodNullable){
             type=type.unwrap();
             updated=true;
+        }
+
+        if(type instanceof ZodLazy){
+            const inner=(type._def as ZodLazyDef)?.getter?.();
+            if(inner){
+                type=inner;
+                updated=true;
+            }
         }
 
         if(!updated){
@@ -274,4 +282,94 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,o
     }
 
     return {jsonType,optional};
+}
+
+export type ZodDeepOptionalPropConfigValue=boolean|ZodDeepOptionalSubPropConfig|'skip';
+export type ZodDeepOptionalPropConfig=Record<string,ZodDeepOptionalPropConfigValue>;
+export interface ZodDeepOptionalSubPropConfig
+{
+    required?:boolean;
+    props?:ZodDeepOptionalPropConfig;
+}
+export interface ZodDeepOptionalOptions
+{
+    maxDepth?:number;
+    propConfig?:ZodDeepOptionalPropConfig;
+}
+
+/**
+ * Converts the passed type and all decedents of the type to optionals. This function does not
+ * work correctly with types with reference loops that use lazy loading
+ */
+export const zodDeepOptional=(type:ZodTypeAny,{
+    maxDepth=20,
+    propConfig
+}:ZodDeepOptionalOptions={}):ZodTypeAny=>{
+    return _zodDeepOptional(type,maxDepth+1,[],propConfig?{props:propConfig}:undefined);
+}
+
+export const _zodDeepOptional=(
+    type:ZodTypeAny,
+    depth:number,
+    converted:{from:ZodTypeAny,to:ZodTypeAny}[],
+    propConfig:ZodDeepOptionalPropConfigValue|undefined
+):ZodTypeAny=>{
+
+    depth--;
+    if(depth<0 || propConfig==='skip'){
+        return type;
+    }
+
+    const config=propConfig && (typeof propConfig === 'object')?propConfig:undefined
+
+    const isOptional=(
+        propConfig===true?
+            false
+        :propConfig===false?
+            true
+        :
+            !propConfig?.required
+    )
+
+    const unwrapped=unwrapZodType(type);
+
+    if(unwrapped instanceof ZodObject){
+        const match=converted.find(c=>c.from===type);
+        if(match){
+            return match.to;
+        }
+
+
+        const newShape:Record<string,ZodTypeAny>={}
+        for(const e in unwrapped.shape){
+            newShape[e]=_zodDeepOptional(
+                unwrapped.shape[e],
+                depth,
+                converted,
+                config?.props?.[e]
+            );
+        }
+        let newObj:ZodTypeAny=z.object(newShape);
+        if(isOptional){
+            newObj=newObj.optional();
+        }
+        converted.push({from:type,to:newObj});
+
+        return newObj;
+    }else if(unwrapped instanceof ZodArray){
+        const itemType=_zodDeepOptional(
+            unwrapped._def.type,
+            depth,
+            converted,
+            config?.props?.['items']??false
+        );
+        let newAry:ZodTypeAny=itemType.array();
+        if(isOptional){
+            newAry=newAry.optional();
+        }
+        converted.push({from:type,to:newAry});
+        return newAry;
+    }else{
+        return isOptional?unwrapped.optional():unwrapped;
+    }
 }

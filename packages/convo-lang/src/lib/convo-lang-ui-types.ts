@@ -1,9 +1,10 @@
+import { XmlNode } from "@iyio/common";
 import { ConversationUiCtrl } from "./ConversationUiCtrl";
 import { FlatConvoMessage } from "./convo-types";
 
 export const convoPromptImagePropKey=Symbol('convoPromptImagePropKey');
 
-export type ConvoEditorMode='code'|'vars';
+export type ConvoEditorMode='code'|'vars'|'flat'|'tree';
 
 export interface ConvoPromptImage
 {
@@ -44,3 +45,14 @@ export interface RenderedConvoMessage
      */
     position?:RenderedConvoMessagePosition;
 }
+
+
+
+export type ConvoComponentRenderer=(
+    component:ConvoMessageComponent,
+    message:FlatConvoMessage,
+    ctrl:ConversationUiCtrl
+)=>any;
+
+
+export type ConvoMessageComponent=XmlNode;

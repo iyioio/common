@@ -3,23 +3,54 @@ import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkd
 import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoMessage } from "@iyio/convo-lang";
 import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
+import { MessageComponentRenderer } from "./MessageComponentRenderer";
 import { useConversationMessages, useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
 
-const renderResult=(result:ConvoMessageRenderResult,i:number,showSystemMessages:boolean,showFunctions:boolean):any=>{
+const renderResult=(
+    ctrl:ConversationUiCtrl,
+    result:ConvoMessageRenderResult,
+    i:number,
+    showSystemMessages:boolean,
+    showFunctions:boolean
+):any=>{
     if((typeof result !== 'object') || !result){
         return null;
     }
     if(result.component){
         return <Fragment key={i+'comp'}>{result.component}</Fragment>
     }
-    return renderMessage({
+    return renderMessage(ctrl,{
         role:result.role??'assistant',
         content:result.content
     },i,showSystemMessages,showFunctions)
 }
 
-const renderMessage=(m:FlatConvoMessage,i:number,showSystemMessages:boolean,showFunctions:boolean)=>{
+const renderMessage=(
+    ctrl:ConversationUiCtrl,
+    m:FlatConvoMessage,
+    i:number,
+    showSystemMessages:boolean,
+    showFunctions:boolean
+)=>{
+
     const className=style.msg({user:m.role==='user',other:m.role!=='user'})
+
+    if(m.component!==undefined && m.component!==false){
+        return (
+            <MessageComponentRenderer
+                id={i+'comp'}
+                key={i+'comp'}
+                ctrl={ctrl}
+                message={m}
+                isUser={m.role==='user'}
+                index={i}
+                showSystemMessages={showSystemMessages}
+                showFunctions={showFunctions}
+                className={className}
+            />
+        )
+    }
+
 
     if(m.setVars && (m.role==='result' || showSystemMessages)){
         const keys=Object.keys(m.setVars);
@@ -129,19 +160,19 @@ export function MessagesView({
         }
 
         if(ctrlRendered?.position==='replace'){
-            return renderResult(ctrlRendered,i,showSystemMessages,showFunctions);
+            return renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions);
         }
 
-        const rendered=renderMessage(m,i,showSystemMessages,showFunctions);
+        const rendered=renderMessage(ctrl,m,i,showSystemMessages,showFunctions);
         if(!ctrlRendered){
             return rendered;
         }
 
         return (
             <Fragment key={i+'j'}>
-                {ctrlRendered.position==='before' && renderResult(ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='before' && renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions)}
                 {rendered}
-                {ctrlRendered.position==='after' && renderResult(ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='after' && renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions)}
             </Fragment>
         )
 

@@ -49,7 +49,8 @@ export type ConvoErrorType=(
     'invalid-register-only-function'|
     'invalid-role'|
     'use-of-reserved-role-not-allowed'|
-    'invalid-message-response-scheme'
+    'invalid-message-response-scheme'|
+    'missing-defaults'
 );
 
 export interface ConvoErrorReferences
@@ -88,6 +89,18 @@ export interface ConvoMessage
      * The value of the message parsed as json
      */
     jsonValue?:any;
+
+    /**
+     * If the message has the `@component` tag the message will be marked as a component. If component
+     * equals true then the component is an unnamed component. Components are by default cause the
+     * message to be renderOnly
+     */
+    component?:string|boolean;
+
+    /**
+     * If true the message should be rendered but not sent to LLMs
+     */
+    renderOnly?:boolean;
 }
 
 export interface ConvoMessagePart
@@ -188,6 +201,11 @@ export interface ConvoStatement
      * If the statement has child match case statements.
      */
     hmc?:boolean;
+
+    /**
+     * Used to start the source code of a statement. Source is most commonly used by message templates.
+     */
+    source?:string;
 
     /**
      * If true the statement in font of the current pipe statement will be  piped to the statement
@@ -541,6 +559,18 @@ export interface FlatConvoMessage
     responseFormatIsArray?:boolean;
     responseAssignTo?:string;
 
+    task?:string;
+
+    /**
+     * If the message has the `@component` tag the message will be marked as a component. If component
+     * equals true then the component is an unnamed component.
+     */
+    component?:string|boolean;
+
+    /**
+     * If true the message should be rendered but not sent to LLMs
+     */
+    renderOnly?:boolean;
 
 }
 
@@ -574,6 +604,7 @@ export interface ConvoCompletion
     error?:any;
     exe?:ConvoExecutionContext;
     returnValues?:any[];
+    task:string;
 }
 
 export interface FlatConvoConversation
@@ -582,6 +613,15 @@ export interface FlatConvoConversation
     messages:FlatConvoMessage[];
     conversation:Conversation;
     capabilities:ConvoCapability[];
+    task:string;
+    /**
+     * Maps task triggers to tasks.
+     * triggerName -> task array
+     */
+    taskTriggers?:Record<string,string[]>;
+
+    templates?:ConvoMessageTemplate[];
+
     /**
      * If defined the debug function should be written to with debug info.
      */
@@ -707,5 +747,43 @@ export interface ConvoMessagePrefixOptions
 {
     includeTokenUsage?:boolean;
     msg?:ConvoCompletionMessage;
+}
+
+export interface FlattenConvoOptions
+{
+    /**
+     * If true the flatten view of the conversation will be set as the current flatten version
+     * @default task === "default"
+     */
+    setCurrent?:boolean;
+
+    /**
+     * The name of the current task being executed.
+     * @default "default"
+     */
+    task?:string;
+
+    discardTemplates?:boolean;
+}
+
+export interface ConvoSubTask
+{
+    name:string;
+    promise:Promise<ConvoCompletion>;
+}
+
+export interface ConvoCompletionOptions
+{
+    task?:string;
+    append?:string;
+}
+
+export interface ConvoMessageTemplate
+{
+    message:ConvoMessage;
+    name?:string;
+    watchPath?:string;
+    matchValue?:string
+    startValue?:any;
 }
 

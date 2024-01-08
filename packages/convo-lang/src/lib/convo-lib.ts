@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoFlowController, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
+import { ConvoBaseType, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -9,6 +9,7 @@ export const convoResultReturnName='__return';
 export const convoResultErrorName='__error';
 export const convoDisableAutoCompleteName='__disableAutoComplete';
 export const convoStructFnName='struct';
+export const convoNewFnName='new';
 export const convoMapFnName='map';
 export const convoArrayFnName='array';
 export const convoJsonMapFnName='jsonMap';
@@ -24,6 +25,8 @@ export const convoGlobalRef='convo';
 export const convoEnumFnName='enum';
 export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
+
+export const defaultConvoTask='default';
 
 export const convoFunctions={
     queryImage:'queryImage'
@@ -169,8 +172,51 @@ export const convoTags={
     /**
      * Shorthand for `@capability vision`
      */
-    enableVision:'enableVision'
+    enableVision:'enableVision',
 
+    /**
+     * Sets the task a message is part of. By default messages are part of the "default" task
+     */
+    task:'task',
+
+    /**
+     * Sets the max number of non-system messages that should be included in a task completion
+     */
+    maxTaskMessageCount:'maxTaskMessageCount',
+
+    /**
+     * Defines what triggers a task
+     */
+    taskTrigger:'taskTrigger',
+
+    /**
+     * Defines a message as a template
+     */
+    template:'template',
+
+    /**
+     * used to track the name of templates used to generate messages
+     */
+    sourceTemplate:'sourceTemplate',
+
+    /**
+     * Used to mark a message as a component. The value of the tag is used as the component name.
+     * If no value is provided then the component will be unnamed.
+     */
+    component:'component',
+
+    /**
+     * When applied to a message the message should be rendered but not sent to LLMs
+     */
+    renderOnly:'renderOnly',
+
+} as const;
+
+export const convoTaskTriggers={
+    /**
+     * Triggers a text message is received. Function calls will to trigger.
+     */
+    onResponse:'onResponse'
 } as const;
 
 export const convoDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx";
@@ -189,6 +235,7 @@ export const defaultConvoVisionSystemMessage=(
 export const defaultConvoVisionResponse='Unable to answer or respond to questions or requests for the given image or images';
 
 export const allowedConvoDefinitionFunctions=[
+    convoNewFnName,
     convoStructFnName,
     convoMapFnName,
     convoArrayFnName,
@@ -580,4 +627,37 @@ export const concatConvoCodeAndAppendEmptyUserMessage=(a:string,b:string):string
     }else{
         return code;
     }
+}
+
+export const isConvoMessageIncludedInTask=(msg:ConvoMessage,task:string):boolean=>{
+    const msgTask=getConvoTag(msg.tags,convoTags.task)?.value??defaultConvoTask;
+    return msgTask===task;
+
+}
+
+export const parseConvoMessageTemplate=(msg:ConvoMessage,template:string):ConvoMessageTemplate=>{
+    const match=/^(\w+)\s*([\w.]+)?\s*(.*)/.exec(template);
+    return match?{
+        message:msg,
+        name:match[1],
+        watchPath:match[2],
+        matchValue:match[3],
+    }:{
+        message:msg,
+    }
+}
+
+export const getConvoStatementSource=(statement:ConvoStatement,code:string):string=>{
+    return code.substring(statement.s,statement.e);
+}
+
+/**
+ * If the value is empty, null or undefined true is returned, otherwise the Boolean
+ * constructor is used to parse the value.
+ */
+export const parseConvoBooleanTag=(value:string|null|undefined)=>{
+    if(!value){
+        return true;
+    }
+    return Boolean(value);
 }
