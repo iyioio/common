@@ -1,11 +1,12 @@
-import { ReadonlySubject, delayAsync, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber } from "@iyio/common";
+import { ReadonlySubject, asArray, delayAsync, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber, shortUuid } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, isConvoCapability } from "./convo-types";
-import { convoTypeToJsonScheme, schemeToConvoTypeString } from "./convo-zod";
+import { CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, isConvoCapability } from "./convo-types";
+import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
 
@@ -289,6 +290,62 @@ export class Conversation
         if(!this.completionService){
             this.completionService=convoCompletionService.get();
         }
+    }/**
+     * Creates a new Conversation and appends the messages of this conversation to the newly
+     * created conversation.
+     */
+    public clone(options?: CloneConversationOptions):Conversation{
+        const conversation=new Conversation(this.defaultOptions);
+        let messages=this.messages;
+        if (options?.noFunctions) {
+            messages=messages.filter(m=>!m.fn || m.fn.topLevel);
+        }
+        if (options?.systemOnly) {
+            messages=messages.filter(m=>m.role === 'system' || m.fn?.topLevel || m.fn?.name===convoFunctions.getState);
+        }
+        conversation.appendMessageObject(messages);
+        for(const e in this.externFunctions){
+            const f=this.externFunctions[e];
+            if(f){
+                conversation.externFunctions[e]=f;
+            }
+        }
+        return conversation;
+    }
+
+    /**
+     * Creates a new Conversation and appends the system messages of this conversation to the newly
+     * created conversation.
+     */
+    public cloneSystem():Conversation{
+        return this.clone({systemOnly:true});
+    }
+
+    /**
+     * Creates a new Conversation and appends the non-function messages of this conversation to the newly
+     * created conversation.
+     */
+    public cloneWithNoFunctions():Conversation{
+        return this.clone({noFunctions:true});
+    }
+
+    /**
+     * Appends new messages to the conversation without appending to the code of the conversation.
+     * It is not recommended to use this function with on-going conversation, but only with
+     * utility purposes
+     */
+    public appendMessageObject(message:ConvoMessage|ConvoMessage[]):void{
+        const messages=asArray(message);
+        this._messages.push(...messages);
+
+        this._onAppend.next({
+            text:'',
+            messages,
+        });
+
+        if(!this.disableAutoFlatten){
+            this.autoFlattenAsync();
+        }
     }
 
     public append(messages:string|(ConvoMessagePart|string)[],mergeWithPrev=false,throwOnError=true):ConvoParsingResult{
@@ -417,12 +474,12 @@ export class Conversation
         this._flat.next(dup?{...flat}:flat);
     }
 
-    public async callFunctionAsync(
+    public async callInlineFunctionAsync(
         fn:ConvoFunction|string,
         args:Record<string,any>={},
         options?:ConvoCompletionOptions
     ):Promise<any>{
-        const c=await this.tryCompleteAsync(options?.task,flat=>{
+        const c=await this.tryCompleteAsync(options?.task,options,flat=>{
 
             if(typeof fn === 'object'){
                 flat.exe.loadFunctions([{
@@ -439,6 +496,33 @@ export class Conversation
         })
 
         return c.returnValues?.[0];
+    }
+
+    public appendFunctionCall(
+        functionName:string,
+        args?:Record<string,any>
+    ){
+        this.append(`@${convoTags.toolId} call_${shortUuid()}\n> call ${functionName}(${
+            args===undefined?'':spreadConvoArgs(args,true)
+        })`)
+    }
+
+    public completeWithFunctionCallAsync(
+        name:string,
+        args?:Record<string,any>,
+        options?:ConvoCompletionOptions
+    ):Promise<ConvoCompletion>{
+        this.appendFunctionCall(name,args);
+        return this.completeAsync(options);
+    }
+
+    /**
+     * Appends a user message then competes the conversation
+     * @param append Optional message to append before submitting
+     */
+    public completeUserMessageAsync(userMessage:string):Promise<ConvoCompletion>{
+        this.appendUserMessage(userMessage);
+        return this.completeAsync();
     }
 
     /**
@@ -460,12 +544,71 @@ export class Conversation
 
         return await this.tryCompleteAsync(
             appendOrOptions?.task,
+            appendOrOptions,
             flat=>completionService?.completeConvoAsync(flat)??[]
         )
     }
 
+    /**
+     * Completes the conversation and returns the last message as JSON. It is recommended using
+     * `@json` mode with the last message that is appended.
+     */
+    public async completeJsonAsync(appendOrOptions?:string|ConvoCompletionOptions):Promise<any>{
+        const r=await this.completeAsync(appendOrOptions);
+        if(r.message?.content===undefined){
+            return undefined;
+        }
+        try{
+            return parseConvoJsonMessage(r.message.content);
+        }catch{
+            return undefined;
+        }
+    }
+
+    /**
+     * Completes the conversation and returns the last message as JSON. It is recommended using
+     * `@json` mode with the last message that is appended.
+     */
+    public async completeJsonSchemeAsync<Z extends ZodTypeAny=ZodType<any>, T=z.infer<Z>>(
+        params:Z,
+        userMessage:string
+    ):Promise<T|undefined>{
+        const r=await this.completeAsync(/*convo*/`
+            > define
+            JsonScheme=${zodSchemeToConvoTypeString(params)}
+
+            @json JsonScheme
+            > user
+            ${escapeConvoMessageContent(userMessage)}
+        `);
+        if(r.message?.content===undefined){
+            return undefined;
+        }
+        try{
+            return parseConvoJsonMessage(r.message.content);
+        }catch{
+            return undefined;
+        }
+    }
+
+    /**
+     * Completes the conversation and returns the last message call params. The last message of the
+     * conversation should instruct the LLM to call a function.
+     */
+    public async callStubFunctionAsync(appendOrOptions?:string|ConvoCompletionOptions):Promise<any>{
+        if(appendOrOptions === undefined){
+            appendOrOptions={};
+        }else if(typeof appendOrOptions === 'string'){
+            appendOrOptions={append:appendOrOptions};
+        }
+        appendOrOptions.returnOnCall=true;
+        const r=await this.completeAsync(appendOrOptions);
+        return r.message?.callParams;
+    }
+
     private async tryCompleteAsync(
         task:string|undefined,
+        additionalOptions:ConvoCompletionOptions|undefined,
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth=0,
         prevCompletion?:ConvoCompletionMessage[],
@@ -481,7 +624,7 @@ export class Conversation
         }else{
             this._isCompleting.next(true);
             try{
-                return await this._completeAsync(task,getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
+                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
             }finally{
                 this._isCompleting.next(false);
             }
@@ -494,6 +637,7 @@ export class Conversation
 
     private async _completeAsync(
         task:string|undefined,
+        additionalOptions:ConvoCompletionOptions|undefined,
         getCompletion:ConvoFlatCompletionCallback,
         autoCompleteDepth:number,
         prevCompletion?:ConvoCompletionMessage[],
@@ -536,7 +680,17 @@ export class Conversation
                 this.setFlat(flat);
             }
 
-            const completion=await getCompletion(flat);
+            const lastMsg=this.messages[this.messages.length-1];
+            const lastMsgIsFnCall=lastMsg?.fn?.call?true:false;
+            const completion:ConvoCompletionMessage[]=(lastMsg?.fn?.call?
+                [{
+                    callFn:lastMsg.fn.name,
+                    callParams:exe.getConvoFunctionArgsValue(lastMsg.fn),
+                    tags:{toolId:getConvoTag(lastMsg.tags,convoTags.toolId)?.value??''}
+                }]:
+                await getCompletion(flat)
+            );
+
             if(this._isDisposed){
                 return {messages:[],status:'disposed',task};
             }
@@ -569,25 +723,35 @@ export class Conversation
                     includeTokenUsage=false;
                 }
 
-                if(msg.callFn){
-                    const callMsg=`${
-                        this.getPrefixTags({includeTokenUsage,msg})
-                    }${
-                        tagsCode
-                    }> call ${
-                        msg.callFn
-                    }(${
-                        msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
-                    })`
-                    const result=isDefaultTask?this.append(callMsg):parseConvoCode(callMsg);
-                    includeTokenUsage=false;
-                    const callMessage=result.result?.[0];
-                    if(result.result?.length!==1 || !callMessage){
-                        throw new ConvoError(
-                            'function-call-parse-count',
-                            {completion:msg},
-                            'failed to parse function call. Exactly 1 function call should have been parsed'
-                        );
+                if(additionalOptions?.returnOnCall && msg.callFn){
+                    cMsg = msg;
+                }else if(msg.callFn){
+                    let callMessage:ConvoMessage|undefined;
+                    if(lastMsgIsFnCall){
+                        callMessage=lastMsg;
+                        if(!callMessage){
+                            throw new Error('Call last message failed')
+                        }
+                    }else{
+                        const callMsg=`${
+                            this.getPrefixTags({includeTokenUsage,msg})
+                        }${
+                            tagsCode
+                        }> call ${
+                            msg.callFn
+                        }(${
+                            msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
+                        })`
+                        const result=isDefaultTask?this.append(callMsg):parseConvoCode(callMsg);
+                        includeTokenUsage=false;
+                        callMessage=result.result?.[0];
+                        if(result.result?.length!==1 || !callMessage){
+                            throw new ConvoError(
+                                'function-call-parse-count',
+                                {completion:msg},
+                                'failed to parse function call. Exactly 1 function call should have been parsed'
+                            );
+                        }
                     }
                     exe.clearSharedSetters();
                     if(!callMessage.fn?.call){
@@ -598,7 +762,7 @@ export class Conversation
                         return {messages:[],status:'disposed',task}
                     }
                     const callResultValue=callResult.valuePromise?(await callResult.valuePromise):callResult.value;
-                    const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage.fn?.name);
+                    const target=this._messages.find(m=>m.fn && !m.fn.call && m.fn?.name===callMessage?.fn?.name);
                     const disableAutoComplete=(
                         !isDefaultTask ||
                         exe.getVarEx(convoDisableAutoCompleteName,undefined,callResult.scope,false)===true ||
@@ -666,7 +830,7 @@ export class Conversation
                     }
                 }
             }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth){
-                return await this._completeAsync(task,getCompletion,autoCompleteDepth+1,completion,returnValues,templates);
+                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth+1,completion,returnValues,templates);
             }
 
             if(isDefaultTask && templates?.length){
@@ -679,7 +843,7 @@ export class Conversation
 
 
             if(flat.taskTriggers?.[convoTaskTriggers.onResponse]){
-                this.startSubTasks(flat,convoTaskTriggers.onResponse,getCompletion,autoCompleteDepth+1);
+                this.startSubTasks(flat,convoTaskTriggers.onResponse,getCompletion,autoCompleteDepth+1,additionalOptions);
             }
 
             return {
@@ -739,7 +903,8 @@ export class Conversation
         flat:FlatConvoConversation,
         trigger:string,
         getCompletion:ConvoFlatCompletionCallback,
-        autoCompleteDepth:number)
+        autoCompleteDepth:number,
+        additionalOptions:ConvoCompletionOptions|undefined)
     {
         const tasks=flat.taskTriggers?.[trigger];
         if(!tasks?.length){
@@ -750,7 +915,7 @@ export class Conversation
         const remove:ConvoSubTask[]=[];
 
         const subs=tasks.map<ConvoSubTask>(task=>{
-            const promise=this._completeAsync(task,getCompletion,autoCompleteDepth);
+            const promise=this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth);
             const sub:ConvoSubTask={
                 name:task,
                 promise

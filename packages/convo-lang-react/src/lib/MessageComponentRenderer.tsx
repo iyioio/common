@@ -1,44 +1,47 @@
-import { atDotCss } from "@iyio/at-dot-css";
-import { ConversationUiCtrl, ConvoMessageComponent, FlatConvoMessage, parseConvoMessageComponents } from "@iyio/convo-lang";
-import { JsonView } from "@iyio/react-common";
-import { useMemo } from "react";
+import { objectToMarkdown } from "@iyio/common";
+import { ConvoComponentRendererContext, ConvoMessageComponent, parseConvoMessageComponents } from "@iyio/convo-lang";
+import { Fragment, useMemo } from "react";
 
 export interface MessageComponentRendererProps
 {
-    id:string;
-    ctrl:ConversationUiCtrl;
-    message:FlatConvoMessage;
-    isUser?:boolean;
-    index?:number;
-    showSystemMessages?:boolean;
-    showFunctions?:boolean;
-    className?:string;
+    ctx:ConvoComponentRendererContext;
 }
 
 export function MessageComponentRenderer({
-    message,
-    className
+    ctx,
 }:MessageComponentRendererProps){
 
+    const content=ctx.message.content;
+    const id=ctx.id;
+
     const components=useMemo<ConvoMessageComponent[]|undefined>(()=>{
-        return message.content?parseConvoMessageComponents(message.content):undefined;
-    },[message.content]);
+        return content?parseConvoMessageComponents(content):undefined;
+    },[content]);
+
 
     return (
-        <div className={style.root(null,className)}>
+        <>
+            {components?.map((c,i)=>{
+                const renderer=ctx.ctrl.componentRenderers[c.name];
 
-            {components?.map((c,i)=>(
-                <JsonView key={i} value={c}/>
-            ))}
+                if(renderer){
+                    return (
+                        <Fragment key={id+'-c-'+i}>
+                            {renderer(c,ctx)}
+                        </Fragment>
+                    )
+                }else{
+                    return (
+                        <div key={id+'-m-'+i} className={ctx.className}>
+                            {objectToMarkdown(c)}
+                        </div>
+                    )
+                }
 
-        </div>
+            })}
+        </>
+
     )
 
 }
 
-const style=atDotCss({name:'MessageComponentRenderer',css:`
-    @.root{
-        display:flex;
-        flex-direction:column;
-    }
-`});

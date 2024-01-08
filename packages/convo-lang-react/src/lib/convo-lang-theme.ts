@@ -1,3 +1,5 @@
+import { LoadingDotsProps } from "@iyio/react-common";
+
 export interface ConvoLangTheme
 {
     foregroundColor:string;
@@ -11,6 +13,20 @@ export interface ConvoLangTheme
     borderRadius:string;
     padding:string;
     gap:string;
+
+    userBackground:string;
+    userColor:string;
+    userBorder:string;
+    agentBackground:string;
+    agentColor:string;
+    agentBorder:string;
+    messageBorderRadius:string;
+    messagePadding:string;
+    maxMessageWidth:string;
+    fontSize:string;
+    loaderProps?:LoadingDotsProps;
+    wrapLoader?:boolean;
+
 }
 
 export const defaultLightConvoLangTheme:ConvoLangTheme={
@@ -25,6 +41,16 @@ export const defaultLightConvoLangTheme:ConvoLangTheme={
     buttonForeground:'#111111',
     padding:'1rem',
     gap:'1rem',
+    fontSize:'1rem',
+    userBackground:'#4F92F7',
+    userColor:'inherit',
+    userBorder:'none',
+    agentBackground:'#3B3B3D',
+    agentColor:'inherit',
+    agentBorder:'none',
+    maxMessageWidth:'700px',
+    messageBorderRadius:'2rem',
+    messagePadding:'10px 14px',
 } as const
 
 export const defaultDarkConvoLangTheme:ConvoLangTheme={
@@ -35,4 +61,5 @@ export const defaultDarkConvoLangTheme:ConvoLangTheme={
     inputBorder:'1px solid #ffffff22',
     buttonColor:'#333333',
     buttonForeground:'#ffffff',
+    agentBorder:'1px solid rgba(255, 255, 255, 0.11)',
 } as const

@@ -1,13 +1,14 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
-import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoMessage } from "@iyio/convo-lang";
+import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage } from "@iyio/convo-lang";
 import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
 import { MessageComponentRenderer } from "./MessageComponentRenderer";
-import { useConversationMessages, useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
+import { useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
 
 const renderResult=(
     ctrl:ConversationUiCtrl,
+    flat:FlatConvoConversation,
     result:ConvoMessageRenderResult,
     i:number,
     showSystemMessages:boolean,
@@ -19,7 +20,7 @@ const renderResult=(
     if(result.component){
         return <Fragment key={i+'comp'}>{result.component}</Fragment>
     }
-    return renderMessage(ctrl,{
+    return renderMessage(ctrl,flat,{
         role:result.role??'assistant',
         content:result.content
     },i,showSystemMessages,showFunctions)
@@ -27,26 +28,30 @@ const renderResult=(
 
 const renderMessage=(
     ctrl:ConversationUiCtrl,
+    flat:FlatConvoConversation,
     m:FlatConvoMessage,
     i:number,
     showSystemMessages:boolean,
     showFunctions:boolean
 )=>{
 
-    const className=style.msg({user:m.role==='user',other:m.role!=='user'})
+    const className=style.msg({user:m.role==='user',agent:m.role!=='user'})
 
     if(m.component!==undefined && m.component!==false){
         return (
             <MessageComponentRenderer
-                id={i+'comp'}
                 key={i+'comp'}
-                ctrl={ctrl}
-                message={m}
-                isUser={m.role==='user'}
-                index={i}
-                showSystemMessages={showSystemMessages}
-                showFunctions={showFunctions}
-                className={className}
+                ctx={{
+                    id:i+'comp',
+                    ctrl,
+                    convo:flat.conversation,
+                    flat,
+                    index:i,
+                    message:m,
+                    isUser:m.role==='user',
+                    className,
+
+                }}
             />
         )
     }
@@ -110,7 +115,7 @@ const renderMessage=(
         return (<Fragment key={i+'f'}>{
             parts.map((p,pi)=>p.image?(
                 <img
-                    className={style.img({user:m.role==='user',other:m.role!=='user'})}
+                    className={style.img({user:m.role==='user',agent:m.role!=='user'})}
                     key={i}
                     alt={p.image.description}
                     src={p.image.url}
@@ -143,7 +148,11 @@ export function MessagesView({
 
     const ctrl=useConversationUiCtrl(_ctrl)
 
-    const messages=useConversationMessages(_ctrl);
+    const convo=useSubject(ctrl.convoSubject);
+
+    const flat=useSubject(convo?.flatSubject);
+
+    const messages=flat?.messages??[];
 
     const theme=useConversationTheme(_ctrl);
 
@@ -155,24 +164,24 @@ export function MessagesView({
     const mapped=messages.map((m,i)=>{
 
         const ctrlRendered=ctrl.renderMessage(m,i);
-        if(ctrlRendered===false){
+        if(ctrlRendered===false || !flat){
             return null;
         }
 
         if(ctrlRendered?.position==='replace'){
-            return renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions);
+            return renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions);
         }
 
-        const rendered=renderMessage(ctrl,m,i,showSystemMessages,showFunctions);
+        const rendered=renderMessage(ctrl,flat,m,i,showSystemMessages,showFunctions);
         if(!ctrlRendered){
             return rendered;
         }
 
         return (
             <Fragment key={i+'j'}>
-                {ctrlRendered.position==='before' && renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='before' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions)}
                 {rendered}
-                {ctrlRendered.position==='after' && renderResult(ctrl,ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='after' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions)}
             </Fragment>
         )
 
@@ -186,10 +195,13 @@ export function MessagesView({
 
                     {mapped}
 
-                    {!!currentTask && <div className={style.msg({other:true})}>
-                        <LoadingDots/>
-                    </div>}
-
+                    {!!currentTask && (theme.wrapLoader===false?
+                        <LoadingDots {...theme.loaderProps}/>
+                    :
+                        <div className={style.msg({agent:true})}>
+                            <LoadingDots {...theme.loaderProps}/>
+                        </div>
+                    )}
                 </div>
             </ScrollView>
         </div>
@@ -211,18 +223,23 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         padding:@@padding @@padding 60px @@padding;
     }
     @.msg{
-        padding: 10px 14px;
-        border-radius:18px;
+        padding:@@messagePadding;
+        border-radius:@@messageBorderRadius;
         white-space:pre-wrap;
+        font-size:@@fontSize;
+        max-width:@@maxMessageWidth;
     }
     @.msg.user{
-        background-color:#4F92F7;
+        color:@@userBorder;
+        background-color:@@userBackground;
+        border:@@userBorder;
         margin-left:4rem;
         align-self:flex-end;
     }
-    @.msg.other{
-        background-color:#3B3B3D;
-        border: 1px solid rgba(255, 255, 255, 0.11);
+    @.msg.agent{
+        color:@@agentBorder;
+        background-color:@@agentBackground;
+        border:@@agentBorder;
         margin-right:4rem;
         align-self:flex-start;
     }
@@ -235,7 +252,7 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         margin-left:4rem;
         align-self:flex-end;
     }
-    @.img.other{
+    @.img.agent{
         margin-right:4rem;
         align-self:flex-start;
     }

@@ -1,6 +1,6 @@
 import { CodeParsingResult, JsonScheme } from '@iyio/common';
 import type { ZodObject, ZodType } from 'zod';
-import type { Conversation } from './Conversation';
+import type { Conversation } from "./Conversation";
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
 import { ConvoMdStatement } from './convo-markdown-types';
 
@@ -105,7 +105,7 @@ export interface ConvoMessage
 
 export interface ConvoMessagePart
 {
-    content:string;
+    content?:string;
     hidden?:boolean;
 }
 
@@ -776,6 +776,10 @@ export interface ConvoCompletionOptions
 {
     task?:string;
     append?:string;
+    /**
+     * If true completion should stop and return when a function is called
+     */
+    returnOnCall?:boolean;
 }
 
 export interface ConvoMessageTemplate
@@ -787,3 +791,8 @@ export interface ConvoMessageTemplate
     startValue?:any;
 }
 
+export interface CloneConversationOptions
+{
+    systemOnly?:boolean;
+    noFunctions?:boolean;
+}

@@ -1,13 +1,18 @@
 import { ReadonlySubject, aryDuplicateRemoveItem, shortUuid } from "@iyio/common";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Subscription } from "rxjs";
 import { Conversation, ConversationOptions } from "./Conversation";
 import { LocalStorageConvoDataStore } from "./LocalStorageConvoDataStore";
 import { getConvoPromptImageUrl } from "./convo-lang-ui-lib";
-import { ConvoDataStore, ConvoEditorMode, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
+import { ConvoComponentRenderer, ConvoDataStore, ConvoEditorMode, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
 import { removeDanglingConvoUserMessage } from "./convo-lib";
 import { FlatConvoMessage } from "./convo-types";
 
 export type ConversationUiCtrlTask='completing'|'loading'|'clearing'|'disposed';
+
+export interface InitConversationUiCtrlConvoOptions
+{
+    appendTemplate:boolean;
+}
 
 export interface ConversationUiCtrlOptions
 {
@@ -36,7 +41,7 @@ export class ConversationUiCtrl
     private readonly store:null|ConvoDataStore;
 
     private readonly convoOptions?:ConversationOptions;
-    private readonly initConvo?:(convo:Conversation)=>void;
+    private readonly initConvoCallback?:(convo:Conversation)=>void;
 
     private readonly _lastCompletion:BehaviorSubject<string|null>=new BehaviorSubject<string|null>(null);
     public get lastCompletionSubject():ReadonlySubject<string|null>{return this._lastCompletion}
@@ -67,7 +72,7 @@ export class ConversationUiCtrl
         this._removeDanglingUserMessages.next(value);
     }
 
-    private readonly _convo:BehaviorSubject<Conversation|null>;
+    private readonly _convo:BehaviorSubject<Conversation|null>=new BehaviorSubject<Conversation|null>(null);
     public get convoSubject():ReadonlySubject<Conversation|null>{return this._convo}
     public get convo(){return this._convo.value}
 
@@ -148,6 +153,8 @@ export class ConversationUiCtrl
     public get queueImagesSubject():ReadonlySubject<readonly (string|ConvoPromptImage)[]>{return this._queueImages as any}
     public get queueImages():readonly (string|ConvoPromptImage)[]{return this._queueImages.value}
 
+    public readonly componentRenderers:Record<string,ConvoComponentRenderer>={};
+
     public constructor({
         id,
         autoLoad,
@@ -167,7 +174,7 @@ export class ConversationUiCtrl
         this._enabledSlashCommands=new BehaviorSubject(enableSlashCommand);
 
         this.convoOptions=convoOptions;
-        this.initConvo=initConvo;
+        this.initConvoCallback=initConvo;
 
         this._template=new BehaviorSubject(template);
 
@@ -178,10 +185,12 @@ export class ConversationUiCtrl
 
 
         if(id!==undefined && autoLoad){
-            this._convo=new BehaviorSubject<Conversation|null>(convo??null);
+            if(convo){
+                this.setConvo(convo);
+            }
             this.loadAsync();
         }else{
-            this._convo=new BehaviorSubject<Conversation|null>(convo??this.createConvo(true));
+            this.setConvo(convo??this.createConvo(true))
         }
     }
 
@@ -194,16 +203,24 @@ export class ConversationUiCtrl
         }
         this._isDisposed=true;
         this._currentTask.next('disposed');
+        if(this.convoTaskSub){
+            this.convoTaskSub.unsubscribe();
+            this.convoTaskSub=null;
+        }
+    }
+
+    protected initConvo(convo:Conversation,options:InitConversationUiCtrlConvoOptions){
+        if(this.initConvoCallback){
+            this.initConvoCallback(convo);
+        }
+        if(options.appendTemplate && this.template){
+            convo.append(this.template);
+        }
     }
 
     private createConvo(appendTemplate:boolean){
         const convo=new Conversation(this.convoOptions);
-        if(this.initConvo){
-            this.initConvo(convo);
-        }
-        if(appendTemplate && this.template){
-            convo.append(this.template);
-        }
+        this.initConvo(convo,{appendTemplate});
         return convo;
     }
 
@@ -221,7 +238,7 @@ export class ConversationUiCtrl
             if(str){
                 convo.append(str);
             }
-            this._convo.next(convo);
+            this.setConvo(convo);
 
         }finally{
             this.popTask('loading');
@@ -234,7 +251,7 @@ export class ConversationUiCtrl
         if(this.isDisposed || this.currentTask){
             return false;
         }
-        this._convo.next(this.createConvo(true));
+        this.setConvo(this.createConvo(true));
         if(this.autoSave){
             this.queueAutoSave();
         }
@@ -264,6 +281,31 @@ export class ConversationUiCtrl
         }
     }
 
+    private convoTaskCount=0;
+    private convoTaskSub:Subscription|null=null;
+    private setConvo(convo:Conversation)
+    {
+        if(this.convoTaskSub){
+            this.convoTaskSub.unsubscribe();
+            this.convoTaskSub=null;
+        }
+        while(this.tasks.includes('completing')){
+            this.popTask('completing');
+        }
+        this.convoTaskSub=convo.activeTaskCountSubject.subscribe(n=>{
+            if(n===1){
+                if(!this.tasks.includes('completing')){
+                    this.pushTask('completing');
+                }
+            }else if(n===0){
+                if(this.tasks.includes('completing')){
+                    this.popTask('completing');
+                }
+            }
+        })
+        this._convo.next(convo);
+    }
+
 
     public replace(convo:string):boolean{
         if(this.isDisposed || this.currentTask){
@@ -282,7 +324,7 @@ export class ConversationUiCtrl
             return false;
         }
 
-        this._convo.next(c);
+        this.setConvo(c);
 
         if(this.autoSave){
             this.queueAutoSave();
@@ -298,14 +340,9 @@ export class ConversationUiCtrl
         if(this.currentTask){
             return false;
         }
-        this.pushTask('completing');
 
-        try{
-            await this.convo?.completeAsync();
-            this._lastCompletion.next(this.convo?.convo??null);
-        }finally{
-            this.popTask('completing');
-        }
+        await this.convo?.completeAsync();
+        this._lastCompletion.next(this.convo?.convo??null);
 
         if(this.autoSave){
             this.queueAutoSave();
@@ -371,33 +408,27 @@ export class ConversationUiCtrl
             return false;
         }
 
-        try{
 
-            this.pushTask('completing');
-
-            if(this.queueImages.length){
-                message+='\n\n'+this.queueImages.map(i=>{
-                    const url=getConvoPromptImageUrl(i);
-                    if(!url){
-                        return '';
-                    }
-                    return `![](${encodeURI(url)})`;
-                }).join('\n');
-                this._queueImages.next([]);
-            }
-
-            if(message.trim()){
-                convo.appendUserMessage(message);
-            }
-            await convo.completeAsync();
-            this._lastCompletion.next(convo.convo??null);
-            if(this.autoSave){
-                this.queueAutoSave();
-            }
-            return true;
-        }finally{
-            this.popTask('completing');
+        if(this.queueImages.length){
+            message+='\n\n'+this.queueImages.map(i=>{
+                const url=getConvoPromptImageUrl(i);
+                if(!url){
+                    return '';
+                }
+                return `![](${encodeURI(url)})`;
+            }).join('\n');
+            this._queueImages.next([]);
         }
+
+        if(message.trim()){
+            convo.appendUserMessage(message);
+        }
+        await convo.completeAsync();
+        this._lastCompletion.next(convo.convo??null);
+        if(this.autoSave){
+            this.queueAutoSave();
+        }
+        return true;
     }
 
     public queueImage(image:string|ConvoPromptImage){

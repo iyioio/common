@@ -29,7 +29,8 @@ export const convoCaptureMetadataTag='captureMetadata';
 export const defaultConvoTask='default';
 
 export const convoFunctions={
-    queryImage:'queryImage'
+    queryImage:'queryImage',
+    getState:'getState',
 } as const;
 
 /**
@@ -210,6 +211,8 @@ export const convoTags={
      */
     renderOnly:'renderOnly',
 
+    toolId:'toolId'
+
 } as const;
 
 export const convoTaskTriggers={
@@ -242,6 +245,7 @@ export const allowedConvoDefinitionFunctions=[
     convoEnumFnName,
     convoJsonMapFnName,
     convoJsonArrayFnName,
+    convoFunctions.getState,
 ] as const;
 
 export const createOptionalConvoValue=(value:any):OptionalConvoValue=>{
