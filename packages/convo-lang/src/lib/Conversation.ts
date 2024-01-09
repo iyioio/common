@@ -1002,7 +1002,7 @@ export class Conversation
 
         for(let i=0;i<this._messages.length;i++){
             const msg=this._messages[i];
-            if(!msg || (msg.role==='user' && !msg.content)){
+            if(!msg || (msg.role==='user' && !msg.content && !msg.statement)){
                 continue;
             }
 
