@@ -1,5 +1,5 @@
 import { ReadonlySubject, aryDuplicateRemoveItem, shortUuid } from "@iyio/common";
-import { BehaviorSubject, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 import { Conversation, ConversationOptions } from "./Conversation";
 import { LocalStorageConvoDataStore } from "./LocalStorageConvoDataStore";
 import { getConvoPromptImageUrl } from "./convo-lang-ui-lib";
@@ -153,6 +153,9 @@ export class ConversationUiCtrl
     public get queueImagesSubject():ReadonlySubject<readonly (string|ConvoPromptImage)[]>{return this._queueImages as any}
     public get queueImages():readonly (string|ConvoPromptImage)[]{return this._queueImages.value}
 
+    private readonly _onClear=new Subject<void>();
+    public get onClear():Observable<void>{return this._onClear}
+
     public readonly componentRenderers:Record<string,ConvoComponentRenderer>={};
 
     public constructor({
@@ -255,6 +258,7 @@ export class ConversationUiCtrl
         if(this.autoSave){
             this.queueAutoSave();
         }
+        this._onClear.next();
         return true;
     }
 

@@ -220,7 +220,7 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         display:flex;
         flex-direction:column;
         gap:@@gap;
-        padding:@@padding @@padding 60px @@padding;
+        padding:@@padding @@padding 120px @@padding;
     }
     @.msg{
         padding:@@messagePadding;
@@ -231,13 +231,15 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
     }
     @.msg.user{
         color:@@userBorder;
+        font-weight:@@userWeight;
         background-color:@@userBackground;
         border:@@userBorder;
         margin-left:4rem;
         align-self:flex-end;
     }
     @.msg.agent{
-        color:@@agentBorder;
+        color:@@agentColor;
+        font-weight:@@agentWeight;
         background-color:@@agentBackground;
         border:@@agentBorder;
         margin-right:4rem;

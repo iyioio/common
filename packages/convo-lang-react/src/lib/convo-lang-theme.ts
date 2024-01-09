@@ -17,8 +17,10 @@ export interface ConvoLangTheme
     userBackground:string;
     userColor:string;
     userBorder:string;
+    userWeight:string;
     agentBackground:string;
     agentColor:string;
+    agentWeight:string;
     agentBorder:string;
     messageBorderRadius:string;
     messagePadding:string;
@@ -45,8 +47,10 @@ export const defaultLightConvoLangTheme:ConvoLangTheme={
     userBackground:'#4F92F7',
     userColor:'inherit',
     userBorder:'none',
+    userWeight:'inherit',
     agentBackground:'#3B3B3D',
     agentColor:'inherit',
+    agentWeight:'inherit',
     agentBorder:'none',
     maxMessageWidth:'700px',
     messageBorderRadius:'2rem',
