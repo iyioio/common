@@ -2,12 +2,18 @@
     "name": "convo-lang-tools",
     "displayName": "convo-lang",
     "description": "A conversational language 🤓",
-    "version": "0.5.10",
+    "version": "0.5.11",
     "type": "commonjs",
     "sideEffects": false,
     "publisher": "IYIO",
     "icon": "assets/convo.png",
-    "keywords": ["prompt", "prompt-engineering", "open-ai", "ai", "convo-lang"],
+    "keywords": [
+        "prompt",
+        "prompt-engineering",
+        "open-ai",
+        "ai",
+        "convo-lang"
+    ],
     "engines": {
         "vscode": "^1.75.0"
     },

@@ -1,6 +1,6 @@
 {
     "name": "@iyio/aws",
-    "version": "0.5.10",
+    "version": "0.5.11",
     "type": "commonjs",
     "sideEffects": false
 }
