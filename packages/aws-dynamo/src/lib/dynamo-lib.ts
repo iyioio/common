@@ -177,6 +177,9 @@ export const getScanCommandInput=<T>({
         for(let i=0;i<keys.length;i++){
             const key=keys[i] as keyof T;
             const value=filter[key];
+            if(value===undefined){
+                continue;
+            }
             if(isFilterExpression(value)){
 
                 if(value.isIn!==undefined){
