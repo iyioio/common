@@ -152,28 +152,31 @@ export const conditionalDeepClone=<T>(
 /**
  * Duplicates the passed in object then deletes all undefined members then returns the new object
  */
-export const dupDeleteUndefined=<T>(obj:T):T=>
-{
+export const dupDeleteUndefined=<T>(obj:T):{
+    [Prop in keyof T]:T[Prop] extends undefined ? never : T[Prop]
+}=>{
     return deleteUndefined({...obj});
 }
 
-export const deleteUndefined=<T>(obj:T):T=>
-{
+export const deleteUndefined=<T>(obj:T):{
+    [Prop in keyof T]:T[Prop] extends undefined ? never : T[Prop]
+}=>{
     if(!obj){
-        return obj;
+        return obj as any;
     }
     for(const e in obj){
         if(obj[e]===undefined){
             delete obj[e];
         }
     }
-    return obj;
+    return obj as any;
 }
 
-export const deleteUndefinedOrNull=<T>(obj:T):T=>
-{
+export const deleteUndefinedOrNull=<T>(obj:T):{
+    [Prop in keyof T]:T[Prop] extends undefined|null ? never : T[Prop]
+}=>{
     if(!obj){
-        return obj;
+        return obj as any;
     }
     for(const e in obj){
         const v=obj[e];
@@ -181,7 +184,7 @@ export const deleteUndefinedOrNull=<T>(obj:T):T=>
             delete obj[e];
         }
     }
-    return obj;
+    return obj as any;
 }
 
 /**
