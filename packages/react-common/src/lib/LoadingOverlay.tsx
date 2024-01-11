@@ -25,6 +25,7 @@ interface LoadingOverlayProps
     style?:CSSProperties;
 
     delayIndictor?:boolean;
+    noBlur?:boolean;
 }
 
 export function LoadingOverlay({
@@ -36,7 +37,8 @@ export function LoadingOverlay({
     transitionLengthMs=500,
     delayMs=0,
     delayIndictor,
-    style:styleProp={}
+    style:styleProp={},
+    noBlur,
 }:LoadingOverlayProps){
 
     const startDelay=useDelayedValue(true,delayMs,undefined,false);
@@ -49,7 +51,7 @@ export function LoadingOverlay({
     style.root();
 
     return (
-        <div className={cn("LoadingOverlay",{disabled,delayIndictor})} style={{
+        <div className={cn("LoadingOverlay",{disabled,delayIndictor,noBlur})} style={{
             zIndex,
             backgroundColor,
             transition:`opacity ${transitionLengthMs}ms ease-in-out`,
@@ -81,6 +83,10 @@ const style=atDotCss({name:'LoadingOverlay',order:'frameworkHigh',css:`
         background-color:#00000055;
         backdrop-filter:blur(4px);
         z-index:10;
+    }
+    .LoadingOverlay.noBlur{
+        backdrop-filter:none;
+        background-color:#00000000;
     }
     .LoadingOverlay.disabled{
         opacity:0;
