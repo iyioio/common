@@ -214,10 +214,48 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
             currentMessage?.content??
             currentMessage?.statement?.params?.[(currentMessage?.statement?.params?.length??0)-1]?.value
         )
-        let endMatch:RegExpExecArray|undefined|null;
-        if(currentMessage && typeof end === 'string' && (endMatch=tagOrCommentReg.exec(end))){
+
+        if(currentMessage && typeof end === 'string' && tagOrCommentReg.test(end)){
+
+            let e=index-1;
+            while(true){
+                const s=code.lastIndexOf('\n',e);
+                if(s<startIndex){
+                    error='Start of captured tags and comments not found at end of text message';
+                    return false;
+                }
+                if(s===-1){
+                    break;
+                }
+
+                const line=code.substring(s,e+1).trim();
+
+                if(line && !line.startsWith('#') && !line.startsWith('@')){
+                    break;
+                }
+                e=s-1;
+                index=s;
+
+            }
+
+            e=end.length-1;
+            while(e>=0){
+                const s=end.lastIndexOf('\n',e);
+                if(s===-1){
+                    break;
+                }
+
+                const line=end.substring(s,e+1).trim();
+
+                if(line && !line.startsWith('#') && !line.startsWith('@')){
+                    break;
+                }
+                e=s-1;
+
+            }
+
             debug?.('endMsg',end,currentMessage);
-            end=end.substring(0,endMatch.index).trimEnd();
+            end=end.substring(0,e+1).trimEnd();
             if(allSpace.test(end)){
                 end='';
             }
@@ -232,25 +270,6 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                 }else{
                     currentMessage.statement.params.pop();
                 }
-            }
-            let e=index-1;
-            while(true){
-                const s=code.lastIndexOf('\n',e);
-                if(s<startIndex){
-                    error='Start of captured tags and comments not found at end of text message';
-                    return false;
-                }
-                if(s===-1){
-                    break;
-                }
-
-                const line=code.substring(s,e+1).trim();
-                if(line && !line.startsWith('#') && !line.startsWith('@')){
-                    break;
-                }
-                index=s;
-                e=s-1;
-
             }
 
         }

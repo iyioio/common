@@ -1146,7 +1146,7 @@ describe('convo',()=>{
 
     it('should parse message test messages with comments and tags',async ()=>{
 
-        const convo=parse(4,/*convo*/`
+        const convo=parse(6,/*convo*/`
 
             #comment1
 
@@ -1165,6 +1165,16 @@ describe('convo',()=>{
             > user
             bye
 
+            #comment4
+            > user
+            bye-s
+            #not a comment
+            hi-s
+
+            #comment5
+            > user
+            ok
+
             > assistant
             👋
         `);
@@ -1179,14 +1189,17 @@ describe('convo',()=>{
         expect(messages?.[0]?.description).toBe('comment1');
         expect(messages?.[1]?.description).toBe('comment2');
         expect(messages?.[2]?.description).toBe('comment3');
-        expect(messages?.[3]?.description).toBeUndefined();
+        expect(messages?.[3]?.description).toBe('comment4');
+        expect(messages?.[5]?.description).toBeUndefined();
 
         expect(messages?.[0]?.statement?.params?.length).toBe(2);
         expect(messages?.[0]?.statement?.params?.[0]?.value?.trim?.()).toBe('hi');
         expect(messages?.[0]?.statement?.params?.[1]?.value).toBe(123);
         expect(messages?.[1]?.content).toBe('Hello');
         expect(messages?.[2]?.content).toBe('bye');
-        expect(messages?.[3]?.content).toBe('👋');
+        expect(messages?.[3]?.content).toBe('bye-s\n#not a comment\nhi-s');
+        expect(messages?.[5]?.content).toBe('👋');
+        expect(messages?.[5]?.content).toBe('👋');
 
     });
 
