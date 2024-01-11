@@ -474,7 +474,7 @@ export class Conversation
         this._flat.next(dup?{...flat}:flat);
     }
 
-    public async callInlineFunctionAsync(
+    public async callFunctionAsync(
         fn:ConvoFunction|string,
         args:Record<string,any>={},
         options?:ConvoCompletionOptions
