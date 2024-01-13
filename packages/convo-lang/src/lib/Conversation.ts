@@ -1440,7 +1440,6 @@ export class Conversation
             }
         }
 
-
         const outParts:(string|ConvoMessagePart)[]=[];
         const push=(content:string,item:ConvoDefItem)=>{
             if(item.hidden){
@@ -1497,7 +1496,7 @@ export class Conversation
                 continue;
             }
             const fn=items[i]?.fn;
-            if(!fn || (!override && this.getAssignment(fn.name))){
+            if(!fn || (!override && !fn.registerOnly && this.getAssignment(fn.name))){
                 continue
             }
 
