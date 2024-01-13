@@ -174,12 +174,14 @@ export const getScanCommandInput=<T>({
         const keys=Object.keys(filter);
         const exp:string[]=[];
         let expI=0;
+        let filterCount=0;
         for(let i=0;i<keys.length;i++){
             const key=keys[i] as keyof T;
             const value=filter[key];
             if(value===undefined){
                 continue;
             }
+            filterCount++;
             if(isFilterExpression(value)){
 
                 if(value.isIn!==undefined){
@@ -301,7 +303,9 @@ export const getScanCommandInput=<T>({
 
             }
         }
-        input.FilterExpression=exp.join(' and ')
+        if(filterCount){
+            input.FilterExpression=exp.join(' and ');
+        }
     }
 
     if(commandInput){
