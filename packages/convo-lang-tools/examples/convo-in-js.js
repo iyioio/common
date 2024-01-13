@@ -1,4 +1,4 @@
-import { Conversation } from '@iyio/convo-lang';
+import { Conversation, convoScript } from '@iyio/convo-lang';
 
 const convo=new Conversation();
 
@@ -43,3 +43,12 @@ submitButton.addEventListener('click',async ()=>{
     // show resutl to user
     console.info('Response from assistant',r);
 })
+
+
+convoScript/*convho*/`
+> user
+${
+    alert('')
+}
+hi
+`
