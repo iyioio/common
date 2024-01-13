@@ -1,17 +1,36 @@
+import { ZodType, ZodTypeAny, z } from "zod";
 import { Conversation, ConversationOptions } from "./Conversation";
+import { escapeConvoMessageContent } from "./convo-lib";
 import { ConvoCompletion, ConvoCompletionOptions } from "./convo-types";
 
 export const getConvoCompletionAsync=(
     messagesOrOptions:string|ConvoCompletionOptions,
-    conversationOptions:ConversationOptions
+    conversationOptions?:ConversationOptions
 ):Promise<ConvoCompletion>=>{
     const conversation=new Conversation(conversationOptions);
     return conversation.completeAsync(messagesOrOptions);
 }
 
+
+export const getConvoTextCompletionAsync=async (
+    messagesOrOptions:string|ConvoCompletionOptions,
+    conversationOptions?:ConversationOptions
+):Promise<string|undefined>=>{
+    const r=await getConvoCompletionAsync(messagesOrOptions,conversationOptions);
+    return r.message?.content;
+}
+
+export const getConvoUserMessageCompletionAsync=async (
+    userMessage:string,
+    conversationOptions?:ConversationOptions
+):Promise<string|undefined>=>{
+    const r=await getConvoCompletionAsync(`> user\n${escapeConvoMessageContent(userMessage)}`,conversationOptions);
+    return r.message?.content;
+}
+
 export const getConvoJsonCompletionAsync=async (
     messagesOrOptions:string|ConvoCompletionOptions,
-    conversationOptions:ConversationOptions
+    conversationOptions?:ConversationOptions
 ):Promise<any>=>{
     const c=await getConvoCompletionAsync(messagesOrOptions,conversationOptions);
 
@@ -26,12 +45,35 @@ export const getConvoJsonCompletionAsync=async (
     }
 }
 
-export const callConvoFunctionAsync=async (
+export const callConvoFunctionAsync=async <T=any>(
     messagesOrOptions:string|ConvoCompletionOptions,
-    conversationOptions:ConversationOptions
-):Promise<any>=>{
+    conversationOptions?:ConversationOptions
+):Promise<T>=>{
+
+    if(messagesOrOptions === undefined){
+        messagesOrOptions={};
+    }else if(typeof messagesOrOptions === 'string'){
+        messagesOrOptions={append:messagesOrOptions};
+    }
+    messagesOrOptions.returnOnCall=true;
 
     const c=await getConvoCompletionAsync(messagesOrOptions,conversationOptions);
 
     return c.message?.callParams;
+}
+
+export const callConvoFunctionWithSchemeAsync=async <Z extends ZodTypeAny=ZodType<any>, T=z.infer<Z>>(
+    functionName:string,
+    functionDescription:string,
+    params:Z,
+    messagesOrOptions:string|ConvoCompletionOptions,
+    conversationOptions?:ConversationOptions
+):Promise<T|undefined>=>{
+    const conversation=new Conversation(conversationOptions);
+    conversation.defineFunction({
+        name:functionName,
+        paramsType:params,
+        description:functionDescription,
+    })
+    return await conversation.callStubFunctionAsync(messagesOrOptions);
 }
