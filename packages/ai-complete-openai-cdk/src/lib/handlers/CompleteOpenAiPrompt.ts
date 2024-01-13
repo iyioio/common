@@ -54,6 +54,5 @@ const CompleteOpenAiPrompt=async (
 export const handler=createFnHandler(CompleteOpenAiPrompt,{
     inputScheme:AiCompletionRequestScheme,
     outputScheme:AiCompletionResultScheme,
-    logRequest:true
 });
 
