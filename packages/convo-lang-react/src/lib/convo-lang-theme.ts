@@ -29,6 +29,10 @@ export interface ConvoLangTheme
     loaderProps?:LoadingDotsProps;
     wrapLoader?:boolean;
 
+    messageRowClassName?:string;
+    messageRowUnstyled?:boolean;
+    rowWidth?:string;
+
 }
 
 export const defaultLightConvoLangTheme:ConvoLangTheme={
@@ -53,7 +57,7 @@ export const defaultLightConvoLangTheme:ConvoLangTheme={
     agentWeight:'inherit',
     agentBorder:'none',
     maxMessageWidth:'700px',
-    messageBorderRadius:'2rem',
+    messageBorderRadius:'1.2rem',
     messagePadding:'10px 14px',
 } as const
 

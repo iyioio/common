@@ -2,8 +2,8 @@ import { ReadonlySubject, aryDuplicateRemoveItem, shortUuid } from "@iyio/common
 import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 import { Conversation, ConversationOptions } from "./Conversation";
 import { LocalStorageConvoDataStore } from "./LocalStorageConvoDataStore";
-import { getConvoPromptImageUrl } from "./convo-lang-ui-lib";
-import { ConvoComponentRenderer, ConvoDataStore, ConvoEditorMode, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptImage } from "./convo-lang-ui-types";
+import { getConvoPromptMediaUrl } from "./convo-lang-ui-lib";
+import { ConvoComponentRenderer, ConvoDataStore, ConvoEditorMode, ConvoMessageRenderResult, ConvoMessageRenderer, ConvoPromptMedia } from "./convo-lang-ui-types";
 import { removeDanglingConvoUserMessage } from "./convo-lib";
 import { FlatConvoMessage } from "./convo-types";
 
@@ -149,9 +149,22 @@ export class ConversationUiCtrl
         this._theme.next(value);
     }
 
-    private readonly _queueImages:BehaviorSubject<(string|ConvoPromptImage)[]>=new BehaviorSubject<(string|ConvoPromptImage)[]>([]);
-    public get queueImagesSubject():ReadonlySubject<readonly (string|ConvoPromptImage)[]>{return this._queueImages as any}
-    public get queueImages():readonly (string|ConvoPromptImage)[]{return this._queueImages.value}
+    private readonly _mediaQueue:BehaviorSubject<(ConvoPromptMedia)[]>=new BehaviorSubject<(ConvoPromptMedia)[]>([]);
+    public get mediaQueueSubject():ReadonlySubject<readonly (ConvoPromptMedia)[]>{return this._mediaQueue as any}
+    public get mediaQueue():readonly (ConvoPromptMedia)[]{return this._mediaQueue.value}
+
+    private readonly _collapsed:BehaviorSubject<boolean>=new BehaviorSubject<boolean>(true);
+    public get collapsedSubject():ReadonlySubject<boolean>{return this._collapsed}
+    /**
+     * Often used to indicate if the conversation is display in a collapsed state
+     */
+    public get collapsed(){return this._collapsed.value}
+    public set collapsed(value:boolean){
+        if(value==this._collapsed.value){
+            return;
+        }
+        this._collapsed.next(value);
+    }
 
     private readonly _onClear=new Subject<void>();
     public get onClear():Observable<void>{return this._onClear}
@@ -228,7 +241,7 @@ export class ConversationUiCtrl
     }
 
     public async loadAsync():Promise<boolean>{
-        if(this.isDisposed || this.currentTask || this.store?.loadConvo){
+        if(this.isDisposed || this.currentTask || !this.store?.loadConvo){
             return false;
         }
         this.pushTask('loading');
@@ -413,15 +426,15 @@ export class ConversationUiCtrl
         }
 
 
-        if(this.queueImages.length){
-            message+='\n\n'+this.queueImages.map(i=>{
-                const url=getConvoPromptImageUrl(i);
+        if(this.mediaQueue.length){
+            message+='\n\n'+this.mediaQueue.map(i=>{
+                const url=getConvoPromptMediaUrl(i,'prompt');
                 if(!url){
                     return '';
                 }
                 return `![](${encodeURI(url)})`;
             }).join('\n');
-            this._queueImages.next([]);
+            this._mediaQueue.next([]);
         }
 
         if(message.trim()){
@@ -435,12 +448,23 @@ export class ConversationUiCtrl
         return true;
     }
 
-    public queueImage(image:string|ConvoPromptImage){
-        this._queueImages.next([...this._queueImages.value,image]);
+    public queueMedia(media:string|ConvoPromptMedia){
+        this._mediaQueue.next([...this._mediaQueue.value,(typeof media === 'string')?{url:media}:media]);
     }
 
-    public dequeueImage(image:string|ConvoPromptImage){
-        this._queueImages.next(aryDuplicateRemoveItem(this._queueImages.value,image));
+    public dequeueMedia(media:string|ConvoPromptMedia):boolean{
+        if(typeof media === 'string'){
+            const match=this._mediaQueue.value.find(m=>m.url===media);
+            if(!match){
+                return false;
+            }
+            media=match;
+        }
+        if(!this._mediaQueue.value.includes(media)){
+            return false;
+        }
+        this._mediaQueue.next(aryDuplicateRemoveItem(this._mediaQueue.value,media));
+        return true;
     }
 
 

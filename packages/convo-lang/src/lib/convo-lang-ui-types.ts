@@ -7,10 +7,13 @@ export const convoPromptImagePropKey=Symbol('convoPromptImagePropKey');
 
 export type ConvoEditorMode='code'|'vars'|'flat'|'tree';
 
-export interface ConvoPromptImage
+export type ConvoPromptMediaPurpose='preview'|'prompt';
+
+export interface ConvoPromptMedia
 {
     url?:string;
-    getUrl?:()=>string;
+    getUrl?:(purpose:ConvoPromptMediaPurpose)=>string;
+    data?:any;
     [convoPromptImagePropKey]?:()=>string;
 }
 
@@ -57,12 +60,21 @@ export interface ConvoComponentRendererContext
     isUser:boolean;
     index:number;
     className?:string;
+    rowClassName?:string;
 }
 
-export type ConvoComponentRenderer=(
+export type ConvoComponentRenderFunction=(
     component:ConvoMessageComponent,
     renderCtx:ConvoComponentRendererContext
 )=>any;
+
+export interface ConvoComponentRendererWithOptions
+{
+    doNotRenderInRow?:boolean;
+    render:ConvoComponentRenderFunction;
+}
+
+export type ConvoComponentRenderer=ConvoComponentRenderFunction|ConvoComponentRendererWithOptions;
 
 
 export type ConvoMessageComponent=XmlNode;

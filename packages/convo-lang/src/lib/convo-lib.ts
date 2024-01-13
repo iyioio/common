@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
+import { ConvoBaseType, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -211,7 +211,12 @@ export const convoTags={
      */
     renderOnly:'renderOnly',
 
-    toolId:'toolId'
+    toolId:'toolId',
+
+    /**
+     * When applied to the last content or component messages auto scrolling will be disabled
+     */
+    disableAutoScroll:'disableAutoScroll'
 
 } as const;
 
@@ -664,4 +669,23 @@ export const parseConvoBooleanTag=(value:string|null|undefined)=>{
         return true;
     }
     return Boolean(value);
+}
+
+export const getFlatConvoTag=(message:FlatConvoMessage|null|undefined,tagName:string)=>{
+    if(!message?.tags || !(tagName in message.tags)){
+        return false;
+    }
+    return parseConvoBooleanTag(message.tags[tagName]);
+}
+
+export const shouldDisableConvoAutoScroll=(messages:FlatConvoMessage[]):boolean=>{
+    console.log('hio 👋 👋 👋 messages',messages);
+    for(let i=messages.length-1;i>=0;i--){
+        const m=messages[i];
+        if(m && (m.content!==undefined || m.component!==undefined)){
+            console.log('hio 👋 👋 👋 test',m);
+            return getFlatConvoTag(m,convoTags.disableAutoScroll);
+        }
+    }
+    return false;
 }

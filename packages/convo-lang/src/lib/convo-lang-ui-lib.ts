@@ -1,7 +1,7 @@
 import { parseXml } from "@iyio/common";
-import { ConvoMessageComponent, ConvoPromptImage, convoPromptImagePropKey } from "./convo-lang-ui-types";
+import { ConvoMessageComponent, ConvoPromptMedia, ConvoPromptMediaPurpose, convoPromptImagePropKey } from "./convo-lang-ui-types";
 
-export const getConvoPromptImageUrl=(img:string|ConvoPromptImage|null|undefined):string|undefined=>{
+export const getConvoPromptMediaUrl=(img:string|ConvoPromptMedia|null|undefined,purpose:ConvoPromptMediaPurpose):string|undefined=>{
     if(typeof img === 'string'){
         return img
     }
@@ -10,7 +10,7 @@ export const getConvoPromptImageUrl=(img:string|ConvoPromptImage|null|undefined)
         return undefined;
     }
 
-    return img.url??img.getUrl?.()??img[convoPromptImagePropKey]?.();
+    return img.url??img.getUrl?.(purpose)??img[convoPromptImagePropKey]?.();
 }
 
 export const parseConvoMessageComponents=(content:string):ConvoMessageComponent[]|undefined=>{

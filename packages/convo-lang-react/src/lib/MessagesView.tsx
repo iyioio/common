@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
-import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage } from "@iyio/convo-lang";
+import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
 import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
 import { MessageComponentRenderer } from "./MessageComponentRenderer";
@@ -12,7 +12,8 @@ const renderResult=(
     result:ConvoMessageRenderResult,
     i:number,
     showSystemMessages:boolean,
-    showFunctions:boolean
+    showFunctions:boolean,
+    rowClassName:string|undefined,
 ):any=>{
     if((typeof result !== 'object') || !result){
         return null;
@@ -23,7 +24,7 @@ const renderResult=(
     return renderMessage(ctrl,flat,{
         role:result.role??'assistant',
         content:result.content
-    },i,showSystemMessages,showFunctions)
+    },i,showSystemMessages,showFunctions,rowClassName)
 }
 
 const renderMessage=(
@@ -32,10 +33,11 @@ const renderMessage=(
     m:FlatConvoMessage,
     i:number,
     showSystemMessages:boolean,
-    showFunctions:boolean
+    showFunctions:boolean,
+    rowClassName:string|undefined,
 )=>{
 
-    const className=style.msg({user:m.role==='user',agent:m.role!=='user'})
+    const className=style.msg({user:m.role==='user',agent:m.role!=='user'});
 
     if(m.component!==undefined && m.component!==false){
         return (
@@ -50,6 +52,7 @@ const renderMessage=(
                     message:m,
                     isUser:m.role==='user',
                     className,
+                    rowClassName,
 
                 }}
             />
@@ -69,38 +72,44 @@ const renderMessage=(
         }
         const singleItem=keys.length===1 && firstValue && (typeof firstValue==='object');
         return (
-            <div className={cn(className,style.data())} key={i}>
-                <div className={style.table({singleItem})}>
-                    {keys.map((k,ki)=>{
+            <div className={rowClassName} key={i}>
+                <div className={cn(className,style.data())}>
+                    <div className={style.table({singleItem})}>
+                        {keys.map((k,ki)=>{
 
-                        const value=ki===0?firstValue:(m.setVars?.[k]);
+                            const value=ki===0?firstValue:(m.setVars?.[k]);
 
-                        return (
-                            <Fragment key={k+'r'}>
-                                <div>{k}</div>
-                                {!singleItem && <div>-</div>}
-                                <div>{k[0]===k[0]?.toLowerCase()?
-                                    objectToMarkdown(value)
-                                :
-                                    JSON.stringify(value,null,4)
-                                }</div>
-                            </Fragment>
-                        )
-                    })}
+                            return (
+                                <Fragment key={k+'r'}>
+                                    <div>{k}</div>
+                                    {!singleItem && <div>-</div>}
+                                    <div>{k[0]===k[0]?.toLowerCase()?
+                                        objectToMarkdown(value)
+                                    :
+                                        JSON.stringify(value,null,4)
+                                    }</div>
+                                </Fragment>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
         )
     }else if(m.fn || (m.role!=='user' && m.role!=='assistant')){
         if(showSystemMessages && m.role==='system'){
             return (
-                <div className={className} key={i+'s'}>
-                    {m.content}
+                <div className={rowClassName} key={i+'s'}>
+                    <div className={className}>
+                        {m.content}
+                    </div>
                 </div>
             )
         }else if(showFunctions && ( m.fn || m.called)){
             return (
-                <div className={className} key={i+'f'}>
-                    {JSON.stringify(m,null,4)}
+                <div className={rowClassName} key={i+'f'}>
+                    <div className={className}>
+                        {JSON.stringify(m,null,4)}
+                    </div>
                 </div>
             )
         }
@@ -114,15 +123,18 @@ const renderMessage=(
 
         return (<Fragment key={i+'f'}>{
             parts.map((p,pi)=>p.image?(
-                <img
-                    className={style.img({user:m.role==='user',agent:m.role!=='user'})}
-                    key={i}
-                    alt={p.image.description}
-                    src={p.image.url}
-                />
+                <div className={rowClassName} key={i}>
+                    <img
+                        className={style.img({user:m.role==='user',agent:m.role!=='user'})}
+                        alt={p.image.description}
+                        src={p.image.url}
+                    />
+                </div>
             ):(
-                <div className={className} key={pi}>
-                    {p.text}
+                <div className={rowClassName} key={pi}>
+                    <div className={className}>
+                        {p.text}
+                    </div>
                 </div>
             ))
     }</Fragment>)
@@ -130,8 +142,10 @@ const renderMessage=(
     }else{
 
         return (
-            <div className={className} key={i+'d'}>
-                {m.content}
+            <div className={rowClassName} key={i+'d'}>
+                <div className={className}>
+                    {m.content}
+                </div>
             </div>
         )
     }
@@ -161,6 +175,11 @@ export function MessagesView({
     const showSystemMessages=useSubject(ctrl.showSystemMessagesSubject);
     const showFunctions=useSubject(ctrl.showFunctionsSubject);
 
+    const rowClassName=(theme.messageRowUnstyled?
+        theme.messageRowClassName:
+        style.row({fixedWidth:theme.rowWidth!==undefined},theme.messageRowClassName)
+    );
+
     const mapped=messages.map((m,i)=>{
 
         const ctrlRendered=ctrl.renderMessage(m,i);
@@ -169,39 +188,42 @@ export function MessagesView({
         }
 
         if(ctrlRendered?.position==='replace'){
-            return renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions);
+            return renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName);
         }
 
-        const rendered=renderMessage(ctrl,flat,m,i,showSystemMessages,showFunctions);
+        const rendered=renderMessage(ctrl,flat,m,i,showSystemMessages,showFunctions,rowClassName);
         if(!ctrlRendered){
             return rendered;
         }
 
         return (
             <Fragment key={i+'j'}>
-                {ctrlRendered.position==='before' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='before' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName)}
                 {rendered}
-                {ctrlRendered.position==='after' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions)}
+                {ctrlRendered.position==='after' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName)}
             </Fragment>
         )
 
 
     })
 
+
     return (
         <div className={style.root()} style={style.vars(theme)}>
-            <ScrollView flex1 autoScrollEnd>
+            <ScrollView flex1 autoScrollEnd autoScrollEndFilter={()=>!shouldDisableConvoAutoScroll(messages)}>
                 <div className={style.list()}>
 
                     {mapped}
 
-                    {!!currentTask && (theme.wrapLoader===false?
-                        <LoadingDots {...theme.loaderProps}/>
-                    :
-                        <div className={style.msg({agent:true})}>
+                    {!!currentTask && <div className={rowClassName}>{
+                        (theme.wrapLoader===false?
                             <LoadingDots {...theme.loaderProps}/>
-                        </div>
-                    )}
+                        :
+                            <div className={style.msg({agent:true})}>
+                                <LoadingDots {...theme.loaderProps}/>
+                            </div>
+                        )
+                    }</div>}
                 </div>
             </ScrollView>
         </div>
@@ -285,5 +307,15 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         font-size:1rem;
         font-weight:bold;
         padding-bottom:0;
+    }
+    @.row{
+        display:flex;
+        flex-direction:column;
+        gap:@@gap;
+    }
+    @.row.fixedWidth{
+        width:@@rowWidth;
+        max-width:100%;
+        align-self:center;
     }
 `});

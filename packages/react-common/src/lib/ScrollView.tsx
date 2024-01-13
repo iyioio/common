@@ -15,6 +15,7 @@ export interface ScrollViewProps extends ViewProps
     overflowRef?:(elem:HTMLElement|null)=>void;
     fitToMaxSize?:string;
     autoScrollEnd?:boolean;
+    autoScrollEndFilter?:()=>boolean;
     autoScrollTrigger?:any;
     autoScrollBehavior?:ScrollBehavior;
     autoScrollDelayMs?:number;
@@ -48,6 +49,7 @@ export function ScrollView({
     overflowRef,
     fitToMaxSize,
     autoScrollEnd,
+    autoScrollEndFilter,
     autoScrollTrigger,
     autoScrollBehavior='smooth',
     autoScrollDelayMs=100,
@@ -74,6 +76,9 @@ export function ScrollView({
 
     const size=fitToMaxSize?containerSize:undefined;
 
+    const refs=useRef({autoScrollEndFilter});
+    refs.current.autoScrollEndFilter=autoScrollEndFilter;
+
 
     useEffect(()=>{
         if(autoScrollTrigger===undefined || !overflowContainer || !root){
@@ -91,6 +96,7 @@ export function ScrollView({
                 autoScrollSelector,
                 autoScrollXOffset,
                 autoScrollYOffset,
+                refs.current.autoScrollEndFilter,
             )
         },autoScrollDelayMs);
 
@@ -126,6 +132,7 @@ export function ScrollView({
                 autoScrollSelector,
                 autoScrollXOffset,
                 autoScrollYOffset,
+                refs.current.autoScrollEndFilter,
             )
         },autoScrollDelayMs);
 
@@ -280,7 +287,12 @@ const autoScrollTo=(
     autoScrollSelector?:string,
     autoScrollXOffset=0,
     autoScrollYOffset=0,
+    autoScrollEndFilter:(()=>boolean)|undefined=undefined,
 )=>{
+
+    if(autoScrollEndFilter?.()===false){
+        return;
+    }
 
     if(autoScrollSelector){
         const elem=root.querySelector(autoScrollSelector);
