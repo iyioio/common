@@ -679,11 +679,9 @@ export const getFlatConvoTag=(message:FlatConvoMessage|null|undefined,tagName:st
 }
 
 export const shouldDisableConvoAutoScroll=(messages:FlatConvoMessage[]):boolean=>{
-    console.log('hio 👋 👋 👋 messages',messages);
     for(let i=messages.length-1;i>=0;i--){
         const m=messages[i];
         if(m && (m.content!==undefined || m.component!==undefined)){
-            console.log('hio 👋 👋 👋 test',m);
             return getFlatConvoTag(m,convoTags.disableAutoScroll);
         }
     }
