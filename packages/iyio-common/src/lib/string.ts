@@ -100,6 +100,17 @@ export const getSubstringCount=(str:string,substring:string):number=>{
     return count;
 }
 
+export const getStrCharCount=(str:string,char:string):number=>{
+    let count=0;
+    for(let i=0;i<str.length;i++){
+        if(str[i]===char){
+            count++;
+        }
+
+    }
+    return count;
+}
+
 interface SplitStringWithQuoteOptions{
     separator:string;
     trimValues?:boolean;
