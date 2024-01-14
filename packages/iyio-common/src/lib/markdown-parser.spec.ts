@@ -485,6 +485,7 @@ console.log(n+1);`
         );
         expect(lines[n]?.codeLanguage).toBe('ts');
         expect(lines[n]?.ln).toBe(3);
+        expect(lines[n]?.eln).toBe(6);
         n++
 
         expect(lines[n]?.type).toBe(asType<MarkdownLineType>('p'));
@@ -521,6 +522,51 @@ console.log(n+1);`
             {name:'tag2'}
         ])
 
+
+    });
+
+
+
+    it('should join paragraphs',()=>{
+
+        const lines=parse(`
+
+This is a line in a paragraph.
+This is a line in the same paragraph.
+
+This is a line in the next paragraph.
+This is a line in the same next paragraph.
+This is the last line in the paragraph.
+
+This is **paragraph** 3.
+This is the next line of **paragraph** 3.
+
+        `,{parseTags:true});
+
+
+        let line=lines[0];
+        if(!line){return;}
+
+        expect(line.type).toBe('p');
+        expect(line.text).toBe('This is a line in a paragraph.\nThis is a line in the same paragraph.');
+        expect(line.ln).toBe(1);
+
+        line=lines[1];
+        expect(line?.type).toBe('p');
+        expect(line?.text).toBe('This is a line in the next paragraph.\nThis is a line in the same next paragraph.\nThis is the last line in the paragraph.');
+        expect(line?.ln).toBe(4);
+
+        line=lines[2];
+        expect(line?.type).toBe('p');
+        expect(line?.text).toBe(undefined);
+        expect(line?.nodes).toEqual([
+            {text:'This is '},
+            {text:'paragraph',bold:true},
+            {text:' 3.\nThis is the next line of '},
+            {text:'paragraph',bold:true},
+            {text:' 3.'},
+        ])
+        expect(line?.ln).toBe(8);
 
     });
 

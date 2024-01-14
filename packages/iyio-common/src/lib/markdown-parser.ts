@@ -172,6 +172,7 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
                         lineNumber++;
                     }
                 }
+                line.eln=lineNumber;
                 text=codeMatch[3] as string;
                 lines.push(line);
                 index=codeMatch.index+fullText.length-text.length;
@@ -221,10 +222,49 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
         if(typeof inline === 'string'){
             line.text=inline;
         }else{
+            mergeNodes(inline);
             line.nodes=inline;
         }
 
-        lines.push(line);
+        const prev=lines[lines.length-1];
+        if( prev &&
+            line.type==='p' &&
+            prev.type==='p' &&
+            (line.ln-1===prev.ln || line.ln-1===prev.eln) &&
+            prev.indent===line.indent &&
+            prev.blockQuoteLevel===line.blockQuoteLevel &&
+            !line.tags
+        ){
+
+            if(line.text!==undefined && prev.text!==undefined){
+                prev.text+='\n'+line.text;
+            }else{
+                if(!prev.nodes){
+                    prev.nodes=[];
+                }
+                if(prev.text!==undefined){
+                    prev.nodes.push({text:prev.text});
+                    delete prev.text;
+                }
+                if(!line.nodes){
+                    line.nodes=[];
+                }
+                if(line.text!==undefined){
+                    line.nodes.push({text:line.text})
+                }
+
+                prev.nodes.push({text:'\n'});
+                prev.nodes.push(...line.nodes);
+                mergeNodes(prev.nodes);
+
+            }
+
+            prev.eln=line.ln;
+
+        }else{
+
+            lines.push(line);
+        }
 
 
         index=match.index+match[0].length;
@@ -435,3 +475,38 @@ const unescapeMd=(text:string):string=>{
     return text.replace(unescapeReg,(_,c:string)=>c);
 }
 
+const mergeNodes=(nodes:MarkdownNode[])=>{
+    let prev:MarkdownNode|undefined;
+    let prevCanMarge=false;
+    for(let i=0;i<nodes.length;i++){
+        const node=nodes[i];
+        if(!node){continue}
+
+        const canMerge=(
+            node.text &&
+            !node.url &&
+            !node.imageUrl &&
+            !node.link &&
+            !node.email &&
+            !node.code
+        )?true:false;
+
+        if( canMerge &&
+            prevCanMarge &&
+            prev &&
+            prev.bold===node.bold &&
+            prev.italic===node.italic
+        ){
+            if(!prev.text){
+                prev.text='';
+            }
+            prev.text+=node.text;
+            nodes.splice(i,1);
+            i--;
+            continue;
+        }
+
+        prev=node;
+        prevCanMarge=canMerge;
+    }
+}

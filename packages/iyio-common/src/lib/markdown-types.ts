@@ -88,5 +88,10 @@ export interface MarkdownLine
      */
     ln:number;
 
+    /**
+     * End line number. Only used with the line spans multiple lines.
+     */
+    eln?:number;
+
     tags?:MarkdownTag[];
 }
