@@ -23,6 +23,18 @@
             "internalConsoleOptions": "neverOpen"
         },
         {
+            "name": "iyio-common tests",
+            "type": "node",
+            "request": "launch",
+            "env": {
+            },
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/jest",
+            "args": [],
+            "cwd": "${workspaceRoot}/packages/iyio-common",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
             "name": "aws-tests tests",
             "type": "node",
             "request": "launch",
