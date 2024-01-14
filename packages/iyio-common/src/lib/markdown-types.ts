@@ -12,9 +12,19 @@ export interface MarkdownImageParsingItem
     image?:MarkdownImage;
 }
 
-export type MarkdownParsingOptions=CodeParsingOptions;
+export interface MarkdownParsingOptions extends CodeParsingOptions
+{
+    startLine?:number;
+    parseTags?:boolean;
+}
+
 export type MarkdownParsingResult=CodeParsingResult<MarkdownLine[]>;
 
+export interface MarkdownTag
+{
+    name:string;
+    value?:string;
+}
 
 export interface MarkdownNode
 {
@@ -77,4 +87,6 @@ export interface MarkdownLine
      * Line number
      */
     ln:number;
+
+    tags?:MarkdownTag[];
 }

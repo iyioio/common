@@ -1,10 +1,10 @@
 import { asType } from './common-lib';
 import { parseMarkdown } from './markdown-parser';
-import { MarkdownLineType } from './markdown-types';
+import { MarkdownLineType, MarkdownParsingOptions } from './markdown-types';
 
-const parse=(md:string)=>{
+const parse=(md:string,options?:MarkdownParsingOptions)=>{
 
-    const result=parseMarkdown(md.trim());
+    const result=parseMarkdown(md.trim(),options);
 
     const lines=result.result;
     if(!lines){
@@ -496,6 +496,31 @@ console.log(n+1);`
         expect(lines[n]?.text).toBe('after example');
         expect(lines[n]?.ln).toBe(8);
         n++
+
+    });
+
+    it('should parse tags',()=>{
+
+        const lines=parse(`
+
+@tag1 value1
+@tag2
+# title
+
+        `,{parseTags:true});
+
+
+        const line=lines[0];
+        if(!line){return;}
+
+        expect(line.type).toBe('header');
+        expect(line.text).toBe('title');
+        expect(line.ln).toBe(3);
+        expect(line.tags).toEqual([
+            {name:'tag1',value:'value1'},
+            {name:'tag2'}
+        ])
+
 
     });
 

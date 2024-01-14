@@ -13,7 +13,8 @@ export const parseXml:CodeParser<XmlNode[],XmlParsingOptions>=(
     xml:string,
     {
         startIndex=0,
-        emptyAttValue
+        emptyAttValue,
+        stopOnFirstNode,
     }:XmlParsingOptions={}
 ):XmlParsingResult=>{
 
@@ -55,6 +56,9 @@ export const parseXml:CodeParser<XmlNode[],XmlParsingOptions>=(
                 inTag=false;
                 isClosingTag=false;
                 index=match.index+match[0].length;
+                if(stack.length===1 && stopOnFirstNode){
+                    break parsingLoop;
+                }
                 continue parsingLoop;
             }
 

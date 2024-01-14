@@ -1,6 +1,6 @@
 import { getCodeParsingError } from "./code-parsing";
 import { CodeParser } from "./code-parsing-types";
-import { MarkdownLine, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult } from "./markdown-types";
+import { MarkdownLine, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types";
 import { isValidEmail } from "./validation";
 
 const mdReg=/([\n\r]*)([ \t]*)([^\n\r$]*)/g;
@@ -11,19 +11,23 @@ const ulReg=/([*+-])[ \t]*(.*)/;
 const olReg=/([0-9]+)\.[ \t]*(.*)/;
 const hrReg=/(\*{3,}|-{3,}|\+{3,})(.*)/;
 const codeReg=/```[ \t]*(\S*)(.*)```([^\r\n]*)/gs;
+const tagReg=/@([\w-]+)[ \t]*(.*)/g;
 
 
 export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
     code:string,
     {
         startIndex=0,
+        startLine=1,
+        parseTags,
     }:MarkdownParsingOptions={}
 ):MarkdownParsingResult=>{
 
     const lines:MarkdownLine[]=[];
     let error:string|undefined;
     let index=startIndex;
-    let lineNumber=1;
+    let lineNumber=startLine;
+    let capturedTags:MarkdownTag[]|undefined;
 
 
     const length=code.length;
@@ -174,11 +178,43 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
                 continue parsingLoop;
             }
 
+            case '@':{
+                if(!parseTags){
+                    break;
+                }
+                tagReg.lastIndex=index;
+                const tagMatch=tagReg.exec(code);
+                if(!tagMatch){
+                    break;
+                }
+                if(!capturedTags){
+                    capturedTags=[];
+                }
+                const v=tagMatch[2]?.trim();
+                if(v){
+                    capturedTags.push({
+                        name:tagMatch[1]??'',
+                        value:v
+                    })
+                }else{
+                    capturedTags.push({
+                        name:tagMatch[1]??'',
+                    })
+                }
+                index=tagMatch.index+tagMatch[0].length;
+                continue parsingLoop;
+            }
+
         }
 
         if(text===undefined){
             error=`remaining line text match invalid index. line type = ${line.type??'default'}`;
             break parsingLoop;
+        }
+
+        if(capturedTags){
+            line.tags=capturedTags;
+            capturedTags=undefined;
         }
 
         const inline=parseInline(text);

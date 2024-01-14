@@ -13,6 +13,7 @@ export interface XmlNode
 
 export interface XmlParsingOptions extends CodeParsingOptions{
     emptyAttValue?:string;
+    stopOnFirstNode?:boolean;
 }
 
 export type XmlParsingResult=CodeParsingResult<XmlNode[]>;
