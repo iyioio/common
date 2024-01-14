@@ -113,7 +113,7 @@ const convo={
                 { "include": "#msgStringBackslash"},
                 { "include": "#embedEscape" },
                 { "include": "#embed" },
-                { "include": "#markdownImage" },
+                { "include": "#markdownLink" },
                 { "include": "#comment" },
                 { "include": "#tag" }
             ]
@@ -411,8 +411,8 @@ const convo={
                 {"include":"#embed"}
             ]
         },
-        "markdownImage":{
-            "begin":"!\\[",
+        "markdownLink":{
+            "begin":"!?\\[",
             "end":"(\\]\\()([^\\)]*)(\\))",
             "beginCaptures":{
                 "0":{"name":"keyword.control"}

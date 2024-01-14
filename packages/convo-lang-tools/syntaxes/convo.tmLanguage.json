@@ -20,7 +20,7 @@
                 { "include": "#msgStringBackslash"},
                 { "include": "#embedEscape" },
                 { "include": "#embed" },
-                { "include": "#markdownImage" },
+                { "include": "#markdownLink" },
                 { "include": "#comment" },
                 { "include": "#tag" }
             ]
@@ -318,8 +318,8 @@
                 {"include":"#embed"}
             ]
         },
-        "markdownImage":{
-            "begin":"!\\[",
+        "markdownLink":{
+            "begin":"!?\\[",
             "end":"(\\]\\()([^\\)]*)(\\))",
             "beginCaptures":{
                 "0":{"name":"keyword.control"}
