@@ -1,12 +1,12 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps, bcn } from "@iyio/common";
+import { BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps, bcn, createJsonRefReplacer } from "@iyio/common";
 import { useMemo } from "react";
 
 interface JsonViewProps
 {
     value?:any;
     whitespace?:number|string;
-    replacer?:(this:any,key:string,value:any)=>any
+    replacer?:((this:any,key:string,value:any)=>any)|boolean;
 }
 
 export function JsonView({
@@ -17,12 +17,16 @@ export function JsonView({
 }:JsonViewProps & BaseLayoutProps & BaseLayoutFontProps & BaseLayoutColorProps){
 
     const json=useMemo<any>(()=>{
+        if(value===undefined){
+            return 'undefined'
+        }
         try{
-            return JSON.stringify(value,replacer,whitespace);
+            const r=replacer===false?null:replacer===true?createJsonRefReplacer():(replacer);
+            return JSON.stringify(value,r as any,whitespace);
         }catch(ex){
-            return {
+            return JSON.stringify({
                 error:'Unable to stringify value - '+(ex as any)?.message,
-            }
+            },null,whitespace);
         }
     },[value,whitespace,replacer]);
 
