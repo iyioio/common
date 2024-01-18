@@ -192,7 +192,7 @@ const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):string|undefined=>{
     if(dbType){
         return dbType;
     }
-    const type=node.types[0]?.mapType?'Json':sqlTypeMap[node.type];
+    const type=node.types[0]?.mapType || node.children?.['json']?'Json':sqlTypeMap[node.type];
     if(type || !allNodes){
         return type;
     }
