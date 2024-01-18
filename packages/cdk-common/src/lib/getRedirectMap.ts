@@ -1,3 +1,4 @@
+import { pathExistsSync } from '@iyio/node-common';
 import { readdirSync, statSync } from 'fs';
 import * as Path from 'path';
 
@@ -16,22 +17,26 @@ export const stringifyRedirectMap=(map:RedirectRegex[])=>(
     '['+map.map(m=>(`{match:${m.match.toString()},path:${JSON.stringify(m.path)}}`)).join(',\n')+']'
 )
 
-export const getRegexRedirectMapAsString=(dir:string,exts:string[]=defaultExtensions):string=>{
-    return stringifyRedirectMap(getRegexRedirectMap(dir,exts))
+export const getRegexRedirectMapAsString=(dir:string,exts:string[]=defaultExtensions,ignorePaths?:string[]):string=>{
+    return stringifyRedirectMap(getRegexRedirectMap(dir,exts,ignorePaths))
 }
 
-export function getRegexRedirectMap(dir:string,exts:string[]=defaultExtensions):RedirectRegex[]
+export function getRegexRedirectMap(dir:string,exts:string[]=defaultExtensions,ignorePaths?:string[]):RedirectRegex[]
 {
     const map:RedirectRegex[]=[{match:/^\/$/i,path:'/index.html'}];
-    scanRegex(dir,map,exts,'');
+    scanRegex(dir,map,exts,'',ignorePaths);
     map.push({match:/^\/index$/i,path:'/index.html'});
     return map;
 }
 
 const dynamicReg=/\[[^\]]+\]/g;
 
-function scanRegex(dir:string, map:RedirectRegex[], exts:string[], basePath:string)
+const scanRegex=(dir:string, map:RedirectRegex[], exts:string[], basePath:string,ignorePaths?:string[])=>
 {
+    if(pathExistsSync(Path.join(dir,'.redirect-map-ignore'))){
+        return;
+    }
+
     const items=readdirSync(dir);
 
     for(const item of items){
@@ -42,7 +47,7 @@ function scanRegex(dir:string, map:RedirectRegex[], exts:string[], basePath:stri
         const path=Path.join(dir,item);
         const stat=statSync(path);
         if(stat.isDirectory()){
-            scanRegex(path,map,exts,basePath+'/'+item);
+            scanRegex(path,map,exts,basePath+'/'+item,ignorePaths);
         }
         const ext=exts.find(e=>name.endsWith(e));
         if(ext){
@@ -56,7 +61,11 @@ function scanRegex(dir:string, map:RedirectRegex[], exts:string[], basePath:stri
                 mPath=basePath+'/'+item;
                 mBase=basePath+'/'+noExt;
             }
-            if(mPath==='/index.html'){
+            let lp=mPath.toLowerCase();
+            if(!lp.startsWith('/')){
+                lp='/'+lp;
+            }
+            if(mPath==='/index.html' || ignorePaths?.some(p=>lp.startsWith(p.toLocaleLowerCase()))){
                 continue;
             }
             map.push({

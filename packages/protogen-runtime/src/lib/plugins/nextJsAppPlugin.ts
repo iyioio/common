@@ -102,10 +102,12 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                         }
                         const domains=protoGetChildrenByName(node,'domain',false);
                         const bucketSources=protoGetChildrenByName(node,'bucketSource',false);
+                        const ignorePaths=protoGetChildrenByName(node,'ignorePath',false);
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
                             redirectHandler,
                             staticSite:{
+                                ignorePaths:ignorePaths.length?ignorePaths.map(p=>p.value??'').filter(v=>v):undefined,
                                 nxExportedPackage:name,
                                 cdn:true,
                                 domainName:domains[0]?.value?.trim(),

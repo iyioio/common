@@ -32,6 +32,7 @@ export interface StaticWebSiteProps
     additionalSources?:SiteContentSource[];
     bucketSources?:BucketSiteContentSource[],
     redirectHandler?:NamedFn;
+    ignorePaths?:string[];
 }
 
 export class StaticWebSite extends Construct {
@@ -56,6 +57,7 @@ export class StaticWebSite extends Construct {
         additionalSources=[],
         bucketSources=[],
         redirectHandler,
+        ignorePaths,
     }:StaticWebSiteProps,managed:ManagedProps=getDefaultManagedProps()){
 
         super(scope, name);
@@ -150,7 +152,7 @@ export class StaticWebSite extends Construct {
                 addBucketResourcePolicy(fallbackBucket);
             }
 
-            const redirectMap=getRegexRedirectMapAsString(dir);
+            const redirectMap=getRegexRedirectMapAsString(dir,undefined,ignorePaths);
 
             const redirectBody=(isEdgeLambda:boolean,matchHandler:string)=>{
                 return /*ts*/`
