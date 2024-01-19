@@ -1,7 +1,7 @@
 import { atDotCss } from '@iyio/at-dot-css';
-import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, escapeHtml, strLineCount } from '@iyio/common';
+import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, CodeParsingResult, escapeHtml, strLineCount } from '@iyio/common';
 import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
-import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Lang } from 'shiki';
 import { dt } from '../lib/lib-design-tokens';
 import { LineNumbers } from './LineNumbers';
@@ -37,6 +37,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 
     parser?:CodeParser<P>;
     parsingDelayMs?:number;
+    onParsed?:(result:CodeParsingResult)=>void;
     logParsed?:boolean;
     debugParser?:boolean|((...args:any[])=>void);
     bottomPadding?:number|string;
@@ -61,6 +62,7 @@ export function CodeInput<P=any>({
     lineNumbers,
     errors,
     parser,
+    onParsed,
     logParsed,
     parsingDelayMs=700,
     debugParser,
@@ -76,6 +78,9 @@ export function CodeInput<P=any>({
 
     const [code,setCode]=useState<HTMLElement|null>(null);
     const [textArea,setTextArea]=useState<HTMLTextAreaElement|null>(null);
+
+    const refs=useRef({onParsed});
+    refs.current.onParsed=onParsed;
 
     useEffect(()=>{
 
@@ -109,6 +114,7 @@ export function CodeInput<P=any>({
                     if(logParsed){
                         console.info('CodeInput parsing result',r)
                     }
+                    refs.current.onParsed?.(r);
 
                     setParsingErrors(r.error?[r.error]:undefined);
                     if(r.error){
