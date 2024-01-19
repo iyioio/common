@@ -252,7 +252,7 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         max-width:@@maxMessageWidth;
     }
     @.msg.user{
-        color:@@userBorder;
+        color:@@userColor;
         font-weight:@@userWeight;
         background-color:@@userBackground;
         border:@@userBorder;
