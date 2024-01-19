@@ -6,7 +6,6 @@ const ar=41/10;
 export interface LoadingDotsProps
 {
     disabled?:boolean;
-    absCenter?:boolean;
     size?:string|number;
     inset?:number;
     className?:string;
@@ -14,7 +13,6 @@ export interface LoadingDotsProps
 
 export function LoadingDots({
     disabled,
-    absCenter,
     size='0.625rem',
     inset=0,
     className,
@@ -23,7 +21,7 @@ export function LoadingDots({
 
     return (
         <svg
-            className={style.root({disabled,absCenter},className,props)}
+            className={style.root({disabled},className,props)}
             style={style.vars({size:(typeof size === 'number')?size+'px':size})}
             viewBox={inset?`${-inset} ${-inset} ${41+inset*2} ${10+inset*2}`:"0 0 41 10"}
             fill="none"
@@ -36,7 +34,7 @@ export function LoadingDots({
 
 }
 
-const style=atDotCss({name:'LoadingDots',css:`
+const style=atDotCss({name:'LoadingDots',namespace:'iyio',order:'framework',css:`
 
     @keyframes @@@dot{
         0%{opacity:0.5}
@@ -57,12 +55,5 @@ const style=atDotCss({name:'LoadingDots',css:`
 
     @.root.disabled circle{
         animation-play-state:paused;
-    }
-
-    @.root.absCenter{
-        position:absolute;
-        left:50%;
-        top:50%;
-        transform:translate(-50%,-50%);
     }
 `});
