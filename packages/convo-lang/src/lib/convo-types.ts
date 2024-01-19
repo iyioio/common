@@ -1,8 +1,7 @@
-import { CodeParsingResult, JsonScheme } from '@iyio/common';
+import { CodeParsingResult, JsonScheme, MarkdownLine } from '@iyio/common';
 import type { ZodObject, ZodType } from 'zod';
 import type { Conversation } from "./Conversation";
 import type { ConvoExecutionContext } from './ConvoExecutionContext';
-import { ConvoMdStatement } from './convo-markdown-types';
 
 export type ConvoMessageType='text'|'function';
 
@@ -78,7 +77,7 @@ export interface ConvoMessage
     statement?:ConvoStatement;
     fn?:ConvoFunction;
     tags?:ConvoTag[];
-    markdown?:ConvoMdStatement[];
+    markdown?:MarkdownLine[];
 
     /**
      * A variable to assign the content or jsonValue of the message to
@@ -502,6 +501,14 @@ export interface ConvoType
 }
 export const isConvoType=(value:any):value is ConvoType=>(value as ConvoType)?.[convoObjFlag]==='type';
 
+export interface ConvoMarkdownLine
+{
+    [convoObjFlag]:'md',
+    line:MarkdownLine;
+}
+export const isConvoMarkdownLine=(value:any):value is ConvoMarkdownLine=>
+    (value as ConvoMarkdownLine)?.[convoObjFlag]==='md';
+
 export interface FlatConvoMessage
 {
     role:string;
@@ -572,6 +579,8 @@ export interface FlatConvoMessage
      */
     renderOnly?:boolean;
 
+    markdown?:MarkdownLine[];
+
 }
 
 export interface ConvoCompletionMessage extends Partial<ConvoTokenUsage>
@@ -610,6 +619,7 @@ export interface ConvoCompletion
 export interface FlatConvoConversation
 {
     exe:ConvoExecutionContext;
+    vars:Record<string,any>
     messages:FlatConvoMessage[];
     conversation:Conversation;
     capabilities:ConvoCapability[];
@@ -621,6 +631,8 @@ export interface FlatConvoConversation
     taskTriggers?:Record<string,string[]>;
 
     templates?:ConvoMessageTemplate[];
+
+    markdownVars:Record<string,ConvoMarkdownLine|string>;
 
     /**
      * If defined the debug function should be written to with debug info.

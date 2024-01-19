@@ -91,6 +91,11 @@ export const convoVars={
      * Response used with the system is not able to generate a vision response.
      */
     __defaultVisionResponse:'__defaultVisionResponse',
+
+    /**
+     * A reference to markdown vars.
+     */
+    __md:'__md'
 } as const;
 
 export const convoTags={
@@ -216,7 +221,18 @@ export const convoTags={
     /**
      * When applied to the last content or component messages auto scrolling will be disabled
      */
-    disableAutoScroll:'disableAutoScroll'
+    disableAutoScroll:'disableAutoScroll',
+
+    /**
+     * When applied to a message the content of the message will be parsed as markdown
+     */
+    markdown:'markdown',
+
+    /**
+     * When applied to a message the content of the message will be parsed as markdown and the
+     * elements of the markdown will be auto assigned to vars
+     */
+    markdownVars:'markdownVars',
 
 } as const;
 

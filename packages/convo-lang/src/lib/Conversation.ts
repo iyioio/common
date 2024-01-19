@@ -1,11 +1,11 @@
-import { ReadonlySubject, asArray, delayAsync, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber, shortUuid } from "@iyio/common";
+import { ReadonlySubject, asArray, delayAsync, parseMarkdown, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber, shortUuid } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
 import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, isConvoCapability } from "./convo-types";
+import { CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -52,6 +52,17 @@ export interface ConversationOptions
     debug?:(...values:any[])=>void;
 
     debugMode?:boolean;
+
+    /**
+     * If true all text based messages will be parsed as markdown and the lines of the markdown will
+     * be used to set vars.
+     */
+    setMarkdownVars?:boolean;
+
+    /**
+     * If true all text based message will be parsed as markdown
+     */
+    parseMarkdown?:boolean;
 }
 
 export class Conversation
@@ -265,6 +276,10 @@ export class Conversation
 
 
 
+    private parseCode(code:string):ConvoParsingResult{
+        return parseConvoCode(code,{parseMarkdown:this.defaultOptions.parseMarkdown})
+    }
+
     private readonly enabledCapabilities:ConvoCapability[]=[];
     public enableCapability(cap:ConvoCapability)
     {
@@ -360,7 +375,7 @@ export class Conversation
                 messages=messages.map(m=>(typeof m === 'string')?m:m.content).join('');
             }
         }
-        const r=parseConvoCode(messages);
+        const r=this.parseCode(messages);
         if(r.error){
             if(!throwOnError){
                 return r;
@@ -742,7 +757,7 @@ export class Conversation
                         }(${
                             msg.callParams===undefined?'':spreadConvoArgs(msg.callParams,true)
                         })`
-                        const result=isDefaultTask?this.append(callMsg):parseConvoCode(callMsg);
+                        const result=isDefaultTask?this.append(callMsg):this.parseCode(callMsg);
                         includeTokenUsage=false;
                         callMessage=result.result?.[0];
                         if(result.result?.length!==1 || !callMessage){
@@ -992,7 +1007,15 @@ export class Conversation
         const edgePairs:{
             flat:FlatConvoMessage;
             msg:ConvoMessage;
+            shouldParseMd:boolean;
+            setMdVars:boolean;
         }[]=[];
+        const mdVarCtx:MdVarCtx={
+            indexMap:{},
+            vars:{},
+            varCount:0,
+        };
+        exe.setVar(true,mdVarCtx.vars,convoVars.__md);
 
         exe.loadFunctions(this._messages,this.externFunctions);
         let hasNonDefaultTasks=false;
@@ -1030,6 +1053,19 @@ export class Conversation
             if(msg.renderOnly){
                 flat.renderOnly=true;
             }
+            if(msg.markdown){
+                flat.markdown=msg.markdown;
+            }
+            const setMdVars=(
+                this.defaultOptions.setMarkdownVars ||
+                containsConvoTag(msg.tags,convoTags.markdownVars)
+            );
+            const shouldParseMd=(
+                setMdVars ||
+                this.defaultOptions.parseMarkdown ||
+                containsConvoTag(msg.tags,convoTags.markdown)
+            )
+
 
             const msgTask=getConvoTag(msg.tags,convoTags.task)?.value??defaultConvoTask;
             if(msgTask!==defaultConvoTask){
@@ -1096,9 +1132,14 @@ export class Conversation
             }else if(msg.statement){
                 if(containsConvoTag(msg.tags,convoTags.edge)){
                     flat.edge=true;
-                    edgePairs.push({flat,msg:msg});
+                    edgePairs.push({flat,msg:msg,shouldParseMd,setMdVars});
                 }else{
-                    await flattenMsgAsync(exe,msg.statement,flat);
+                    await flattenMsgAsync(
+                        exe,
+                        msg.statement,
+                        flat,
+                        shouldParseMd
+                    );
                 }
 
             }else if(msg.content!==undefined){
@@ -1108,16 +1149,16 @@ export class Conversation
             }
 
             if(!flat.edge){
-                this.applyTagsAndState(msg,flat,exe);
+                this.applyTagsAndState(msg,flat,exe,setMdVars,mdVarCtx);
             }
             messages.push(flat);
         }
 
         for(const pair of edgePairs){
             if(pair.msg.statement){
-                await flattenMsgAsync(exe,pair.msg.statement,pair.flat);
+                await flattenMsgAsync(exe,pair.msg.statement,pair.flat,pair.shouldParseMd);
             }
-            this.applyTagsAndState(pair.msg,pair.flat,exe);
+            this.applyTagsAndState(pair.msg,pair.flat,exe,pair.setMdVars,mdVarCtx);
         }
 
 
@@ -1229,6 +1270,7 @@ export class Conversation
 
         const flat:FlatConvoConversation={
             exe,
+            vars:exe.getUserSharedVars(),
             messages,
             conversation:this,
             task,
@@ -1236,6 +1278,7 @@ export class Conversation
             templates,
             debug,
             capabilities,
+            markdownVars:mdVarCtx.vars
         }
 
         if(setCurrent){
@@ -1245,10 +1288,70 @@ export class Conversation
         return flat;
     }
 
-    private applyTagsAndState(msg:ConvoMessage,flat:FlatConvoMessage,exe:ConvoExecutionContext)
-    {
+    private applyTagsAndState(
+        msg:ConvoMessage,
+        flat:FlatConvoMessage,
+        exe:ConvoExecutionContext,
+        setMdVars:boolean,
+        mdVarCtx:MdVarCtx
+    ){
         if(msg.assignTo){
             exe.setVar(true,msg.jsonValue??flat.content,msg.assignTo);
+        }
+
+        if(setMdVars && flat.markdown){
+            for(const line of flat.markdown){
+                const index=mdVarCtx.indexMap[line.type]??0;
+                mdVarCtx.indexMap[line.type]=index+1;
+                mdVarCtx.varCount++;
+                const mdLine:ConvoMarkdownLine={
+                    [convoObjFlag]:'md',
+                    line
+                }
+                mdVarCtx.vars[line.type+index]=mdLine;
+                const tagName=getConvoTag(line.tags,'name')?.value;
+                if(tagName){
+                    mdVarCtx.vars[tagName]=mdLine;
+                }
+
+                if(line.nodes){
+                    for(const node of line.nodes){
+
+                        if(node.imageUrl){
+                            const li=mdVarCtx.indexMap['image']??0;
+                            mdVarCtx.indexMap['image']=li+1;
+                            mdVarCtx.vars['imageUrl'+li]=node.imageUrl;
+                            const key=line.type+index;
+                            mdVarCtx.vars[key+'ImageUrl'+li]=node.imageUrl;
+                            if(tagName){
+                                mdVarCtx.vars[tagName+'ImageUrl']=node.imageUrl;
+                            }
+                            mdVarCtx.vars['imageText'+li]=node.text??'';
+                            mdVarCtx.vars[key+'ImageText'+li]=node.text??'';
+                            if(tagName){
+                                mdVarCtx.vars[tagName+'ImageText']=node.text??'';
+                            }
+                        }
+
+                        if(node.link && node.url){
+                            const li=mdVarCtx.indexMap['link']??0;
+                            mdVarCtx.indexMap['link']=li+1;
+                            mdVarCtx.vars['linkUrl'+li]=node.url;
+                            const key=line.type+index;
+                            mdVarCtx.vars[key+'LinkUrl'+li]=node.url;
+                            if(tagName){
+                                mdVarCtx.vars[tagName+'LinkUrl']=node.url;
+                            }
+                            mdVarCtx.vars['linkText'+li]=node.text??'';
+                            mdVarCtx.vars[key+'LinkText'+li]=node.text??'';
+                            if(tagName){
+                                mdVarCtx.vars[tagName+'LinkText']=node.text??'';
+                            }
+                        }
+
+                    }
+                }
+            }
         }
 
         let value:any;
@@ -1624,7 +1727,7 @@ export class Conversation
      * Used to mark variables, types and function as assigned before actually appending the code.
      */
     public preAssign(convoCode:string){
-        const r=parseConvoCode(convoCode);
+        const r=this.parseCode(convoCode);
         if(r.error){
             throw new Error(r.error.message);
         }
@@ -1637,7 +1740,12 @@ export class Conversation
 }
 
 
-const flattenMsgAsync=async (exe:ConvoExecutionContext,statement:ConvoStatement,flat:FlatConvoMessage)=>{
+const flattenMsgAsync=async (
+    exe:ConvoExecutionContext,
+    statement:ConvoStatement,
+    flat:FlatConvoMessage,
+    parseMd:boolean
+)=>{
     const r=exe.executeStatement(statement);
     let value:any;
     if(r.valuePromise){
@@ -1650,4 +1758,17 @@ const flattenMsgAsync=async (exe:ConvoExecutionContext,statement:ConvoStatement,
     }else{
         flat.content=value?.toString()??'';
     }
+    if(parseMd && !flat.markdown){
+        const r=parseMarkdown(flat.content??'',{parseTags:true});
+        if(r.result){
+            flat.markdown=r.result;
+        }
+    }
+}
+
+interface MdVarCtx
+{
+    indexMap:Record<string,number>;
+    vars:Record<string,ConvoMarkdownLine|string>;
+    varCount:number;
 }

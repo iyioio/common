@@ -37,7 +37,9 @@ const copyDefaultScope=(scope:ConvoScope):ConvoScope=>{
 
 export class ConvoExecutionContext
 {
-    public readonly sharedVars:Record<string,any>;private nextSuspendId=1;
+    public readonly sharedVars:Record<string,any>;
+
+    private nextSuspendId=1;
 
     private readonly suspendedScopes:Record<string,ConvoScope>={};
 
@@ -694,6 +696,20 @@ export class ConvoExecutionContext
         this.setVar(statement.shared,value,statement.ref,statement.refPath,scope);
 
         return value;
+    }
+
+    public setDefaultVarValue(value:any,name:string,path?:string[]):any{
+
+        if(name in defaultConvoVars){
+            setConvoScopeError(null,`Overriding builtin var not allowed - ${name}`);
+            return value;
+        }
+
+        if(this.sharedVars[name]!==undefined){
+            return this.sharedVars[name];
+        }
+
+        return this.setVar(true,value,name,path);
     }
 
     public setVar(shared:boolean|undefined,value:any,name:string,path?:string[],scope?:ConvoScope){

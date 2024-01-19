@@ -31,3 +31,13 @@ export const getCodeParsingError=(code:string,index:number,message:string):CodeP
         ),
     }
 }
+
+export const getLineNumber=(code:string,stopIndex=code.length-1)=>{
+    let lineNumber=1;
+    for(let i=0;i<=stopIndex;i++){
+        if(code[i]==='\n'){
+            lineNumber++;
+        }
+    }
+    return lineNumber;
+}

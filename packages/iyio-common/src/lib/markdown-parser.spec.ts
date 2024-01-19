@@ -265,6 +265,38 @@ Take a look at this [link-name](https://example.com).
     });
 
 
+    it('should parse link only',()=>{
+
+        const lines=parse(`
+
+[link-name](https://example.com)
+
+        `);
+
+
+        let n=0;
+        const line=lines[0];
+        expect(line?.nodes).not.toBeUndefined();
+        if(!line?.nodes){return;}
+
+        expect(line.ln).toBe(1);
+        n++;
+        expect(lines[n]).toBeUndefined();
+
+        let c=0;
+
+        expect(line.nodes[c]?.text).toBe('link-name');
+        expect(line.nodes[c]?.url).toBe('https://example.com');
+        expect(line.nodes[c]?.imageUrl).toBe(undefined);
+        expect(line.nodes[c]?.link).toBe(true);
+        c++;
+
+
+        expect(line.nodes[c]).toBeUndefined();
+
+    });
+
+
     it('should parse image',()=>{
 
         const lines=parse(`
@@ -286,6 +318,37 @@ Take a look at this ![image-name](https://example.com/ricky-bobby.tiff)
         let c=0;
         expect(line.nodes[c]?.text).toBe('Take a look at this ');
         c++;
+
+        expect(line.nodes[c]?.text).toBe('image-name');
+        expect(line.nodes[c]?.url).toBe(undefined);
+        expect(line.nodes[c]?.imageUrl).toBe('https://example.com/ricky-bobby.tiff');
+        expect(line.nodes[c]?.link).toBe(undefined);
+        c++;
+
+
+        expect(line.nodes[c]).toBeUndefined();
+
+    });
+
+    it('should parse image only',()=>{
+
+        const lines=parse(`
+
+![image-name](https://example.com/ricky-bobby.tiff)
+
+        `);
+
+
+        let n=0;
+        const line=lines[0];
+        expect(line?.nodes).not.toBeUndefined();
+        if(!line?.nodes){return;}
+
+        expect(line.ln).toBe(1);
+        n++;
+        expect(lines[n]).toBeUndefined();
+
+        let c=0;
 
         expect(line.nodes[c]?.text).toBe('image-name');
         expect(line.nodes[c]?.url).toBe(undefined);

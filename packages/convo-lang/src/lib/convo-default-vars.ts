@@ -1,10 +1,11 @@
-import { createJsonRefReplacer, httpClient, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
+import { createJsonRefReplacer, escapeHtml, httpClient, markdownLineToString, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
 import { format } from "date-fns";
 import { ZodObject } from "zod";
 import { ConvoError } from "./ConvoError";
-import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDateFormat, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
+import { ConvoExecutionContext } from "./ConvoExecutionContext";
+import { convoArgsName, convoArrayFnName, convoBodyFnName, convoCaseFnName, convoDateFormat, convoDefaultFnName, convoEnumFnName, convoGlobalRef, convoJsonArrayFnName, convoJsonMapFnName, convoLabeledScopeParamsToObj, convoMapFnName, convoMetadataKey, convoPipeFnName, convoStructFnName, convoSwitchFnName, convoTestFnName, convoVars, createConvoBaseTypeDef, createConvoMetadataForStatement, createConvoScopeFunction, createConvoType, makeAnyConvoType } from "./convo-lib";
 import { convoPipeScopeFunction } from "./convo-pipe";
-import { ConvoIterator, ConvoScope } from "./convo-types";
+import { ConvoIterator, ConvoScope, isConvoMarkdownLine } from "./convo-types";
 import { convoTypeToJsonScheme, convoValueToZodType, describeConvoScheme } from "./convo-zod";
 
 const ifFalse=Symbol();
@@ -870,6 +871,37 @@ export const defaultConvoVars={
         }
     }),
 
+    tmpl:createConvoScopeFunction((scope,ctx)=>{
+        const name=scope.paramValues?.[0];
+        const format=scope.paramValues?.[1]??'plain';
+        const md=ctx.getVar(convoVars.__md,null,null);
+        if(!md){
+            return '';
+        }
+
+        return getConvoMarkdownVar(name,format,ctx);
+    }),
+
+    html:createConvoScopeFunction((scope)=>{
+        const params=scope.paramValues;
+        if(!params?.length){
+            return '';
+        }
+        if(params.length===1){
+            return escapeHtml(params[0]?.toString?.()??'');
+        }
+        const out:string[]=[];
+        for(let i=0;i<params.length;i++){
+            const p=params[i];
+            if(!p){
+                out.push(escapeHtml(p.toString?.()??''))
+            }
+
+        }
+
+        return out.join('\n');
+    }),
+
     describeStruct,
 
 } as const;
@@ -877,3 +909,16 @@ export const defaultConvoVars={
 Object.freeze(defaultConvoVars);
 
 
+export const getConvoMarkdownVar=(name:string,format:string,ctx:ConvoExecutionContext)=>{
+    const md=ctx.getVar(convoVars.__md,null,null);
+    if(!md){
+        return '';
+    }
+
+    const v=md[name];
+    if(isConvoMarkdownLine(v)){
+        return markdownLineToString(format as any,v.line);
+    }else{
+        return v?.toString?.()??'';
+    }
+}

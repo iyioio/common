@@ -289,7 +289,7 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
 
 const unescapeReg=/\\([\\`*_{}[\]<>()#+\-.!|])/g;
 
-const startReg=/([^\\])([*_`<![])/g;
+const startReg=/([^\\*_`<![]|^)([*_`<![])/g;
 const underscoreReg=/_((?:\\_|[^_])*)_/g;
 const codeInlineReg=/`((?:\\`|[^`])*)`/g;
 const starReg=/\*((?:\\\*|[^*])*)\*/g;
@@ -402,7 +402,7 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                 if(match){
                     const matchValue=match[1]??'';
                     if(!isImage && matchValue.includes('!')){
-                        imageLinkReg.lastIndex=index;
+                        imageLinkReg.lastIndex=index-1;
                         const liMatch=imageLinkReg.exec(text);
                         if(liMatch){
                             const sub=parseInline(liMatch[1]??'');

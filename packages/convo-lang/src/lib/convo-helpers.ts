@@ -1,7 +1,8 @@
+import { getErrorMessage } from "@iyio/common";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { Conversation, ConversationOptions } from "./Conversation";
 import { escapeConvoMessageContent } from "./convo-lib";
-import { ConvoCompletion, ConvoCompletionOptions } from "./convo-types";
+import { ConvoCompletion, ConvoCompletionOptions, ConvoParsingResult, FlatConvoConversation, FlatConvoMessage } from "./convo-types";
 
 export const getConvoCompletionAsync=(
     messagesOrOptions:string|ConvoCompletionOptions,
@@ -76,4 +77,48 @@ export const callConvoFunctionWithSchemeAsync=async <Z extends ZodTypeAny=ZodTyp
         description:functionDescription,
     })
     return await conversation.callStubFunctionAsync(messagesOrOptions);
+}
+
+export interface FlattenedConvoResult
+{
+    success:boolean;
+    flat?:FlatConvoConversation;
+    vars:Record<string,any>
+    messages:FlatConvoMessage[];
+    parsingResult:ConvoParsingResult;
+}
+export const flattenConvoAsync=async (code:string,options?:ConversationOptions):Promise<FlattenedConvoResult>=>{
+    try{
+        const conversation=new Conversation({...options,disableAutoFlatten:true});
+        const r=conversation.append(code);
+        if(r.error || !r.result){
+            return {success:false,parsingResult:r,vars:{},messages:[]}
+        }
+        const flat=await conversation.flattenAsync();
+        return {
+            success:true,
+            flat,
+            vars:flat.vars,
+            messages:flat.messages,
+            parsingResult:r,
+        }
+
+    }catch(ex){
+        return {
+            success:false,
+            parsingResult:{
+                error:{
+                    message:getErrorMessage(ex),
+                    index:0,
+                    lineNumber:0,
+                    col:0,
+                    line:'',
+                    near:'',
+                },
+                endIndex:0,
+            },
+            vars:{},
+            messages:[]
+        };
+    }
 }

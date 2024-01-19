@@ -1,4 +1,4 @@
-import { CodeParser, CodeParsingOptions, getCodeParsingError } from '@iyio/common';
+import { CodeParser, CodeParsingOptions, getCodeParsingError, getLineNumber, parseMarkdown } from '@iyio/common';
 import { parse as parseJson5 } from "json5";
 import { allowedConvoDefinitionFunctions, collapseConvoPipes, convoBodyFnName, convoCallFunctionModifier, convoCaseFnName, convoDefaultFnName, convoJsonArrayFnName, convoJsonMapFnName, convoLocalFunctionModifier, convoSwitchFnName, convoTags, convoTestFnName, getConvoStatementSource, getConvoTag, isValidConvoIdentifier, parseConvoBooleanTag } from "./convo-lib";
 import { ConvoFunction, ConvoMessage, ConvoNonFuncKeyword, ConvoParsingResult, ConvoStatement, ConvoTag, ConvoValueConstant, convoNonFuncKeywords, convoValueConstants } from "./convo-types";
@@ -85,6 +85,7 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
     code=code+'\n';
 
     const messages:ConvoMessage[]=[];
+    const parseMd=options?.parseMarkdown??false;
 
     let inMsg=false;
     let inFnMsg=false;
@@ -883,11 +884,27 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
         }
     }
 
+    const setMsgMarkdown=(msg:ConvoMessage)=>{
+        if(msg.content!==undefined && msg.markdown===undefined){
+            const mdResult=parseMarkdown(
+                msg.content,
+                {parseTags:true,startLine:getLineNumber(code,msg.statement?.s)}
+            );
+            if(mdResult.result){
+                msg.markdown=mdResult.result;
+            }
+        }
+    }
+
     finalPass: for(let i=0;i<messages.length;i++){
         const msg=messages[i];
         if(!msg){
             error=`Undefined message in result messages at index ${i}`;
             break;
+        }
+
+        if(parseMd && msg.content!==undefined){
+            setMsgMarkdown(msg);
         }
 
         if(msg.tags){
@@ -897,12 +914,19 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                 if(!tag){continue}
                 switch(tag.name){
 
+                    case convoTags.markdown:
+                    case convoTags.markdownVars:
+                        setMsgMarkdown(msg);
+                        break;
+
                     case convoTags.template:
                         if(!msg.statement){
                             error=`template message missing statement ${JSON.stringify(msg,null,4)}`;
                             break finalPass;
                         }
-                        msg.statement.source=getConvoStatementSource(msg.statement,code);
+                        if(msg.statement.source===undefined){
+                            msg.statement.source=getConvoStatementSource(msg.statement,code);
+                        }
                         break;
 
                     case convoTags.component:

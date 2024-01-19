@@ -7,7 +7,7 @@ export const createJsonRefReplacer=()=>{
 
     const objs:any[]=[];
 
-    return (key:string,value:any)=>{
+    return (key:string,value:any):any=>{
         if(value && (typeof value ==='object')){
 
             if(objs.includes(value)){

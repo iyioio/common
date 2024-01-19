@@ -18,6 +18,7 @@ export interface CodeParsingError
 export interface CodeParsingOptions
 {
     startIndex?:number;
+    parseMarkdown?:boolean;
     debug?:(...args:any[])=>void;
 }
 
