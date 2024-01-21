@@ -1,6 +1,6 @@
 import { BadRequestError, FnEvent, FnEventEventTypeDisconnect, FnEventEventTypeMessage, asArray, createFnHandler } from '@iyio/common';
 import { ObjSyncClientCommand, ObjSyncRemoteCommand } from '@iyio/obj-sync';
-import { cleanUpSocket, createClientConnectionAsync, initBackend, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib';
+import { cleanUpSocket, createClientConnectionAsync, initBackend, isSocketRegistered, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib';
 
 initBackend();
 
@@ -27,6 +27,10 @@ const objSyncSocketDefault=async (
                     await createClientConnectionAsync(cmd,fnEvt.connectionId,fnEvt.sub);
                     break;
 
+                case 'simCleanUp':
+                    await cleanUpSocket(fnEvt.connectionId);
+                    break;
+
                 case 'get':
                     await sendStateToClientAsync(fnEvt.connectionId,cmd);
                     break;
@@ -40,6 +44,16 @@ const objSyncSocketDefault=async (
                     break;
 
                 case 'ping':
+                    if(cmd.pc && !await isSocketRegistered(fnEvt.connectionId)){
+                        await sendData<ObjSyncClientCommand>(fnEvt.connectionId,{
+                            type:'reconnect',
+                            clientId:cmd.clientId,
+                            objId:cmd.objId,
+                            changeIndex:0,
+                        });
+                        return;
+                    }
+
                     await sendData<ObjSyncClientCommand>(fnEvt.connectionId,{
                         type:'pong',
                         clientId:cmd.clientId,

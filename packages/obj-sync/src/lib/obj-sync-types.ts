@@ -100,7 +100,7 @@ export type ObjSyncObjState=z.infer<typeof ObjSyncObjStateScheme>;
 
 
 
-export const ObjSyncRemoteCommandTypeScheme=z.enum(['delete','get','evt','createClient','ping']);
+export const ObjSyncRemoteCommandTypeScheme=z.enum(['delete','get','evt','createClient','simCleanUp','ping']);
 export type ObjSyncRemoteCommandType=z.infer<typeof ObjSyncRemoteCommandTypeScheme>;
 
 
@@ -117,6 +117,11 @@ export const ObjSyncRemoteCommandScheme=z.object({
      * Id of the object the connection is tracking
      */
     objId:z.string(),
+
+    /**
+     * Ping Check. If true pings should check if the client connection record exists
+     */
+    pc:z.boolean().optional(),
 
     evts:z.optional(z.array(ObjSyncRecursiveObjWatchEvtScheme)),
 
@@ -141,7 +146,7 @@ export type ObjSyncRemoteCommand=z.infer<typeof ObjSyncRemoteCommandScheme>;
 export type ScopedObjSyncRemoteCommand=Omit<ObjSyncRemoteCommand,'clientId'|'objId'>;
 
 
-export const ObjSyncClientCommandTypeScheme=z.enum(['set','delete','evt','reset','pong']);
+export const ObjSyncClientCommandTypeScheme=z.enum(['set','delete','evt','reset','reconnect','pong']);
 export type ObjSyncClientCommandType=z.infer<typeof ObjSyncClientCommandTypeScheme>;
 
 

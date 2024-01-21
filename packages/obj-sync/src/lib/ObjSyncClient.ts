@@ -414,7 +414,7 @@ export abstract class ObjSyncClient
             }
 
             this.lastPing=Date.now();
-            this.send({type:'ping'})
+            this.send({type:'ping',pc:true});
         },this.pingIntervalMs)
     }
 
@@ -625,6 +625,9 @@ export abstract class ObjSyncClient
         }else if(command.type==='pong'){
             this.lastPong=Date.now();
             return;
+        }else if(command.type==='reconnect'){
+            this.tryReconnectAsync();
+            return;
         }
 
         if(this._changeIndex===null){
@@ -758,6 +761,13 @@ export abstract class ObjSyncClient
             delete obj[this.queueKey];
         }
         return ary;
+    }
+
+    public simDisconnect()
+    {
+        this.send({
+            type:'simCleanUp'
+        })
     }
 }
 

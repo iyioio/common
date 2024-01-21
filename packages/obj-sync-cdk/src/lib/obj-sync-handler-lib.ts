@@ -247,6 +247,18 @@ const mergeLogIntoStateAsync=async (objId:string,changeIndex?:number):Promise<bo
 }
 
 
+export const isSocketRegistered=async (socketId:string):Promise<boolean>=>{
+    const obj=await dynamoClient().queryMatchTableAsync({
+        table:ObjSyncConnectionTable,
+        index:ObjSyncConnectionTableIndexMap.socketId,
+        matchKey:{
+            socketId
+        },
+        limit:1,
+    })
+    return obj.items.length?true:false;
+}
+
 export const cleanUpSocket=async (socketId:string)=>{
 
     await dynamoClient().queryMatchTableAsync({

@@ -25,6 +25,8 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
 
     private webSocketFactory:WebSocketFactory;
 
+    private ignoreDisconnectEvent=false;
+
     public constructor({
         endpoint,
         webSocketFactory,
@@ -56,6 +58,9 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
             })
 
             socket.addEventListener('close',()=>{
+                if(this.ignoreDisconnectEvent){
+                    return;
+                }
                 if(opened && socket===this.socket){
                     this.onDisconnected();
                 }
@@ -63,6 +68,9 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
             })
 
             socket.addEventListener('error',(err)=>{
+                if(this.ignoreDisconnectEvent){
+                    return;
+                }
                 if(opened && socket===this.socket){
                     this.onDisconnected();
                 }
@@ -84,6 +92,12 @@ export class ObjSyncWebsocketClient extends ObjSyncClient
     protected override _pingLost(){
         this.socket?.close();
         this.socket=null;
+    }
+
+    public testDisconnectSocket()
+    {
+        this.ignoreDisconnectEvent=true;
+        this.socket?.close();
     }
 
 }
