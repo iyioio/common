@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { Conversation, ConversationOptions } from "./Conversation";
 import { convoFunctions, convoLabeledScopeParamsToObj, convoVars, defaultConvoVisionResponse, escapeConvoMessageContent } from "./convo-lib";
 import { ConvoFunctionDef } from "./convo-types";
 
@@ -9,14 +8,11 @@ const paramsType=z.object({
     imageUrls:z.string().array().describe('URLs of referenced images')
 })
 
-export interface CreateConvoVisionFunctionOptions extends Partial<ConvoFunctionDef>{
-    conversationOptions:ConversationOptions;
-}
+export type CreateConvoVisionFunctionOptions=Partial<ConvoFunctionDef>;
 
 export const createConvoVisionFunction=({
-    conversationOptions,
     ...defaults
-}:CreateConvoVisionFunctionOptions):ConvoFunctionDef=>{
+}:CreateConvoVisionFunctionOptions={}):ConvoFunctionDef=>{
     return {
         ...defaults,
         name:convoFunctions.queryImage,
@@ -30,14 +26,13 @@ export const createConvoVisionFunction=({
             }=paramsType.parse(convoLabeledScopeParamsToObj(scope));
 
             const srcConvo=ctx.convo.conversation;
+            if(!srcConvo){
+                return {error:'no parent conversation found'};
+            }
 
-            const convo=new Conversation({
-                ...conversationOptions,
+            const convo=srcConvo?.createChild({
                 capabilities:[],
                 serviceCapabilities:['vision'],
-                debug:srcConvo?.debugToConversation,
-                debugMode:srcConvo?.shouldDebug(),
-
             });
 
             const varMsg=ctx.getVar(convoVars.__visionServiceSystemMessage,scope);

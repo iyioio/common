@@ -220,7 +220,7 @@ export class Conversation
         if(this.runtimeInited){
             return;
         }
-        const msg=this.messages[0]
+        const msg=this.messages.find(f=>!f.fn || f.fn.topLevel)
         if(!msg){
             return;
         }
@@ -294,7 +294,7 @@ export class Conversation
             case 'vision':
                 this.define({
                     hidden:true,
-                    fn:createConvoVisionFunction({conversationOptions:this.defaultOptions})
+                    fn:createConvoVisionFunction()
                 },true)
                 break;
         }
@@ -305,7 +305,25 @@ export class Conversation
         if(!this.completionService){
             this.completionService=convoCompletionService.get();
         }
-    }/**
+    }
+
+    public createChild(options?:ConversationOptions)
+    {
+        const convo=new Conversation({
+            ...this.defaultOptions,
+            debug:this.debugToConversation,
+            debugMode:this.shouldDebug(),
+            ...options
+        });
+
+        if(this._defaultApiKey){
+            convo.setDefaultApiKey(this._defaultApiKey);
+        }
+
+        return convo;
+    }
+
+    /**
      * Creates a new Conversation and appends the messages of this conversation to the newly
      * created conversation.
      */
