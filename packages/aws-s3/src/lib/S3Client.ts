@@ -1,6 +1,7 @@
 import { S3Client as AwsS3Client, DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { AuthDependentClient, BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope, ValueCache, authService } from "@iyio/common";
+import { FetchHttpHandler } from '@smithy/fetch-http-handler';
 import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
 
 
@@ -30,7 +31,10 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
     }
 
     protected override createAuthenticatedClient():AwsS3Client{
-        return new AwsS3Client(this.clientConfig);
+        return new AwsS3Client({
+            ...this.clientConfig,
+            requestHandler:new FetchHttpHandler({keepAlive:false})
+        });
     }
 
 
@@ -126,6 +130,15 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
                 Bucket:formatBucketName(bucket),
                 Body:value.content,
                 ContentType:value.contentType,
+                ContentLength:value.length
+            })
+        :(value instanceof Blob)?
+            new PutObjectCommand({
+                Key:key,
+                Bucket:formatBucketName(bucket),
+                Body:value,
+                ContentType:value.type,
+                ContentLength:value.size
             })
         :
             new PutObjectCommand({
