@@ -201,3 +201,10 @@ export const strLineCount=(str:string,startIndex=0,endIndex=str.length-1):number
     }
     return lineNumber;
 }
+
+export const strCaseInsensitiveCompare=(a:string|null|undefined,b:string|null|undefined):boolean=>{
+    if(a===null || a===undefined || b===null || b===undefined){
+        return false;
+    }
+    return a.localeCompare(b,undefined,{sensitivity:'accent'})===0;
+}
