@@ -21,6 +21,8 @@ export interface ResourceRefOptions<T>
      * @default 5
      */
     autoDisposeIntervalSec?:number;
+
+    initRefCount?:number;
 }
 
 /**
@@ -67,6 +69,7 @@ export class ResourceRef<T>
         this.created=Date.now();
         this.value=value;
         this.usage=usage;
+        this._refCount=options?.initRefCount??0;
         this.disposeCallback=options?.dispose;
         this.disposeDelayMs=options?.disposeDelayMs??0;
         this.autoDispose=options?.autoDispose;
@@ -116,7 +119,7 @@ export class ResourceRef<T>
     }
 
 
-    private _refCount=0;
+    private _refCount;
     public get refCount(){return this._refCount}
     public addRef(){
         this._refCount++;
