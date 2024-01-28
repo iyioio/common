@@ -88,6 +88,48 @@ const _protoFindChildren=(
     }
 }
 
+export const protoChildrenToStringRecordOrUndefined=(
+    children:Record<string,ProtoNode>|null|undefined,
+):Record<string,string>|undefined=>{
+    if(!children){
+        return undefined;
+    }
+    const obj:Record<string,string>={};
+    let added=false;
+    for(const e in children){
+        const value=children[e]?.value;
+        if(value===undefined){
+            continue;
+        }
+        added=true;
+        obj[e]=value;
+    }
+    if(!added){
+        return undefined;
+    }
+    return obj;
+}
+
+export const protoChildrenToStringArrayOrUndefined=(
+    name:string,
+    children:Record<string,ProtoNode>|null|undefined
+):string[]|undefined=>{
+    if(!children || !name){
+        return undefined;
+    }
+    const values:string[]=[];
+    for(const e in children){
+        if(e!==name){
+            continue;
+        }
+        const value=children[e]?.value;
+        if(value){
+            values.push(value);
+        }
+    }
+    return values.length?values:undefined;
+}
+
 export const protoGetChildren=(
     parent:ProtoNode|null|undefined,
     recursive:boolean,
