@@ -1,10 +1,12 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { actionPlugin } from "./plugins/actionPlugin";
 import { aiCompletionPlugin } from "./plugins/aiCompletionPlugin";
+import { apiPlugin } from "./plugins/api";
 import { assignPlugin } from "./plugins/assignPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
 import { bucketPlugin } from "./plugins/bucketPlugin";
 import { callablePlugin } from "./plugins/callablePlugin";
+import { containerPlugin } from "./plugins/container";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
@@ -163,6 +165,18 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             source:'@',
             paths:[],
             plugin:assignPlugin
+        },
+        {
+            name:'apiPlugin',
+            source:'@',
+            paths:[],
+            plugin:apiPlugin
+        },
+        {
+            name:'containerPlugin',
+            source:'@',
+            paths:[],
+            plugin:containerPlugin
         },
         {
             name:'sqlMigrationsPlugin',

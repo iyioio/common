@@ -29,6 +29,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
 {
     public readonly userPool:cognito.UserPool;
     public readonly userPoolClient:cognito.UserPoolClient;
+    public readonly userPoolDomain?:cognito.IUserPoolDomain;
     public readonly idPool:cognito.CfnIdentityPool;
     public readonly cognitoUserRole:iam.Role;
     public readonly anonCognitoUserRole:iam.Role;
@@ -44,6 +45,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             params,
             accessManager,
             fns,
+            userPools,
         }=getDefaultManagedProps(),
         name,
         grantAccess,
@@ -108,7 +110,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             if(params){
                 params.setParam(cognitoDomainPrefixParam,domainPrefix);
             }
-            userPool.addDomain('default',{
+            this.userPoolDomain=userPool.addDomain('default',{
                 cognitoDomain:{
                     domainPrefix
                 }
@@ -177,6 +179,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             this,
             "UserPoolClient",
             {
+                generateSecret:true,
                 userPool,
                 authFlows: {
                     adminUserPassword: true,
@@ -292,6 +295,14 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         }
 
         accessManager?.addGroup(this);
+        if(this.userPoolDomain && name){
+            userPools.push({
+                managedName:name,
+                userPool:this.userPool,
+                userPoolClient:this.userPoolClient,
+                userPoolDomain:this.userPoolDomain,
+            });
+        }
     }
 
 }

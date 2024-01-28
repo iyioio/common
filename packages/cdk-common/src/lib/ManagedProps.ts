@@ -1,6 +1,7 @@
 import { AccessManager } from "./AccessManager";
+import { BridgeEvent } from "./BridgeEvent";
 import { ParamOutput } from "./ParamOutput";
-import { NamedBucket, NamedFn, NamedQueue, SiteContentSource } from "./cdk-types";
+import { ApiRouteTarget, IApiRouter, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, SiteContentSource } from "./cdk-types";
 
 export interface ManagedProps
 {
@@ -16,7 +17,17 @@ export interface ManagedProps
 
     readonly queues:NamedQueue[];
 
-    readonly beforeOutputs:((managed:ManagedProps)=>void)[]
+    readonly events:BridgeEvent[];
+
+    readonly eventTargets:IEventTarget[];
+
+    readonly apiRouters:IApiRouter[];
+
+    readonly apiRouteTargets:ApiRouteTarget[];
+
+    readonly userPools:IHasUserPool[];
+
+    readonly beforeOutputs:((managed:ManagedProps)=>void)[];
 
 
 }
@@ -27,4 +38,9 @@ export const getDefaultManagedProps=():ManagedProps=>({
     buckets:[],
     queues:[],
     beforeOutputs:[],
+    events:[],
+    eventTargets:[],
+    apiRouters:[],
+    apiRouteTargets:[],
+    userPools:[],
 })

@@ -77,9 +77,12 @@ export const addPolicyToGrantee=(
 
 }
 
+let defaultVpc:ec2.IVpc|null=null;
+
 /**
- * Returns the default VPC for the current deployment. You must define the account and region
- * in the env of the stack in-order to use this function.
+ * Returns the default VPC for the current deployment. If the default VPC is not explicity defined
+ * using the setDefaultVpc function you must define the account and region in the env of the stack
+ * in-order to use this function.
  *
  * const app = new cdk.App();
  * new ExampleStack(app, "Example", {
@@ -90,7 +93,17 @@ export const addPolicyToGrantee=(
  * @returns
  */
 export const getDefaultVpc=(scope:Construct,name='DefaultVpc')=>{
-    return ec2.Vpc.fromLookup(scope,name,{isDefault:true})
+    if(!defaultVpc){
+        defaultVpc=ec2.Vpc.fromLookup(scope,name,{isDefault:true});
+    }
+    return defaultVpc;
+}
+
+export const setDefaultVpc=(vpc:ec2.IVpc)=>{
+    if(defaultVpc){
+        throw new Error('Default VPC already set')
+    }
+    defaultVpc=vpc;
 }
 
 

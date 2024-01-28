@@ -1,8 +1,13 @@
-import { ParamTypeDef } from "@iyio/common";
+import { HttpMethod, ParamTypeDef } from "@iyio/common";
+import * as ag from "aws-cdk-lib/aws-apigateway";
 import type * as cf from "aws-cdk-lib/aws-cloudfront";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import { ParamOutput } from "./ParamOutput";
@@ -169,4 +174,76 @@ export interface NamedQueue
 {
     name:string;
     queue:sqs.Queue;
+}
+
+export interface IEventTarget
+{
+    /**
+     * Used to match the target in a managed stack
+     */
+    managedName?:string;
+    fn?:lambda.Function;
+    task?:targets.EcsTaskProps;
+}
+
+export interface ApiRoute
+{
+    path:string;
+
+    methods?:HttpMethod[];
+
+    queryStrings?:elbv2.QueryStringCondition[];
+
+    sourceIps?:string[];
+
+    auth?:ApiRouteAuth[];
+
+    /**
+     * The name of the target of the route. Named targets are used with ManagedStacks and are
+     * applied at the end of the stack generation.
+     */
+    targetName?:string;
+
+    target?:ApiRouteTarget;
+
+    fnTargetOptions?:ag.LambdaIntegrationOptions;
+}
+
+export interface ApiRouteAuth
+{
+    method?:HttpMethod;
+    userPool?:IHasUserPool;
+    /**
+     * A name to match to managed user pools
+     */
+    managedName?:string;
+    roles?:string[]
+}
+
+export interface ApiRouteTarget
+{
+    targetName?:string;
+    topic?:sns.Topic;
+    fn?:lambda.Function;
+    elbTarget?:ApiLoadBalancerTarget;
+}
+
+export interface IApiRouter
+{
+    addApiTarget(route:ApiRoute,target:ApiRouteTarget):void;
+    addMatchingTargets(targets:ApiRouteTarget[]):void;
+}
+
+export interface IHasUserPool
+{
+    managedName:string;
+    userPool:cognito.UserPool;
+    userPoolClient:cognito.IUserPoolClient;
+    userPoolDomain:cognito.IUserPoolDomain;
+}
+
+export interface ApiLoadBalancerTarget
+{
+    target:elbv2.IApplicationLoadBalancerTarget;
+    port?:number;
 }
