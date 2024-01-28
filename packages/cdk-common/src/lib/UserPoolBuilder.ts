@@ -179,7 +179,6 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             this,
             "UserPoolClient",
             {
-                generateSecret:true,
                 userPool,
                 authFlows: {
                     adminUserPassword: true,

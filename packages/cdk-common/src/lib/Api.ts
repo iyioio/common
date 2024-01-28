@@ -2,7 +2,6 @@ import { ParamTypeDef } from "@iyio/common";
 import * as cm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
-import * as elbv2Actions from "aws-cdk-lib/aws-elasticloadbalancingv2-actions";
 import * as elbv2Targets from "aws-cdk-lib/aws-elasticloadbalancingv2-targets";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
@@ -233,35 +232,37 @@ export class Api extends Construct implements IApiRouter
             conditions.push(elbv2.ListenerCondition.sourceIps(route.sourceIps));
         }
 
-        if(route.auth){
+        // todo - implement auth using a lambda callback
+        // import * as elbv2Actions from "aws-cdk-lib/aws-elasticloadbalancingv2-actions";
+        // if(route.auth){
 
-            const up=(
-                route.auth.find(u=>u.userPool)?.userPool??
-                this.managed.userPools.find(u=>route.auth?.some(a=>a.managedName && a.managedName===u.managedName))
-            );
-            if(!up){
-                throw new Error('Only Cognito auth supported at this time')
-            }
+        //     const up=(
+        //         route.auth.find(u=>u.userPool)?.userPool??
+        //         this.managed.userPools.find(u=>route.auth?.some(a=>a.managedName && a.managedName===u.managedName))
+        //     );
+        //     if(!up){
+        //         throw new Error('Only Cognito auth supported at this time')
+        //     }
 
-            const next:elbv2.ListenerAction=elbv2.ListenerAction.forward([targetGroup])
+        //     const next:elbv2.ListenerAction=elbv2.ListenerAction.forward([targetGroup])
 
-            this.listener.addAction(route.path,{
-                priority:100,
-                conditions,
-                action:new elbv2Actions.AuthenticateCognitoAction({
-                    userPool:up.userPool,
-                    userPoolClient:up.userPoolClient,
-                    userPoolDomain:up.userPoolDomain,
-                    next
-                })
-            })
-        }else{
+        //     this.listener.addAction(route.path,{
+        //         priority:100,
+        //         conditions,
+        //         action:new elbv2Actions.AuthenticateCognitoAction({
+        //             userPool:up.userPool,
+        //             userPoolClient:up.userPoolClient,
+        //             userPoolDomain:up.userPoolDomain,
+        //             next
+        //         })
+        //     })
+        // }else{
             this.listener.addTargetGroups(route.path,{
                 priority:100,
                 targetGroups:[targetGroup],
                 conditions
             })
-        }
+        //}
     }
 
 
