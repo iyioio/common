@@ -25,3 +25,7 @@ export const readBlobAsUint8ArrayAsync=async (blob:Blob):Promise<Uint8Array|unde
     }
     return new Uint8Array(r);
 }
+
+export const readBlobAsStringAsync=(blob:Blob):Promise<string|undefined>=>{
+    return readBlobAsync(blob,(r,b)=>r.readAsText(b)) as any;
+}
