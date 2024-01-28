@@ -1,4 +1,6 @@
-export type HttpMethod='GET'|'POST'|'PUT'|'PATCH'|'DELETE'|'OPTIONS';
+export const allHttpMethods=['GET','POST','PUT','PATCH','DELETE','OPTIONS'] as const;
+
+export type HttpMethod=typeof allHttpMethods[number];
 
 export interface BaseHttpRequest
 {
