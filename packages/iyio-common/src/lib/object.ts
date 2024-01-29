@@ -474,6 +474,9 @@ export const objectToQueryParams=(obj:HashMap):string=>{
 
 export const queryParamsToObject=(query:string):HashMap<string>=>
 {
+    if(!query){
+        return {}
+    }
     if(query.startsWith('?')){
         query=query.substring(1);
     }
