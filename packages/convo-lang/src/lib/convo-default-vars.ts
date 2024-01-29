@@ -669,11 +669,16 @@ export const defaultConvoVars={
     }),
 
     httpGet:createConvoScopeFunction(async scope=>{
-        const url=scope.paramValues?.[0];
-        const options=scope.paramValues?.[1];
+        let url=scope.paramValues?.[0];
+        let options=scope.paramValues?.[1];
 
         if(typeof url !== 'string'){
             throw new ConvoError('invalid-args',{statement:scope.s},"First arg must be a string URL");
+        }
+
+        if(options && (typeof options !== 'object')){
+            url+=`${url.includes('?')?'&':'?'}__input=${encodeURIComponent(options.toString())}`;
+            options=undefined;
         }
 
         return await httpClient().getAsync(url,options)
