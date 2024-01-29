@@ -1,3 +1,4 @@
+import { ZodBoolean, ZodNumber, ZodObject, ZodSchema, ZodString } from 'zod';
 import { BaseError } from './errors';
 import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
 import { FnEventTransformers } from './fn-handler.deps';
@@ -127,7 +128,16 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
         :fnInvokeEvent?
             fnInvokeEvent.input
         :isHttp?
-            (evt.body?(typeof evt.body === 'string')?JSON.parse(evt.body):evt.body:((method==='GET' || getObjKeyCount(query)) && inputScheme)?zodCoerceObject(inputScheme,query)?.result:undefined)
+            (evt.body?
+                (typeof evt.body === 'string')?
+                    JSON.parse(evt.body)
+                :
+                    evt.body
+            :((method==='GET' || getObjKeyCount(query)) && inputScheme)?
+                parseQuery(inputScheme,query)
+            :
+                undefined
+            )
         :
             evt
     );
@@ -299,3 +309,21 @@ export const createEmptyEventSource=():FnEvent=>({
     headers:{},
     claims:{},
 })
+
+const parseQuery=(inputScheme:ZodSchema,query:Record<string,string>)=>{
+    if(query['__input']!==undefined){
+        if(inputScheme instanceof ZodObject){
+            for(const e in inputScheme.shape){
+                query={[e]:query['__input']??''};
+                break;
+            }
+        }else if(inputScheme instanceof ZodString){
+            return query['__input'];
+        }else if(inputScheme instanceof ZodNumber){
+            return Number(query['__input']);
+        }else if(inputScheme instanceof ZodBoolean){
+            return query['__input']===''?true:Boolean(query['__input']);
+        }
+    }
+    return zodCoerceObject(inputScheme,query)?.result;
+}
