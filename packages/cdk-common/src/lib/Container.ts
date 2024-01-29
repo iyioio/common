@@ -175,7 +175,6 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 streamPrefix:`${name}FargateTask`,
                 logRetention:7
             }),
-            portMappings:[{hostPort:port,containerPort:port}],
             healthCheck:{
                 command:healthCheckCmd?
                     ["CMD-SHELL",healthCheckCmd]
@@ -192,6 +191,9 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
 
         });
         this.container=container;
+        container.addPortMappings({
+            containerPort:port,
+        })
 
         const service=new ecs.FargateService(this,"FargateService",{
             cluster,

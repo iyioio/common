@@ -2,6 +2,7 @@ import { HttpMethod, ParamTypeDef } from "@iyio/common";
 import * as ag from "aws-cdk-lib/aws-apigateway";
 import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -246,4 +247,5 @@ export interface ApiLoadBalancerTarget
 {
     target:elbv2.IApplicationLoadBalancerTarget;
     port?:number;
+    vpc?:ec2.IVpc;
 }

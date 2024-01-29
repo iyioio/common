@@ -51,8 +51,12 @@ export class Api extends Construct implements IApiRouter
 
     private readonly managed:ManagedProps;
 
+    public readonly vpc:ec2.IVpc;
+
 
     public readonly domainNames:string[];
+
+    private nextPriority=10000;
 
     private baseName:string;
 
@@ -81,6 +85,7 @@ export class Api extends Construct implements IApiRouter
         if(!vpc){
             vpc=getDefaultVpc(this);
         }
+        this.vpc=vpc;
 
         if(typeof cors === 'string'){
             cors={
@@ -159,7 +164,7 @@ export class Api extends Construct implements IApiRouter
 
         if(cors){
             this.listener.addTargets(`${this.baseName}CorsTarget`,{
-                priority:200,
+                priority:this.nextPriority--,
                 conditions:[
                     elbv2.ListenerCondition.httpRequestMethods(['OPTIONS'])
                 ],
@@ -200,9 +205,13 @@ export class Api extends Construct implements IApiRouter
     public addApiTarget(route:ApiRoute,target:ApiRouteTarget){
         let lbTarget:elbv2.IApplicationLoadBalancerTarget|undefined;
         let port:number|undefined;
+        let vpc:ec2.IVpc|undefined;
+        let protocol:elbv2.ApplicationProtocol|undefined;
         if(target.elbTarget){
             lbTarget=target.elbTarget.target;
             port=target.elbTarget.port;
+            vpc=target.elbTarget.vpc??this.vpc;
+            protocol=elbv2.ApplicationProtocol.HTTP;
         }else if(target.fn){
             lbTarget=new elbv2Targets.LambdaTarget(target.fn);
         }else if(target.topic){
@@ -214,7 +223,9 @@ export class Api extends Construct implements IApiRouter
         }
 
         const targetGroup=new elbv2.ApplicationTargetGroup(this,`${this.baseName}Group${route.path}`,{
+            vpc,
             port,
+            protocol,
             targets:[lbTarget],
         })
 
@@ -247,7 +258,7 @@ export class Api extends Construct implements IApiRouter
         //     const next:elbv2.ListenerAction=elbv2.ListenerAction.forward([targetGroup])
 
         //     this.listener.addAction(route.path,{
-        //         priority:100,
+        //         priority:this.nextPriority--,
         //         conditions,
         //         action:new elbv2Actions.AuthenticateCognitoAction({
         //             userPool:up.userPool,
@@ -258,7 +269,7 @@ export class Api extends Construct implements IApiRouter
         //     })
         // }else{
             this.listener.addTargetGroups(route.path,{
-                priority:100,
+                priority:this.nextPriority--,
                 targetGroups:[targetGroup],
                 conditions
             })
