@@ -31,10 +31,14 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
     }
 
     protected override createAuthenticatedClient():AwsS3Client{
-        return new AwsS3Client({
-            ...this.clientConfig,
-            requestHandler:new FetchHttpHandler({keepAlive:false})
-        });
+        if(globalThis.window){
+            return new AwsS3Client({
+                ...this.clientConfig,
+                requestHandler:new FetchHttpHandler({keepAlive:false})
+            });
+        }else{
+            return new AwsS3Client(this.clientConfig);
+        }
     }
 
 
