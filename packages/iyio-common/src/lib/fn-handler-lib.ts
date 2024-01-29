@@ -89,8 +89,8 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
 
     const requestContextHttpPath=evt?.requestContext?.http?.path;
     const requestContextHttpMethod=evt?.requestContext?.http?.method;
-    const requestContextPath=evt?.requestContext?.path??defaultHttpPath;
-    const requestContextMethod=evt?.requestContext?.httpMethod??defaultHttpMethod;
+    const requestContextPath=evt?.requestContext?.path??evt?.path??defaultHttpPath;
+    const requestContextMethod=evt?.requestContext?.httpMethod??evt?.httpMethod??defaultHttpMethod;
 
     const query=getQuery(evt,defaultQueryString);
 
@@ -269,7 +269,7 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
 
 const getQuery=(evt?:any,defaultQueryString?:string):Record<string,string>=>{
     const _queryString=evt?.rawQueryString??defaultQueryString;
-    return evt?.queryStringParameters??_queryString?queryParamsToObject(_queryString):{}
+    return evt?.queryStringParameters??(_queryString?queryParamsToObject(_queryString):{});
 }
 
 export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={}):((evt:any,context:any)=>Promise<any>) & {rawHandler:FnHandler}=>{
