@@ -30,7 +30,7 @@ export const createCorsFn=(scope:Construct,name:string,options:CorsOptions={}):l
                 return {
                     statusCode:200,
                     statusDescription:'200 Success',
-                    headers:${JSON.stringify(headers)};
+                    headers:${JSON.stringify(headers)}
                 }
             }`
         ),
