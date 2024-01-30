@@ -629,9 +629,11 @@ How many fish are in the sea
 - `@template` - Defines a message as a template
 - `@sourceTemplate` - used to track the name of templates used to generate messages
 - `@component` - Used to mark a message as a component. The value of the tag is used as the component name.
-               If no value is provided then the component will be unnamed. By default components will
-               be considered renderOnly
+                 If no value is provided then the component will be unnamed. By default components will
+                 be considered renderOnly
 - `@renderOnly` - When applied to a message the message should be rendered but not sent to LLMs
+- `@condition` - When applied to a message the message is conditionally added to the flattened view of a
+                 conversation. When the condition is false the message will not be visible to the user or the LLM. [read more](#conditional-messages)
 
 ### Strings
 There are 3 types of string in convo.
@@ -790,6 +792,23 @@ obj2 = {
 Text-based messages in convo support a subset of the markdown syntax, and the markdown structure
 is available at compile time.
 
+
+### Conditional messages
+Messages can be conditionally visible using the `@condition` tag
+
+The example below will only render and send the second system message to the LLM
+``` convo
+> define
+animal = 'dog'
+
+@condition animal frog
+> system
+You are a frog and you like to hop around.
+
+@condition animal dog
+> system
+You are a dog and you like to eat dirt.
+```
 
 
 ## Keywords

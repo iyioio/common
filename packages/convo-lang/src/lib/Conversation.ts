@@ -1,4 +1,4 @@
-import { ReadonlySubject, asArray, delayAsync, parseMarkdown, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber, shortUuid } from "@iyio/common";
+import { ReadonlySubject, aryRemoveItem, asArray, delayAsync, parseMarkdown, pushBehaviorSubjectAryMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, safeParseNumber, shortUuid } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
@@ -1166,17 +1166,18 @@ export class Conversation
                 continue;
             }
 
-            if(!flat.edge){
-                this.applyTagsAndState(msg,flat,exe,setMdVars,mdVarCtx);
-            }
             messages.push(flat);
+
+            if(!flat.edge){
+                this.applyTagsAndState(msg,flat,messages,exe,setMdVars,mdVarCtx);
+            }
         }
 
         for(const pair of edgePairs){
             if(pair.msg.statement){
                 await flattenMsgAsync(exe,pair.msg.statement,pair.flat,pair.shouldParseMd);
             }
-            this.applyTagsAndState(pair.msg,pair.flat,exe,pair.setMdVars,mdVarCtx);
+            this.applyTagsAndState(pair.msg,pair.flat,messages,exe,pair.setMdVars,mdVarCtx);
         }
 
 
@@ -1306,9 +1307,33 @@ export class Conversation
         return flat;
     }
 
+    private isTagConditionTrue(exe:ConvoExecutionContext,tagValue:string,startIndex=0):boolean{
+        const parts=tagValue.split(/\s+/);
+        if(startIndex){
+            parts.splice(0,startIndex);
+        }
+        if(parts.length<1){
+            return false;
+        }
+        const value=exe.getVar(parts[0]??'');
+        if(parts.length===1){
+            return value?true:false;
+        }
+        let v2:any;
+        if(parts.length>2){
+            parts.shift();
+            v2=parts.join(' ');
+        }else{
+            v2=parts[1];
+        }
+        return value?.toString()===v2;
+
+    }
+
     private applyTagsAndState(
         msg:ConvoMessage,
         flat:FlatConvoMessage,
+        allMessages:FlatConvoMessage[],
         exe:ConvoExecutionContext,
         setMdVars:boolean,
         mdVarCtx:MdVarCtx
@@ -1414,6 +1439,13 @@ export class Conversation
                 case convoTags.responseEndpoint:
                     flat.responseEndpoint=tag.value;
                     break;
+
+                case convoTags.condition:
+                    if(!tag.value || !this.isTagConditionTrue(exe,tag.value)){
+                        aryRemoveItem(allMessages,flat);
+                    }
+                    break;
+
             }
         }
         if(responseFormat){

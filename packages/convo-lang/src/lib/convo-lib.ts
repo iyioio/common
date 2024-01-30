@@ -234,6 +234,31 @@ export const convoTags={
      */
     markdownVars:'markdownVars',
 
+    /**
+     * When applied to a message the message is conditionally added to the flattened view of a
+     * conversation. When the condition is false the message will not be visible to the user
+     * or the LLM.
+     *
+     * @note The example below uses (at) instead of the at symbol because of a limitation of jsdoc.
+     *
+     * The example below will only render and send the second system message to the LLM
+     * @example
+     *
+     * ``` convo
+     * > define
+     * animal = 'dog'
+     *
+     * (at)condition animal frog
+     * > system
+     * You are a frog and you like to hop around.
+     *
+     * (at)condition animal dog
+     * > system
+     * You are a dog and you like to eat dirt.
+     * ```
+     */
+    condition:'condition',
+
 } as const;
 
 export const convoTaskTriggers={
