@@ -85,6 +85,8 @@ export * from './lib/fn-handler-types';
 export * from './lib/fn-handler.deps';
 export * from './lib/fs';
 export * from './lib/getHttpParamsAsync';
+export * from './lib/google-tag-manager';
+export * from './lib/google-tag-manager-types';
 export * from './lib/grammar';
 export * from './lib/html';
 export * from './lib/http-lib';

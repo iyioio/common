@@ -1,9 +1,10 @@
-import { HashMap, initBaseLayout, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
+import { GoogleTagManagerConfig, HashMap, initBaseLayout, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
 import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
 import { useRouteRedirectFallback } from "./common-hooks";
 import { LockScreenRenderer } from "./LockScreenRenderer";
 import { PortalRenderer } from "./PortalRenderer";
+import { useGoogleTagManager } from "./useGoogleTagManager";
 import { useUiReady } from "./useUiReady";
 
 export interface BaseAppContainerProps
@@ -25,6 +26,7 @@ export interface BaseAppContainerProps
      * paths or removing .html extentions such as hosting on S3.
      */
     enableRouteRedirectFallback?:boolean;
+    googleTagConfig?:GoogleTagManagerConfig|string|null;
 }
 
 export function BaseAppContainer({
@@ -40,11 +42,14 @@ export function BaseAppContainer({
     afterAll,
     enableRouteRedirectFallback,
     skipInitBaseLayout,
+    googleTagConfig
 }:BaseAppContainerProps){
 
     if(!skipInitBaseLayout){
         initBaseLayout(style);
     }
+
+    useGoogleTagManager(googleTagConfig);
 
     const stateRef=useRef({scopeInit,staticEnvVars});
     const [inited,setInited]=useState(false);
