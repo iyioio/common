@@ -14,6 +14,12 @@ export interface XmlNode
 export interface XmlParsingOptions extends CodeParsingOptions{
     emptyAttValue?:string;
     stopOnFirstNode?:boolean;
+    /**
+     * If true attribute values that start and end with curly brackets will be parsed as json.
+     * The starting and ending brackets will be discarded. A string value that starts and ends with
+     * curly brackets can be escaped by starting the string with a backslash.
+     */
+    parseJsonAtts?:boolean;
 }
 
 export type XmlParsingResult=CodeParsingResult<XmlNode[]>;

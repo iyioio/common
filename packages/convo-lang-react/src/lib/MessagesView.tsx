@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
-import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
+import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage, defaultConvoRenderTarget, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
 import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
 import { MessageComponentRenderer } from "./MessageComponentRenderer";
@@ -154,9 +154,11 @@ const renderMessage=(
 export interface MessagesViewProps
 {
     ctrl?:ConversationUiCtrl;
+    renderTarget?:string;
 }
 
 export function MessagesView({
+    renderTarget=defaultConvoRenderTarget,
     ctrl:_ctrl,
 }:MessagesViewProps){
 
@@ -183,7 +185,7 @@ export function MessagesView({
     const mapped=messages.map((m,i)=>{
 
         const ctrlRendered=ctrl.renderMessage(m,i);
-        if(ctrlRendered===false || !flat){
+        if(ctrlRendered===false || !flat || (m.renderTarget??defaultConvoRenderTarget)!==renderTarget){
             return null;
         }
 

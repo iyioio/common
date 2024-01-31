@@ -216,6 +216,12 @@ export const convoTags={
      */
     renderOnly:'renderOnly',
 
+    /**
+     * Controls where a message is rendered. By default messages are rendered in the default chat
+     * view, but applications can define different render targets.
+     */
+    renderTarget:'renderTarget',
+
     toolId:'toolId',
 
     /**
@@ -269,6 +275,8 @@ export const convoTaskTriggers={
 } as const;
 
 export const convoDateFormat="yyyy-MM-dd'T'HH:mm:ssxxx";
+
+export const defaultConvoRenderTarget='default';
 
 export const getConvoDateString=(date:Date|number=new Date()):string=>{
     return format(date,convoDateFormat);

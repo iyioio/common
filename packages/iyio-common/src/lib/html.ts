@@ -23,6 +23,18 @@ export const escapeHtmlKeepSingleQuote=(str:string):string=>
          .replace(/"/g, "'")
  }
 
+export const escapeHtmlKeepDoubleQuote=(str:string):string=>
+{
+    if(!str){
+        return '';
+    }
+    return str
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/'/g, "&#039;");
+ }
+
 export const unescapeHtml=(str:string):string=>{
     return str.replace(/&([^;]{0,10});/g,(_:string,v:string)=>{
         v=v.toLowerCase();

@@ -80,6 +80,11 @@ export interface ConvoMessage
     markdown?:MarkdownLine[];
 
     /**
+     * The target render area of the message.
+     */
+    renderTarget?:string;
+
+    /**
      * A variable to assign the content or jsonValue of the message to
      */
     assignTo?:string;
@@ -526,6 +531,10 @@ export interface FlatConvoMessage
      */
     fnParams?:ZodObject<any>;
 
+    /**
+     * The target render area of the message.
+     */
+    renderTarget?:string;
 
     /**
      * A function that was called

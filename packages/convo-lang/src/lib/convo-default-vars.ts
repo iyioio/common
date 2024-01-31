@@ -1,4 +1,4 @@
-import { createJsonRefReplacer, escapeHtml, httpClient, markdownLineToString, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
+import { createJsonRefReplacer, escapeHtml, escapeHtmlKeepDoubleQuote, getErrorMessage, httpClient, markdownLineToString, objectToMarkdownBuffer, toCsvLines } from "@iyio/common";
 import { format } from "date-fns";
 import { ZodObject } from "zod";
 import { ConvoError } from "./ConvoError";
@@ -908,6 +908,45 @@ export const defaultConvoVars={
     }),
 
     describeStruct,
+
+    xAtt:createConvoScopeFunction((scope)=>{
+        const value=scope.paramValues?.[0];
+        switch(typeof value){
+            case 'string':
+                if(value.startsWith('{') && value.endsWith('}')){
+                    return `"\\${escapeHtml(value)}"`;
+                }else{
+                    return `"${escapeHtml(value)}"`;
+                }
+
+            case 'number':
+            case 'boolean':
+            case 'bigint':
+                return `"{${value}}"`;
+
+            case 'undefined':
+                return '"{undefined}"';
+
+            default:
+                try{
+                    return `'{${escapeHtmlKeepDoubleQuote(JSON.stringify(value))}}'`
+                }catch(ex){
+                    return `'{${escapeHtmlKeepDoubleQuote(JSON.stringify({
+                        __error:getErrorMessage(ex)
+                    }))}}'`
+                }
+        }
+    }),
+
+    openBrowserWindow:createConvoScopeFunction((scope)=>{
+        const url=scope.paramValues?.[0];
+        const target=scope.paramValues?.[1]??'_blank';
+        if((typeof url !== 'string') || (typeof target !== 'string')){
+            return false;
+        }
+        globalThis.window?.open(url,target);
+        return true;
+    }),
 
 } as const;
 

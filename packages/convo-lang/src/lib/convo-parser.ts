@@ -939,6 +939,12 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                     case convoTags.renderOnly:
                         msg.renderOnly=parseConvoBooleanTag(tag.value);
                         break;
+
+                    case convoTags.renderTarget:
+                        if(tag.value){
+                            msg.renderTarget=tag.value;
+                        }
+                        break;
                 }
 
             }

@@ -1068,6 +1068,9 @@ export class Conversation
             if(msg.component!==undefined){
                 flat.component=msg.component;
             }
+            if(msg.renderTarget){
+                flat.renderTarget=msg.renderTarget;
+            }
             if(msg.renderOnly){
                 flat.renderOnly=true;
             }

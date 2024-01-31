@@ -633,7 +633,13 @@ How many fish are in the sea
                  be considered renderOnly
 - `@renderOnly` - When applied to a message the message should be rendered but not sent to LLMs
 - `@condition` - When applied to a message the message is conditionally added to the flattened view of a
-                 conversation. When the condition is false the message will not be visible to the user or the LLM. [read more](#conditional-messages)
+                 conversation. When the condition is false the message will not be visible to the user or 
+                 the LLM. [read more](#conditional-messages)
+- `@markdownVars` - When applied to a message the content of the message will be parsed as markdown and the 
+                    elements of the markdown will be auto assigned to vars. `@markdownVars` can be
+                    used with the [`tmpl`](#tmpl-varnamestring-formatenumplain-html-markdown) function to create formatted templates
+- `@renderTarget` - Controls where a message is rendered. By default messages are rendered in the default chat
+                    view, but applications can define different render targets.
 
 ### Strings
 There are 3 types of string in convo.
@@ -1363,6 +1369,47 @@ Prints an array of values a as CSV inside of a markdown code block.
 
 ### merge( ...values:any[] )
 Merges all passed in parameters into a single object. merge is similar to Javascript's spread operator.
+
+### html( ...values:any[] )
+Returns a string will all given values as escaped html. values are separated by a newline
+
+### xAtt( value:any )
+Returns the value as an attribute to be used with XML.
+
+``` convo
+> assistant
+<Component propName={{xAtt({prop1:'hello',prop2:77})}}>
+```
+
+### tmpl( varName:string format:enum("plain" "html" "markdown") )
+Returns the value of the variable pointed to by the varName argument as a formatted value. When
+used with markdown variables using the `@markdownVars` tag tmpl can be used to convert messages
+from markdown to html.
+
+``` convo
+@markdownVars
+> user
+# Coming to America
+There once was a man that came to **America**
+
+> assistant
+{{tmpl("header0" "html")}}
+{{tmpl("p0" "html")}}
+```
+
+Flattened version:
+``` convo
+> user
+# Coming to America
+There once was a man that came to **America**
+
+> assistant
+<h1>Coming to America</h1>
+<p>There once was a man that came to <strong>America</strong></p>
+```
+
+### openBrowserWindow( url:string target:string='_blank' )
+Opens a new browser window
 
 
 ## Examples

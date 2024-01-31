@@ -14,5 +14,5 @@ export const getConvoPromptMediaUrl=(img:string|ConvoPromptMedia|null|undefined,
 }
 
 export const parseConvoMessageComponents=(content:string):ConvoMessageComponent[]|undefined=>{
-    return parseXml(content).result;
+    return parseXml(content,{parseJsonAtts:true}).result;
 }

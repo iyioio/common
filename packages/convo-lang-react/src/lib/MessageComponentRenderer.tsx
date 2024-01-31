@@ -1,23 +1,55 @@
 import { objectToMarkdown } from "@iyio/common";
-import { ConvoComponentRenderFunction, ConvoComponentRendererContext, ConvoComponentRendererWithOptions, ConvoMessageComponent, parseConvoMessageComponents } from "@iyio/convo-lang";
+import { ConversationUiCtrl, ConvoComponentRenderFunction, ConvoComponentRendererContext, ConvoComponentRendererWithOptions, ConvoMessageComponent, FlatConvoMessage, parseConvoMessageComponents } from "@iyio/convo-lang";
+import { useSubject } from "@iyio/react-common";
 import { Fragment, useMemo } from "react";
 
 export interface MessageComponentRendererProps
 {
-    ctx:ConvoComponentRendererContext;
+    message?:FlatConvoMessage;
+    ctrl?:ConversationUiCtrl;
+    ctx?:ConvoComponentRendererContext;
+    doNotRenderInRow?:boolean;
 }
 
 export function MessageComponentRenderer({
-    ctx,
+    message,
+    ctrl,
+    ctx:_ctx,
+    doNotRenderInRow=(message && ctrl)?true:false,
 }:MessageComponentRendererProps){
 
-    const content=ctx.message.content;
-    const id=ctx.id;
+    const convo=useSubject(ctrl?.convoSubject);
+    const flat=useSubject(convo?.flatSubject);
+
+    const ctrlCtx=useMemo<ConvoComponentRendererContext|undefined>(()=>{
+
+        if(!ctrl || !message || !convo || !flat){
+            return undefined;
+        }
+
+        return {
+            id:'_',
+            ctrl,
+            convo,
+            flat,
+            message,
+            isUser:message.role==='user',
+            index:0,
+        }
+    },[message,ctrl,convo,flat]);
+
+    const ctx=_ctx??ctrlCtx;
+
+    const content=ctx?.message.content??message?.content;
+    const id=ctx?.id??'_';
 
     const components=useMemo<ConvoMessageComponent[]|undefined>(()=>{
         return content?parseConvoMessageComponents(content):undefined;
     },[content]);
 
+    if(!ctx){
+        return null;
+    }
 
     return (
         <>
@@ -36,7 +68,7 @@ export function MessageComponentRenderer({
                 if(fn){
                     return (
                         <Fragment key={id+'-c-'+i}>
-                            {options?.doNotRenderInRow?
+                            {(options?.doNotRenderInRow || doNotRenderInRow)?
                                 fn(c,ctx)
                             :
                                 <div className={ctx.rowClassName}>

@@ -1,5 +1,6 @@
 import { getCodeParsingError } from "./code-parsing";
 import { CodeParser } from "./code-parsing-types";
+import { getErrorMessage } from "./error-lib";
 import { unescapeHtml } from "./html";
 import { XmlNode, XmlParsingOptions, XmlParsingResult } from "./xml-parser-types";
 
@@ -15,6 +16,7 @@ export const parseXml:CodeParser<XmlNode[],XmlParsingOptions>=(
         startIndex=0,
         emptyAttValue,
         stopOnFirstNode,
+        parseJsonAtts
     }:XmlParsingOptions={}
 ):XmlParsingResult=>{
 
@@ -85,7 +87,26 @@ export const parseXml:CodeParser<XmlNode[],XmlParsingOptions>=(
                 currentNode.atts={};
             }
 
-            currentNode.atts[name]=value===undefined?(emptyAttValue??name):unescapeHtml(value);
+            if(parseJsonAtts && value && value.endsWith('}')){
+                if(value.startsWith('\\{')){
+                    currentNode.atts[name]=unescapeHtml(value.substring(1));
+                }else if(value.startsWith('{')){
+                    if(value==='{undefined}'){
+                        currentNode.atts[name]=undefined;
+                    }else{
+                        try{
+                            currentNode.atts[name]=JSON.parse(unescapeHtml(value.substring(1,value.length-1)));
+                        }catch(ex){
+                            error=`Parsing json attribute failed. att = ${name} - ${getErrorMessage(ex)}`;
+                            break parsingLoop;
+                        }
+                    }
+                }else{
+                    currentNode.atts[name]=unescapeHtml(value);
+                }
+            }else{
+                currentNode.atts[name]=value===undefined?(emptyAttValue??name):unescapeHtml(value);
+            }
 
             index=match.index+match[0].length;
 
