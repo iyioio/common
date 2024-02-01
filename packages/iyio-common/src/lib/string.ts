@@ -208,3 +208,17 @@ export const strCaseInsensitiveCompare=(a:string|null|undefined,b:string|null|un
     }
     return a.localeCompare(b,undefined,{sensitivity:'accent'})===0;
 }
+
+export const strHash=(str:string):number=>{
+    if(!str){
+        return 0;
+    }
+    let h=0;
+    const l=str.length;
+    for (let i=0,c:number;i<l;i++) {
+        c=str.charCodeAt(i);
+        h=((h<<5)-h)+c;
+        h|=0; // Convert to 32bit integer
+    }
+    return h;
+}
