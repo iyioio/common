@@ -443,6 +443,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const isIn=tokenType==='in';
         switch(model){
+            case 'gpt-4-0125-preview':
             case 'gpt-4-1106-preview':
             case 'gpt-4-vision-preview': return (isIn?0.01:0.03)/1000;
             case 'gpt-4':
@@ -454,9 +455,10 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             case 'gpt-3.5-turbo':
             case 'gpt-3.5-turbo-0301':
             case 'gpt-3.5-turbo-0613':
-            case 'gpt-3.5-turbo-1106': return (isIn?0.0015:0.002)/1000;
+            case 'gpt-3.5-turbo-1106': return (isIn?0.001:0.002)/1000;
             case 'gpt-3.5-turbo-16k':
             case 'gpt-3.5-turbo-16k-0613': return (isIn?0.001:0.002)/1000;
+            case 'gpt-3.5-turbo-instruct': return (isIn?0.0015:0.002)/1000;
         }
 
         return (isIn?0.01:0.03)/1000;
