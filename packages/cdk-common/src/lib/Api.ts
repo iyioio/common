@@ -1,4 +1,4 @@
-import { ParamTypeDef } from "@iyio/common";
+import { ParamTypeDef, strHash } from "@iyio/common";
 import * as cm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
@@ -55,8 +55,6 @@ export class Api extends Construct implements IApiRouter
 
 
     public readonly domainNames:string[];
-
-    private nextPriority=10000;
 
     private baseName:string;
 
@@ -164,7 +162,7 @@ export class Api extends Construct implements IApiRouter
 
         if(cors){
             this.listener.addTargets(`${this.baseName}CorsTarget`,{
-                priority:this.nextPriority--,
+                priority:this.getPriority('CORS'),
                 conditions:[
                     elbv2.ListenerCondition.httpRequestMethods(['OPTIONS'])
                 ],
@@ -258,7 +256,7 @@ export class Api extends Construct implements IApiRouter
         //     const next:elbv2.ListenerAction=elbv2.ListenerAction.forward([targetGroup])
 
         //     this.listener.addAction(route.path,{
-        //         priority:this.nextPriority--,
+        //         priority:this.getPriority(route.path),
         //         conditions,
         //         action:new elbv2Actions.AuthenticateCognitoAction({
         //             userPool:up.userPool,
@@ -269,7 +267,7 @@ export class Api extends Construct implements IApiRouter
         //     })
         // }else{
             this.listener.addTargetGroups(route.path,{
-                priority:this.nextPriority--,
+                priority:this.getPriority(route.path),
                 targetGroups:[targetGroup],
                 conditions
             })
@@ -291,5 +289,35 @@ export class Api extends Construct implements IApiRouter
         }
     }
 
+    private priorities:number[]=[];
+    private getPriority(name:string):number{
+        let p=Math.round(strHash(name)/4294967296*maxPriority);
+        if(p<0){
+            p*=-1;
+        }
+        while(p>maxPriority){
+            p=Math.round(p*0.1);
+        }
+        if(p<minPriority){
+            p+=minPriority;
+        }
+        while(this.priorities.includes(p)){
+            p++;
+            if(p<0){
+                p=minPriority;
+            }
+            while(p>maxPriority){
+                p=Math.round(p*0.1);
+            }
+            if(p<minPriority){
+                p+=minPriority;
+            }
+        }
+        return p;
+    }
+
 
 }
+
+const minPriority=1000;
+const maxPriority=50000;
