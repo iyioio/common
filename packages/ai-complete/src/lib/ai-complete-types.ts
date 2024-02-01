@@ -168,6 +168,8 @@ export const AiCompletionResultScheme=z.object({
     formatTypeName:z.string().optional(),
     formatIsArray:z.boolean().optional(),
     assignTo:z.string().optional(),
+    quotaUsd:z.number().optional(),
+    quotaUsedUsd:z.number().optional(),
 })
 export type AiCompletionResult=z.infer<typeof AiCompletionResultScheme>;
 

@@ -11,9 +11,9 @@ export interface HttpAiCompletionProviderOptions
 export class HttpAiCompletionProvider implements AiCompletionProvider
 {
 
-    public static fromScope(scope:Scope){
+    public static fromScope(scope:Scope,url?:string){
         return new HttpAiCompletionProvider({
-            url:httpAiCompletionUrlParam(scope),
+            url:url??httpAiCompletionUrlParam(scope),
             httpClient:httpClient(scope),
         })
     }

@@ -2,7 +2,7 @@ import { AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiC
 import { FnEvent, UnauthorizedError, createFnHandler, shortUuid } from '@iyio/common';
 import { initBackend } from "../ai-complete-openai-cdk-lib";
 import { openAiAllowOpenAccessParam } from '../ai-complete-openai-cdk.deps';
-import { checkTokenQuotaAsync, storeTokenUsageAsync } from '../price-capping';
+import { QuotaResult, checkTokenQuotaAsync, storeTokenUsageAsync } from '../price-capping';
 
 initBackend();
 
@@ -13,9 +13,11 @@ const CompleteOpenAiPrompt=async (
 
     const remoteAddress=fnEvt.remoteAddress||'0.0.0.0';
 
+    let quota:QuotaResult|undefined;
+
     if(!input.apiKey){
-        const allow=await checkTokenQuotaAsync({remoteAddress});
-        if(!allow){
+        quota=await checkTokenQuotaAsync({remoteAddress});
+        if(!quota.allow){
             return {
                 options:[{
                     message:{
@@ -46,6 +48,11 @@ const CompleteOpenAiPrompt=async (
             r.tokenPrice??1,
             {remoteAddress}
         )
+    }
+
+    if(quota && quota.singleCap!==undefined && quota.singleUsage!==undefined){
+        r.quotaUsd=quota.singleCap;
+        r.quotaUsedUsd=quota.singleUsage;
     }
 
     return r;

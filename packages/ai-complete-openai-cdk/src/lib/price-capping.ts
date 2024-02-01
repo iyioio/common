@@ -8,6 +8,15 @@ export interface CallerInfo
     remoteAddress:string;
 }
 
+export interface QuotaResult
+{
+    allow:boolean;
+    totalUsage?:number;
+    singleUsage?:number;
+    totalCap?:number;
+    singleCap?:number;
+}
+
 const CapsTable:DataTableDescription<TokenQuota>={
     name:"Caps",
     primaryKey:"id",
@@ -31,15 +40,15 @@ export const getTokenQuotaAsync=(caller:CallerInfo):Promise<TokenQuota>=>{
 
 export const checkTokenQuotaAsync=async (
     caller:CallerInfo
-):Promise<boolean>=>{
+):Promise<QuotaResult>=>{
 
     const id=caller.remoteAddress||'0.0.0.0';
 
-    const singleCap=aiCompleteAnonUsdCapParam.get();
-    const totalCap=aiCompleteAnonUsdCapTotalParam.get();
+    let singleCap=aiCompleteAnonUsdCapParam.get();
+    let totalCap=aiCompleteAnonUsdCapTotalParam.get();
 
     if(singleCap===undefined && totalCap===undefined){
-        return true;
+        return {allow:true};
     }
 
     const [single,total]=await Promise.all([
@@ -47,10 +56,26 @@ export const checkTokenQuotaAsync=async (
         totalCap!==undefined?_getCapAsync('_'):undefined,
     ]);
 
-    return (
+    if(single?.cap!==undefined){
+        singleCap=single.cap;
+    }
+
+    if(total?.cap!==undefined){
+        totalCap=total.cap;
+    }
+
+    const allow=(
         (singleCap===undefined?true:single?single.usage<singleCap:false) &&
         (totalCap===undefined?true:total?total.usage<totalCap:false)
     )
+    return {
+        allow,
+        singleUsage:(singleCap===undefined || !single)?undefined:singleCap-single.usage,
+        totalUsage:(totalCap===undefined || !total)?undefined:totalCap-total.usage,
+        singleCap,
+        totalCap
+
+    }
 }
 
 
