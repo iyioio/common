@@ -592,22 +592,10 @@ export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap
             return undefined;
         }
 
-        const key=path[i];
-
-        let jmp=false;
-        for(const type of node.types){
-            if(!type.isRefType){
-                continue;
-            }
-            const refType:ProtoNode|undefined=addressMap[type.type];
-            const refNode:ProtoNode|undefined=refType?.children?.[key];
-            if(refNode){
-                node=refNode;
-                jmp=true;
-                break;
-            }
-        }
-        if(jmp){
+        const key=path[i]??'';
+        const link=getLinkTarget(node,key,addressMap);
+        if(link.jmp){
+            node=link.node;
             continue;
         }
 
@@ -616,6 +604,43 @@ export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap
     return node;
 }
 
+const getLinkTarget=(node:ProtoNode,key:string,addressMap:Record<string,ProtoNode>,maxDepth=30):{node:ProtoNode,jmp:boolean}=>{
+    if(maxDepth<1){
+        return {node,jmp:false}
+    }
+    maxDepth--;
+    let jmp=false;
+    let hasRefs=false;
+    for(const type of node.types){
+        if(!type.isRefType){
+            continue;
+        }
+        hasRefs=true;
+        const refType:ProtoNode|undefined=addressMap[type.type];
+        const refNode:ProtoNode|undefined=refType?.children?.[key];
+        if(refNode){
+            node=refNode;
+            jmp=true;
+            break;
+        }
+    }
+    if(hasRefs && !jmp){
+        for(const type of node.types){
+            if(!type.isRefType){
+                continue;
+            }
+            const refType:ProtoNode|undefined=addressMap[type.type];
+            if(!refType){
+                continue;
+            }
+            const link=getLinkTarget(refType,key,addressMap);
+            if(link.jmp){
+                return link;
+            }
+        }
+    }
+    return {node,jmp};
+}
 
 export const protoAddLink=(node:ProtoNode,link:ProtoLink,allowDuplicates=false):boolean=>{
 
