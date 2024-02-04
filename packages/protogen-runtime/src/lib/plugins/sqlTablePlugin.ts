@@ -113,13 +113,13 @@ url      = "localhost"
                         continue;
                     }
 
-                    const type=getSqlType(child,context.nodes);
+                    const {type,custom}=getSqlType(child,context.nodes);
                     const maxLength=getSqlMaxLength(child,longProps);
 
                     if(type){
 
                         schemeOutput.push(`${context.tab}${prop} ${type}${
-                            child.types[0]?.isArray?'[]':child.optional?'?':''
+                           ( child.types[0]?.isArray && !custom)?'[]':child.optional?'?':''
                         }${
                             prop===table.primaryKey?type==='Int'?' @id @default(autoincrement())':' @id':''
                         }${
@@ -186,30 +186,38 @@ const sqlTypeMap:Record<string,string>={
     enum:'Int',
 }
 
-const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):string|undefined=>{
+const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):{type:string|undefined,custom?:boolean}=>{
 
-    const dbType=(node.children?.['$sqlType']?.value??node.children?.['$dbType']?.value)?.trim();
+    let dbType=(node.children?.['$sqlType']?.value??node.children?.['$dbType']?.value)?.trim();
     if(dbType){
-        return dbType;
+        const len=(node.children?.['$sqlLength']?.value??node.children?.['$dbLength']?.value)?.trim();
+        if(len){
+            dbType+=`(${len})`
+        }
+        if(dbType.startsWith('!')){
+            return {type:`Unsupported("${dbType.substring(1)}")`,custom:true}
+        }else{
+            return {type:dbType};
+        }
     }
     const type=node.types[0]?.mapType || node.children?.['json']?'Json':sqlTypeMap[node.type];
     if(type || !allNodes){
-        return type;
+        return {type,custom:true};
     }
 
     const refType=node.types[0];
     if(!refType?.isRefType){
-        return undefined;
+        return {type:undefined};
     }
 
     const t=refType.path[0];
     if(!t){
-        return undefined;
+        return {type:undefined};
     }
 
     const r=allNodes.find(n=>n.address===t);
     if(!r){
-        return undefined;
+        return {type:undefined};
     }
 
     return getSqlType(r);
