@@ -41,13 +41,14 @@ export function PanZoomControls({
 
 }
 
-const style=atDotCss({name:'PanZoomControls',css:`
+const style=atDotCss({name:'PanZoomControls',order:'framework',css:`
     @.root{
         display:flex;
         flex-direction:column;
         position:absolute;
         right:0;
         top:0;
+        border-radius:@@radius;
     }
 
     @.zoomIn, @.zoomOut{
