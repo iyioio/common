@@ -20,10 +20,11 @@ export interface UiActionItem<
     iconColor?:string;
     to?:string;
     type?:TType;
-    action?:(item:UiActionItem)=>void;
+    action?:(item:UiActionItem<any,any,any>)=>void;
     linkTarget?:string;
     data?:TData;
     mapKey?:string|number|null;
+    selected?:boolean;
 }
 
 export interface UiActionSubItem<
