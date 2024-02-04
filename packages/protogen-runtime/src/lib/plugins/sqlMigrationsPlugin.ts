@@ -1,7 +1,7 @@
 import { SqlMigration, getFileName, joinPaths } from "@iyio/common";
 import { execAsync, pathExistsAsync } from "@iyio/node-common";
 import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoGenerateTsIndex } from "@iyio/protogen";
-import { readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import { z } from "zod";
 
 const SqlMigrationsConfig=z.object(
@@ -50,8 +50,8 @@ export const sqlMigrationsPlugin:ProtoPipelineConfigurablePlugin<typeof SqlMigra
         sqlMigrationsPackage='sql-migrations',
         sqlMigrationsPath=sqlMigrationsPackage,
         sqlMigrationsIndexFilename='sql-migrations-index.ts',
-        sqlMigrationCdkConstructClassName='SqlMigrate',
-        sqlMigrationCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${sqlMigrationCdkConstructClassName}.ts`:undefined,
+        //sqlMigrationCdkConstructClassName='SqlMigrate',
+        //sqlMigrationCdkConstructFile=libStyle==='nx'?`packages/cdk/src/${sqlMigrationCdkConstructClassName}.ts`:undefined,
 
     })=>{
 
@@ -75,6 +75,10 @@ export const sqlMigrationsPlugin:ProtoPipelineConfigurablePlugin<typeof SqlMigra
             libStyle,
             {packagePaths,indexFilename:sqlMigrationsIndexFilename}
         );
+
+        if(!await pathExistsAsync(path)){
+            await mkdir(path,{recursive:true});
+        }
 
         // migrations
         const content=(await readFile(schemeOutput.path)).toString();
