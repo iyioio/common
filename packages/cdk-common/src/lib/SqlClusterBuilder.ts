@@ -2,6 +2,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from "constructs";
 import { ManagedProps } from "./ManagedProps";
 import { SqlCluster, SqlClusterOptionsBase } from "./SqlCluster";
+import { getDefaultVpc } from './cdk-lib';
 
 export interface SqlClusterBuilderCluster extends SqlClusterOptionsBase
 {
@@ -11,7 +12,7 @@ export interface SqlClusterBuilderCluster extends SqlClusterOptionsBase
 export interface SqlClusterBuilderOptions
 {
     managed?:ManagedProps;
-    vpc:ec2.IVpc;
+    vpc?:ec2.IVpc;
     clusters:SqlClusterBuilderCluster[];
 }
 
@@ -22,7 +23,7 @@ export class SqlClusterBuilder extends Construct
 
     public constructor(scope:Construct,id:string,{
         managed,
-        vpc,
+        vpc=getDefaultVpc(scope),
         clusters,
     }:SqlClusterBuilderOptions)
     {

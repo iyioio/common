@@ -16,6 +16,7 @@ export interface SqlClusterOptionsBase
     autoPauseMinutes?:number|null;
     migrations?:SqlMigration[];
     migratorOptions?:Partial<SqlDbMigratorOptions>;
+    rdsVersion?:1|2;
 }
 
 export interface SqlClusterOptions extends SqlClusterOptionsBase
@@ -43,6 +44,8 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
     }:SqlClusterOptions){
 
         super(scope,id);
+
+        // todo - add support for RDS v2
 
         const dbCluster=new rds.ServerlessCluster(this,'Rds',{
             engine:rds.DatabaseClusterEngine.auroraPostgres({version:rds.AuroraPostgresEngineVersion.VER_11_13 }),
