@@ -23,6 +23,7 @@ export interface ScrollViewProps extends ViewProps
     autoScrollXOffset?:number;
     autoScrollYOffset?:number;
     containerFill?:boolean;
+    containerCol?:boolean;
     /**
      * When true the children of the scroll view will be returned by passing the scroll view layout
      * completely. When set to keepContainers the layout of the scroll view will be changed so that
@@ -42,6 +43,7 @@ export function ScrollView({
     children,
     containerProps,
     containerClassName,
+    containerCol,
     className,
     direction='y',
     row,
@@ -192,7 +194,7 @@ export function ScrollView({
                     col={col}
                     className={byPass?
                         style.byPassContainer({byPassFlex1}):
-                        style.container(null,[containerClassName,containerProps?.className])
+                        style.container({col:containerCol},[containerClassName,containerProps?.className])
                     }
                     {...containerProps}
                     style={byPass?containerProps?.style:{
@@ -253,6 +255,10 @@ const style=atDotCss({name:'ScrollView',css:`
     }
     @.container{
         position:relative;
+    }
+    @.container.col{
+        display:flex;
+        flex-direction:column;
     }
 
 
