@@ -1,6 +1,6 @@
 import { SqlMigration, getFileName, joinPaths } from "@iyio/common";
 import { execAsync, pathExistsAsync } from "@iyio/node-common";
-import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoGenerateTsIndex } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, getProtoPluginPackAndPath, protoGenerateTsIndex, protoGetChildrenByName } from "@iyio/protogen";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { z } from "zod";
 
@@ -109,27 +109,43 @@ export const sqlMigrationsPlugin:ProtoPipelineConfigurablePlugin<typeof SqlMigra
                 }
                 let sqlUp:string;
                 let sqlDown:string;
-                if(sqlUpExists){
-                    sqlUp=(await readFile(sqlUpPath)).toString();
-                }else{
-                    sqlUp=await execAsync(`npx prisma migrate diff ${
-                       prevSchemePath?`--from-schema-datamodel ${prevSchemePath}`:'--from-empty'
-                    } --to-schema-datamodel ${schemePath} --script`);
+                const upChildren=protoGetChildrenByName(child,'$up',false);
+                const downChildren=protoGetChildrenByName(child,'$down',false);
+                const inlineSql=(upChildren.length || downChildren.length)?true:false;
+                if(inlineSql){
+                    sqlUp=upChildren.map(c=>c.value??'').join('\n')||'-- empty';
+                    sqlDown=downChildren.map(c=>c.value??'').join('\n')||'-- empty';
                     await writeFile(sqlUpPath,sqlUp);
-
-                }
-                if(sqlDownExists){
-                    sqlDown=(await readFile(sqlDownPath)).toString();
-                }else{
-                    sqlDown=await execAsync(`npx prisma migrate diff ${
-                       prevSchemePath?`--to-schema-datamodel ${prevSchemePath}`:'--to-empty'
-                    } --from-schema-datamodel ${schemePath} --script`);
                     await writeFile(sqlDownPath,sqlDown);
+                }else{
+                    if(sqlUpExists){
+                        sqlUp=(await readFile(sqlUpPath)).toString();
+                    }else{
+                        sqlUp=await execAsync(`npx prisma migrate diff ${
+                            prevSchemePath?`--from-schema-datamodel ${prevSchemePath}`:'--from-empty'
+                            } --to-schema-datamodel ${schemePath} --script`
+                        );
+
+                        await writeFile(sqlUpPath,sqlUp);
+
+                    }
+                    if(sqlDownExists){
+                        sqlDown=(await readFile(sqlDownPath)).toString();
+                    }else{
+                        sqlDown=await execAsync(`npx prisma migrate diff ${
+                            prevSchemePath?`--to-schema-datamodel ${prevSchemePath}`:'--to-empty'
+                            } --from-schema-datamodel ${schemePath} --script`
+                        );
+
+                        await writeFile(sqlDownPath,sqlDown);
+                    }
                 }
 
                 out.push({name,up:sqlUp,down:sqlDown});
 
-                prevSchemePath=schemePath;
+                if(!inlineSql){
+                    prevSchemePath=schemePath;
+                }
             }
 
             if(out.length){

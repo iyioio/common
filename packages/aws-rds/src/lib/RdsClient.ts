@@ -1,10 +1,11 @@
 import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, sql } from '@iyio/common';
+import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, safeParseNumberOrUndefined, splitSqlStatements, sql } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
 export const rdsDatabaseParam=defineStringParam('rdsDatabase');
+export const rdsVersionParam=defineStringParam('rdsVersion');
 
 export interface RdsClientOptions
 {
@@ -13,6 +14,7 @@ export interface RdsClientOptions
     secretArn:string;
     database:string;
     region:string;
+    autoSplitStatements?:boolean;
 }
 
 
@@ -30,7 +32,12 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
     }
 
     public static fromScope(scope:Scope,storeAdapterOptions?:SqlStoreAdapterOptions){
-        return new RdsClient(RdsClient.optionsFromScope(scope),authService(scope).userDataCache,storeAdapterOptions);
+        return new RdsClient(
+            RdsClient.optionsFromScope(scope),
+            authService(scope).userDataCache,
+            storeAdapterOptions,
+            safeParseNumberOrUndefined(scope.to(rdsVersionParam).get())===2
+        );
     }
 
     private readonly options:RdsClientOptions;
@@ -39,15 +46,19 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
 
     private readonly authServerUserDataCache:ValueCache<any>;
 
+    public autoSplitStatements:boolean;
+
     public constructor(
         options:RdsClientOptions,
         authServerUserDataCache:ValueCache<any>,
-        storeAdapterOptions:SqlStoreAdapterOptions={})
-    {
+        storeAdapterOptions:SqlStoreAdapterOptions={},
+        autoSplitStatements=false
+    ){
         super();
         this.options={...options};
         this.storeAdapterOptions={...storeAdapterOptions};
         this.authServerUserDataCache=authServerUserDataCache;
+        this.autoSplitStatements=autoSplitStatements;
     }
 
     protected readonly clientCacheKey=Symbol();
@@ -86,6 +97,22 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
 
         const t=Date.now();
 
+        if(this.autoSplitStatements){
+            const split=splitSqlStatements(sql);
+            if(split.length>1){
+                sql=split.pop()??'';
+                for(const s of split){
+                    await this.getClient().send(new ExecuteStatementCommand({
+                        resourceArn:this.options.clusterArn,
+                        secretArn:this.options.secretArn,
+                        database:this.options.database,
+                        sql:s
+                    }));
+                }
+            }else{
+                sql=split[0]??''
+            }
+        }
         const cmd=new ExecuteStatementCommand({
             resourceArn:this.options.clusterArn,
             secretArn:this.options.secretArn,

@@ -44,6 +44,8 @@ export interface SqlDbMigratorOptions {
      * will result in a full reset of the database each time the deployment is ran.
      */
     FORCE_RESET_DATABASE_BEFORE_MIGRATING?:'THEN_MIGRATE'|'AND_LEAVE_EMPTY';
+
+    rdsVersion?:string;
 }
 
 export class SqlDbMigrator extends Construct{
@@ -57,6 +59,7 @@ export class SqlDbMigrator extends Construct{
         secretArn,
         databaseName,
         clearOnDelete,
+        rdsVersion,
         FORCE_RESET_DATABASE_BEFORE_MIGRATING
     }:SqlDbMigratorOptions){
 
@@ -76,6 +79,7 @@ export class SqlDbMigrator extends Construct{
                 secretArn,
                 databaseName,
                 clearOnDelete,
+                rdsVersion,
                 FORCE_RESET_DATABASE_BEFORE_MIGRATING
             },
         });

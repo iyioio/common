@@ -1,7 +1,7 @@
 import { AwsAuthProviders } from "@iyio/aws";
 import { RdsClient, applyDbMigrationAsync, forceClearAllMigrationsAsync } from "@iyio/aws-rds";
 import { OnEventRequest, OnEventResponse } from "@iyio/cdk-common";
-import { SqlMigration, authService } from "@iyio/common";
+import { SqlMigration, authService, delayAsync } from "@iyio/common";
 
 const physicalResourceId='SqlDbMigration_HyEQhCoDFzbiL1tfx6UU';
 
@@ -17,12 +17,20 @@ export async function migrateDb(
         clusterArn:event.ResourceProperties['clusterArn'],
         secretArn:event.ResourceProperties['secretArn'],
         database:event.ResourceProperties['databaseName'],
-        region:process.env['AWS_REGION']??''
-    },authService().userDataCache);
+        region:process.env['AWS_REGION']??'',
+    },authService().userDataCache,undefined,event.ResourceProperties['rdsVersion']==='2');
 
     client.log=true;
 
-    await client.wakeDatabaseAsync();
+    while(true){
+        try{
+            await client.wakeDatabaseAsync();
+            break;
+        }catch(ex){
+            console.warn('Wake DB Failed. Will try again',ex);
+            await delayAsync(1000);
+        }
+    }
 
     try{
 

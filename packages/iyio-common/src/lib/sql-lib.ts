@@ -85,3 +85,51 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,altString=false)
 
 
 export const escapeSqlValue=(value:any,wrapArray=true):string=>_escapeSqlValue(value,wrapArray,0);
+
+export const splitSqlStatements=(statements:string):string[]=>{
+    const split:string[]=[];
+    let inside:'"'|"'"|'-'|null=null;
+    let s=0;
+    for(let i=0;i<statements.length;i++){
+        const char=statements[i] as string;
+
+        if(inside){
+            if(inside==='-'){
+                if(char==='\n'){
+                    inside=null;
+                    s=i+1;
+                }
+            }else if(char===inside){
+                if(statements[i+1]===inside){
+                    i++;
+                }else{
+                    inside=null;
+                }
+            }
+        }else if(char==='"'){
+            inside='"';
+        }else if(char==="'"){
+            inside="'";
+        }else if(char==='-' && statements[i+1]==='-'){
+            const v=statements.substring(s,i).trim();
+            if(v){
+                split.push(v);
+            }
+            inside='-';
+            i++
+        }else if(char===';'){
+            const v=statements.substring(s,i).trim();
+            if(v){
+                split.push(v);
+            }
+            s=i+1;
+        }
+    }
+    if(s!==statements.length-1 && inside!=='-'){
+        const v=statements.substring(s).trim();
+        if(v){
+            split.push(v);
+        }
+    }
+    return split;
+}
