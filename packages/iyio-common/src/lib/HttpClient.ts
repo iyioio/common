@@ -135,33 +135,32 @@ export class HttpClient
 
         const jwt=noAuth?undefined:this.options.jwtProviders?.getFirst(null,p=>p(uri));
 
-        const baseRequest:BaseHttpRequest={
-            uri,
-            method,
-            body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
-            headers:deleteUndefined<any>({
-                "Authorization":jwt?'Bearer '+jwt:undefined,
-                "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
-            })
-        }
-
-        if(!noAuth && getUriProtocol(uri)){
-            const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
-            if(signer){
-                await signer.sign(baseRequest);
-            }
-        }
-
-        const fetcher=this.options.fetchers?.getFirst(null,p=>p.canFetch(baseRequest)?p:undefined);
-        if(!fetcher){
-            throw new Error('No HttpFetcherType found');
-        }
-
         const maxTries=this.options.maxRetries??1;
 
         let response:Response|undefined;
 
         for(let t=0;t<maxTries;t++){
+            const baseRequest:BaseHttpRequest={
+                uri,
+                method,
+                body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
+                headers:deleteUndefined<any>({
+                    "Authorization":jwt?'Bearer '+jwt:undefined,
+                    "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
+                })
+            }
+
+            if(!noAuth && getUriProtocol(uri)){
+                const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
+                if(signer){
+                    await signer.sign(baseRequest);
+                }
+            }
+
+            const fetcher=this.options.fetchers?.getFirst(null,p=>p.canFetch(baseRequest)?p:undefined);
+            if(!fetcher){
+                throw new Error('No HttpFetcherType found');
+            }
             try{
                 response=await fetcher.fetchAsync(baseRequest);
 
