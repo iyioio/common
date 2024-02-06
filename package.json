@@ -29,6 +29,7 @@
         "constructs": "^10.1.308",
         "core-js": "^3.6.5",
         "date-fns": "^2.29.3",
+        "date-fns-tz": "^2.0.0",
         "highlight.js": "^11.7.0",
         "json5": "^2.2.3",
         "next": "13.1.1",
