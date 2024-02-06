@@ -23,6 +23,7 @@ export interface DataTableDescription<T=any>
     updateVersionProp?:string;
     scheme?:ZodSchema;
     tableType?:string;
+    colInfos?:Record<string,DataTableColInfo>;
 }
 
 export interface DataTableIndex
@@ -50,4 +51,11 @@ export interface DataTableIndex
      * used with no-sql databases that replicate data when building indexes.
      */
     includeAll?:boolean;
+}
+
+export interface DataTableColInfo
+{
+    name:string;
+    sqlType?:string;
+    sqlLength?:number;
 }

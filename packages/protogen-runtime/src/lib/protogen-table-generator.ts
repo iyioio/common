@@ -1,4 +1,4 @@
-import { DataTableDescription, DataTableIndex, HashMap, joinPaths } from "@iyio/common";
+import { DataTableColInfo, DataTableDescription, DataTableIndex, HashMap, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoContext, ProtoNode, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoPrependTsImports } from "@iyio/protogen";
 import { TableNameParamNamePair } from "./plugins/tableCdkTemplate";
 import { SharedTsPluginConfig, getTsSchemeName } from "./sharedTsConfig";
@@ -134,6 +134,27 @@ export const generateProtoTable=async ({
         addImport(name);
         out.push(`export const ${name}Table:DataTableDescription<${name}>={`);
         out.push(`${tab}name:${JSON.stringify(name)},`);
+
+
+
+        let hasInfo=false;
+        const colInfos:Record<string,DataTableColInfo>={};
+        for(const prop of props){
+            const sqlType=prop.children?.['$sqlType']?.value?.replace(/\W/g,'');
+            const sqlLen=prop.children?.['$sqlLength']?.value;
+            if(sqlType){
+                hasInfo=true;
+                colInfos[prop.name]={
+                    name:prop.name,
+                    sqlType,
+                    sqlLength:safeParseNumberOrUndefined(sqlLen),
+                }
+            }
+        }
+
+        if(hasInfo){
+            out.push(`${tab}colInfos:${JSON.stringify(colInfos)},`);
+        }
 
         const config=node.children?.['$table']?.children??{};
         let configValue:string|undefined;

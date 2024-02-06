@@ -1,5 +1,5 @@
 import { ZodObject, ZodRawShape, ZodSchema, ZodType } from "zod";
-import { DataTableDescription } from "./data-table";
+import { DataTableColInfo, DataTableDescription } from "./data-table";
 
 export const getDataTableShape=(table:DataTableDescription):ZodRawShape|undefined=>{
 
@@ -16,6 +16,13 @@ export const getDataTableId=(table:DataTableDescription|string):string=>{
         return table;
     }
     return table.tableId??table.getTableId?.()??table.tableIdParam?.()??table.name;
+}
+
+export const getDataTableColInfo=(table:DataTableDescription|string|null|undefined,colName:string):DataTableColInfo|undefined=>{
+    if(!table || (typeof table === 'string')){
+        return undefined;
+    }
+    return table.colInfos?.[colName];
 }
 
 export const getDataTableScheme=<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>):ZodSchema<T>|undefined=>{

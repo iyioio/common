@@ -1,3 +1,5 @@
+import { DataTableColInfo } from "./data-table";
+import { safeParseNumber } from "./numbers";
 
 export const escapeSqlString=(value:string)=>"'"+value.replace(/'/g,"''")+"'";
 export const escapeSqlName=(value:string)=>'"'+value.replace(/"/g,'""')+'"';
@@ -27,6 +29,13 @@ export const sqlName=(name:string):EscapedSqlValue=>{
     }
 }
 
+export const rawSqlValue=(value:string):EscapedSqlValue=>{
+    return {
+        value,
+        [isEscaped]:true,
+    }
+}
+
 export const sql=(strings:TemplateStringsArray,...values:any[])=>{
 
     if(strings.length===1){
@@ -53,7 +62,7 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
     return strAry.join('').trim();
 }
 
-const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,altString=false):string=>{
+const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTableColInfo,altString=false):string=>{
     if(depth>20){
         throw new Error('Max escapeSqlValue depth reached');
     }
@@ -75,7 +84,22 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,altString=false)
             }else if(value instanceof Date){
                 return `'${value.toISOString()}'`;
             }else if(Array.isArray(value)){
-                return (wrapArray?'\'{':'')+value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,true)).join(',')+(wrapArray?'}\'':'');
+                if(colInfo?.sqlType==='vector'){
+                    let changed=false;
+                    for(let i=0;i<value.length;i++){
+                        const v=value[i];
+                        if((typeof v !== 'number') && (typeof v !== 'bigint')){
+                            if(!changed){
+                                value=[...value];
+                                changed=true;
+                            }
+                            value[i]=safeParseNumber(v,0);
+                        }
+
+                    }
+                    return `'${JSON.stringify(value)}'`
+                }
+                return (wrapArray?'\'{':'')+value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,colInfo,true)).join(',')+(wrapArray?'}\'':'');
             }else{
                 return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
             }
@@ -84,7 +108,7 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,altString=false)
 }
 
 
-export const escapeSqlValue=(value:any,wrapArray=true):string=>_escapeSqlValue(value,wrapArray,0);
+export const escapeSqlValue=(value:any,colInfo?:DataTableColInfo,wrapArray=true):string=>_escapeSqlValue(value,wrapArray,0,colInfo);
 
 export const splitSqlStatements=(statements:string):string[]=>{
     const split:string[]=[];

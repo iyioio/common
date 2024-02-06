@@ -1,7 +1,7 @@
 import { ZodSchema } from "zod";
 import { NoId } from "./common-types";
 import { DataTableDescription } from "./data-table";
-import { getDataTableId, getDataTableScheme } from "./data-table-lib";
+import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib";
 import { deepCompare, objGetFirstValue } from "./object";
 import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
 import { ISqlClient, SqlResult } from "./sql-types";
@@ -37,6 +37,7 @@ export abstract class SqlBaseClient implements ISqlClient
     public async updateAsync<T>(table:string|DataTableDescription<T>, item:T, primaryKey:keyof T, onlyChanged?:T):Promise<boolean|null>
     {
 
+        const ot=table;
         table=getDataTableId(table);
 
         const changes:string[]=[];
@@ -48,7 +49,7 @@ export abstract class SqlBaseClient implements ISqlClient
                 continue;
             }
 
-            changes.push(`${escapeSqlName(e)}=${escapeSqlValue(item[e])}`);
+            changes.push(`${escapeSqlName(e)}=${escapeSqlValue(item[e],getDataTableColInfo(ot,e))}`);
         }
 
         if(!changes.length){
@@ -72,7 +73,7 @@ export abstract class SqlBaseClient implements ISqlClient
     {
 
         table=getDataTableId(table);
-        await this._insertAsync(table,values,false);
+        await this._insertAsync(table,values,false,(typeof table !== 'string'?table:undefined));
     }
 
 
@@ -103,7 +104,7 @@ export abstract class SqlBaseClient implements ISqlClient
 
         const tableName=getDataTableId(table);
 
-        const r=await this._insertAsync(tableName,values,true);
+        const r=await this._insertAsync(tableName,values,true,(typeof table !== 'string'?table:undefined));
 
 
 
@@ -134,7 +135,7 @@ export abstract class SqlBaseClient implements ISqlClient
      * Used by the insertAsync and insertReturnAsync functions.
      * @param returnInserted If true the query will be executed with "RETURNING *"
      */
-    private async _insertAsync<T>(table:string,values:NoId<T>|NoId<T>[],returnInserted:boolean):Promise<SqlResult>
+    private async _insertAsync<T>(table:string,values:NoId<T>|NoId<T>[],returnInserted:boolean,dataTable?:DataTableDescription):Promise<SqlResult>
     {
         if(!Array.isArray(values)){
             values=[values];
@@ -162,7 +163,7 @@ export abstract class SqlBaseClient implements ISqlClient
         for(const v of values){
             let row='(';
             for(const k of keys){
-                row+=(row==='('?'':',')+escapeSqlValue((v as any)[k])
+                row+=(row==='('?'':',')+escapeSqlValue((v as any)[k],getDataTableColInfo(dataTable,k))
             }
             rows.push(row+')');
         }

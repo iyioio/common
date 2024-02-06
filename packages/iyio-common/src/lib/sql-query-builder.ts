@@ -190,7 +190,7 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
     }else if(value.col){
         appendCol(ctx,value.col);
     }else if(value.value!==undefined){
-        ctx.sql.push(escapeSqlValue(value.value,false));
+        ctx.sql.push(escapeSqlValue(value.value,undefined,false));
     }else if(value.subQuery){
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,value.subQuery.query,value.subQuery.condition??null);
