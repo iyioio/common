@@ -175,6 +175,7 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
      */
     public async wakeDatabaseAsync(timeoutMs:number|null=minuteMs*5,delayMs=100):Promise<void>{
         const start=Date.now();
+        // eslint-disable-next-line no-constant-condition
         while(true){
             try{
                 await this.execAsync(sql`select ${'wake-up'} as ${{name:'action'}}`,true);
@@ -203,7 +204,9 @@ export const convertFieldValue=(field:Field,colMetadataTypeName?:string):any=>{
 
             case "json":
             case "jsonb":
+            case "vector":
                 return JSON.parse(field.stringValue);
+
 
             default:
                 return field.stringValue;
