@@ -64,7 +64,7 @@ export class Api extends Construct implements IApiRouter
         vpc,
         loadBalancerProps,
         cors,
-        port=443,
+        port=isPublic?443:80,
         disableHttpRedirect,
         listenerProps,
         routes=[],
@@ -114,7 +114,7 @@ export class Api extends Construct implements IApiRouter
         });
         this.loadBalancer=lb;
 
-        if(!disableHttpRedirect){
+        if(!disableHttpRedirect && isPublic){
             lb.addListener(`${this.baseName}HttpToHttps`,{
                 protocol:elbv2.ApplicationProtocol.HTTP,
                 port:80,
@@ -129,7 +129,8 @@ export class Api extends Construct implements IApiRouter
 
         const listener=lb.addListener(`${this.baseName}Listener`,{
             port,
-            open:isPublic,
+            open:true,
+            protocol:isPublic?elbv2.ApplicationProtocol.HTTPS:elbv2.ApplicationProtocol.HTTP,
             ...listenerProps,
         })
         this.listener=listener;
@@ -157,7 +158,7 @@ export class Api extends Construct implements IApiRouter
         }
         this.domainNames=domainNames?[...domainNames,this.defaultDomainName]:[this.defaultDomainName];
         this.domainName=domainName;
-        this.url=`https://${domainName}/`;
+        this.url=`http${isPublic?'s':''}://${domainName}/`;
 
 
         if(cors){

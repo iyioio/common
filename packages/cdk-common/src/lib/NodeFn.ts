@@ -1,5 +1,6 @@
 import { isRooted, joinPaths } from "@iyio/common";
 import * as cdk from "aws-cdk-lib";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
@@ -7,8 +8,9 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from "constructs";
 import { existsSync } from "fs";
 import * as Path from "path";
+import { getDefaultVpc } from "./cdk-lib";
 
-export type NodeFnProps=Partial<lambdaNodeJs.NodejsFunctionProps> & AdditionalFuncOptions;
+export type NodeFnProps=Partial<Omit<lambdaNodeJs.NodejsFunctionProps,'vpc'>> & AdditionalFuncOptions;
 
 interface AdditionalFuncOptions
 {
@@ -35,6 +37,8 @@ interface AdditionalFuncOptions
      * Timeout in milliseconds. If timeout is defined this value will be overrode.
      */
     timeoutMs?:number;
+
+    vpc?:ec2.IVpc|boolean;
 }
 
 export interface CreateNodeFnResult
@@ -58,6 +62,7 @@ export class NodeFn extends Construct{
         minify=true,
         urlCors,
         timeoutMs,
+        vpc,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
         bundling={minify,sourceMap:true,target:'node18'},
@@ -72,6 +77,11 @@ export class NodeFn extends Construct{
 
         super(scope,name);
 
+        let role:iam.Role|undefined;
+        if(vpc===true){
+            vpc=getDefaultVpc(this);
+        }
+
         if(isRooted(entry)){
             entry=joinPaths(process.cwd(),entry??'');
         }
@@ -84,6 +94,8 @@ export class NodeFn extends Construct{
             memorySize,
             timeout,
             runtime,
+            vpc:vpc||undefined,
+            role,
             ...props,
 
         }

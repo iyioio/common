@@ -195,8 +195,10 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     handlerFileName:sourcePath?(libStyle==='nx'?joinPaths('../..',sourcePath):sourcePath):joinPaths(cdkRelPath,filepath),
                     handler:'handler',
                     timeoutMs:timeoutValue===undefined?serverFnDefaultTimeoutMs:timeoutValue*1000,
+                    vpc:(node.children?.['vpc'])?true:undefined,
+                    minify:node.children?.['minify']?.value==='false'?false:undefined
                 },
-                arnParam:paramName
+                arnParam:paramName,
             };
             infos.push(fnInfo);
 
