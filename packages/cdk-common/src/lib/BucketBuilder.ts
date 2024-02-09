@@ -62,7 +62,8 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
-            buckets:namedBuckets
+            buckets:namedBuckets,
+            resources,
         }=getDefaultManagedProps(),
     }:BucketBuilderProps)
     {
@@ -170,6 +171,8 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 info,
                 bucket,
             })
+
+            resources.push({name:info.name,bucket});
 
         }
 

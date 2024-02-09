@@ -7,7 +7,7 @@ import { BridgeEvent } from './BridgeEvent';
 import { ManagedProps } from './ManagedProps';
 import { ParamOutput } from "./ParamOutput";
 import { setDefaultVpc } from './cdk-lib';
-import { ApiRouteTarget, IApiRouter, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, SiteContentSource } from './cdk-types';
+import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from './cdk-types';
 import { setDefaultClusterProps } from './cluster-lib';
 
 export interface ManagedStackProps extends cdk.StackProps
@@ -36,11 +36,11 @@ export class ManagedStack extends cdk.Stack
 
     protected readonly eventTargets:IEventTarget[]=[];
 
-    protected readonly apiRouters:IApiRouter[]=[];
-
     protected readonly apiRouteTargets:ApiRouteTarget[]=[];
 
     protected readonly userPools:IHasUserPool[]=[];
+
+    protected readonly resources:NamedResource[]=[];
 
     protected readonly beforeOutputs:((managed:ManagedProps)=>void)[]=[];
 
@@ -79,9 +79,9 @@ export class ManagedStack extends cdk.Stack
             queues:this.queues,
             events:this.events,
             eventTargets:this.eventTargets,
-            apiRouters:this.apiRouters,
             apiRouteTargets:this.apiRouteTargets,
             userPools:this.userPools,
+            resources:this.resources,
             beforeOutputs:this.beforeOutputs,
         };
     }
@@ -97,9 +97,10 @@ export class ManagedStack extends cdk.Stack
             }
         }
 
-        // api routing
-        for(const router of this.apiRouters){
-            router.addMatchingTargets(this.apiRouteTargets);
+        for(const res of this.resources){
+            if(res.api){
+                res.api.addMatchingTargets(this.apiRouteTargets);
+            }
         }
 
         for(const b of this.beforeOutputs){

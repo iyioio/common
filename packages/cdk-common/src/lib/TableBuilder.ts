@@ -37,6 +37,7 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
+            resources
         }=getDefaultManagedProps(),
     }:TableBuilderProps)
     {
@@ -67,6 +68,8 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
                 removalPolicy:cdk.RemovalPolicy.DESTROY,
                 timeToLiveAttribute:tbl.ttlProp,
             });
+
+            resources.push({name:tbl.name,table});
 
             if(info.arnParam && params){
                 params.setParam(info.arnParam,table.tableArn);

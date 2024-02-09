@@ -41,8 +41,9 @@ export class BridgeEvent extends Construct
             }
         }
 
-        if(managed?.events){
+        if(managed){
             managed.events.push(this);
+            managed.resources.push({name,event:this});
         }
     }
 

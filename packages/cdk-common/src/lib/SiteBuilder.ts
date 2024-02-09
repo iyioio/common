@@ -37,7 +37,8 @@ export class SiteBuilder extends Construct
         const {
             params,
             siteContentSources,
-            fns
+            fns,
+            resources,
         }=managed;
 
         const results:SiteResult[]=[];
@@ -72,6 +73,8 @@ export class SiteBuilder extends Construct
                 info,
                 staticSite,
             })
+
+            resources.push({name:info.name,staticWebsite:staticSite})
 
         }
 

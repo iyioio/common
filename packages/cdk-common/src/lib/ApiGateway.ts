@@ -65,7 +65,7 @@ export class ApiGateway extends Construct implements IApiRouter
         this.managed=managed;
 
         const {
-            apiRouters,
+            resources,
             params,
         }=managed;
 
@@ -145,8 +145,6 @@ export class ApiGateway extends Construct implements IApiRouter
             }
         }
 
-        apiRouters.push(this);
-
         if(params){
             if(urlParam){
                 params.setParam(urlParam,this.url);
@@ -158,6 +156,8 @@ export class ApiGateway extends Construct implements IApiRouter
                 params.setParam(defaultDomainParam,this.defaultDomainName);
             }
         }
+
+        resources.push({name,api:this});
 
     }
 

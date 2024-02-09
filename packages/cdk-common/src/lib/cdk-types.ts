@@ -2,16 +2,23 @@ import { HttpMethod, ParamTypeDef } from "@iyio/common";
 import * as ag from "aws-cdk-lib/aws-apigateway";
 import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as db from "aws-cdk-lib/aws-dynamodb";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
+import type { BridgeEvent } from "./BridgeEvent";
 import { ParamOutput } from "./ParamOutput";
+import type { SqlCluster } from "./SqlCluster";
+import type { StaticWebSite } from "./StaticWebSite";
+import type { UserPoolBuilder } from "./UserPoolBuilder";
 
 export interface IParamOutputConsumer
 {
@@ -175,6 +182,22 @@ export interface NamedQueue
 {
     name:string;
     queue:sqs.Queue;
+}
+
+export interface NamedResource
+{
+    name:string;
+    queue?:sqs.Queue;
+    fn?:lambda.Function;
+    bucket?:s3.Bucket;
+    event?:BridgeEvent;
+    service?:ecs.FargateService;
+    table?:db.Table;
+    sqlCluster?:SqlCluster;
+    api?:IApiRouter;
+    secret?:secrets.Secret;
+    staticWebsite?:StaticWebSite;
+    userPoolBuilder?:UserPoolBuilder;
 }
 
 export interface IEventTarget

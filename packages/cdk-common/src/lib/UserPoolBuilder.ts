@@ -46,6 +46,7 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             accessManager,
             fns,
             userPools,
+            resources,
         }=getDefaultManagedProps(),
         name,
         grantAccess,
@@ -291,6 +292,10 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
                     }
                 }
             })
+        }
+
+        if(name){
+            resources.push({name,userPoolBuilder:this});
         }
 
         accessManager?.addGroup(this);

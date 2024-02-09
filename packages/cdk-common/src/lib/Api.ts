@@ -100,8 +100,8 @@ export class Api extends Construct implements IApiRouter
         this.managed=managed;
 
         const {
-            apiRouters,
             params,
+            resources,
         }=managed;
 
         this.routes=routes;
@@ -185,8 +185,6 @@ export class Api extends Construct implements IApiRouter
             }
         }
 
-        apiRouters.push(this);
-
         if(params){
             if(urlParam){
                 params.setParam(urlParam,this.url);
@@ -199,6 +197,7 @@ export class Api extends Construct implements IApiRouter
             }
         }
 
+        resources.push({name,api:this});
     }
 
     public addApiTarget(route:ApiRoute,target:ApiRouteTarget){

@@ -150,6 +150,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
             params,
             accessManager,
             apiRouteTargets,
+            resources,
         }=getDefaultManagedProps()
     }:ContainerProps)
     {
@@ -298,6 +299,8 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
             port:port,
             target:service
         }})
+
+        resources.push({name,service});
 
         accessManager?.addGroup(this);
 

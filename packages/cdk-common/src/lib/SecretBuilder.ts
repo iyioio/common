@@ -34,6 +34,7 @@ export class SecretBuilder extends Construct implements IAccessGrantGroup
         managed:{
             params,
             accessManager,
+            resources,
         }=getDefaultManagedProps(),
     }:SecretBuilderProps)
     {
@@ -46,6 +47,8 @@ export class SecretBuilder extends Construct implements IAccessGrantGroup
         for(const info of secretsAry){
 
             const secret=new secrets.Secret(this,info.name);
+
+            resources.push({name:info.name,secret})
 
             if(info.arnParam){
                 params?.setParam(info.arnParam,secret.secretArn);

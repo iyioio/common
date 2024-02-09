@@ -53,6 +53,7 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
         managed:{
             params,
             accessManager,
+            resources,
         }=getDefaultManagedProps()
     }:SqlClusterOptions){
 
@@ -163,6 +164,8 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
                 }
             }
         })
+
+        resources.push({name:id,sqlCluster:this})
 
         if(accessManager){
             accessManager.addGrantGroup(this);

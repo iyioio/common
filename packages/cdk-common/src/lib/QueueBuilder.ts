@@ -125,13 +125,13 @@ export class QueueBuilder extends Construct implements IAccessGrantGroup
             if(targets?.length){
                 beforeOutputs.push(({fns})=>{
                     for(const target of targets){
-                        const t=fns.find(f=>f.name===target);
-                        if(t){
-                            queue.grantConsumeMessages(t.fn);
-                            deadLetterQueue?.grantConsumeMessages(t.fn);
+                        const fnTarget=fns.find(f=>f.name===target);
+                        if(fnTarget){
+                            queue.grantConsumeMessages(fnTarget.fn);
+                            deadLetterQueue?.grantConsumeMessages(fnTarget.fn);
 
                             const es=new lambdaEventSources.SqsEventSource(queue,{batchSize});
-                            t.fn.addEventSource(es);
+                            fnTarget.fn.addEventSource(es);
                         }else{
                             throw new Error(`Queue target (${target}) not found`);
                         }
