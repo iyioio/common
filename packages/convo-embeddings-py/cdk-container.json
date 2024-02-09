@@ -1,0 +1,7 @@
+{
+    "paths":[
+        {"path":"packages/ai-models/all-mpnet-base-v2"},
+        {"path":"packages/iyio-common-py"},
+        {"path":"packages/convo-embeddings-py"}
+    ]
+}

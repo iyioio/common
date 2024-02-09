@@ -174,11 +174,13 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         task.env
         this.task=task;
 
+        const containerOptions=getCdkContainerOptions(dir,file)
+
         const dockerAsset=new ecsAssets.DockerImageAsset(this,'DockerImage',{
             directory:dir,
             file,
             platform:cpuArchitecture==='x86_64'?ecra.Platform.LINUX_AMD64:ecra.Platform.LINUX_ARM64,
-            exclude:getDockerExcludePaths(dir,file),
+            exclude:containerOptions?.ignorePaths,
             ignoreMode:IgnoreMode.GIT,
             assetName:name
         })
@@ -307,27 +309,86 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
     }
 }
 
-const noIgnore=['.gitignore','.dockerignore','packages']
-const getDockerExcludePaths=(dir:string,file:string|undefined):string[]|undefined=>{
+export interface CdkContainerPath
+{
+    stage?:string;
+    path:string;
+}
+
+export interface CdkContainerOptions
+{
+    paths?:CdkContainerPath[];
+    ignorePaths?:string[]
+}
+
+const defaultIgnore=['.DS_store','__pycache__','node_modules','cdk.out'];
+const noIgnore=['.gitignore','.dockerignore',...defaultIgnore.map(i=>i.toLowerCase())]
+export const getCdkContainerOptions=(dir:string,file:string|undefined):CdkContainerOptions|undefined=>{
 
 
     if(file){
         dir=getDirectoryName(joinPaths(dir,file));
     }
 
-    const inc=joinPaths(dir,'cdk-include-packages.json');
-    if(!pathExistsSync(inc)){
+    const containerPath=joinPaths(dir,'cdk-container.json');
+    if(!pathExistsSync(containerPath)){
         return undefined;
     }
 
-    const includePackages=JSON.parse(readFileSync(inc).toString()) as string[];
+    const container:CdkContainerOptions=JSON.parse(readFileSync(containerPath).toString());
 
-    const paths:string[]=[];
+    if(container.paths && !container.ignorePaths){
+        const ignore=[...defaultIgnore];
+        const paths:string[]=[];
+        const pathMap:Record<string,CdkContainerPath>={}
+        for(const p of container.paths){
+            let key=p.path;
+            if(!key.startsWith('/')){
+                key='/'+key;
+            }
+            if(!key.endsWith('/')){
+                key+='/';
+            }
+            key=key.toLowerCase();
+            pathMap[key]=p;
+            paths.push(key);
+        }
 
-    paths.push(...readdirSync('../..').filter(p=>!noIgnore.includes(p)).map(p=>'/'+p));
-    paths.push(...readdirSync('..').filter(p=>!includePackages.includes(p)).map(p=>`/packages/${p}`));
+        scanContainerPaths(container,'../..','/',pathMap,paths,ignore);
+        container.ignorePaths=ignore;
+    }
+
+    return container;
+
+}
+
+const scanContainerPaths=(container:CdkContainerOptions,baseDir:string,dir:string,pathMap:Record<string,CdkContainerPath>,paths:string[],ignore:string[])=>{
+
+    const fullDir=joinPaths(baseDir,dir);
+    const items=readdirSync(fullDir);
+    for(const p of items){
+        if(noIgnore.includes(p.toLowerCase())){
+            continue;
+        }
+        const path=joinPaths(dir,p);
+        const lPath=path.toLowerCase()+'/';
+        let found=false;
+        for(let i=0;i<paths.length;i++){
+            const includePath=paths[i] as string;
+            if(lPath.startsWith(includePath)){
+                found=true;
+                break;
+            }else if(includePath.startsWith(lPath)){
+                scanContainerPaths(container,baseDir,path,pathMap,paths,ignore);
+                found=true;
+                break;
+            }
+
+        }
+        if(!found){
+            ignore.push(path);
+        }
 
 
-    return paths.length?paths:undefined;
-
+    }
 }
