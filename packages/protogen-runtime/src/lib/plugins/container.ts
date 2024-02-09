@@ -1,5 +1,5 @@
 import { joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
-import { ProtoPipelineConfigurablePlugin, protoAddContextParam, protoChildrenToStringRecordOrUndefined, protoGetParamName } from "@iyio/protogen";
+import { ProtoPipelineConfigurablePlugin, protoAddContextParam, protoChildrenToStringRecordOrUndefined, protoGetParamName, protoNodeChildrenToAccessRequests, protoNodeChildrenToGrantAccessRequests } from "@iyio/protogen";
 import { z } from "zod";
 import { ContainerInfoTemplate, containerCdkTemplate } from "./containerCdkTemplate";
 
@@ -52,11 +52,12 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                 content:containerCdkTemplate(containerCdkConstructClassName,supported.map<ContainerInfoTemplate>(q=>{
                     const c=q.children??{};
                     const pkg=c['package']?.value;
-                    const path=c['path']?.value??joinPaths('../../packages',pkg??q.name);
+                    const dir=c['fullDir']?.value??(c['dir']?.value?joinPaths('../..',c['dir']?.value):pkg?joinPaths('../../packages',pkg):'../..');
                     const info:ContainerInfoTemplate={
                         grantAccess:true,
                         name:q.name,
-                        path,
+                        dir,
+                        file:c['file']?.value,
                         serviceArnParam:protoGetParamName(q.name+'ServiceArn'),
                         taskArnParam:protoGetParamName(q.name+'TaskArn'),
                         vCpuCount:safeParseNumberOrUndefined(c['vCpuCount']?.value),
@@ -77,6 +78,19 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                         targetCpuUsage:safeParseNumberOrUndefined(c['targetCpuUsage']?.value),
                         scaleUpSeconds:safeParseNumberOrUndefined(c['scaleUpSeconds']?.value),
                         scaleDownSeconds:safeParseNumberOrUndefined(c['scaleDownSeconds']?.value),
+                    }
+                    const accessProp=c['$access'];
+                    if(accessProp?.children){
+                        info.accessRequests=protoNodeChildrenToAccessRequests(accessProp);
+                    }
+
+                    const grantAccessProp=c['$grant-access'];
+                    if(grantAccessProp?.children){
+                        info.grantAccessRequests=protoNodeChildrenToGrantAccessRequests(q.name,grantAccessProp);
+                    }
+
+                    if(c['$no-passive-access']){
+                        info.noPassiveAccess=true;
                     }
                     return info;
                 }),importMap)

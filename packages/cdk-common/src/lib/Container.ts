@@ -1,10 +1,13 @@
-import { ParamTypeDef } from '@iyio/common';
-import { Duration } from 'aws-cdk-lib';
+import { ParamTypeDef, getDirectoryName, joinPaths } from '@iyio/common';
+import { pathExistsSync } from '@iyio/node-common';
+import { Duration, IgnoreMode } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecra from 'aws-cdk-lib/aws-ecr-assets';
+import * as ecsAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from "constructs";
+import { readFileSync, readdirSync } from 'fs';
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { getDefaultVpc } from './cdk-lib';
 import { AccessGranter, AccessRequest, AccessRequestDescription, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget } from './cdk-types';
@@ -12,7 +15,11 @@ import { requireDefaultCluster } from './cluster-lib';
 
 export interface ContainerProps
 {
-    path:string;
+    dir:string;
+    /**
+     * Path to Dockerfile relative to dir
+     */
+    file?:string;
     managed?:ManagedProps;
     vCpuCount?:number;
     memoryMb?:number;
@@ -110,7 +117,8 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
     public passiveTargets:PassiveAccessTarget[]=[];
 
     public constructor(scope:Construct, name:string, {
-        path,
+        dir,
+        file,
         vCpuCount=256,
         memoryMb=2048,
         cpuArchitecture='x86_64',
@@ -165,11 +173,17 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         task.env
         this.task=task;
 
+        const dockerAsset=new ecsAssets.DockerImageAsset(this,'DockerImage',{
+            directory:dir,
+            file,
+            platform:cpuArchitecture==='x86_64'?ecra.Platform.LINUX_AMD64:ecra.Platform.LINUX_ARM64,
+            exclude:getDockerExcludePaths(dir,file),
+            ignoreMode:IgnoreMode.GIT,
+            assetName:name
+        })
 
         const container=task.addContainer(`Container`,{
-            image:ecs.ContainerImage.fromAsset(path,{
-                platform:cpuArchitecture==='x86_64'?ecra.Platform.LINUX_AMD64:ecra.Platform.LINUX_ARM64,
-            }),
+            image: ecs.ContainerImage.fromDockerImageAsset(dockerAsset),
             environment:env,
             logging:new ecs.AwsLogDriver({
                 streamPrefix:`${name}FargateTask`,
@@ -288,4 +302,29 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         accessManager?.addGroup(this);
 
     }
+}
+
+const noIgnore=['.gitignore','.dockerignore','packages']
+const getDockerExcludePaths=(dir:string,file:string|undefined):string[]|undefined=>{
+
+
+    if(file){
+        dir=getDirectoryName(joinPaths(dir,file));
+    }
+
+    const inc=joinPaths(dir,'cdk-include-packages.json');
+    if(!pathExistsSync(inc)){
+        return undefined;
+    }
+
+    const includePackages=JSON.parse(readFileSync(inc).toString()) as string[];
+
+    const paths:string[]=[];
+
+    paths.push(...readdirSync('../..').filter(p=>!noIgnore.includes(p)).map(p=>'/'+p));
+    paths.push(...readdirSync('..').filter(p=>!includePackages.includes(p)).map(p=>`/packages/${p}`));
+
+
+    return paths.length?paths:undefined;
+
 }

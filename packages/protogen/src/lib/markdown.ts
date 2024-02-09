@@ -96,8 +96,11 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                 const parent=nodeStack[depth-1];
 
                 const name=match[lineRegName];
-                const value=match[lineRegRest];
+                let value=match[lineRegRest];
                 const {types,tags}=parseTypesAndFlags(rootNodes[rootNodes.length-1]??null,value);
+                if(value.startsWith('!!')){
+                    value=value.substring(2).trim();
+                }
                 const node:ProtoNode={
                     name,
                     address:name,
@@ -205,7 +208,7 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
     tags?:string[],
 }=>{
 
-    const matches=value.matchAll(/([@>#~*?!= \t]+)?(\(?)[ \t]*([\w.\-[\]]+)(\)?)/g);
+    const matches=value.startsWith('!!')?[]:value.matchAll(/([@>#~*?!= \t]+)?(\(?)[ \t]*([\w.\-[\]]+)(\)?)/g);
     const flagsI=1;
     const tagOpenI=2;
     const nameI=3;
