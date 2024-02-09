@@ -1,13 +1,13 @@
 {
-    "name": "convo-embeddings",
+    "name": "convo-embeddings-py",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "packages/convo-embeddings/src",
+    "sourceRoot": "packages/convo-embeddings-py/src",
     "projectType": "library",
     "targets": {
         "build-image": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "packages/convo-embeddings/build-image.sh"
+                "command": "packages/convo-embeddings-py/build-image.sh"
             }
         }
 

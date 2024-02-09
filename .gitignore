@@ -53,3 +53,6 @@ Thumbs.db
 
 # Python
 __pycache__
+
+/packages/ai-models
+

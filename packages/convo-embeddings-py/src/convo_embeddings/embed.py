@@ -1,7 +1,6 @@
 from sentence_transformers import SentenceTransformer
-import time
 
-modelPath='./models/all-mpnet-base-v2'
+modelPath='../ai-models/all-mpnet-base-v2'
 
 model = SentenceTransformer(modelPath)
 
