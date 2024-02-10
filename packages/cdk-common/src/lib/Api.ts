@@ -220,11 +220,23 @@ export class Api extends Construct implements IApiRouter
             throw new Error('Unable to create load balancer from ApiRouteTarget')
         }
 
+        const healthCheck=target.elbTarget?.getHealthCheck?.();
+
         const targetGroup=new elbv2.ApplicationTargetGroup(this,`${this.baseName}Group${route.path}`,{
             vpc,
             port,
             protocol,
             targets:[lbTarget],
+            healthCheck:(
+                healthCheck===undefined?
+                    undefined
+                :healthCheck===false?
+                    {
+                        enabled:false,
+                    }
+                :
+                    healthCheck
+            )
         })
 
         const conditions:elbv2.ListenerCondition[]=[

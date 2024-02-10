@@ -273,4 +273,5 @@ export interface ApiLoadBalancerTarget
     target:elbv2.IApplicationLoadBalancerTarget;
     port?:number;
     vpc?:ec2.IVpc;
+    getHealthCheck?:()=>elbv2.HealthCheck|false;
 }

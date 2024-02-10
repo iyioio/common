@@ -1,10 +1,19 @@
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from typing import Any, Callable
 import urllib.parse
 
+@dataclass
+class RestHandlerOptions:
+    disableHealthCheckSupport:bool=False
+    heathCheckPath:str='/health-check'
 
-def create_rest_handler(request_handler:Callable[[str,Any,str],Any]):
+def create_rest_handler(
+    request_handler:Callable[[str,Any,str],Any],
+    *,
+    options:RestHandlerOptions=RestHandlerOptions()
+):
     class RestHandler(BaseHTTPRequestHandler):
 
         def send_json_result(self,result):
@@ -36,15 +45,23 @@ def create_rest_handler(request_handler:Callable[[str,Any,str],Any]):
 
         def handle_no_body_request(self,method):
 
-            print(method+" "+self.path)
 
             parsed=urllib.parse.urlparse(self.path)
             path=parsed.path
             query=urllib.parse.parse_qs(parsed.query)
             for key in query:
                 query[key]=query[key][0]
-            print(query)
 
+            if  method=="GET" \
+                and not options.disableHealthCheckSupport \
+                and path.endswith(options.heathCheckPath):
+
+                self.send_json_result({
+                    "healthy":True
+                })
+                return
+
+            print(method+" "+self.path)
 
             result = request_handler(path,query,"GET")
 

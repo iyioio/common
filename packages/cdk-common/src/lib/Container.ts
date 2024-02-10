@@ -32,9 +32,10 @@ export interface ContainerProps
     enableExecuteCommand?:boolean;
 
     /**
-     * Http path to use for health checks. If not supplied health checks are disabled
+     * Http path to use for health checks by application load balancers
+     * @default '/health-check'
      */
-    healthCheckPath?:string;
+    healthCheckPath?:string|null;
 
     healthCheckCmd?:string;
 
@@ -42,6 +43,11 @@ export interface ContainerProps
      * @default 30
      */
     healthCheckIntervalSeconds?:number;
+
+    /**
+     * @default 2
+     */
+    healthyThresholdCount?:number;
 
 
     /**
@@ -140,12 +146,13 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         scaleDownSeconds=60,
         scaleUpSeconds=30,
         env,
-        healthCheckPath,
+        healthCheckPath='/health-check',
         healthCheckCmd,
         healthCheckIntervalSeconds=30,
+        healthyThresholdCount=2,
         healthCheckRetries=5,
-        healthCheckTimeoutSeconds=30,
-        healthCheckStartSeconds=30,
+        healthCheckTimeoutSeconds=15,
+        healthCheckStartSeconds=0,
         port=8080,
         serviceArnParam,
         taskArnParam,
@@ -204,8 +211,6 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
             healthCheck:{
                 command:healthCheckCmd?
                     ["CMD-SHELL",healthCheckCmd]
-                :healthCheckPath?
-                    ["CMD-SHELL",`curl -f http://localhost:${port}/ || exit 1`]
                 :
                     ["CMD-SHELL",'exit 0']
                 ,
@@ -310,7 +315,17 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
 
         apiRouteTargets.push({targetName:name,elbTarget:{
             port:port,
-            target:service
+            target:service,
+            getHealthCheck:()=>({
+                port:String(port),
+                interval:Duration.seconds(healthCheckIntervalSeconds),
+                retries:healthCheckRetries,
+                timeout:Duration.seconds(healthCheckTimeoutSeconds),
+                startPeriod:Duration.seconds(healthCheckStartSeconds),
+                healthyThresholdCount,
+                healthyHttpCodes:'200-399',
+                path:healthCheckPath?(healthCheckPath.startsWith('/')?healthCheckPath:'/'+healthCheckPath):'/'
+            })
         }})
 
         resources.push({name,container:this});
