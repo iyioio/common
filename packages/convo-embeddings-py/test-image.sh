@@ -6,4 +6,4 @@ cd "$(dirname "$0")"
 
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-docker run -it --rm -p "8080:8080" convo-embeddings
+docker run -it --rm -p "8080:8080" convo-embeddings-py
