@@ -4,7 +4,6 @@ import type * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -15,6 +14,7 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import type { BridgeEvent } from "./BridgeEvent";
+import type { Container } from "./Container";
 import { ParamOutput } from "./ParamOutput";
 import type { SqlCluster } from "./SqlCluster";
 import type { StaticWebSite } from "./StaticWebSite";
@@ -45,6 +45,8 @@ export interface EnvVarTarget
     requiredParams:(string|ParamTypeDef<string>)[];
 
     varContainer:IHasEnvVars;
+
+    fn?:lambda.Function;
 }
 
 export interface IHasEnvVars
@@ -191,7 +193,7 @@ export interface NamedResource
     fn?:lambda.Function;
     bucket?:s3.Bucket;
     event?:BridgeEvent;
-    service?:ecs.FargateService;
+    container?:Container;
     table?:db.Table;
     sqlCluster?:SqlCluster;
     api?:IApiRouter;

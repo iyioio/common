@@ -80,6 +80,10 @@ export const camelCaseToSnakeCase=(value:string,separator='_',toCase?:'upper'|'l
     return value;
 }
 
+export const strToUpperSnakeCase=(value:string):string=>{
+    return value.replace(/([a-z])([A-Z]+)/g,(_,l,u)=>l+'_'+u).toUpperCase();
+}
+
 export const getSubstringCount=(str:string,substring:string):number=>{
     let count=0;
     let i=0;

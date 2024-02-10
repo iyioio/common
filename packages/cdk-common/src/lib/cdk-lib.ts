@@ -1,4 +1,5 @@
 import { asArray, parseConfigBool } from "@iyio/common";
+import { pathExistsSync } from "@iyio/node-common";
 import { Duration } from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -7,6 +8,8 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNodeJs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from "constructs";
+import { mkdirSync } from "fs";
+import { tmpdir } from 'os';
 import * as Path from "path";
 import { Grantee } from "./cdk-types";
 
@@ -120,4 +123,18 @@ export const secondsToCdkDuration=(seconds:string|number|null|undefined):Duratio
         default:
             return undefined;
     }
+}
+
+let tmpCdkDir:string|null;;
+export const setTmpCdkDir=(dir:string)=>{
+    tmpCdkDir=dir;
+}
+export const getTmpCdkDir=(autoCreate=false)=>{
+    if(!tmpCdkDir){
+        tmpCdkDir=tmpdir();
+    }
+    if(autoCreate && !pathExistsSync(tmpCdkDir)){
+        mkdirSync(tmpCdkDir,{recursive:true});
+    }
+    return tmpCdkDir;
 }

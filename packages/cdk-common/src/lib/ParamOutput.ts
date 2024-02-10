@@ -1,18 +1,39 @@
-import { HashMap, ParamTypeDef, envNameToName } from "@iyio/common";
+import { ParamTypeDef, envNameToName, strToUpperSnakeCase } from "@iyio/common";
 import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { JsonLambdaLayer } from "./JsonLambdaLayer";
 import { EnvVarTarget, IParamOutputConsumer, ParamType } from "./cdk-types";
 
+export interface ParamOutputOptions
+{
+    /**
+     * If true a lambda layer will be created the contains shared params instead of injecting
+     * params as environment variables. enableLambdaConfigLayer can be helpful when you have a
+     * stack with a large number of param generating resources since Lambda functions have a
+     * 4K env var limit.
+     */
+    enableLambdaConfigLayer?:boolean;
 
+    /**
+     * The managed name of functions to excluded from the lambda config layer.
+     */
+    excludeFnsFromConfigLayer?:string[];
+
+    /**
+     * The location where params config is located in the config layer
+     * @default "/opt/params-output.json"
+     */
+    paramsConfigLayerPath?:string;
+}
 
 export class ParamOutput
 {
 
     public log=false;
 
-    public readonly params:HashMap<string>={}
+    public readonly params:Record<string,string>={}
 
-    public readonly paramTypes:HashMap<ParamType>={}
+    public readonly paramTypes:Record<string,ParamType>={}
 
     private readonly targets:EnvVarTarget[]=[];
 
@@ -21,6 +42,22 @@ export class ParamOutput
     public readonly envVars:Record<string,string>={};
 
     public envVarPrefix:string|null=null;
+
+    public enableLambdaConfigLayer:boolean;
+
+    public excludeFnsFromConfigLayer:string[];
+
+    public paramsConfigLayerPath:string;
+
+    public constructor({
+        enableLambdaConfigLayer=false,
+        excludeFnsFromConfigLayer=[],
+        paramsConfigLayerPath='/opt/params-output.json'
+    }:ParamOutputOptions={}){
+        this.enableLambdaConfigLayer=enableLambdaConfigLayer;
+        this.excludeFnsFromConfigLayer=excludeFnsFromConfigLayer;
+        this.paramsConfigLayerPath=paramsConfigLayerPath;
+    }
 
     public copyEnvVars(names:string[]){
         for(const n of names){
@@ -63,7 +100,6 @@ export class ParamOutput
         }
         this.params[param.typeName]=value;
         this.paramTypes[param.typeName]=type;
-
     }
 
     private outputsGenerated=false;
@@ -76,6 +112,16 @@ export class ParamOutput
         }
         this.outputsGenerated=true;
 
+        const hasFnTargets=this.targets.some(t=>t.fn && !this.excludeFnsFromConfigLayer.includes(t.name));
+        let layer:JsonLambdaLayer|undefined;
+        const varMap=this.getDefaultSharedVarMap();
+        if(hasFnTargets && this.enableLambdaConfigLayer){
+            layer=new JsonLambdaLayer(scope,'ConfigLayer',{
+                json:varMap,
+                zipFilePath:'params-output.json'
+            })
+        }
+
         for(const name in this.envVars){
             for(const target of this.targets){
                 if(target.varContainer){
@@ -84,16 +130,32 @@ export class ParamOutput
             }
         }
 
+        const skipTargets:EnvVarTarget[]=[];
+        if(layer){
+            for(const target of this.targets){
+                if(!target.fn || this.excludeFnsFromConfigLayer.includes(target.name)){
+                    continue;
+                }
+                target.fn.addEnvironment('IYIO_CONFIG_JSON_PATH',this.paramsConfigLayerPath)
+                target.fn.addLayers(layer.layer);
+                skipTargets.push(target);
+            }
+        }
+
         for(const e in this.params){
             new CfnOutput(scope,e+'Param',{value:this.params[e]??''});
 
-            const name=e.replace(/([a-z])([A-Z]+)/g,(_,l,u)=>l+'_'+u).toUpperCase();
+            const name=strToUpperSnakeCase(e);
 
             if(this.reservedEnvVars.includes(name)){
                 continue;
             }
 
             for(const target of this.targets){
+
+                if(skipTargets.includes(target) && varMap[e]!==undefined){
+                    continue
+                }
 
                 if(this.paramTypes[e]==='fn' && !target.requiredParams.some(ep=>{
                     if(typeof ep ==='string'){
@@ -123,11 +185,32 @@ export class ParamOutput
 
     }
 
-    public getVarMap(){
+    public getVarMap(type?:ParamType):Record<string,string>{
         const output={...this.params}
+        if(type){
+            for(const e in output){
+                if(this.paramTypes[e]!==type){
+                    delete output[e];
+                }
+            }
+        }
         for(const e in this.envVars){
             output[envNameToName(e,this.envVarPrefix)]=this.envVars[e] as string;
         }
         return output;
+    }
+
+    public getDefaultSharedVarMap():Record<string,string>{
+        const map=this.getVarMap('default');
+        for(const t of this.targets){
+            for(const e of t.excludeParams){
+                if(typeof e === 'string'){
+                    delete map[e];
+                }else{
+                    delete map[e.typeName];
+                }
+            }
+        }
+        return map;
     }
 }

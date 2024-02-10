@@ -5,22 +5,23 @@ import { Construct } from 'constructs';
 import { AccessManager } from "./AccessManager";
 import { BridgeEvent } from './BridgeEvent';
 import { ManagedProps } from './ManagedProps';
-import { ParamOutput } from "./ParamOutput";
-import { setDefaultVpc } from './cdk-lib';
+import { ParamOutput, ParamOutputOptions } from "./ParamOutput";
+import { setDefaultVpc, setTmpCdkDir } from './cdk-lib';
 import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from './cdk-types';
 import { setDefaultClusterProps } from './cluster-lib';
 
-export interface ManagedStackProps extends cdk.StackProps
+export interface ManagedStackProps extends cdk.StackProps, ParamOutputOptions
 {
     defaultVpc?:ec2.IVpc;
     disableFargateAutoScaling?:boolean;
     dedicatedVpc?:boolean;
+    tmpDir?:string;
 }
 
 export class ManagedStack extends cdk.Stack
 {
 
-    protected readonly params=new ParamOutput();
+    protected readonly params;
 
     protected readonly accessManager:AccessManager;
 
@@ -50,9 +51,18 @@ export class ManagedStack extends cdk.Stack
         defaultVpc,
         disableFargateAutoScaling,
         dedicatedVpc,
+        tmpDir,
+        enableLambdaConfigLayer,
+        excludeFnsFromConfigLayer,
         ...props
     }:ManagedStackProps={}){
         super(scope,id,props);
+
+        this.params=new ParamOutput({enableLambdaConfigLayer,excludeFnsFromConfigLayer});
+
+        if(tmpDir){
+            setTmpCdkDir(tmpDir);
+        }
 
         if(defaultVpc){
             setDefaultVpc(defaultVpc);

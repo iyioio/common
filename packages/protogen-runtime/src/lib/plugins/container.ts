@@ -53,6 +53,11 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                     const c=q.children??{};
                     const pkg=c['package']?.value;
                     const dir=c['fullDir']?.value??(c['dir']?.value?joinPaths('../..',c['dir']?.value):pkg?joinPaths('../../packages',pkg):'../..');
+                    const cmdV=c['cmd']?.value;
+                    const cmd=cmdV?JSON.parse(cmdV):undefined;
+                    if(cmd && !Array.isArray(cmd)){
+                        throw new Error('container cmd should be a string array')
+                    }
                     const info:ContainerInfoTemplate={
                         grantAccess:true,
                         name:q.name,
@@ -78,6 +83,7 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                         targetCpuUsage:safeParseNumberOrUndefined(c['targetCpuUsage']?.value),
                         scaleUpSeconds:safeParseNumberOrUndefined(c['scaleUpSeconds']?.value),
                         scaleDownSeconds:safeParseNumberOrUndefined(c['scaleDownSeconds']?.value),
+                        cmd,
                     }
                     const accessProp=c['$access'];
                     if(accessProp?.children){

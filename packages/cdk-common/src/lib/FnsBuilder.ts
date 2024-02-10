@@ -55,7 +55,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
             siteContentSources,
             fns:managedFns,
             apiRouteTargets,
-            resources
+            resources,
         }=getDefaultManagedProps(),
     }:FnsBuilderProps){
 
@@ -96,6 +96,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                     varContainer:nodeFn.func,
                     excludeParams,
                     requiredParams:[],
+                    fn:nodeFn.func,
                 }
                 params.addVarContainer(varContainer)
             }

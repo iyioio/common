@@ -1,11 +1,13 @@
 import { ParamTypeDef, getDirectoryName, joinPaths } from '@iyio/common';
 import { pathExistsSync } from '@iyio/node-common';
 import { Duration, IgnoreMode } from 'aws-cdk-lib';
+import * as autoScaling from "aws-cdk-lib/aws-applicationautoscaling";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecra from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecsAssets from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import { readFileSync, readdirSync } from 'fs';
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
@@ -100,6 +102,11 @@ export interface ContainerProps
     accessRequests?:AccessRequestDescription[];
     grantAccessRequests?:PassiveAccessGrantDescription[];
     noPassiveAccess?:boolean;
+
+    /**
+     * A command that can be used to override the default command of the container image
+     */
+    cmd?:string[];
 }
 
 export class Container extends Construct implements IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup
@@ -108,6 +115,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
     public readonly task:ecs.FargateTaskDefinition;
     public readonly container:ecs.ContainerDefinition;
     public readonly service:ecs.FargateService;
+    public readonly scaling:ecs.ScalableTaskCount|undefined;
     //public readonly loadBalancer:ecsp.ApplicationLoadBalancedFargateService;
 
     public readonly accessGrants:AccessGranter[]=[];
@@ -123,6 +131,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         memoryMb=2048,
         cpuArchitecture='x86_64',
         vpc,
+        cmd,
         enableExecuteCommand,
         enableScaling=false,
         minInstanceCount=1,
@@ -204,7 +213,8 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 retries:healthCheckRetries,
                 timeout:Duration.seconds(healthCheckTimeoutSeconds),
                 startPeriod:Duration.seconds(healthCheckStartSeconds),
-            }
+            },
+            command:cmd
 
         });
         this.container=container;
@@ -234,6 +244,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 scaleInCooldown:Duration.seconds(scaleDownSeconds),
                 scaleOutCooldown:Duration.seconds(scaleUpSeconds),
             })
+            this.scaling=scaling;
         }
 
 
@@ -302,10 +313,28 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
             target:service
         }})
 
-        resources.push({name,service});
+        resources.push({name,container:this});
 
         accessManager?.addGroup(this);
 
+    }
+
+    public connectQueue(queueName:string,queue:sqs.Queue){
+        queue.grantConsumeMessages(this.task.taskRole);
+
+        this.container.addEnvironment('CONNECTED_QUEUE_URL',queue.queueUrl);
+
+        if(this.scaling){
+            this.scaling.scaleOnMetric(`OnMsgVis-${queueName}`,{
+                metric:queue.metricApproximateNumberOfMessagesVisible(),
+                adjustmentType:autoScaling.AdjustmentType.CHANGE_IN_CAPACITY,
+                cooldown:Duration.seconds(300),
+                scalingSteps:[
+                    {upper:0,change:-1},
+                    {lower:1,change:+1},
+                ]
+            })
+        }
     }
 }
 
