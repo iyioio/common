@@ -1,4 +1,5 @@
-import { joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
+import { defaultContainerIgnoreOverrides } from "@iyio/cdk-common";
+import { getDirectoryName, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoAddContextParam, protoChildrenToStringRecordOrUndefined, protoGetParamName, protoNodeChildrenToAccessRequests, protoNodeChildrenToGrantAccessRequests } from "@iyio/protogen";
 import { z } from "zod";
 import { ContainerInfoTemplate, containerCdkTemplate } from "./containerCdkTemplate";
@@ -52,9 +53,22 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                 content:containerCdkTemplate(containerCdkConstructClassName,supported.map<ContainerInfoTemplate>(q=>{
                     const c=q.children??{};
                     const pkg=c['package']?.value;
-                    const dir=c['fullDir']?.value??(c['dir']?.value?joinPaths('../..',c['dir']?.value):pkg?joinPaths('../../packages',pkg):'../..');
+                    const file=c['file']?.value;
+                    const dir=c['fullDir']?.value??(
+                        c['dir']?.value?
+                            joinPaths('../..',c['dir']?.value)
+                        :pkg?
+                            joinPaths('../../packages',pkg)
+                        :c['rootDir']?
+                            '../..'
+                        :file?
+                            joinPaths('../..',getDirectoryName(file))
+                        :
+                            '.'
+                    );
                     const cmdV=c['cmd']?.value;
                     const cmd=cmdV?JSON.parse(cmdV):undefined;
+                    const ignoreOverrides=c['ignoreOverrides']?.value;
                     if(cmd && !Array.isArray(cmd)){
                         throw new Error('container cmd should be a string array')
                     }
@@ -62,7 +76,7 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                         grantAccess:true,
                         name:q.name,
                         dir,
-                        file:c['file']?.value,
+                        file:file,
                         serviceArnParam:protoGetParamName(q.name+'ServiceArn'),
                         taskArnParam:protoGetParamName(q.name+'TaskArn'),
                         vCpuCount:safeParseNumberOrUndefined(c['vCpuCount']?.value),
@@ -84,6 +98,14 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                         scaleUpSeconds:safeParseNumberOrUndefined(c['scaleUpSeconds']?.value),
                         scaleDownSeconds:safeParseNumberOrUndefined(c['scaleDownSeconds']?.value),
                         cmd,
+                        ignoreOverrides:(
+                            !ignoreOverrides?
+                                undefined
+                            :ignoreOverrides.startsWith('+')?
+                                [...defaultContainerIgnoreOverrides,...ignoreOverrides.split(',').map(i=>i.trim())]
+                            :
+                                ignoreOverrides.split(',').map(i=>i.trim())
+                        )
                     }
                     const accessProp=c['$access'];
                     if(accessProp?.children){

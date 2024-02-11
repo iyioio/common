@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { OnEventRequest } from "@iyio/aws";
 import { formatBucketName } from "@iyio/aws-s3";
-import { OnEventRequest } from "@iyio/cdk-common";
 import { createReadStream, createWriteStream, writeFileSync } from "fs";
 import { tmpdir } from 'os';
 import { join } from 'path';

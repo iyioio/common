@@ -1,4 +1,4 @@
-import { OnEventRequest } from "@iyio/cdk-common";
+import { OnEventRequest } from "@iyio/aws";
 import { deleteDb, migrateDb } from "../db-migrator-lib";
 
 const SqlDbMigratorFn=async (event: OnEventRequest)=>{

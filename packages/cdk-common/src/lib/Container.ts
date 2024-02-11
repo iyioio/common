@@ -1,5 +1,5 @@
-import { ParamTypeDef, getDirectoryName, joinPaths } from '@iyio/common';
-import { pathExistsSync } from '@iyio/node-common';
+import { ParamTypeDef, getDirectoryName, getFileName, joinPaths } from '@iyio/common';
+import { DockerIgnore, dockerIgnore, isDirSync, pathExistsSync } from '@iyio/node-common';
 import { Duration, IgnoreMode } from 'aws-cdk-lib';
 import * as autoScaling from "aws-cdk-lib/aws-applicationautoscaling";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -113,6 +113,12 @@ export interface ContainerProps
      * A command that can be used to override the default command of the container image
      */
     cmd?:string[];
+
+    /**
+     * An array of directory names that will be ignored in addition to paths ignored by
+     * the docker ignore file of the container
+     */
+    ignoreOverrides?:string[];
 }
 
 export class Container extends Construct implements IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup
@@ -132,7 +138,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
 
     public constructor(scope:Construct, name:string, {
         dir,
-        file,
+        file='Dockerfile',
         vCpuCount=256,
         memoryMb=2048,
         cpuArchitecture='x86_64',
@@ -162,6 +168,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         noPassiveAccess,
         grantName,
         cluster=requireDefaultCluster(),
+        ignoreOverrides=defaultContainerIgnoreOverrides,
         managed:{
             params,
             accessManager,
@@ -190,15 +197,14 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         task.env
         this.task=task;
 
-        const containerOptions=getCdkContainerOptions(dir,file)
+        const ignorePaths=getCdkContainerIgnorePaths(dir,file,ignoreOverrides);
 
         const dockerAsset=new ecsAssets.DockerImageAsset(this,'DockerImage',{
             directory:dir,
             file,
             platform:cpuArchitecture==='x86_64'?ecra.Platform.LINUX_AMD64:ecra.Platform.LINUX_ARM64,
-            exclude:containerOptions?.ignorePaths,
-            ignoreMode:IgnoreMode.GIT,
-            assetName:name
+            exclude:ignorePaths,
+            ignoreMode:IgnoreMode.DOCKER,
         })
 
         const container=task.addContainer(`Container`,{
@@ -365,74 +371,86 @@ export interface CdkContainerOptions
     ignorePaths?:string[]
 }
 
-const defaultIgnore=['.DS_store','__pycache__','node_modules','cdk.out'];
-const noIgnore=['.gitignore','.dockerignore',...defaultIgnore.map(i=>i.toLowerCase())]
-export const getCdkContainerOptions=(dir:string,file:string|undefined):CdkContainerOptions|undefined=>{
+export const defaultContainerIgnoreOverrides=['node_modules','venv','__pycache__','bin','cdk.out','.git','.nx','.next'];
+Object.freeze(defaultContainerIgnoreOverrides);
+
+export const getCdkContainerIgnorePaths=(dir:string,file:string,ignoreOverrides=defaultContainerIgnoreOverrides):string[]=>{
 
 
     if(file){
         dir=getDirectoryName(joinPaths(dir,file));
     }
 
-    const containerPath=joinPaths(dir,'cdk-container.json');
-    if(!pathExistsSync(containerPath)){
-        return undefined;
-    }
+    const ignoreRules:string[]=[];
 
-    const container:CdkContainerOptions=JSON.parse(readFileSync(containerPath).toString());
-
-    if(container.paths && !container.ignorePaths){
-        const ignore=[...defaultIgnore];
-        const paths:string[]=[];
-        const pathMap:Record<string,CdkContainerPath>={}
-        for(const p of container.paths){
-            let key=p.path;
-            if(!key.startsWith('/')){
-                key='/'+key;
-            }
-            if(!key.endsWith('/')){
-                key+='/';
-            }
-            key=key.toLowerCase();
-            pathMap[key]=p;
-            paths.push(key);
+    const addPath=(path:string)=>{
+        if(pathExistsSync(path)){
+            const lines=readFileSync(path).toString().split('\n').map(l=>l.trim()).filter(l=>l && !l.startsWith('#'));
+            ignoreRules.push(...lines);
         }
-
-        scanContainerPaths(container,'../..','/',pathMap,paths,ignore);
-        container.ignorePaths=ignore;
     }
 
-    return container;
+    let ignoreFile=joinPaths(dir,'.dockerignore');
+    addPath(ignoreFile);
+
+    const dockerFile=getFileName(file);
+    if(dockerFile.includes('.')){
+        ignoreFile=dockerFile.split('.')[0]+'.dockerignore';
+        addPath(ignoreFile);
+    }
+
+    ignoreRules.push(`!${file.startsWith('/')?file.substring(1):''}${file}`);
+
+    const ig=dockerIgnore();
+    ig.add(ignoreRules);
+
+    const {ignore}=scanContainerPaths(ig,'../..','',ignoreOverrides);
+
+    return ignore;
 
 }
 
-const scanContainerPaths=(container:CdkContainerOptions,baseDir:string,dir:string,pathMap:Record<string,CdkContainerPath>,paths:string[],ignore:string[])=>{
+const scanContainerPaths=(
+    ig:DockerIgnore,
+    baseDir:string,
+    dir:string,
+    ignoreOverrides:string[]
+):{ignore:string[],allIgnored:boolean}=>{
 
     const fullDir=joinPaths(baseDir,dir);
     const items=readdirSync(fullDir);
+    let allIgnored=true;
+    const ignore:string[]=[];
     for(const p of items){
-        if(noIgnore.includes(p.toLowerCase())){
+        const path=dir?joinPaths(dir,p):p;
+        if(ignoreOverrides.includes(p)){
+            ignore.push(path);
             continue;
         }
-        const path=joinPaths(dir,p);
-        const lPath=path.toLowerCase()+'/';
-        let found=false;
-        for(let i=0;i<paths.length;i++){
-            const includePath=paths[i] as string;
-            if(lPath.startsWith(includePath)){
-                found=true;
-                break;
-            }else if(includePath.startsWith(lPath)){
-                scanContainerPaths(container,baseDir,path,pathMap,paths,ignore);
-                found=true;
-                break;
+
+
+        if(ig.ignores(path)){
+            const isDir=isDirSync(joinPaths(baseDir,path));
+            if(isDir){
+                const r=scanContainerPaths(ig,baseDir,path,ignoreOverrides);
+                if(r.allIgnored){
+                    ignore.push(path);
+                }else{
+                    allIgnored=false;
+                    ignore.push(...r.ignore);
+                }
+            }else{
+                ignore.push(path);
             }
 
+        }else{
+            allIgnored=false;
+            continue;
         }
-        if(!found){
-            ignore.push(path);
-        }
+    }
 
-
+    return {
+        ignore,
+        allIgnored,
     }
 }

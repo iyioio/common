@@ -28,7 +28,6 @@ export * from './lib/cluster-lib';
 export * from './lib/cors-fn';
 export * from './lib/createBucket';
 export * from './lib/createUserPool';
-export * from './lib/custom-resource-types';
 export * from './lib/dynamo';
 export * from './lib/getRedirectMap';
 export * from './lib/ses';

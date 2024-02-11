@@ -1,6 +1,6 @@
 import { CancelToken, isRooted } from '@iyio/common';
 import { Abortable } from 'node:events';
-import { OpenMode, PathLike, accessSync } from 'node:fs';
+import { OpenMode, PathLike, accessSync, statSync } from 'node:fs';
 import { access, readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -29,6 +29,15 @@ export const getFullPath=(path:string)=>{
         return path;
     }else{
         return join(process.cwd(),path);
+    }
+}
+
+export const isDirSync=(path:string):boolean|null=>{
+    try{
+        const stat=statSync(path);
+        return stat.isDirectory();
+    }catch{
+        return null;
     }
 }
 

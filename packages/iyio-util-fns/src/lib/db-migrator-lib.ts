@@ -1,6 +1,5 @@
-import { AwsAuthProviders } from "@iyio/aws";
+import { AwsAuthProviders, OnEventRequest, OnEventResponse } from "@iyio/aws";
 import { RdsClient, applyDbMigrationAsync, forceClearAllMigrationsAsync } from "@iyio/aws-rds";
-import { OnEventRequest, OnEventResponse } from "@iyio/cdk-common";
 import { SqlMigration, authService, delayAsync } from "@iyio/common";
 
 const physicalResourceId='SqlDbMigration_HyEQhCoDFzbiL1tfx6UU';
