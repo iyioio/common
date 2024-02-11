@@ -29,6 +29,7 @@ export * from './lib/cors-fn';
 export * from './lib/createBucket';
 export * from './lib/createUserPool';
 export * from './lib/dynamo';
+export * from './lib/getCdkContainerIgnorePaths';
 export * from './lib/getRedirectMap';
 export * from './lib/ses';
 

@@ -1,5 +1,4 @@
-import { ParamTypeDef, getDirectoryName, getFileName, joinPaths } from '@iyio/common';
-import { DockerIgnore, dockerIgnore, isDirSync, pathExistsSync } from '@iyio/node-common';
+import { ParamTypeDef } from '@iyio/common';
 import { Duration, IgnoreMode } from 'aws-cdk-lib';
 import * as autoScaling from "aws-cdk-lib/aws-applicationautoscaling";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -9,11 +8,11 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
-import { readFileSync, readdirSync } from 'fs';
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { getDefaultVpc } from './cdk-lib';
 import { AccessGranter, AccessRequest, AccessRequestDescription, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget } from './cdk-types';
 import { requireDefaultCluster } from './cluster-lib';
+import { defaultContainerIgnoreOverrides, getCdkContainerIgnorePaths } from './getCdkContainerIgnorePaths';
 
 export interface ContainerProps
 {
@@ -197,7 +196,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         task.env
         this.task=task;
 
-        const ignorePaths=getCdkContainerIgnorePaths(dir,file,ignoreOverrides);
+        const ignorePaths=getCdkContainerIgnorePaths(file,dir,ignoreOverrides);
 
         const dockerAsset=new ecsAssets.DockerImageAsset(this,'DockerImage',{
             directory:dir,
@@ -369,88 +368,4 @@ export interface CdkContainerOptions
 {
     paths?:CdkContainerPath[];
     ignorePaths?:string[]
-}
-
-export const defaultContainerIgnoreOverrides=['node_modules','venv','__pycache__','bin','cdk.out','.git','.nx','.next'];
-Object.freeze(defaultContainerIgnoreOverrides);
-
-export const getCdkContainerIgnorePaths=(dir:string,file:string,ignoreOverrides=defaultContainerIgnoreOverrides):string[]=>{
-
-
-    if(file){
-        dir=getDirectoryName(joinPaths(dir,file));
-    }
-
-    const ignoreRules:string[]=[];
-
-    const addPath=(path:string)=>{
-        if(pathExistsSync(path)){
-            const lines=readFileSync(path).toString().split('\n').map(l=>l.trim()).filter(l=>l && !l.startsWith('#'));
-            ignoreRules.push(...lines);
-        }
-    }
-
-    let ignoreFile=joinPaths(dir,'.dockerignore');
-    addPath(ignoreFile);
-
-    const dockerFile=getFileName(file);
-    if(dockerFile.includes('.')){
-        ignoreFile=dockerFile.split('.')[0]+'.dockerignore';
-        addPath(ignoreFile);
-    }
-
-    ignoreRules.push(`!${file.startsWith('/')?file.substring(1):''}${file}`);
-
-    const ig=dockerIgnore();
-    ig.add(ignoreRules);
-
-    const {ignore}=scanContainerPaths(ig,'../..','',ignoreOverrides);
-
-    return ignore;
-
-}
-
-const scanContainerPaths=(
-    ig:DockerIgnore,
-    baseDir:string,
-    dir:string,
-    ignoreOverrides:string[]
-):{ignore:string[],allIgnored:boolean}=>{
-
-    const fullDir=joinPaths(baseDir,dir);
-    const items=readdirSync(fullDir);
-    let allIgnored=true;
-    const ignore:string[]=[];
-    for(const p of items){
-        const path=dir?joinPaths(dir,p):p;
-        if(ignoreOverrides.includes(p)){
-            ignore.push(path);
-            continue;
-        }
-
-
-        if(ig.ignores(path)){
-            const isDir=isDirSync(joinPaths(baseDir,path));
-            if(isDir){
-                const r=scanContainerPaths(ig,baseDir,path,ignoreOverrides);
-                if(r.allIgnored){
-                    ignore.push(path);
-                }else{
-                    allIgnored=false;
-                    ignore.push(...r.ignore);
-                }
-            }else{
-                ignore.push(path);
-            }
-
-        }else{
-            allIgnored=false;
-            continue;
-        }
-    }
-
-    return {
-        ignore,
-        allIgnored,
-    }
 }
