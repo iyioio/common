@@ -13,20 +13,24 @@ COPY packages/convo-embeddings-py/requirements.txt requirements.txt
 
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
+# Copy models. Remember to add to .gitignore as well
 COPY packages/ai-models/all-mpnet-base-v2/ packages/ai-models/all-mpnet-base-v2
 
+# Copy source directories . Remember to add to .gitignore as well
 COPY packages/iyio-common-py/src/ packages/iyio-common-py/src
-
-COPY packages/convo-embeddings-py/rest_api.py packages/convo-embeddings-py/rest_api.py
-COPY packages/convo-embeddings-py/ingest_queued.py packages/convo-embeddings-py/ingest_queued.py
-
 COPY packages/convo-embeddings-py/src/ packages/convo-embeddings-py/src
 
+# The command below can be used to verify copied files
+#RUN find . -type f
+
+
+# Add paths to copied libraries here
 ENV PYTHONPATH=/app/packages/iyio-common-py/src
+
 ENV REST_PORT=8080
 
 EXPOSE 8080
 
 WORKDIR /app/packages/convo-embeddings-py
 
-CMD [ "python3", "rest_api.py" ]
+CMD [ "python3", "src/rest_api.py" ]
