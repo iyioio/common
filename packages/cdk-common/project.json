@@ -42,5 +42,8 @@
             }
         }
     },
-    "tags": []
+    "tags": [],
+    "implicitDependencies": [
+        "iyio-util-fns"
+    ]
 }
