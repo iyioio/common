@@ -13,4 +13,4 @@ def onMessage(messages:List[Any]):
 
 
 # receive first message from queue then exit
-run_sqs(queueUrl,onMessage,exitOnFailure=True,maxHandleCount=1)
+run_sqs(queueUrl,onMessage,exitOnFailure=True,exitOnTimeout=True)

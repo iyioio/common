@@ -11,9 +11,12 @@ def run_sqs(
     *,
     maxHandleCount:int=-1,
     maxMessageCount:int=1,
-    waitSeconds:int=30,
+    # Max value 20, min value 0
+    waitSeconds:int=20,
+    # Max value 12hr
     visibilityTimeoutSeconds:int=30,
-    exitOnFailure:bool=False
+    exitOnFailure:bool=False,
+    exitOnTimeout:bool=False
 )->int:
     """ Dequeues messages from a SQS queue and calls the provided handler"""
     global client
@@ -43,9 +46,14 @@ def run_sqs(
         )
 
         if not response or not ('Messages' in response):
+            if exitOnTimeout:
+                break
             continue
 
         messages=response['Messages']
+
+        if len(messages) == 0 and exitOnTimeout:
+            break
 
         success=False
 
@@ -60,7 +68,7 @@ def run_sqs(
             client.delete_message_batch(
                 QueueUrl=queueUrl,
                 Entries=list(map((lambda m:({
-                    'Id': m['ReceiptHandle'],
+                    'Id': m['MessageId'],
                     'ReceiptHandle': m['ReceiptHandle']
                 })),messages))
             )
