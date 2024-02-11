@@ -58,8 +58,8 @@ export class BridgeEvent extends Construct
             targets.addLambdaPermission(this.rule,target.fn);
         }
 
-        if(target.task){
-            this.rule.addTarget(new targets.EcsTask(target.task));
+        if(target.getEventTarget){
+            this.rule.addTarget(target.getEventTarget(this.eventName,this));
         }
     }
 

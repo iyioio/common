@@ -55,6 +55,7 @@ export class QueueBuilder extends Construct implements IAccessGrantGroup
             accessManager,
             queues:namedBuckets,
             beforeOutputs,
+            resources,
         }=getDefaultManagedProps(),
     }:QueueBuilderProps)
     {
@@ -148,6 +149,11 @@ export class QueueBuilder extends Construct implements IAccessGrantGroup
             queueInfos.push({
                 info,
                 queue,
+            })
+
+            resources.push({
+                name:info.name,
+                queue
             })
 
         }

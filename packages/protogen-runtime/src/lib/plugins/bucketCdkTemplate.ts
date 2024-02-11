@@ -58,7 +58,8 @@ const getBuckets=():BucketInfo[]=>[${buckets.map((b,i)=>`
         website:${JSON.stringify(b.website)},`:''}${b.disableWebsiteCache?`
         disableWebsiteCache:${JSON.stringify(b.disableWebsiteCache)},`:''}${b.websiteIndexDocument?`
         websiteIndexDocument:${JSON.stringify(b.websiteIndexDocument)},`:''}${b.websiteErrorDocument?`
-        websiteErrorDocument:${JSON.stringify(b.websiteErrorDocument)},`:''}
+        websiteErrorDocument:${JSON.stringify(b.websiteErrorDocument)},`:''}${b.events?`
+        events:${JSON.stringify(b.events)},`:''}
         grantAccess:true,${b.versioned?`
         versioned:true,`:''}
     },`).join('')}

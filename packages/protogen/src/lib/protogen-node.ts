@@ -97,6 +97,9 @@ export const protoChildrenToStringRecordOrUndefined=(
     const obj:Record<string,string>={};
     let added=false;
     for(const e in children){
+        if(e.startsWith('#')){
+            continue;
+        }
         const value=children[e]?.value;
         if(value===undefined){
             continue;

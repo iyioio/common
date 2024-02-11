@@ -1,5 +1,6 @@
 import { protoAddContextParam, protoGetChildrenByName, protoGetParamName, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
+import { parseProtoEventDestinations } from "../protogen-cdk-lib";
 import { bucketCdkTemplate, BucketInfoTemplate } from "./bucketCdkTemplate";
 
 const supportedTypes=['bucket'];
@@ -88,7 +89,8 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                                 sourcePath:(libStyle==='nx'?'../../':'')+source,
                                 mountPath:mount,
                             }
-                        }):undefined
+                        }):undefined,
+                        events:parseProtoEventDestinations(b),
                     }
                     return info;
                 }),importMap)

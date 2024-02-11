@@ -111,6 +111,7 @@ export class ManagedStack extends cdk.Stack
             if(res.api){
                 res.api.addMatchingTargets(this.apiRouteTargets);
             }
+            res.onReady?.(this.managed);
         }
 
         for(const b of this.beforeOutputs){

@@ -1,12 +1,13 @@
-import { ParamTypeDef } from "@iyio/common";
+import { ParamTypeDef, strToUpperSnakeCase } from "@iyio/common";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cfo from "aws-cdk-lib/aws-cloudfront-origins";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
+import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
+import { AccessGranter, IAccessGrantGroup, IEventDestination } from "./cdk-types";
 import { createBucket } from "./createBucket";
 
 export interface BucketBuilderProps
@@ -43,6 +44,7 @@ export interface BucketInfo
     websiteParam?:ParamTypeDef<string>;
     websiteIndexDocument?:string;
     websiteErrorDocument?:string;
+    events?:IEventDestination[];
 }
 
 export interface BucketResult
@@ -81,7 +83,7 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 blockPublicAccess:s3.BlockPublicAccess.BLOCK_ACLS,
                 websiteErrorDocument:info.websiteErrorDocument,
                 websiteIndexDocument:info.websiteIndexDocument,
-            })
+            });
 
             namedBuckets?.push({
                 name:info.name,
@@ -172,7 +174,42 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
                 bucket,
             })
 
-            resources.push({name:info.name,bucket});
+            resources.push({name:info.name,bucket,onReady:({resources})=>{
+                if(info.events){
+                    for(const evt of info.events){
+                        const res=resources.find(r=>r.name===evt.targetName);
+                        if(!res){
+                            throw new Error(`Event resource target not found by name - ${evt.targetName}`);
+                        }
+                        const type:s3.EventType|undefined=(
+                            (s3.EventType as any)[evt.type as any]??
+                            (s3.EventType as any)[strToUpperSnakeCase(evt.type)]
+                        )
+                        if(!type){
+                            throw new Error(`Invalid s3.EventType - ${evt.type} / ${strToUpperSnakeCase(evt.type)}`);
+                        }
+                        const filters:s3.NotificationKeyFilter[]=[];
+                        if(evt.props?.['prefix'] || evt.props?.['suffix']){
+                            filters.push({
+                                prefix:evt.props['prefix'],
+                                suffix:evt.props['suffix'],
+                            })
+                        }
+                        let added=false;
+                        if(res.queue){
+                            bucket.addEventNotification(type,new s3Notifications.SqsDestination(res.queue),...filters);
+                            added=true;
+                        }
+                        if(res.fn){
+                            bucket.addEventNotification(type,new s3Notifications.LambdaDestination(res.fn),...filters);
+                            added=true;
+                        }
+                        if(!added){
+                            throw new Error(`Target resource by name ${res.name} did not define a supported resource.`);
+                        }
+                    }
+                }
+            }});
 
         }
 
