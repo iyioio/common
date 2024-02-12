@@ -7,3 +7,6 @@ model = SentenceTransformer(modelPath)
 def encode_text(sentences):
 
     return model.encode(sentences).tolist()
+
+def decode_embedding(embedding):
+    return model.decode(embedding)
