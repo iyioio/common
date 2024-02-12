@@ -41,6 +41,3 @@ def generate_document_list(request:DocumentRetrievalRequest):
     document_list = retriever.get_relevant_documents(query)
 
     return document_list
-
-
-
