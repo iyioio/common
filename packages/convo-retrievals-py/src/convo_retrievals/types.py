@@ -1,7 +1,6 @@
 from ast import List
 from dataclasses import dataclass
 from typing import Any, Dict
-from langchain_core.documents.base import Document
 
 @dataclass
 class DocumentRetrievalRequest:
@@ -18,4 +17,3 @@ class DocumentRetrievalRequest:
 
     # list of the documents to be returned
     # docs:List[Document]
-    
