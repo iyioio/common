@@ -1,21 +1,26 @@
+import os
 from psycopg import sql, connect
 from typing import Any, Dict
 from .types import DocumentRetrievalRequest
-from .embed import encode_text
+from .retrieve import *
 from iyio_common import exec_sql, escape_sql_identifier, parse_s3_path
 import json
 from sentence_transformers import SentenceTransformerEmbeddings
-import os
 from langchain_community.vectorstores.pgvector import PGVector
 
-embeddings_table='VectorIndex'
 
 def generate_document_list(request:DocumentRetrievalRequest):
+    '''
+    This function generates a list of relevant documents based on the provided request.
 
-    document_path=request.location
-    content_type=request.contentType
-    COLLECTION_NAME = embeddings_table
+    Parameters:
+    request (DocumentRetrievalRequest): The request object containing the prompt for which relevant documents are to be retrieved.
 
+    Returns:
+    document_list (list): A list of relevant documents retrieved based on the prompt in the request.
+    '''
+
+    COLLECTION_NAME = 'VectorIndex'
     CONNECTION_STRING = PGVector.connection_string_from_db_params(
      driver=os.environ.get("PGVECTOR_DRIVER", "psycopg2"),
      host=os.environ.get("PGVECTOR_HOST", "localhost"),
