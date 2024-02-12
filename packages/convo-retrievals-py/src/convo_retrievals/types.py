@@ -10,12 +10,6 @@ class DocumentRetrievalRequest:
     # prompt for the documents to retrieve
     prompt:str
 
-    # location of the documents that is searched in. Should be a vectorDB store
-    location:str
-
-    # The content type of the document
-    contentType:str
-
     # Name for the table to extract embeddings from
     embeddingsTable:str='VectorIndex'
 
@@ -23,4 +17,5 @@ class DocumentRetrievalRequest:
     cols:Dict[str,Any]|None=None
 
     # list of the documents to be returned
-    docs:List[Document]
+    # docs:List[Document]
+    
