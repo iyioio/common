@@ -1,13 +1,22 @@
+from attr import dataclass
 import boto3
 from botocore.config import Config
 import os
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Dict
+import json
 
 client = None
 
+@dataclass
+class SqsEventRecord:
+    id:str
+    message:Any
+    body:Dict[str,Any]
+    attributes:Dict[str,Any]
+
 def run_sqs(
     queueUrl:str,
-    handler:Callable[[List[Any]],None],
+    handler:Callable[[List[SqsEventRecord]],None],
     *,
     maxHandleCount:int=-1,
     maxMessageCount:int=1,
@@ -58,7 +67,16 @@ def run_sqs(
         success=False
 
         try:
-            handler(messages)
+            records:List[SqsEventRecord]=[]
+            for msg in messages:
+
+                records.append(SqsEventRecord(
+                    id=msg['MessageId'],
+                    message=msg,
+                    attributes=msg['Attributes'],
+                    body=json.loads(msg['Body']) if msg['Body'] else {},
+                ))
+            handler(records)
             handleCount=handleCount+len(messages)
             success=True
         except Exception as err:

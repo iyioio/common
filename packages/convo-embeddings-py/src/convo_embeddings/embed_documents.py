@@ -2,16 +2,20 @@ from langchain_community.document_loaders import S3FileLoader, UnstructuredURLLo
 from langchain.text_splitter import CharacterTextSplitter
 from psycopg import sql, connect
 from typing import Any, Dict
+from .s3_loader import S3FileLoaderEx
 from .types import DocumentEmbeddingRequest
 from .embed import encode_text
 from iyio_common import exec_sql, escape_sql_identifier, parse_s3_path
 import json
+import magic
 
 
 embeddings_table='VectorIndex'
 max_sql_len=65536
 
-def generate_document_embeddings(request:DocumentEmbeddingRequest):
+def generate_document_embeddings(request:DocumentEmbeddingRequest)->int:
+
+    print('generate_document_embeddings',request)
 
     file_loader=None
 
@@ -19,10 +23,11 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest):
 
     document_path=request.location
     content_type=request.contentType
+    mime_path = document_path
 
     if document_path.startswith('s3://'):
         s3Path=parse_s3_path(document_path)
-        file_loader=S3FileLoader(
+        file_loader=S3FileLoaderEx(
             s3Path['bucket'],
             s3Path['key'],
         )
@@ -38,11 +43,11 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest):
                 "mode":mode
             }
         )
-    elif content_type.endswith('/pdf'):
+    elif content_type and content_type.endswith('/pdf'):
         file_loader=UnstructuredPDFLoader(document_path, mode=mode)
-    elif content_type.endswith('/html'):
+    elif content_type and content_type.endswith('/html'):
         file_loader=UnstructuredHTMLLoader(document_path, mode=mode)
-    elif content_type.endswith('/markdown'):
+    elif content_type and content_type.endswith('/markdown'):
         file_loader=UnstructuredMarkdownLoader(document_path, mode=mode)
     else:
         file_loader=UnstructuredFileLoader(document_path, mode=mode)
@@ -53,14 +58,67 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest):
     text_splitter=CharacterTextSplitter(chunk_size=300, chunk_overlap=20)
     docs=text_splitter.split_documents(docs)
 
+    if len(docs) == 0:
+        print(f'No embedding documents found for {document_path} ')
+        return 0
+
+    firstDoc=docs[0]
+    if firstDoc and firstDoc.metadata and firstDoc.metadata['content_type']:
+        content_type=firstDoc.metadata['content_type']
+    else:
+        if firstDoc and firstDoc.metadata and firstDoc.metadata['filename']:
+            print('first doc filename',firstDoc)
+            mime_path=firstDoc.metadata['filename']
+
+        if mime_path:
+            mime = magic.Magic(mime=True)
+            type=mime.from_file(mime_path)
+            if type:
+                content_type=type
+                print('content type set to ',type)
+
+    content_category:str|None=None
+
+    match content_type:
+        case "application/pdf":
+            content_category='document'
+        case _:
+            if content_type:
+                content_category=content_type.split('/')[0]
+
+    if content_category:
+        content_category=content_category.lower()
+
+    print('Content category',content_category)
+
+    if not content_category and request.contentCategoryCol:
+        print('Unable to determine content category.')
+        return 0
+
+    if not content_type and request.contentTypeCol:
+        print('Unable to determine content type.')
+        return 0
+
+    if request.contentCategoryFilter and  not (content_category in request.contentCategoryFilter):
+        print(f'content_category filtered out - {content_category}')
+        return 0
 
     first=True
     all=[]
     print('Generating embeddings')
+
+    cols=request.cols.copy()
+
+    if request.contentCategoryCol:
+        cols[request.contentCategoryCol]=content_category
+
+    if request.contentTypeCol:
+        cols[request.contentTypeCol]=content_type
+
     for doc in docs:
         vec=encode_text(doc.page_content)
         all.append({
-            **request.cols,
+            **cols,
             "vector":vec,
             "text":doc.page_content
         })
@@ -71,8 +129,8 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest):
 
     colNamesEscaped=[]
     colNames=[]
-    if request.cols:
-        for colName in request.cols:
+    if cols:
+        for colName in cols:
             colNames.append(colName)
             colNamesEscaped.append(escape_sql_identifier(colName))
 
@@ -95,11 +153,11 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest):
         ).as_string(None)
 
 
-        if len(colNames) and request.cols:
+        if len(colNames) and cols:
             colData=[]
             for colName in colNames:
                 colData.append(sql.SQL("{value}").format(
-                    value=request.cols[colName],
+                    value=cols[colName],
                 ).as_string(None))
             chunk=chunk+','+(','.join(colData))
 

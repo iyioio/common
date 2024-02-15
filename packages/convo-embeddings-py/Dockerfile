@@ -5,7 +5,8 @@ FROM python:3.11
 
 WORKDIR /app
 
-RUN apt-get install libmagic1
+RUN apt-get update
+RUN apt-get install -y libmagic1 libgl1-mesa-dev ffmpeg tesseract-ocr
 
 RUN python3 -m pip install --upgrade pip
 
