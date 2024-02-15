@@ -208,7 +208,12 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
 
         const container=task.addContainer(`Container`,{
             image: ecs.ContainerImage.fromDockerImageAsset(dockerAsset),
-            environment:env,
+            environment:{
+                TASK_INFO_MIN_INSTANCE_COUNT:minInstanceCount.toString(),
+                TASK_INFO_MAX_INSTANCE_COUNT:maxInstanceCount.toString(),
+                TASK_INFO_TARGET_CPU_USAGE:targetCpuUsage.toString(),
+                ...env
+            },
             logging:new ecs.AwsLogDriver({
                 streamPrefix:`${name}FargateTask`,
                 logRetention:7
@@ -217,7 +222,7 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 command:healthCheckCmd?
                     ["CMD-SHELL",healthCheckCmd]
                 :
-                    ["CMD-SHELL",'exit 0']
+                    ["CMD-SHELL",'echo ok']
                 ,
                 interval:Duration.seconds(healthCheckIntervalSeconds),
                 retries:healthCheckRetries,
