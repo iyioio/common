@@ -27,6 +27,14 @@ export interface Sides
     bottom:number;
 }
 
+export interface PointOrSides
+{
+    left:number;
+    top:number;
+    right?:number;
+    bottom?:number;
+}
+
 export interface OptionalSides
 {
     left?:number;
