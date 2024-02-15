@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { useEffect, useRef, useState } from "react";
+import { UIEvent, useEffect, useRef, useState } from "react";
 import { View, ViewProps } from "./View";
 import { useElementSize } from "./useElementSize";
 
@@ -24,6 +24,7 @@ export interface ScrollViewProps extends ViewProps
     autoScrollYOffset?:number;
     containerFill?:boolean;
     containerCol?:boolean;
+    onScroll?:(e:UIEvent<HTMLElement>)=>void;
     /**
      * When true the children of the scroll view will be returned by passing the scroll view layout
      * completely. When set to keepContainers the layout of the scroll view will be changed so that
@@ -62,6 +63,7 @@ export function ScrollView({
     containerFill,
     byPass,
     byPassFlex1,
+    onScroll,
     ...props
 }:ScrollViewProps){
 
@@ -186,6 +188,7 @@ export function ScrollView({
         >
 
             <div
+                onScroll={onScroll}
                 className={byPass?style.byPassOverflow({byPassFlex1}):undefined}
                 ref={v=>{overflowRef?.(v);setOverflowContainer(v)}}
             >
