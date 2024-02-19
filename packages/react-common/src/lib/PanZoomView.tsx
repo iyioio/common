@@ -25,6 +25,7 @@ export interface PanZoomViewProps
     maxScale?:number;
     initState?:PanZoomState;
     mode?:PanZoomMode;
+    disableScroll?:boolean;
     getCtrl?:(ctrl:PanZoomCtrl)=>void;
     /**
      * class names of elements to ignore touches from
@@ -107,6 +108,7 @@ export function PanZoomView({
     controls,
     markCenter,
     bound,
+    disableScroll,
     listenToKeys
 }:PanZoomViewProps){
 
@@ -470,7 +472,7 @@ export function PanZoomView({
 
     useEffect(()=>{
 
-        if(!rootElem){
+        if(!rootElem || disableScroll){
             return;
         }
 
@@ -544,7 +546,7 @@ export function PanZoomView({
         }
 
 
-    },[onPoints,rootElem]);
+    },[onPoints,rootElem,disableScroll]);
 
 
     const [dragCover,setDragCover]=useState<HTMLElement|null>(null);
