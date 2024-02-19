@@ -105,6 +105,12 @@ export interface ConvoMessage
      * If true the message should be rendered but not sent to LLMs
      */
     renderOnly?:boolean;
+
+    sourceUrl?:string;
+
+    sourceId?:string;
+
+    sourceName?:string;
 }
 
 export interface ConvoMessagePart
@@ -590,6 +596,12 @@ export interface FlatConvoMessage
 
     markdown?:MarkdownLine[];
 
+    sourceUrl?:string;
+
+    sourceId?:string;
+
+    sourceName?:string;
+
 }
 
 export interface ConvoCompletionMessage extends Partial<ConvoTokenUsage>
@@ -613,6 +625,13 @@ export interface ConvoCompletionService
 }
 
 export type ConvoCompletionStatus='complete'|'busy'|'error'|'disposed';
+
+export type ConvoRagMode=boolean|number;
+export const isConvoRagMode=(value:any):value is ConvoRagMode=>(
+    value===true ||
+    value===false ||
+    (typeof value === 'number')
+)
 
 export interface ConvoCompletion
 {
@@ -647,6 +666,10 @@ export interface FlatConvoConversation
      * If defined the debug function should be written to with debug info.
      */
     debug?:(...args:any[])=>void;
+
+    ragMode?:ConvoRagMode;
+    ragPrefix?:string;
+    ragSuffix?:string;
 }
 
 export interface ConvoExecuteResult
@@ -816,4 +839,32 @@ export interface CloneConversationOptions
 {
     systemOnly?:boolean;
     noFunctions?:boolean;
+}
+
+export interface ConvoDocumentReference
+{
+    content:string;
+
+    sourceId?:string;
+    sourceName?:string;
+    sourceUrl?:string;
+}
+
+export interface ConvoRagContext
+{
+    params:Record<string,any>;
+    tolerance:number;
+    lastMessage:FlatConvoMessage;
+    flat:FlatConvoConversation;
+    conversation:Conversation;
+}
+
+export type ConvoRagCallback=(
+    ragContext:ConvoRagContext
+)=>ConvoDocumentReference|null|Promise<ConvoDocumentReference|null>;
+
+export interface AppendConvoMessageObjOptions
+{
+    disableAutoFlatten?:boolean;
+    appendCode?:boolean;
 }

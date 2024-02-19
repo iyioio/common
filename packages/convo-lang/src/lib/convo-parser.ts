@@ -940,11 +940,10 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                         msg.renderOnly=parseConvoBooleanTag(tag.value);
                         break;
 
-                    case convoTags.renderTarget:
-                        if(tag.value){
-                            msg.renderTarget=tag.value;
+                    default:
+                        if(copyTagValues[tag.name] && tag.value){
+                            (msg as any)[tag.name]=tag.value;
                         }
-                        break;
                 }
 
             }
@@ -960,6 +959,16 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
 
 }
 
+/**
+ * Names of tags that have a matching property in the ConvoMessage interface with a string value
+ */
+const copyTagValues:Record<string,boolean>={
+    [convoTags.renderTarget]:true,
+    [convoTags.sourceId]:true,
+    [convoTags.sourceUrl]:true,
+    [convoTags.sourceName]:true,
+
+}
 
 
 const unescapeStr=(str:string):string=>str.replace(/\\(.)/g,(_,char)=>{

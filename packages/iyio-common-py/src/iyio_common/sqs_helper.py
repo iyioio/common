@@ -61,8 +61,10 @@ def run_sqs(
 
         messages=response['Messages']
 
-        if len(messages) == 0 and exitOnTimeout:
-            break
+        if len(messages) == 0:
+            if exitOnTimeout:
+                break
+            continue
 
         success=False
 
@@ -83,13 +85,19 @@ def run_sqs(
             print('SQS handler failed',err)
 
         if success:
-            client.delete_message_batch(
-                QueueUrl=queueUrl,
-                Entries=list(map((lambda m:({
-                    'Id': m['MessageId'],
-                    'ReceiptHandle': m['ReceiptHandle']
-                })),messages))
-            )
+            try:
+                client.delete_message_batch(
+                    QueueUrl=queueUrl,
+                    Entries=list(map((lambda m:({
+                        'Id': m['MessageId'],
+                        'ReceiptHandle': m['ReceiptHandle']
+                    })),messages))
+                )
+            except Exception as err2:
+                print('SQS failed to remove from queue',err2)
+                if exitOnFailure:
+                    break
+
         elif exitOnFailure:
             break
 

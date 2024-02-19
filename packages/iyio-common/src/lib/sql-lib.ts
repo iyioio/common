@@ -29,6 +29,10 @@ export const sqlName=(name:string):EscapedSqlValue=>{
     }
 }
 
+export const sqlIn=(value:any[]):EscapedSqlValue=>{
+    return rawSqlValue(_escapeSqlValue(value,true,0,undefined,{inConditionValue:true}))
+}
+
 export const rawSqlValue=(value:string):EscapedSqlValue=>{
     return {
         value,
@@ -62,7 +66,12 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
     return strAry.join('').trim();
 }
 
-const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTableColInfo,altString=false):string=>{
+
+export interface SqlEscapeValueOptions
+{
+    inConditionValue?:boolean;
+}
+const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTableColInfo,options?:SqlEscapeValueOptions,altString=false):string=>{
     if(depth>20){
         throw new Error('Max escapeSqlValue depth reached');
     }
@@ -99,7 +108,11 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTab
                     }
                     return `'${JSON.stringify(value)}'`
                 }
-                return (wrapArray?'\'{':'')+value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,colInfo,true)).join(',')+(wrapArray?'}\'':'');
+                return (
+                    (options?.inConditionValue?'(':wrapArray?'\'{':'')+
+                    value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,colInfo,{...options,inConditionValue:false},options?.inConditionValue?false:true)).join(',')+
+                    (options?.inConditionValue?')':wrapArray?'}\'':'')
+                );
             }else{
                 return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
             }

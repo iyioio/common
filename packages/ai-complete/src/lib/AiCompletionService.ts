@@ -307,12 +307,29 @@ export class AiCompletionService implements ConvoCompletionService
         const functions:AiCompletionFunction[]=[];
 
         const baseId=shortUuid()+'_';
+        let lastContentMessage:AiCompletionMessage|undefined;
 
         for(let i=0;i<flat.messages.length;i++){
             const msg=flat.messages[i];
             if(!msg || msg.renderOnly){
                 continue;
             }
+
+            if(msg.role==='rag'){
+                if(!lastContentMessage?.content){
+                    continue;
+                }
+                let content=msg.content??'';
+                if(flat.ragPrefix){
+                    content=flat.ragPrefix+'\n\n'+content;
+                }
+                if(flat.ragSuffix){
+                    content+='\n\n'+flat.ragSuffix;
+                }
+                lastContentMessage.content+='\n\n'+content;
+                continue;
+            }
+
             if(msg.fn){
 
                 functions.push({
@@ -334,7 +351,7 @@ export class AiCompletionService implements ConvoCompletionService
                     endpoint:msg.responseEndpoint,
                 })
             }else if(msg.content!==undefined){
-                messages.push({
+                messages.push(lastContentMessage={
                     id:baseId+i,
                     type:'text',
                     role:isAiCompletionRole(msg.role)?msg.role:'user',
@@ -355,7 +372,9 @@ export class AiCompletionService implements ConvoCompletionService
             functions,
             debug:flat.debug,
             capabilities:[],
-            apiKey:flat.conversation.getDefaultApiKey()??undefined
+            apiKey:flat.conversation.getDefaultApiKey()??undefined,
+            ragPrefix:flat.ragPrefix,
+            ragSuffix:flat.ragSuffix,
         }
 
         for(const c of flat.conversation.serviceCapabilities){

@@ -78,3 +78,5 @@ export type ConvoComponentRenderer=ConvoComponentRenderFunction|ConvoComponentRe
 
 
 export type ConvoMessageComponent=XmlNode;
+
+export type ConvoRagRenderer=(msg:FlatConvoMessage,ctrl:ConversationUiCtrl)=>any;

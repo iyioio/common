@@ -3,9 +3,9 @@ import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoResultReturnName, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability } from "./convo-types";
+import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -63,6 +63,11 @@ export interface ConversationOptions
      * If true all text based message will be parsed as markdown
      */
     parseMarkdown?:boolean;
+
+    /**
+     * A callback used to implement rag retrieval.
+     */
+    ragCallback?:ConvoRagCallback;
 }
 
 export class Conversation
@@ -166,6 +171,11 @@ export class Conversation
 
     public dynamicFunctionCallback:ConvoScopeFunction|undefined;
 
+    /**
+     * A callback used to implement rag retrieval.
+     */
+    private readonly ragCallback?:ConvoRagCallback;
+
 
     /**
      * A function that will be used to output debug values. By default debug information is written
@@ -190,6 +200,7 @@ export class Conversation
             trackModel=false,
             disableAutoFlatten=false,
             autoFlattenDelayMs=30,
+            ragCallback,
             debug,
             debugMode,
         }=options;
@@ -205,6 +216,7 @@ export class Conversation
         this._trackModel=new BehaviorSubject<boolean>(trackModel);
         this.disableAutoFlatten=disableAutoFlatten;
         this.autoFlattenDelayMs=autoFlattenDelayMs;
+        this.ragCallback=ragCallback;
         this.debug=debug;
         if(debugMode){
             this.debugMode=true;
@@ -363,20 +375,27 @@ export class Conversation
     }
 
     /**
-     * Appends new messages to the conversation without appending to the code of the conversation.
-     * It is not recommended to use this function with on-going conversation, but only with
-     * utility purposes
+     * Appends new messages to the conversation and by default does not add code to the conversation.
      */
-    public appendMessageObject(message:ConvoMessage|ConvoMessage[]):void{
+    public appendMessageObject(message:ConvoMessage|ConvoMessage[],{
+        disableAutoFlatten,
+        appendCode
+    }:AppendConvoMessageObjOptions={}):void{
         const messages=asArray(message);
         this._messages.push(...messages);
+
+        if(appendCode){
+            for(const msg of messages){
+                this._convo.push(convoMessageToString(msg));
+            }
+        }
 
         this._onAppend.next({
             text:'',
             messages,
         });
 
-        if(!this.disableAutoFlatten){
+        if(!this.disableAutoFlatten && !disableAutoFlatten){
             this.autoFlattenAsync();
         }
     }
@@ -675,7 +694,8 @@ export class Conversation
         autoCompleteDepth:number,
         prevCompletion?:ConvoCompletionMessage[],
         preReturnValues?:any[],
-        templates?:ConvoMessageTemplate[]
+        templates?:ConvoMessageTemplate[],
+        updateTaskCount=true
     ):Promise<ConvoCompletion>{
 
         if(task===undefined){
@@ -687,7 +707,9 @@ export class Conversation
             this.initRuntime();
         }
 
-        this._activeTaskCount.next(this.activeTaskCount+1);
+        if(updateTaskCount){
+            this._activeTaskCount.next(this.activeTaskCount+1);
+        }
 
         try{
             const append:string[]=[];
@@ -707,6 +729,34 @@ export class Conversation
 
             for(const e in this.unregisteredVars){
                 flat.exe.setVar(false,this.unregisteredVars[e],e);
+            }
+
+            let ragDoc:ConvoDocumentReference|null|undefined;
+            let ragMsg:ConvoMessage|undefined;
+
+            const lastFlatMsg=getLastCompletionMessage(flat.messages);
+            if( lastFlatMsg &&
+                task===defaultConvoTask &&
+                flat.ragMode &&
+                this.ragCallback &&
+                lastFlatMsg?.role===convoRoles.user
+            ){
+                const ragParams=flat.exe.getVar(convoVars.__ragParams);
+                const tol=flat.exe.getVar(convoVars.__ragTol)
+                ragDoc=await this.ragCallback({
+                    params:ragParams && (typeof ragParams === 'object')?ragParams:{},
+                    lastMessage:lastFlatMsg,
+                    flat,
+                    conversation:this,
+                    tolerance:(typeof tol === 'number')?tol:defaultConvoRagTol
+                });
+            }
+
+            if(ragDoc){
+                ragMsg=convoRagDocRefToMessage(ragDoc,convoRoles.rag);
+                flat.messages.push(this.flattenMsg(ragMsg,true));
+                this.applyRagMode(flat.messages,flat.ragMode);
+                this.appendMessageObject(ragMsg,{disableAutoFlatten:true,appendCode:true});
             }
 
             if(isDefaultTask){
@@ -888,7 +938,9 @@ export class Conversation
                 task
             }
         }finally{
-            this._activeTaskCount.next(this.activeTaskCount-1);
+            if(updateTaskCount){
+                this._activeTaskCount.next(this.activeTaskCount-1);
+            }
         }
     }
 
@@ -1010,6 +1062,43 @@ export class Conversation
         return flatExe;
     }
 
+    private flattenMsg(msg:ConvoMessage,setContent:boolean):FlatConvoMessage{
+        const flat:FlatConvoMessage={
+            role:this.getMappedRole(msg.role),
+            tags:msg.tags?convoTagsToMap(msg.tags):undefined,
+        }
+
+        if(setContent){
+            flat.content=msg.content;
+        }
+
+        if(msg.component!==undefined){
+            flat.component=msg.component;
+        }
+        if(msg.sourceId!==undefined){
+            flat.sourceId=msg.sourceId;
+        }
+        if(msg.sourceUrl!==undefined){
+            flat.sourceUrl=msg.sourceUrl;
+        }
+        if(msg.sourceName!==undefined){
+            flat.sourceName=msg.sourceName;
+        }
+        if(msg.renderTarget){
+            flat.renderTarget=msg.renderTarget;
+        }
+        if(msg.renderOnly){
+            flat.renderOnly=true;
+        }
+        if(msg.markdown){
+            flat.markdown=msg.markdown;
+        }
+        if(this.userRoles.includes(flat.role)){
+            flat.isUser=true;
+        }
+        return flat;
+    }
+
     public async flattenAsync(
         exe:ConvoExecutionContext=this.createConvoExecutionContext(),
         {
@@ -1060,23 +1149,8 @@ export class Conversation
                 continue;
             }
 
-            const flat:FlatConvoMessage={
-                role:this.getMappedRole(msg.role),
-                tags:msg.tags?convoTagsToMap(msg.tags):undefined,
-            }
+            const flat=this.flattenMsg(msg,false);
 
-            if(msg.component!==undefined){
-                flat.component=msg.component;
-            }
-            if(msg.renderTarget){
-                flat.renderTarget=msg.renderTarget;
-            }
-            if(msg.renderOnly){
-                flat.renderOnly=true;
-            }
-            if(msg.markdown){
-                flat.markdown=msg.markdown;
-            }
             const setMdVars=(
                 this.defaultOptions.setMarkdownVars ||
                 containsConvoTag(msg.tags,convoTags.markdownVars)
@@ -1110,9 +1184,6 @@ export class Conversation
                 if(maxTasks){
                     maxTaskMsgCount=safeParseNumber(maxTasks,maxTaskMsgCount);
                 }
-            }
-            if(this.userRoles.includes(flat.role)){
-                flat.isUser=true;
             }
             if(msg.fn){
                 if(msg.fn.local || msg.fn.call){
@@ -1182,6 +1253,11 @@ export class Conversation
             }
             this.applyTagsAndState(pair.msg,pair.flat,messages,exe,pair.setMdVars,mdVarCtx);
         }
+
+        const ragStr=exe.getVar(convoVars.__rag);
+        const ragMode=isConvoRagMode(ragStr)?ragStr:undefined;
+
+        this.applyRagMode(messages,ragMode);
 
 
         if(this.capabilities.includes('vision') && isDefaultTask){
@@ -1300,7 +1376,30 @@ export class Conversation
             templates,
             debug,
             capabilities,
-            markdownVars:mdVarCtx.vars
+            markdownVars:mdVarCtx.vars,
+            ragMode
+        }
+
+        for(let i=0;i<messages.length;i++){
+            const msg=messages[i];
+            if(!msg){continue}
+
+            switch(msg.role){
+
+                case convoRoles.ragPrefix:
+                    flat.ragPrefix=msg.content;
+                    messages.splice(i,1);
+                    i--;
+                    break;
+
+                case convoRoles.ragSuffix:
+                    flat.ragSuffix=msg.content;
+                    messages.splice(i,1);
+                    i--;
+                    break;
+
+            }
+
         }
 
         if(setCurrent){
@@ -1308,6 +1407,29 @@ export class Conversation
         }
 
         return flat;
+    }
+
+    private applyRagMode(messages:FlatConvoMessage[],ragMode:ConvoRagMode|null|undefined){
+        if(typeof ragMode === 'number'){
+            let ragCount=0;
+            for(let i=messages.length-1;i>=0;i--){
+                const msg=messages[i];
+                if(msg?.role!==convoRoles.rag){
+                    continue;
+                }
+                ragCount++;
+                msg.renderOnly=ragCount>ragMode;
+            }
+        }else{
+            const renderOnly=!ragMode;
+            for(let i=0;i<messages.length;i++){
+                const msg=messages[i];
+                if(msg?.role===convoRoles.rag){
+                    msg.renderOnly=renderOnly;
+                }
+
+            }
+        }
     }
 
     private isTagConditionTrue(exe:ConvoExecutionContext,tagValue:string,startIndex=0):boolean{

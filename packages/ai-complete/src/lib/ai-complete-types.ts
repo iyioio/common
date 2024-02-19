@@ -195,6 +195,9 @@ export const AiCompletionRequestScheme=z.object({
     capabilities:AiCompletionCapabilityScheme.array().optional(),
 
     apiKey:z.string().optional(),
+
+    ragPrefix:z.string().optional(),
+    ragSuffix:z.string().optional(),
 })
 export type AiCompletionRequest=z.infer<typeof AiCompletionRequestScheme> & {
     debug?:(...args:any[])=>void;

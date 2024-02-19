@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { ConversationUiCtrl, ConversationUiCtrlOptions, ConvoEditorMode, defaultConvoRenderTarget, removeDanglingConvoUserMessage } from '@iyio/convo-lang';
+import { ConversationUiCtrl, ConversationUiCtrlOptions, ConvoEditorMode, ConvoRagRenderer, defaultConvoRenderTarget, removeDanglingConvoUserMessage } from '@iyio/convo-lang';
 import { useShallowCompareItem, useSubject } from "@iyio/react-common";
 import { useContext, useEffect, useMemo } from "react";
 import { ConversationInput, ConversationInputProps } from "./ConversationInput";
@@ -16,6 +16,7 @@ export interface ConversationViewProps
     content?:string;
     enabledSlashCommands?:boolean;
     renderInput?:(ctrl:ConversationUiCtrl)=>any;
+    ragRenderer?:ConvoRagRenderer;
     noInput?:boolean;
     inputProps?:ConversationInputProps;
     theme?:ConvoLangTheme|'dark'|'light';
@@ -38,6 +39,7 @@ export function ConversationView({
     sourceMode:_sourceMode,
     showSource:_showSource,
     showInputWithSource,
+    ragRenderer,
     renderTarget=defaultConvoRenderTarget,
 }:ConversationViewProps){
 
@@ -88,7 +90,7 @@ export function ConversationView({
                 {showSource?
                     <MessagesSourceView mode={sourceMode} ctrl={ctrl} />
                 :
-                    <MessagesView renderTarget={renderTarget} ctrl={ctrl} />
+                    <MessagesView renderTarget={renderTarget} ctrl={ctrl} ragRenderer={ragRenderer} />
                 }
 
                 {

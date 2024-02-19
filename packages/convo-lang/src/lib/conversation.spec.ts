@@ -641,4 +641,105 @@ describe('convo',()=>{
     //     expect(v).toEqual({user:{name:'Jeff',age:44}});
     // })
 
+
+
+    it('Should use RAG',async ()=>{
+
+        let ragParams:any;
+
+        const convo=new Conversation({
+            ragCallback:(params)=>{
+                ragParams=params;
+                return {
+                    content:'Polar bears like coke ;)',
+                    sourceId:'ice123',
+                    sourceName:'Bears on Ice',
+                    sourceUrl:'https://example.com/polarbears'
+                }
+            },
+            completionService:new CallbackConvoCompletionService(async ()=>{
+                return [{
+                    role:'assistant',
+                    content:'They don\'t anymore because we are melting all the ice',
+                }]
+            })
+        });
+
+        convo.append(/*convo*/`
+
+            > define
+            __rag=true
+            __ragParams={go:'fast'}
+
+            > user
+            How do polar bears eat
+
+        `);
+
+        await convo.completeAsync();
+        expect(convo.messages.length).toBe(4);
+        expect(convo.messages[2]).toEqual({
+            "role": "rag",
+            "content": "Polar bears like coke ;)",
+            "tags": [
+                {
+                    "name": "sourceId",
+                    "value": "ice123"
+                },
+                {
+                    "name": "sourceName",
+                    "value": "Bears on Ice"
+                },
+                {
+                    "name": "sourceUrl",
+                    "value": "https://example.com/polarbears"
+                }
+            ],
+            "sourceId": "ice123",
+            "sourceName": "Bears on Ice",
+            "sourceUrl": "https://example.com/polarbears"
+        })
+        expect(ragParams).toEqual({go:'fast'})
+    })
+
+
+    it('Should use RAG with prefix and suffix',async ()=>{
+
+        const convo=new Conversation({
+            ragCallback:()=>({
+                content:'Polar bears like coke ;)',
+                sourceId:'ice123',
+                sourceName:'Bears on Ice',
+                sourceUrl:'https://example.com/polarbears'
+            }),
+            completionService:new CallbackConvoCompletionService(async ()=>{
+                return [{
+                    role:'assistant',
+                    content:'They don\'t anymore because we are melting all the ice',
+                }]
+            })
+        });
+
+        convo.append(/*convo*/`
+
+            > define
+            __rag=true
+
+            > ragPrefix
+            Use the content below to assist
+
+            > ragSuffix
+            The content above should be helpful
+
+            > user
+            How do polar bears eat
+
+        `);
+
+        const flat=await convo.flattenAsync();
+        expect(flat.ragPrefix).toBe('Use the content below to assist');
+        expect(flat.ragSuffix).toBe('The content above should be helpful');
+        expect(flat.messages.length).toBe(2);
+    })
+
 });

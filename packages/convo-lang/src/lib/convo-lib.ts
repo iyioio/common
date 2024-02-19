@@ -1,7 +1,8 @@
+import { UnsupportedError } from "@iyio/common";
 import { format } from "date-fns";
 import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
+import { ConvoBaseType, ConvoDocumentReference, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -27,6 +28,21 @@ export const convoMetadataKey=Symbol('convoMetadataKey');
 export const convoCaptureMetadataTag='captureMetadata';
 
 export const defaultConvoTask='default';
+
+export const convoRoles={
+    user:'user',
+    assistant:'assistant',
+    rag:'rag',
+    /**
+     * Used to define a prefix to add to rag messages
+     */
+    ragPrefix:'ragPrefix',
+
+    /**
+     * Used to define a suffix to add to rag messages
+     */
+    ragSuffix:'ragSuffix',
+} as const;
 
 export const convoFunctions={
     queryImage:'queryImage',
@@ -95,8 +111,31 @@ export const convoVars={
     /**
      * A reference to markdown vars.
      */
-    __md:'__md'
+    __md:'__md',
+
+    /**
+     * Enables retrieval augmented generation (RAG). The value of the __rag can either be true,
+     * false or a number. The value indicates the number of rag results that should be sent to the
+     * LLM by default all rag message will be sent to the LLM. When setting the number of rag
+     * messages to a fixed number only the last N number of rag messages will be sent to the LLM.
+     * Setting __rag to a fixed number can help to reduce prompt size.
+     */
+    __rag:'__rag',
+
+    /**
+     * An object that will be passed to the rag callback of a conversation. If the value is not an
+     * object it is ignored.
+     */
+    __ragParams:'__ragParams',
+
+    /**
+     * The tolerance that determines if matched rag content should be included as contact.
+     */
+    __ragTol:'__ragTol'
+
 } as const;
+
+export const defaultConvoRagTol=1.2;
 
 export const convoTags={
 
@@ -264,6 +303,12 @@ export const convoTags={
      * ```
      */
     condition:'condition',
+
+    sourceUrl:'sourceUrl',
+
+    sourceId:'sourceId',
+
+    sourceName:'sourceName'
 
 } as const;
 
@@ -735,4 +780,71 @@ export const shouldDisableConvoAutoScroll=(messages:FlatConvoMessage[]):boolean=
         }
     }
     return false;
+}
+
+export const convoRagDocRefToMessage=(doc:ConvoDocumentReference,role:string):ConvoMessage=>{
+    const msg:ConvoMessage={
+        role,
+        content:doc.content,
+        tags:[]
+    }
+
+    if(doc.sourceId){
+        msg.sourceId=doc.sourceId;
+        msg.tags?.push({name:convoTags.sourceId,value:doc.sourceId})
+    }
+
+    if(doc.sourceName){
+        msg.sourceName=doc.sourceName;
+        msg.tags?.push({name:convoTags.sourceName,value:doc.sourceName})
+    }
+
+    if(doc.sourceUrl){
+        msg.sourceUrl=doc.sourceUrl;
+        msg.tags?.push({name:convoTags.sourceUrl,value:doc.sourceUrl})
+    }
+
+    if(!msg.tags?.length){
+        delete msg.tags;
+    }
+
+    return msg;
+}
+
+export const escapeConvoTagValue=(value:string):string=>{
+    return value.replace(/\s/g,' ');
+}
+
+export const convoMessageToString=(msg:ConvoMessage):string=>{
+    if(msg.fn || msg.statement){
+        throw new UnsupportedError(
+            'convoMessageToString only supports text based messages without embedded statements'
+        );
+    }
+
+    const out:string[]=[];
+
+    if(msg.tags){
+        for(const tag of msg.tags){
+            out.push(`@${tag.name}${tag.value===undefined?'':' '+escapeConvoTagValue(tag.value)}`);
+        }
+    }
+
+    out.push(`> ${msg.role??'user'}`);
+    if(msg.content){
+        out.push(escapeConvoMessageContent(msg.content,true));
+    }
+
+    return out.join('\n');
+}
+
+export const getLastCompletionMessage=(messages:FlatConvoMessage[]):FlatConvoMessage|undefined=>{
+    for(let i=messages.length-1;i>=0;i--){
+        const msg=messages[i];
+        if(!msg || msg.role==='function'){
+            continue;
+        }
+        return msg;
+    }
+    return undefined;
 }

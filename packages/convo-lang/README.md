@@ -272,6 +272,9 @@ following contents. Remember to replace the API key with your OpenAI api key.
 }
 ```
 
+## RAG (Retrieval Augmented Generation)
+**Documentation coming soon**
+
 ## Vision
 Vision capabilities can be added to any LLM that supports function calling. When vision is enabled
 the convo-lang runtime will add the queryImage function to the current conversation and inject 
@@ -313,10 +316,10 @@ Why did The Beatles cross the road? Because they knew it was the only way to get
 ```
 
 ## Templates
-add documentation
+**Documentation coming soon**
 
 ## Tasks
-add documentation
+**Documentation coming soon**
 
 ## The convo-lang syntax
 The convo-lang syntax is designed to be easily readable and follows a chat-like message structure.

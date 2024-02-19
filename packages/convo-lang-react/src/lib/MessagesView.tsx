@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
-import { ConversationUiCtrl, ConvoMessageRenderResult, FlatConvoConversation, FlatConvoMessage, defaultConvoRenderTarget, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
+import { ConversationUiCtrl, ConvoMessageRenderResult, ConvoRagRenderer, FlatConvoConversation, FlatConvoMessage, convoRoles, defaultConvoRenderTarget, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
 import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
 import { MessageComponentRenderer } from "./MessageComponentRenderer";
@@ -14,6 +14,7 @@ const renderResult=(
     showSystemMessages:boolean,
     showFunctions:boolean,
     rowClassName:string|undefined,
+    ragRenderer:ConvoRagRenderer|undefined,
 ):any=>{
     if((typeof result !== 'object') || !result){
         return null;
@@ -24,7 +25,7 @@ const renderResult=(
     return renderMessage(ctrl,flat,{
         role:result.role??'assistant',
         content:result.content
-    },i,showSystemMessages,showFunctions,rowClassName)
+    },i,showSystemMessages,showFunctions,rowClassName,ragRenderer)
 }
 
 const renderMessage=(
@@ -35,6 +36,7 @@ const renderMessage=(
     showSystemMessages:boolean,
     showFunctions:boolean,
     rowClassName:string|undefined,
+    ragRenderer:ConvoRagRenderer|undefined,
 )=>{
 
     const className=style.msg({user:m.role==='user',agent:m.role!=='user'});
@@ -93,6 +95,16 @@ const renderMessage=(
                         })}
                     </div>
                 </div>
+            </div>
+        )
+    }else if(m.role===convoRoles.rag){
+        return (
+            <div className={rowClassName} key={i+'rag'}>
+                {ragRenderer?.(m,ctrl)??
+                    <div className={cn(className,style.rag())}>
+                        {m.content}
+                    </div>
+                }
             </div>
         )
     }else if(m.fn || (m.role!=='user' && m.role!=='assistant')){
@@ -155,11 +167,13 @@ export interface MessagesViewProps
 {
     ctrl?:ConversationUiCtrl;
     renderTarget?:string;
+    ragRenderer?:ConvoRagRenderer;
 }
 
 export function MessagesView({
     renderTarget=defaultConvoRenderTarget,
     ctrl:_ctrl,
+    ragRenderer,
 }:MessagesViewProps){
 
     const ctrl=useConversationUiCtrl(_ctrl)
@@ -190,19 +204,19 @@ export function MessagesView({
         }
 
         if(ctrlRendered?.position==='replace'){
-            return renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName);
+            return renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName,ragRenderer);
         }
 
-        const rendered=renderMessage(ctrl,flat,m,i,showSystemMessages,showFunctions,rowClassName);
+        const rendered=renderMessage(ctrl,flat,m,i,showSystemMessages,showFunctions,rowClassName,ragRenderer);
         if(!ctrlRendered){
             return rendered;
         }
 
         return (
             <Fragment key={i+'j'}>
-                {ctrlRendered.position==='before' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName)}
+                {ctrlRendered.position==='before' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName,ragRenderer)}
                 {rendered}
-                {ctrlRendered.position==='after' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName)}
+                {ctrlRendered.position==='after' && renderResult(ctrl,flat,ctrlRendered,i,showSystemMessages,showFunctions,rowClassName,ragRenderer)}
             </Fragment>
         )
 
@@ -319,5 +333,8 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         width:@@rowWidth;
         max-width:100%;
         align-self:center;
+    }
+    @.rag{
+        background-color:#3B3B3D99 !important;
     }
 `});
