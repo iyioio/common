@@ -200,9 +200,9 @@ const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):{type:string|undefined,c
             return {type:dbType};
         }
     }
-    const type=node.types[0]?.mapType || node.children?.['json']?'Json':sqlTypeMap[node.type];
+    const type=(node.types[0]?.mapType || node.children?.['json'])?'Json':sqlTypeMap[node.type];
     if(type || !allNodes){
-        return {type,custom:true};
+        return {type,custom:false};
     }
 
     const refType=node.types[0];
