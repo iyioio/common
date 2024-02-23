@@ -1,3 +1,4 @@
+export * from './lib/ComponentRenderTarget';
 export * from './lib/ConversationInput';
 export * from './lib/ConversationView';
 export * from './lib/MessageComponentRenderer';
