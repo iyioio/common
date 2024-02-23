@@ -384,7 +384,7 @@ export class AiCompletionService implements ConvoCompletionService
             }
         }
 
-        const result=await this.completeAsync(request);
+        const result=await this.completeAsync(request,{allowAllModels:true});
 
         const resultMessage=result.options[0];
         if(!resultMessage){
@@ -448,6 +448,9 @@ const expandModels=(models:string[]|null|undefined,allowed:readonly string[]):re
 }
 
 const checkModelAccess=(model:string,provider:AiCompletionProvider,options:CompletionOptions|undefined)=>{
+    if(options?.allowAllModels){
+        return;
+    }
     const allowed=provider.getAllowedModels?.()??[];
     const expanded=expandModels(options?.allowedModels,allowed);
 

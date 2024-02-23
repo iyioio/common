@@ -5,6 +5,7 @@ import { AiCompletionService } from "./AiCompletionService";
 export interface CompletionOptions
 {
     allowedModels?:string[];
+    allowAllModels?:boolean;
 }
 
 export interface AiCompletionProvider

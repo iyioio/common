@@ -32,15 +32,17 @@ const CompleteOpenAiPrompt=async (
         }
     }
 
+    const openAccess=openAiAllowOpenAccessParam();
     const _modelsString=fnEvt.claims?.[aiCompleteModelCliam];
-    if(!(typeof _modelsString === 'string') && !openAiAllowOpenAccessParam()){
+    if(!(typeof _modelsString === 'string') && !openAccess){
         throw new UnauthorizedError();
     }
 
     const modelsString=(_modelsString as string)??'default';
 
     const r=await aiComplete().completeAsync(input,{
-        allowedModels:modelsString.split(',').map(m=>m.trim())
+        allowedModels:modelsString.split(',').map(m=>m.trim()),
+        allowAllModels:openAccess,
     });
 
     if(!input.apiKey){
