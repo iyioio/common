@@ -191,6 +191,21 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
         appendCol(ctx,value.col);
     }else if(value.value!==undefined){
         ctx.sql.push(escapeSqlValue(value.value,undefined,false));
+    }else if(value.generatedValue){
+        const g=value.generatedValue;
+        switch(g.type){
+
+            case 'timeMs':
+                ctx.sql.push((Date.now()+(g.offset??0)).toString());
+                break;
+
+            case 'timeSec':
+                ctx.sql.push(Math.round((Date.now()+(g.offset??0))/1000).toString());
+                break;
+
+            default:
+                throw new Error(`Unsupported generated value type - ${(g as any).type}`);
+        }
     }else if(value.subQuery){
         ctx.sql.push('(');
         _buildQuery(ctx,depth+1,value.subQuery.query,value.subQuery.condition??null);

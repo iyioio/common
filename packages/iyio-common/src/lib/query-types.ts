@@ -14,6 +14,11 @@ export interface StaticQueryOperator<T=any>
 export interface Query
 {
     /**
+     * An optional id that can be used for any purpose
+     */
+    id?:string;
+
+    /**
      * The columns or values to select. If not defined all columns are selected using the * operator
      */
     columns?:NamedQueryValue[];
@@ -76,6 +81,18 @@ export interface Query
      * If true debug information about the query should be printed
      */
     debug?:boolean;
+
+    /**
+     * A display label
+     */
+    label?:string;
+
+    /**
+     * If defined the query defined by passthrough should be used in-place of this query.
+     */
+    passthrough?:Query;
+
+    metadata?:Record<string,any>;
 }
 export const isQuery=(value:any):value is Query=>{
     const tableType=typeof (value as Partial<Query>)?.table;
@@ -153,6 +170,13 @@ export interface QueryGroupCondition
      */
     conditions:QueryConditionOrGroup[];
 
+    /**
+     * A display label
+     */
+    label?:string;
+
+    metadata?:Record<string,any>;
+
 }
 export const isQueryGroupCondition=(value:any):value is QueryGroupCondition=>{
     if(!value){
@@ -196,6 +220,13 @@ export interface QueryCondition
      */
     right:QueryValue;
 
+    /**
+     * A display label
+     */
+    label?:string;
+
+    metadata?:Record<string,any>;
+
 }
 export const isQueryCondition=(value:any):value is QueryCondition=>{
     if(!value){
@@ -222,6 +253,14 @@ export const queryExpressionOperators=[
 Object.freeze(queryExpressionOperators);
 export type QueryExpressionOperator=typeof queryExpressionOperators[number];
 
+export type QueryGeneratedValue={
+    type:'timeMs';
+    offset?:number;
+}|{
+    type:'timeSec';
+    offset?:number;
+}
+
 /**
  * Represents any of the possible value types that can be used. Only one property of the QueryValue
  * should be defined at a time. Defining more that one property at a time can result in undefined
@@ -243,6 +282,11 @@ export interface QueryValue
      * A literal value to use as the value
      */
     value?:string|number|boolean|null|((string|number|boolean|null)[]);
+
+    /**
+     * A value that is generated at the time the query is built
+     */
+    generatedValue?:QueryGeneratedValue;
 
     /**
      * A predefined function to use as a value
