@@ -1,0 +1,58 @@
+import { atDotCss } from "@iyio/at-dot-css";
+import React from "react";
+
+export interface ExampleProps
+{
+    active?:boolean;
+    color?:string;
+}
+
+export function Example({
+    active,
+    color='green'
+}:ExampleProps){
+
+    return (
+        <div className={style.root()} style={style.vars({color})}>
+
+            <h2 className={style.header()}>Hello</h2>
+
+            <button className={style.button({active})}>Click Me</button>
+
+        </div>
+    )
+
+}
+
+const style=atDotCss({name:'Example',css:`
+    @.root{
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+        padding:1rem;
+        border-radius:12px;
+        border:1px solid @@color;
+        gap:1rem;
+    }
+
+    @.header{
+        margin:0;
+    }
+
+    @.button{
+        border:none;
+        background-color:#ccc;
+        padding:1rem;
+        border-radius:12px;
+    }
+    @.button.active{
+        background-color:@@color;
+    }
+
+    @tabletSmDown{
+        @.root{
+            flex-direction:column;
+            align-items:flex-start;
+        }
+    }
+`});
