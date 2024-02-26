@@ -1,7 +1,7 @@
 import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, getLastNonCallAiCompleteMessage } from '@iyio/ai-complete';
-import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
+import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, httpClient, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
-import OpenAIApi from 'openai';
+import OpenAIApi, { toFile } from 'openai';
 import { ImagesResponse } from 'openai/resources';
 import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionCreateParams, ChatCompletionMessageParam, ChatCompletionSystemMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from 'openai/resources/chat';
 import { openAiApiKeyParam, openAiAudioModelParam, openAiBaseUrlParam, openAiChatModelParam, openAiImageModelParam, openAiSecretsParam, openAiVisionModelParam } from './_types.ai-complete-openai';
@@ -295,7 +295,23 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const type=lastMessage.dataContentType??'audio/mp3';
 
-        const file=new FileBlob([Buffer.from(lastMessage.data??'','base64')],'audio.'+(type.split('/')[1]??'mp3'),{type});
+        const file=(lastMessage.dataUrl?
+            await (async ()=>{
+                const r=await httpClient().getResponseAsync(lastMessage.dataUrl??'');
+                if(!r){
+                    throw new Error('Fetch file failed')
+                }
+                const contentType=r.headers.get('Content-Type')||r.headers.get('content-type')||'';
+                const m=/\w+\/(\w+)/.exec(contentType);
+                const file=await toFile(r.blob(),`tmp.${m?.[1]??'file'}`);
+                return file;
+            })():
+            new FileBlob([Buffer.from(lastMessage.data??'','base64')],'audio.'+(type.split('/')[1]??'mp3'),{type})
+        );
+
+        if(!file){
+            throw new Error('Unable to load data URL');
+        }
 
         const r=await api.audio.transcriptions.create({
             file,

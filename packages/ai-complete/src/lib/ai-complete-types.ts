@@ -90,6 +90,11 @@ export const AiCompletionMessageScheme=z.object({
      */
     data:z.string().optional(),
 
+    /**
+     * URL to data data
+     */
+    dataUrl:z.string().optional(),
+
     dataContentType:z.string().optional(),
 
     /**
