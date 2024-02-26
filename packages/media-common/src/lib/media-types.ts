@@ -29,3 +29,10 @@ export interface GetImageDataStatsOptions
 {
     trueAverage?:boolean;
 }
+
+export interface MediaRecordingResult
+{
+    data:Blob[];
+    recorder:MediaRecorder;
+    mimeType:string;
+}

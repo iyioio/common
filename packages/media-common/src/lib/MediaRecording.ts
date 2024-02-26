@@ -1,5 +1,6 @@
 import { PromiseSource, ReadonlySubject, asArray, createPromiseSource, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { MediaRecordingResult } from "./media-types";
 
 export const defaultMediaRecordingAudioKBPerSecond=2;
 export const defaultMediaRecordingVideoKBPerSecond=50;
@@ -8,6 +9,7 @@ export interface MediaRecordingOptions
 {
     recorderOptions?:MediaRecorderOptions;
     stream?:MediaStream;
+    streams?:MediaStream[];
     recorder?:MediaRecorder;
     /**
      * The first media constraint that yeilds a stream will be used
@@ -37,13 +39,6 @@ export interface MediaRecordingOptions
     mimeType?:string;
 
 
-}
-
-export interface MediaRecordingResult
-{
-    data:Blob[];
-    recorder:MediaRecorder;
-    mimeType:string;
 }
 
 export class MediaRecording
@@ -124,6 +119,19 @@ export class MediaRecording
         }
 
         let recorder=this.options.recorder;
+        if(!recorder && this.options.streams){
+            const stream=new MediaStream();
+            const streams=this.options.stream?
+                [this.options.stream,...this.options.streams]:
+                this.options.streams;
+            for(const s of streams){
+                const tracks=s.getTracks();
+                for(const t of tracks){
+                    stream.addTrack(t);
+                }
+            }
+            recorder=new MediaRecorder(stream,getOptions());
+        }
         if(!recorder && this.options.stream){
             recorder=new MediaRecorder(this.options.stream,getOptions());
         }

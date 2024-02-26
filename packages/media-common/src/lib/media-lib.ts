@@ -1,5 +1,5 @@
-import { Size, addQueryToPath, uuid } from "@iyio/common";
-import { GetImageDataStatsOptions, ImageStats, SnapShotResult, VideoSnapShotOptions as SnapshotOptions } from "./media-types";
+import { Size, addQueryToPath, safeParseNumberOrUndefined, uuid } from "@iyio/common";
+import { GetImageDataStatsOptions, ImageStats, MediaRecordingResult, SnapShotResult, VideoSnapShotOptions as SnapshotOptions } from "./media-types";
 
 
 const getCanvas=()=>{
@@ -245,7 +245,7 @@ export const getVideoInfoAsync=(src:string|Blob):Promise<VideoInfo>=>{
         }
 
         const onMeta=()=>{
-            resolve({width:video.videoWidth,height:video.videoHeight,durationSeconds:video.duration})
+            resolve({width:video.videoWidth,height:video.videoHeight,durationSeconds:safeParseNumberOrUndefined(video.duration)??0})
             cleanUp();
         }
 
@@ -256,12 +256,11 @@ export const getVideoInfoAsync=(src:string|Blob):Promise<VideoInfo>=>{
 
         video.addEventListener('loadedmetadata',onMeta)
         video.addEventListener('error',onError)
-
         video.src=blobUrl??(src as string);
     })
 }
 
-export const getVideoAsync=(src:string|Blob):Promise<{video:HTMLVideoElement,url:string,revokeRequired:boolean}>=>{
+export const getVideoAsync=(src:string|Blob,forPreview?:boolean):Promise<{video:HTMLVideoElement,url:string,revokeRequired:boolean}>=>{
     return new Promise<{video:HTMLVideoElement,url:string,revokeRequired:boolean}>((resolve,reject)=>{
         const video=globalThis.window?.document?.createElement('video');
 
@@ -273,16 +272,33 @@ export const getVideoAsync=(src:string|Blob):Promise<{video:HTMLVideoElement,url
         const blobUrl=typeof src === 'string'?undefined:URL.createObjectURL(src);
 
         const onMeta=()=>{
-            resolve({video,url:video.src,revokeRequired:blobUrl?true:false})
+            resolve({video,url:video.src,revokeRequired:blobUrl?true:false});
         }
 
         const onError=(e:any)=>{
             reject(e);
         }
 
-        video.addEventListener('loadedmetadata',onMeta)
         video.addEventListener('error',onError)
+        if(forPreview){
+            video.currentTime=0.1;
+            video.addEventListener('canplay',onMeta);
+            video.addEventListener('loadeddata',onMeta);
+        }else{
+            video.addEventListener('loadedmetadata',onMeta);
+        }
 
         video.src=blobUrl??(src as string);
     })
+}
+
+export const mediaRecordingResultToBlob=(recordingResult:MediaRecordingResult):Blob|undefined=>{
+    const first=recordingResult.data[0];
+    if(recordingResult.data.length===0){
+        return undefined;
+    }else if(recordingResult.data.length===1 && first && first.type===recordingResult.mimeType){
+        return first;
+    }else{
+        return new Blob(recordingResult.data,{type:recordingResult.mimeType});
+    }
 }
