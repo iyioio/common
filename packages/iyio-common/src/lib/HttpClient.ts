@@ -225,6 +225,14 @@ export class HttpClient
         return await response.text();
     }
 
+    public getResponseAsync(uri:string,options?:HttpClientRequestOptions):Promise<Response|undefined>
+    {
+        return this.requestAsync<Response>('GET',uri,undefined,{
+            returnFetchResponse:true,
+            ...options
+        });
+    }
+
     public async postAsync<T>(uri:string,body:any,options?:HttpClientRequestOptions):Promise<T|undefined>
     {
         return await this.requestAsync<T>('POST',uri,body,options);
