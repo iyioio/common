@@ -153,6 +153,9 @@ export const isQueryWithData=<T=any>(value:any): value is QueryWithData<T>=>{
 export type QueryOrQueryWithData<T=any>=Query|QueryWithData<T>;
 
 export const allQueryGroupConditionOps=['and','or'] as const;
+/**
+ * Operators to combine multiple query conditions, either `and` or `or`
+ */
 export type QueryGroupConditionOp=typeof allQueryGroupConditionOps[number];
 
 /**
@@ -175,6 +178,9 @@ export interface QueryGroupCondition
      */
     label?:string;
 
+    /**
+     * Metadata to attach to the condition. Mainly used to bind UI interfaces to query conditions
+     */
     metadata?:Record<string,any>;
 
 }
@@ -200,7 +206,11 @@ export const queryConditionNotMap:Record<string,string>={
 Object.freeze(queryConditionNotMap);
 
 export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','is','in'] as const;
+/**
+ * Operators allowed to be used in query conditions
+ */
 export type QueryConditionOp=typeof allQueryConditionOps[number];
+
 export interface QueryCondition
 {
     /**
@@ -213,6 +223,9 @@ export interface QueryCondition
      */
     op:QueryConditionOp;
 
+    /**
+     * Inverts the logic of the operator (op prop)
+     */
     not?:boolean;
 
     /**
@@ -225,6 +238,9 @@ export interface QueryCondition
      */
     label?:string;
 
+    /**
+     * Metadata to attach to the condition. Mainly used to bind UI interfaces to query conditions
+     */
     metadata?:Record<string,any>;
 
 }
@@ -244,6 +260,9 @@ export const queryFunctions=[
     'reverse','coalesce'
 ] as const;
 Object.freeze(queryFunctions);
+/**
+ * All allowed functions
+ */
 export type QueryFunction=typeof queryFunctions[number];
 
 export const queryExpressionOperators=[
@@ -251,8 +270,16 @@ export const queryExpressionOperators=[
     'all','and','any','between','exists','in','like','not','or','some'
 ] as const;
 Object.freeze(queryExpressionOperators);
+/**
+ * All operators allowed as part of a query expression
+ */
 export type QueryExpressionOperator=typeof queryExpressionOperators[number];
 
+/**
+ * QueryGeneratedValues are values that are evaluated during the conversion of a query object into
+ * sql. For example the timeMs generated value will insert the current date and time as a timestamp
+ * using the Date.now() javascript function.
+ */
 export type QueryGeneratedValue={
     type:'timeMs';
     offset?:number;
@@ -362,6 +389,9 @@ export interface QueryCol
     target?:QueryTargetTable;
 }
 
+/**
+ * A column with order defined
+ */
 export interface OrderCol extends QueryCol
 {
     desc?:boolean;

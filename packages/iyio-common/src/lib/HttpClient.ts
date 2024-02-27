@@ -10,24 +10,64 @@ import { deleteUndefined } from "./object";
 import { Scope, TypeDef } from "./scope-types";
 import { getUriProtocol } from "./uri";
 
+/**
+ * Options for configuring requests sent by the HttpClient class
+ */
 export interface HttpClientOptions
 {
+    /**
+     * Maps URIs prefixed to base URLs
+     * @example
+     * // this mapping allows URLs like `@api/messages` to be passed to the request methods of
+     * // HttpClient and those request be sent to https://api.example.com/v1
+     * {
+     *     "api":"https://api.example.com/v1"
+     * }
+     */
     baseUrlMap?:HashMap<string>;
 
+    /**
+     * References to HttpRequestSigners that can sign requests. Currently used by the
+     * AwsHttpRequestSigner to sign requests sent to AWS services.
+     */
     signers?:TypeDef<HttpRequestSigner>;
 
+    /**
+     * References to fetchers that preference the actual HTTP request for the HttpClient class.
+     * By default the global fetch function is used.
+     */
     fetchers?:TypeDef<HttpFetcher>;
 
+    /**
+     * The URL prefix that a URI must start with to be remapped.
+     * @default '@'
+     */
     baseUrlPrefix?:string;
 
+    /**
+     * References to JwtProviders
+     */
     jwtProviders?:TypeDef<JwtProvider>;
 
+    /**
+     * If true all requests are written to the console
+     */
     logRequests?:boolean;
 
+    /**
+     * If true all responses are written to the console
+     */
     logResponses?:boolean;
 
+    /**
+     * Max number of a request should be retired. Requests are retired in the cases of connection
+     * errors or server errors (500 status codes).
+     */
     maxRetries?:number;
 
+    /**
+     * Number of milliseconds to delay between request retires
+     */
     retryDelay?:number;
 }
 
@@ -76,6 +116,13 @@ export class HttpClient
         }
     }
 
+    /**
+     * Applies a base url to the given uri. The HttpClient can be configured to replaced URI prefixes
+     * with full base URLs. For example if `@api` is configured to be replaced with `https://api.example.com/v1`
+     * then passing a value of `@api/messages` to applyBaseUrl will return `https://api.example.com/v1/message`.
+     * @param uri
+     * @returns
+     */
     public applyBaseUrl(uri:string):string{
         if( !this.options.baseUrlMap ||
             !this.options.baseUrlPrefix ||
@@ -107,6 +154,16 @@ export class HttpClient
         throw new HttpBaseUrlPrefixNotFoundError(`prefix = ${prefix}`);
     }
 
+     /**
+      * Sends a request to the URL. All other request methods of the HttpClient class are shorthand
+      * methods of this method.
+      * @param method HTTP method of the request
+      * @param uri endpoint URI
+      * @param body A body to send as part of the request
+      * @param options additional request options
+      * @returns By default the returned value from the endpoint is parsed as a JSON object and
+      *          returned. You can optionally have a raw Response object returned.
+      */
     public async requestAsync<T>(
         method:HttpMethod,
         uri:string,
@@ -207,12 +264,13 @@ export class HttpClient
         return result;
     }
 
-
-    public async getAsync<T>(uri:string,options?:HttpClientRequestOptions):Promise<T|undefined>
-    {
-        return await this.requestAsync<T>('GET',uri,undefined,options);
-    }
-
+    /**
+     * Sends a GET Request to the given URI and returns the result as a string instead of parsing
+     * the return as a JSON object.
+     * @param uri endpoint URI
+     * @param options additional request options
+     * @returns The value returned from the endpoint as a string. Undefined is returned in the cases of a 404.
+     */
     public async getStringAsync(uri:string,options?:HttpClientRequestOptions):Promise<string|undefined>
     {
         const response=await this.requestAsync<Response>('GET',uri,undefined,{
@@ -225,6 +283,12 @@ export class HttpClient
         return await response.text();
     }
 
+    /**
+     * Sends a GET Request to the given URI and returns a raw Response object.
+     * @param uri endpoint URI
+     * @param options additional request options
+     * @returns A raw Response object.
+     */
     public getResponseAsync(uri:string,options?:HttpClientRequestOptions):Promise<Response|undefined>
     {
         return this.requestAsync<Response>('GET',uri,undefined,{
@@ -233,23 +297,62 @@ export class HttpClient
         });
     }
 
-    public async postAsync<T>(uri:string,body:any,options?:HttpClientRequestOptions):Promise<T|undefined>
+
+    /**
+     * Sends a GET Request to the given URI
+     * @param uri endpoint URI
+     * @param options additional request options
+     * @returns The value returned from the endpoint. Undefined is returned in the cases of a 404.
+     */
+    public async getAsync<TReturn>(uri:string,options?:HttpClientRequestOptions):Promise<TReturn|undefined>
     {
-        return await this.requestAsync<T>('POST',uri,body,options);
+        return await this.requestAsync<TReturn>('GET',uri,undefined,options);
     }
 
-    public async patchAsync<T>(uri:string,body:any,options?:HttpClientRequestOptions):Promise<T|undefined>
+    /**
+     * Sends a POST Request to the given URI
+     * @param uri endpoint URI
+     * @param body The body of the request
+     * @param options additional request options
+     * @returns The value returned from the endpoint. Undefined is returned in the cases of a 404.
+     */
+    public async postAsync<TReturn,TBody=any>(uri:string,body:TBody,options?:HttpClientRequestOptions):Promise<TReturn|undefined>
     {
-        return await this.requestAsync<T>('PATCH',uri,body,options);
+        return await this.requestAsync<TReturn>('POST',uri,body,options);
     }
 
-    public async putAsync<T>(uri:string,body:any,options?:HttpClientRequestOptions):Promise<T|undefined>
+    /**
+     * Sends a PATCH Request to the given URI
+     * @param uri endpoint URI
+     * @param body The body of the request
+     * @param options additional request options
+     * @returns The value returned from the endpoint. Undefined is returned in the cases of a 404.
+     */
+    public async patchAsync<TReturn,TBody=any>(uri:string,body:TBody,options?:HttpClientRequestOptions):Promise<TReturn|undefined>
     {
-        return await this.requestAsync<T>('PUT',uri,body,options);
+        return await this.requestAsync<TReturn>('PATCH',uri,body,options);
     }
 
-    public async deleteAsync<T>(uri:string,options?:HttpClientRequestOptions):Promise<T|undefined>
+    /**
+     * Sends a PUT Request to the given URI
+     * @param uri endpoint URI
+     * @param body The body of the request
+     * @param options additional request options
+     * @returns The value returned from the endpoint. Undefined is returned in the cases of a 404.
+     */
+    public async putAsync<TReturn,TBody=any>(uri:string,body:TBody,options?:HttpClientRequestOptions):Promise<TReturn|undefined>
     {
-        return await this.requestAsync<T>('DELETE',uri,undefined,options);
+        return await this.requestAsync<TReturn>('PUT',uri,body,options);
+    }
+
+    /**
+     * Sends a DELETE Request to the given URI
+     * @param uri endpoint URI
+     * @param options additional request options
+     * @returns The value returned from the endpoint. Undefined is returned in the cases of a 404.
+     */
+    public async deleteAsync<TReturn>(uri:string,options?:HttpClientRequestOptions):Promise<TReturn|undefined>
+    {
+        return await this.requestAsync<TReturn>('DELETE',uri,undefined,options);
     }
 }
