@@ -47,6 +47,7 @@ export interface Series<T=any>
     repeat?:number|T[];
     offset?:SeriesOffset;
     offsetMultiplier?:number;
+    debug?:boolean;
 }
 
 export interface SeriesIntervalCtrl<T=any>
