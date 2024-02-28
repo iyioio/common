@@ -648,7 +648,8 @@ describe('convo',()=>{
         let ragParams:any;
 
         const convo=new Conversation({
-            ragCallback:(params)=>{
+            ragCallback:({params})=>{
+                console.log('hio 👋 👋 👋 RAG params',params);
                 ragParams=params;
                 return {
                     content:'Polar bears like coke ;)',
