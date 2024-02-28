@@ -427,7 +427,7 @@ export interface IQueryClient
 * The function and selected column to run the function on.
 * Omitting this will default to counting the query
 */
-export interface funcColumn
+export interface FuncColumn
 {
     /**
      * A predefined function to use as a value

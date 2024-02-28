@@ -2,12 +2,25 @@ import { addDays, addMonths, addWeeks, addYears } from "date-fns";
 import { asArray } from "./array";
 import { HashMap } from "./common-types";
 import { deepClone } from "./object";
-import { NamedQueryValue, Query, QueryCondition, QueryGroupCondition, funcColumn } from "./query-types";
+import { FuncColumn, NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types";
 import { getSeriesIntervalCtrl } from "./series-ctrls";
 import { AutoSeries, Series, SeriesData, SeriesDataQuery, SeriesRange } from "./series-types";
 import { buildQuery } from "./sql-query-builder";
 
-export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries:Query|Query[], funcColumn?:funcColumn):SeriesDataQuery=>{
+export const createSeriesQuery=(
+    rangeColumn:string,
+    series:Series,
+    seriesQueries:Query|Query[],
+    funcColumn?:FuncColumn|string
+):SeriesDataQuery=>{
+
+    if(typeof funcColumn === 'string'){
+        funcColumn={
+            func:'sum',
+            name:'count',
+            col:funcColumn
+        }
+    }
 
     const repeatAry=Array.isArray(series.repeat)?series.repeat:undefined;
 
@@ -34,8 +47,6 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
     let offset=0;
     const rangeType=series.rangeType??'<=>';
 
-    let index = 0;
-
     if(series.debug){
         console.info(
             'createSeriesQuery - before main loop',
@@ -44,8 +55,6 @@ export const createSeriesQuery=(rangeColumn:string, series:Series, seriesQueries
     }
 
     for(let queryIndex=0;queryIndex<seriesQueries.length;queryIndex++){
-
-        index=queryIndex;
 
         const names:string[]=[];
         seriesColNames.push(names);
@@ -302,10 +311,4 @@ export const getSeriesDiff=(data:SeriesData):DataDiff=>{
     }
 }
 
-export interface SeriesDataQueryOptions {
-    rangeColumn: string | null | undefined;
-    funcColumn?: funcColumn | null;
-    series: Series | null | undefined;
-    seriesQueries: Query | Query[] | null | undefined;
-}
-export declare const useSeriesDataQuery: ({ rangeColumn, funcColumn, series, seriesQueries, }?: SeriesDataQueryOptions) => SeriesData | undefined;
+

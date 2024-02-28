@@ -1,4 +1,4 @@
-import { createSeriesQuery, deepCompare, Query, queryCtrlFactory, Series, SeriesData, SeriesDataQuery } from "@iyio/common";
+import { createSeriesQuery, deepCompare, FuncColumn, Query, queryCtrlFactory, Series, SeriesData, SeriesDataQuery } from "@iyio/common";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSubject } from "./rxjs-hooks";
 
@@ -14,14 +14,18 @@ export interface SeriesDataQueryOptions
 {
     rangeColumn:string|null|undefined,
     sumColumn?:string|null;
+    funcColumn?:FuncColumn|string|null;
     series:Series|null|undefined,
     seriesQueries:Query|Query[]|null|undefined;
 }
+
+
 
 export const useSeriesDataQuery=(
     {
         rangeColumn,
         sumColumn,
+        funcColumn=sumColumn,
         series,
         seriesQueries,
     }:SeriesDataQueryOptions={rangeColumn:null,series:null,seriesQueries:null}
@@ -46,18 +50,18 @@ export const useSeriesDataQuery=(
             return;
         }
 
-        const state={rangeColumn,series,seriesQueries,sumColumn};
+        const state={rangeColumn,series,seriesQueries,funcColumn};
         if(lastStateRef.current && deepCompare(lastStateRef.current,state)){
             return;
         }
 
-        const sq=createSeriesQuery(rangeColumn,series,seriesQueries,sumColumn??undefined);
+        const sq=createSeriesQuery(rangeColumn,series,seriesQueries,funcColumn??undefined);
         lastStateRef.current=state;
         setSq(sq);
         ctrl.setLimit(Array.isArray(seriesQueries)?seriesQueries.length:1);
         ctrl.query=sq.query;
 
-    },[ctrl,seriesQueries,series,rangeColumn,sumColumn]);
+    },[ctrl,seriesQueries,series,rangeColumn,funcColumn]);
 
     const data=useSubject(ctrl?.data);
 
