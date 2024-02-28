@@ -1,6 +1,6 @@
 {
     "name": "@iyio/media-common",
-    "version": "0.5.13",
+    "version": "0.5.14",
     "type": "commonjs",
     "sideEffects": false
 }
