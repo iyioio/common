@@ -62,6 +62,9 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
 
 }
 
+/**
+ * Watches an object and all of its descendants
+ */
 export const watchObjDeep=<T extends Watchable>(
     obj:T,
     listener:ObjRecursiveListenerOptionalEvt,
@@ -70,6 +73,9 @@ export const watchObjDeep=<T extends Watchable>(
     return watchObj(obj).watchPath(null,listener,{deep:true,...options});
 }
 
+/**
+ * Watches an object at the given path
+ */
 export const watchObjAtPath=<T extends Watchable>(
     obj:T,
     path:RecursiveKeyOf<T>,
@@ -79,6 +85,10 @@ export const watchObjAtPath=<T extends Watchable>(
     return watchObj(obj).watchPath(path as any,listener,options);
 }
 
+/**
+ * Watches an object and all of its descendants based on a filter. The filter allows for specifying
+ * multiple branching paths.
+ */
 export const watchObjWithFilter=<T extends Watchable>(
     obj:T,
     filter:ObjWatchFilter<T>,
@@ -88,6 +98,9 @@ export const watchObjWithFilter=<T extends Watchable>(
     return watchObj(obj).watchDeepPath(filter,listener,options);
 }
 
+/**
+ * Sets a value at the given path.
+ */
 export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
     if(!obj){
         return value;
@@ -100,6 +113,11 @@ export const wSetProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[
     }
     return value;
 }
+
+/**
+ * Sets a value at the given path. If an object already exists at the path the existing and new value
+ * are merged together. The existing value will be mutated.
+ */
 export const wSetOrMergeProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],source?:any):T[P]=>{
     if(!obj){
         return value;
@@ -113,6 +131,10 @@ export const wSetOrMergeProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,v
     return value;
 }
 
+/**
+ * Sets a value at the given path using the current value and apply the not operator. This is
+ * equivalent to `obj[prop]=!obj[prop]`
+ */
 export const wToggleProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,source?:any):boolean=>{
     if(!obj){
         return false;
@@ -122,6 +144,10 @@ export const wToggleProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,sourc
     return value;
 }
 
+/**
+ * Sets or deletes the value at the given path. If the `value` is falsy then the value at the path is
+ * deleted otherwise the value is set.
+ */
 export const wSetPropOrDeleteFalsy=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P]):T[P]=>{
     if(!obj){
         return value;
@@ -143,6 +169,10 @@ export const wSetPropOrDeleteFalsy=<T,P extends keyof T>(obj:T|null|undefined,pr
     return value;
 }
 
+/**
+ * Sets or deletes the value at the given path. If the `value` equals `deleteWhen` then the value at the path is
+ * deleted otherwise the value is set.
+ */
 export const wSetPropOrDeleteWhen=<T,P extends keyof T>(obj:T|null|undefined,prop:P,value:T[P],deleteWhen:T[P]):T[P]=>{
     if(!obj){
         return value;
@@ -164,6 +194,9 @@ export const wSetPropOrDeleteWhen=<T,P extends keyof T>(obj:T|null|undefined,pro
     return value;
 }
 
+/**
+ * Deletes the value at the given path.
+ */
 export const wDeleteProp=<T,P extends keyof T>(obj:T|null|undefined,prop:P,source?:any):void=>{
 
      if(!obj){
@@ -190,6 +223,9 @@ export const wDeleteAllObjProps=(obj:any)=>{
     }
 }
 
+/**
+ * Pushes a value onto an array
+ */
 export const wAryPush=<T extends Array<any>>(obj:T|null|undefined,...values:T[number][])=>{
 
      if(!obj){
@@ -204,9 +240,16 @@ export const wAryPush=<T extends Array<any>>(obj:T|null|undefined,...values:T[nu
 
 }
 
+/**
+ * Splices an array
+ */
 export const wArySplice=<T extends Array<any>>(obj:T|null|undefined,index:number,deleteCount:number,...values:T[number][]):boolean=>{
     return wArySpliceWithSource<T>(undefined,obj,index,deleteCount,values);
 }
+
+/**
+ * Splices an array and relays information about the source that triggered the change.
+ */
 export const wArySpliceWithSource=<T extends Array<any>>(source:any,obj:T|null|undefined,index:number,deleteCount:number,values:T[number][]):boolean=>{
 
      if(!obj){
@@ -221,6 +264,9 @@ export const wArySpliceWithSource=<T extends Array<any>>(source:any,obj:T|null|u
 
 }
 
+/**
+ * Removes the given value from an array
+ */
 export const wAryRemove=<T extends Array<any>>(obj:T|null|undefined,value:any):boolean=>{
 
      if(!obj){
@@ -235,6 +281,9 @@ export const wAryRemove=<T extends Array<any>>(obj:T|null|undefined,value:any):b
 
 }
 
+/**
+ * Removes a value from an array at the given index
+ */
 export const wAryRemoveAt=<T extends Array<any>>(obj:T|null|undefined,index:number,count=1):boolean=>{
 
      if(!obj){
@@ -249,6 +298,9 @@ export const wAryRemoveAt=<T extends Array<any>>(obj:T|null|undefined,index:numb
 
 }
 
+/**
+ * Moves items in an array
+ */
 export const wAryMove=<T extends Array<any>>(obj:T|null|undefined,fromIndex:number,toIndex:number,count=1,source?:any):boolean=>{
 
      if(!obj){
@@ -263,7 +315,10 @@ export const wAryMove=<T extends Array<any>>(obj:T|null|undefined,fromIndex:numb
 
 }
 
-
+/**
+ * Triggers an event on the given object. Event triggering allows objects to act as channels for events
+ * without the actual object having any knowledge of the events.
+ */
 export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:any,source?:any):void=>{
     if(!obj){
         return;
@@ -282,7 +337,9 @@ export const wTriggerEvent=<T>(obj:T|null|undefined,type:string|symbol,value?:an
 
 }
 
-
+/**
+ * Triggers a change event for the given object.
+ */
 export const wTriggerChange=<T>(obj:T|null|undefined,source?:any):void=>{
     if(!obj){
         return;
@@ -299,7 +356,9 @@ export const wTriggerChange=<T>(obj:T|null|undefined,source?:any):void=>{
 
 }
 
-
+/**
+ * Triggers the `load` event for the given object.
+ */
 export const wTriggerLoad=<T>(obj:T|null|undefined,prop?:keyof T,source?:any):void=>{
     if(!obj){
         return;
