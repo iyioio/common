@@ -85,6 +85,13 @@ export interface PanZoomViewProps
      * If true CMD + PLUS and CMD + MINUS will zoom in and out
      */
     listenToKeys?:boolean;
+
+    /**
+     * If true selections make by pressing the mouse down and dragging will be forcefully disabled
+     * by preventing the default action of all mouse down events received by the PanZoomView
+     * component.
+     */
+    forcePreventDragSelection?:boolean;
 }
 
 
@@ -109,7 +116,8 @@ export function PanZoomView({
     markCenter,
     bound,
     disableScroll,
-    listenToKeys
+    listenToKeys,
+    forcePreventDragSelection
 }:PanZoomViewProps){
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
@@ -123,6 +131,7 @@ export function PanZoomView({
     ctrlRefs.current.minScale=minScale;
     ctrlRefs.current.maxScale=maxScale;
     ctrlRefs.current.bound=bound;
+
 
     const ctrl=useMemo(()=>new PanZoomCtrl(ctrlRefs.current,initRef.current),[]);
 
@@ -207,6 +216,7 @@ export function PanZoomView({
         dragTargets,
         disabled,
         bound,
+        forcePreventDragSelection,
     })
     stateRef.current.mode=mode;
     stateRef.current.ignore=ignore;
@@ -214,6 +224,7 @@ export function PanZoomView({
     stateRef.current.dragTargets=dragTargets;
     stateRef.current.disabled=disabled;
     stateRef.current.bound=bound;
+    stateRef.current.forcePreventDragSelection=forcePreventDragSelection;
 
     const onPoints=useCallback((points:TouchPoint[], simTouch=false)=>{
         if(!plane){
@@ -427,6 +438,9 @@ export function PanZoomView({
     },[onPoints])
 
     const onMouseDown=useCallback((e:MouseEvent)=>{
+        if(stateRef.current.forcePreventDragSelection){
+            e.preventDefault();
+        }
         const state=stateRef.current;
         if(state.isTouch){
             return;
