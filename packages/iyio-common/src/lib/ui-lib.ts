@@ -25,6 +25,8 @@ export interface UiActionItem<
     data?:TData;
     mapKey?:string|number|null;
     selected?:boolean;
+    primary?:boolean;
+    secondary?:boolean;
 }
 
 export interface UiActionSubItem<
