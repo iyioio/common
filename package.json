@@ -71,6 +71,7 @@
         "@testing-library/react": "14.0.0",
         "@types/archiver": "^6.0.2",
         "@types/aws-lambda": "^8.10.104",
+        "@types/chrome": "^0.0.262",
         "@types/jest": "28.1.1",
         "@types/node": "18.14.2",
         "@types/node-fetch": "^2.6.2",
