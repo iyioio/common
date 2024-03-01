@@ -6,7 +6,7 @@ import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, Htt
 import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps";
 import { JwtProvider } from "./jwt";
 import { JwtProviders } from "./jwt.deps";
-import { deleteUndefined } from "./object";
+import { deleteUndefined, deleteUndefinedOrNull } from "./object";
 import { Scope, TypeDef } from "./scope-types";
 import { getUriProtocol } from "./uri";
 
@@ -175,6 +175,8 @@ export class HttpClient
             parseResponse=true,
             urlEncodeBody=false,
             noAuth,
+            headers,
+            includeDefaultHeadersWithHeaders,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -201,9 +203,10 @@ export class HttpClient
                 uri,
                 method,
                 body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
-                headers:deleteUndefined<any>({
+                headers:deleteUndefined<any>((headers && !includeDefaultHeadersWithHeaders)?headers:{
                     "Authorization":jwt?'Bearer '+jwt:undefined,
                     "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
+                    ...deleteUndefinedOrNull(headers)
                 })
             }
 

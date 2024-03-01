@@ -52,6 +52,18 @@ export interface HttpClientRequestOptions
     urlEncodeBody?:boolean;
 
     noAuth?:boolean;
+
+    /**
+     * Additional headers to add to the request. Null and undefined key pairs will be ignored.
+     * If supplied the default headers created by HttpClient will be ignored.
+     */
+    headers?:Record<string,string|null|undefined>;
+
+    /**
+     * If true and headers are provided then the default headers created by HttpClient will also
+     * be used.
+     */
+    includeDefaultHeadersWithHeaders?:boolean;
 }
 
 export interface HttpFetcher{
