@@ -56,6 +56,7 @@ export * from "./lib/tool-tip/tool-tip-lib";
 export * from "./lib/useCompareItem";
 export * from "./lib/useDataQuery";
 export * from "./lib/useDelayedValue";
+export * from "./lib/useDomSharedStyleSheets";
 export * from "./lib/useDragDropFiles";
 export * from "./lib/useElementSize";
 export * from './lib/useIntersectionObserver';
