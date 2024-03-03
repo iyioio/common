@@ -71,7 +71,7 @@ export const getWindowLocationRouteInfo=():RouteInfo=>{
         return createDefaultRouteInfo();
     }
     return {
-        key:window.history?((window.history.state as any).key??'_'):'_',
+        key:window.history?((window.history.state as any)?.key??'_'):'_',
         path:window.location.pathname,
         route:window.location.pathname,
         asPath:window.location.pathname+window.location.search,
