@@ -3,9 +3,9 @@ import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, mapToConvoTags, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
+import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTag, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -17,6 +17,7 @@ export interface ConversationOptions
     completionService?:ConvoCompletionService;
     serviceCapabilities?:ConvoCapability[];
     capabilities?:ConvoCapability[];
+    disableMessageCapabilities?:boolean;
     maxAutoCompleteDepth?:number;
     /**
      * If true time tags will be added to appended user message
@@ -156,9 +157,16 @@ export class Conversation
     public readonly externFunctions:Record<string,ConvoScopeFunction>={};
 
     /**
-     * Capabilities the conversation should support.
+     * The default capabilities of the conversation. Additional capabilities can be enabled by
+     * the first and last message of the conversation as long a disableMessageCapabilities is not
+     * true.
      */
     public readonly capabilities:ConvoCapability[];
+
+    /**
+     * If true capabilities enabled by message in the conversation will be ignored.
+     */
+    public readonly disableMessageCapabilities:boolean;
 
     /**
      * Capabilities that should be enabled by the underlying completion service.
@@ -203,12 +211,14 @@ export class Conversation
             ragCallback,
             debug,
             debugMode,
+            disableMessageCapabilities=false,
         }=options;
         this.defaultOptions=options;
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
         this.capabilities=[...capabilities];
+        this.disableMessageCapabilities=disableMessageCapabilities;
         this.serviceCapabilities=serviceCapabilities;
         this.maxAutoCompleteDepth=maxAutoCompleteDepth;
         this._trackTime=new BehaviorSubject<boolean>(trackTime);
@@ -223,49 +233,89 @@ export class Conversation
         }
     }
 
-    private runtimeInited=false;
+    private getMessageListCapabilities(msgs:FlatConvoMessage[]):ConvoCapability[]{
+        let firstMsg:FlatConvoMessage|undefined;
+        let lastMsg:FlatConvoMessage|undefined;
+        for(let i=0;i<msgs.length;i++){
+            const f=msgs[i];
+            if(f && (!f.fn || f.fn.topLevel)){
+                firstMsg=f;
+                break;
+            }
+        }
+        for(let i=msgs.length-1;i>=0;i--){
+            const f=msgs[i];
+            if(f && (!f.fn || f.fn.topLevel)){
+                lastMsg=f;
+                break;
+            }
+        }
+        if(!firstMsg && !lastMsg){
+            return []
+        }
+        if(firstMsg===lastMsg){
+            lastMsg=undefined;
+        }
+        const tags:ConvoTag[]=[];
+        if(firstMsg?.tags){
+            const t=mapToConvoTags(firstMsg.tags);
+            tags.push(...t);
+        }
+        if(lastMsg?.tags){
+            const t=mapToConvoTags(lastMsg.tags);
+            tags.push(...t);
+        }
+        return this.getMessageCapabilities(tags)??[];
+    }
     /**
-     * Initializes runtime features and capabilities. initRuntime is called just before the first
-     * completion.
+     * Gets the capabilities enabled by the given tags. If disableMessageCapabilities is true
+     * undefined is always returned
      */
-    private initRuntime(){
-        if(this.runtimeInited){
-            return;
+    private getMessageCapabilities(tags:ConvoTag[]|null|undefined):ConvoCapability[]|undefined{
+        if(!tags || this.disableMessageCapabilities){
+            return undefined;
         }
-        const msg=this.messages.find(f=>!f.fn || f.fn.topLevel)
-        if(!msg){
-            return;
-        }
-        this.runtimeInited=true;
 
-        if(msg.tags){
-            for(const tag of msg.tags){
-                switch(tag.name){
+        let capList:ConvoCapability[]|undefined;
 
-                    case convoTags.capability:
-                        if(tag.value){
-                            const caps=tag.value.split(',');
-                            for(const c of caps){
-                                const cap=c.trim();
-                                if(isConvoCapability(cap) && !this.capabilities.includes(cap)){
-                                    this.capabilities.push(cap);
+        for(const tag of tags){
+            switch(tag.name){
+
+                case convoTags.capability:
+                    if(tag.value){
+                        const caps=tag.value.split(',');
+                        for(const c of caps){
+                            const cap=c.trim();
+                            if(isConvoCapability(cap) && !capList?.includes(cap)){
+                                if(!capList){
+                                    capList=[];
                                 }
+                                capList.push(cap);
                             }
                         }
-                        break;
+                    }
+                    break;
 
-                    case convoTags.enableVision:
-                        if(!this.capabilities.includes('vision')){
-                            this.capabilities.push('vision');
+                case convoTags.enableVision:
+                    if(!capList?.includes('vision')){
+                        if(!capList){
+                            capList=[]
                         }
+                        capList.push('vision');
+                    }
 
-                }
             }
         }
 
-        for(const cap of this.capabilities){
+        if(!capList){
+            return undefined;
+        }
+
+        for(const cap of capList){
             this.enableCapability(cap);
         }
+
+        return capList;
 
     }
 
@@ -299,9 +349,6 @@ export class Conversation
             return;
         }
         this.enabledCapabilities.push(cap);
-        if(!this.capabilities.includes(cap)){
-            this.capabilities.push(cap);
-        }
         switch(cap){
             case 'vision':
                 this.define({
@@ -702,10 +749,6 @@ export class Conversation
             task=defaultConvoTask;
         }
         const isDefaultTask=task===defaultConvoTask;
-
-        if(!this.runtimeInited){
-            this.initRuntime();
-        }
 
         if(updateTaskCount){
             this._activeTaskCount.next(this.activeTaskCount+1);
@@ -1259,8 +1302,12 @@ export class Conversation
 
         this.applyRagMode(messages,ragMode);
 
+        let capabilities=[...this.serviceCapabilities,...this.getMessageListCapabilities(messages)];
+        if(!isDefaultTask){
+            capabilities=capabilities.filter(c=>c!=='vision');
+        }
 
-        if(this.capabilities.includes('vision') && isDefaultTask){
+        if(capabilities.includes('vision') && isDefaultTask){
             const systemMessage=messages.find(m=>m.role==='system');
             const content=exe.getVar(convoVars.__visionServiceSystemMessage,null,defaultConvoVisionSystemMessage);
             if(systemMessage){
@@ -1352,10 +1399,7 @@ export class Conversation
             }
         }
 
-        let capabilities=[...this.serviceCapabilities];
-        if(!isDefaultTask){
-            capabilities=capabilities.filter(c=>c!=='vision');
-        }
+
 
         if(templates){
             for(let i=0;i<templates.length;i++){
@@ -1820,6 +1864,18 @@ export class Conversation
 
     public defineFunctions(fns:ConvoFunctionDef[],override?:boolean){
         return this.define(fns.map(fn=>({fn})),override);
+    }
+
+    public defineLocalFunctions(funcs:Record<string,(...args:any[])=>any>){
+        const keys=Object.keys(funcs);
+        this.define(keys.map<ConvoDefItem>(name=>({
+            hidden:true,
+            fn:{
+                local:true,
+                name,
+                callback:funcs[name]
+            }
+        })))
     }
 
     private createFunctionImpl(fnDef:ConvoFunctionDef):string{
