@@ -304,11 +304,29 @@ export const convoTags={
      */
     condition:'condition',
 
+    /**
+     * A URL to the source of the message. Typically used with RAG.
+     */
     sourceUrl:'sourceUrl',
 
+    /**
+     * The ID of the source content of the message. Typically used with RAG.
+     */
     sourceId:'sourceId',
 
-    sourceName:'sourceName'
+    /**
+     * The name of the source content of the message. Typically used with RAG.
+     */
+    sourceName:'sourceName',
+
+    /**
+     * When applied to a message the message becomes a clickable suggestion that when clicked will
+     * add a new user message with the content of the message. If the suggestion tag defines a value
+     * that value will be displayed on the clickable button instead of the message content but the
+     * message content will still be used as the user messaged added to the conversation when clicked.
+     * Suggestion message are render only and not seen by LLMs.
+     */
+    suggestion:'suggestion'
 
 } as const;
 

@@ -1127,6 +1127,9 @@ export class Conversation
         if(msg.sourceName!==undefined){
             flat.sourceName=msg.sourceName;
         }
+        if(msg.isSuggestion!==undefined){
+            flat.isSuggestion=msg.isSuggestion;
+        }
         if(msg.renderTarget){
             flat.renderTarget=msg.renderTarget;
         }

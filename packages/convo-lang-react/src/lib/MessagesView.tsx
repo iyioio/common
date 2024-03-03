@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { aryRemoveWhere, cn, containsMarkdownImage, objectToMarkdown, parseMarkdownImages } from "@iyio/common";
-import { ConversationUiCtrl, ConvoMessageRenderResult, ConvoRagRenderer, FlatConvoConversation, FlatConvoMessage, convoRoles, defaultConvoRenderTarget, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
-import { LoadingDots, ScrollView, useSubject } from "@iyio/react-common";
+import { ConversationUiCtrl, ConvoMessageRenderResult, ConvoRagRenderer, FlatConvoConversation, FlatConvoMessage, convoRoles, convoTags, defaultConvoRenderTarget, shouldDisableConvoAutoScroll } from "@iyio/convo-lang";
+import { LoadingDots, ScrollView, SlimButton, useSubject } from "@iyio/react-common";
 import { Fragment } from "react";
 import { MessageComponentRenderer } from "./MessageComponentRenderer";
 import { useConversationTheme, useConversationUiCtrl } from "./convo-lang-react";
@@ -39,7 +39,7 @@ const renderMessage=(
     ragRenderer:ConvoRagRenderer|undefined,
 )=>{
 
-    const className=style.msg({user:m.role==='user',agent:m.role!=='user'});
+    const className=style.msg({user:m.role==='user',agent:m.role!=='user',suggestion:m.isSuggestion});
 
     if(m.component!==undefined && m.component!==false){
         return (
@@ -151,8 +151,17 @@ const renderMessage=(
             ))
     }</Fragment>)
 
+    }else if(m.isSuggestion){
+        return (
+            <div className={rowClassName} key={i+'d'}>
+                <SlimButton className={className} onClick={()=>{
+                    ctrl.appendUiMessageAsync(m.content??'')
+                }}>
+                    {m.tags?.[convoTags.suggestion]??m.content}
+                </SlimButton>
+            </div>
+        )
     }else{
-
         return (
             <div className={rowClassName} key={i+'d'}>
                 <div className={className}>
@@ -336,5 +345,16 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
     }
     @.rag{
         background-color:#3B3B3D99 !important;
+    }
+    @.msg.suggestion{
+        background-color:#000000;
+        box-shadow:0 0 8px #00000099;
+        border:1px solid #ffffff22;
+    }
+    @.msg.agent.suggestion{
+        margin-left:0.5rem;
+    }
+    @.msg.user.suggestion{
+        margin-right:0.5rem;
     }
 `});

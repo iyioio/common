@@ -111,6 +111,12 @@ export interface ConvoMessage
     sourceId?:string;
 
     sourceName?:string;
+
+    /**
+     * If true the message should be clickable and when clicked the content of the message should be
+     * added to the conversation.
+     */
+    isSuggestion?:boolean;
 }
 
 export interface ConvoMessagePart
@@ -601,6 +607,12 @@ export interface FlatConvoMessage
     sourceId?:string;
 
     sourceName?:string;
+
+    /**
+     * If true the message should be clickable and when clicked the content of the message should be
+     * added to the conversation.
+     */
+    isSuggestion?:boolean
 
 }
 

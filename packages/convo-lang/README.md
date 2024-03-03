@@ -643,6 +643,11 @@ How many fish are in the sea
                     used with the [`tmpl`](#tmpl-varnamestring-formatenumplain-html-markdown) function to create formatted templates
 - `@renderTarget` - Controls where a message is rendered. By default messages are rendered in the default chat
                     view, but applications can define different render targets.
+- `@suggestion` - When applied to a message the message becomes a clickable suggestion that when clicked will
+                  add a new user message with the content of the message. If the suggestion tag defines a value
+                  that value will be displayed on the clickable button instead of the message content but the
+                  message content will still be used as the user messaged added to the conversation when clicked.
+                  Suggestion message are render only and not seen by LLMs.
 
 ### Strings
 There are 3 types of string in convo.

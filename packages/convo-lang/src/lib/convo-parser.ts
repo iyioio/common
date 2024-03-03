@@ -940,6 +940,11 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                         msg.renderOnly=parseConvoBooleanTag(tag.value);
                         break;
 
+                    case convoTags.suggestion:
+                        msg.renderOnly=true;
+                        msg.isSuggestion=true;
+                        break;
+
                     default:
                         if(copyTagValues[tag.name] && tag.value){
                             (msg as any)[tag.name]=tag.value;
