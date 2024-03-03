@@ -105,5 +105,5 @@ ${!disableFontFamilyCss && fontFamilies?fontFamilies.map(f=>f.className && f.fam
 
     `??''
 
-    global.document?.head.appendChild(style);
+    globalThis.document?.head.appendChild(style);
 }

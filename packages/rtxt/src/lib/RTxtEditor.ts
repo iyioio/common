@@ -333,7 +333,7 @@ export class RTxtEditor
         }
 
 
-        global.document?.body.appendChild(container);
+        globalThis.document?.body.appendChild(container);
         return container;
     }
 
