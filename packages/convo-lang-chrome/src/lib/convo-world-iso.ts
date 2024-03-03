@@ -1,3 +1,10 @@
+import { createChromeIsoMainRelay, setChromeEnv } from "@iyio/chrome-common";
+import { WorldIsoCtrl } from "./WorldIsoCtrl";
+
 export const initConvoChromeWorldIso=()=>{
-    console.log('hio 👋 👋 👋 Im world iso',);
+
+    setChromeEnv('iso');
+
+    createChromeIsoMainRelay();
+    new WorldIsoCtrl();
 }

@@ -1,9 +1,13 @@
+import { setChromeEnv } from '@iyio/chrome-common';
+import { BaseAppContainerProps } from '@iyio/react-common';
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PopupView } from './PopupView';
 
-export const initConvoChromePopup=()=>{
-    console.log('hio 👋 👋 👋 Im a popup',);
+export const initConvoChromePopup=(props?:BaseAppContainerProps)=>{
+    console.log('hio 👋 👋 👋 Im a popup',props);
+
+    setChromeEnv('popup');
 
     const root=document.querySelector('#__popup_root');
     if(!root){
@@ -12,5 +16,5 @@ export const initConvoChromePopup=()=>{
 
     const reactRoot=createRoot(root);
 
-    reactRoot.render(createElement(PopupView));
+    reactRoot.render(createElement(PopupView,props??null));
 }

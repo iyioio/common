@@ -207,8 +207,8 @@ export const convoTags={
     assign:'assign',
 
     /**
-     * Used to enable capabilities. The capability tag can only be used on the first message of the
-     * conversation if used on any other message it is ignored. Multiple capability tags can be
+     * Used to enable capabilities. Only the first and last message in the conversation are used
+     * to determine current capabilities. Multiple capability tags can be
      * applied to a message and multiple capabilities can be specified by separating them with a
      * comma.
      */
@@ -461,6 +461,17 @@ export const convoTagsToMap=(tags:ConvoTag[]):Record<string,string|undefined>=>{
         map[t.name]=t.value;
     }
     return map;
+}
+
+export const mapToConvoTags=(map:Record<string,string|undefined>):ConvoTag[]=>{
+    const tags:ConvoTag[]=[];
+    for(const e in map){
+        tags.push({
+            name:e,
+            value:map[e]
+        })
+    }
+    return tags;
 }
 
 export const createConvoMetadataForStatement=(statement:ConvoStatement):ConvoMetadata=>{

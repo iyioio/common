@@ -1,16 +1,34 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { useDomSharedStyleSheets } from '@iyio/react-common';
+import { BaseAppContainer, BaseAppContainerProps } from '@iyio/react-common';
+import { useEffect, useMemo } from "react";
+import { PopupCtrl } from "./PopupCtrl";
+import { TaskView } from "./TaskView";
 
-export function PopupView(){
+export type PopupViewProps=BaseAppContainerProps;
 
-    useDomSharedStyleSheets();
+export function PopupView(props:PopupViewProps){
+
+    const ctrl=useMemo(()=>new PopupCtrl(),[]);
+
+    useEffect(()=>{
+        return ()=>{
+            ctrl.dispose();
+        }
+    },[ctrl]);
 
     return (
-        <div className={style.root()}>
+        <BaseAppContainer
+            insertSharedStyleSheets
+            enableRouteRedirectFallback={false}
+            initBeforeRender
+            {...props}
+        >
+            <div className={style.root()}>
 
-            PopupView
+                <TaskView ctrl={ctrl}/>
 
-        </div>
+            </div>
+        </BaseAppContainer>
     )
 
 }
@@ -19,8 +37,6 @@ const style=atDotCss({name:'PopupView',css:`
     @.root{
         display:flex;
         flex-direction:column;
-        align-items:center;
-        justify-content:center;
         flex:1;
         min-width:300px;
         min-height:500px;

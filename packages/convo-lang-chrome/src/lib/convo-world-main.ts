@@ -1,3 +1,9 @@
+import { setChromeEnv } from "@iyio/chrome-common";
+import { WorldMainCtrl } from "./WorldMainCtrl";
+
 export const initConvoChromeWorldMain=()=>{
-    console.log('hio 👋 👋 👋 Im world main',);
+
+    setChromeEnv('main');
+
+    new WorldMainCtrl();
 }
