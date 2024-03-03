@@ -45,13 +45,16 @@ const updateSheets=()=>{
     }
 }
 
-export const useDomSharedStyleSheets=()=>{
+export const useDomSharedStyleSheets=(enabled=true)=>{
 
     useEffect(()=>{
+        if(!enabled){
+            return;
+        }
         const sub=sharedStyleSheetsUpdateSubject.subscribe(updateSheets);
         return ()=>{
             sub.unsubscribe();
         }
-    },[]);
+    },[enabled]);
 
 }

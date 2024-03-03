@@ -4,6 +4,7 @@ import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutSty
 import { useRouteRedirectFallback } from "./common-hooks";
 import { LockScreenRenderer } from "./LockScreenRenderer";
 import { PortalRenderer } from "./PortalRenderer";
+import { useDomSharedStyleSheets } from "./useDomSharedStyleSheets";
 import { useGoogleTagManager } from "./useGoogleTagManager";
 import { useUiReady } from "./useUiReady";
 
@@ -27,6 +28,7 @@ export interface BaseAppContainerProps
      */
     enableRouteRedirectFallback?:boolean;
     googleTagConfig?:GoogleTagManagerConfig|string|null;
+    insertSharedStyleSheets?:boolean;
 }
 
 export function BaseAppContainer({
@@ -42,12 +44,15 @@ export function BaseAppContainer({
     afterAll,
     enableRouteRedirectFallback,
     skipInitBaseLayout,
-    googleTagConfig
+    googleTagConfig,
+    insertSharedStyleSheets=false
 }:BaseAppContainerProps){
 
     if(!skipInitBaseLayout){
         initBaseLayout(style);
     }
+
+    useDomSharedStyleSheets(insertSharedStyleSheets);
 
     useGoogleTagManager(googleTagConfig);
 
