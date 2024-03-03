@@ -1,6 +1,5 @@
 import { AwsAuthProviders } from "@iyio/aws";
 import { AuthProviders, authService, BaseUser, createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot, uuid } from "@iyio/common";
-import { fail } from "assert";
 import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
 
 export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user:BaseUser,config:CognitoAuthProviderConfig)=>Promise<void>)=>{
@@ -26,8 +25,7 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
 
     if(result.status!=='success'){
         console.log(result);
-        fail('Result not success');
-        return;
+        throw new Error('Result not success');
     }
 
     try{
@@ -38,7 +36,8 @@ export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user
 
         const deleteResult=await authService(scope).deleteAsync(result.user);
         if(deleteResult.status==='error'){
-            fail('Failed to delete user');
+            // eslint-disable-next-line no-unsafe-finally
+            throw new Error('Failed to delete user');
         }else if(deleteResult.status==='pending'){
             console.warn('Delete user pending');
         }else{
