@@ -16,7 +16,7 @@ export const initGoogleTagManager=(config:GoogleTagManagerConfig|string):boolean
 
     const domain=config.domain??globalThis.location?.hostname?.toLowerCase();
 
-    if(!domain || !global.document?.body){
+    if(!domain || !globalThis.document?.body){
         console.warn('initGoogleTagManager can only be used client side')
         return false;
     }
