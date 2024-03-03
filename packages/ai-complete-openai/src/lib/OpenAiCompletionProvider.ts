@@ -134,7 +134,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
     private async completeChatAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
-        const useVision=request.capabilities?.includes('vision');
+        const useVision=request.capabilities?.includes('vision') || lastMessage.model?.includes('vision');
 
         const endpoint=lastMessage.endpoint;
 
