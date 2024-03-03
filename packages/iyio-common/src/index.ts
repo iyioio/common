@@ -74,6 +74,7 @@ export * from './lib/data-table-lib';
 export * from './lib/data-url-lib';
 export * from './lib/date';
 export * from './lib/dom';
+export * from './lib/dom-event-sim';
 export * from './lib/dom-listener-types';
 export * from './lib/dom-listener.deps';
 export * from './lib/error-lib';
