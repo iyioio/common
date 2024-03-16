@@ -1,6 +1,6 @@
 {
     "name": "@iyio/any-comp",
-    "version": "0.5.14",
+    "version": "0.5.15",
     "type": "commonjs",
     "sideEffects": false
 }
