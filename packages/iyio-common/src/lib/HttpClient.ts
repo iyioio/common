@@ -177,6 +177,8 @@ export class HttpClient
             noAuth,
             headers,
             includeDefaultHeadersWithHeaders,
+            log,
+            ignoreErrors,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -184,7 +186,7 @@ export class HttpClient
 
         uri=this.applyBaseUrl(uri);
 
-        if(this.options.logRequests){
+        if(this.options.logRequests || log){
             if(body===undefined){
                 console.info(`${method} ${uri}`);
             }else{
@@ -222,6 +224,9 @@ export class HttpClient
                 throw new Error('No HttpFetcherType found');
             }
             try{
+                if(log){
+                    console.info(`${method} ${uri} baseRequest:`,baseRequest);
+                }
                 response=await fetcher.fetchAsync(baseRequest);
 
                 if(returnFetchResponse){
@@ -250,7 +255,7 @@ export class HttpClient
             throw new Error(`Max http retries reached. max = ${maxTries}`)
         }
 
-        if(!response.ok){
+        if(!response.ok && !ignoreErrors){
             throw new Error(`Request failed with a status of ${response.status}. uri=${uri}`)
         }
 
@@ -260,7 +265,7 @@ export class HttpClient
 
         const result=await response.json();
 
-        if(this.options.logResponses){
+        if(this.options.logResponses || log){
             console.info(`${method} ${uri} Response:`,result);
         }
 

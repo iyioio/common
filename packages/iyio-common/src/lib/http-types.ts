@@ -64,6 +64,16 @@ export interface HttpClientRequestOptions
      * be used.
      */
     includeDefaultHeadersWithHeaders?:boolean;
+
+    /**
+     * If true information about the response is logged.
+     */
+    log?:boolean;
+
+    /**
+     * If true error status codes are ignored
+     */
+    ignoreErrors?:boolean;
 }
 
 export interface HttpFetcher{
