@@ -16,6 +16,11 @@ export interface ManagedStackProps extends cdk.StackProps, ParamOutputOptions
     disableFargateAutoScaling?:boolean;
     dedicatedVpc?:boolean;
     tmpDir?:string;
+
+    /**
+     * If set and bucketKey is not defined keySalt will be used to salt the random key that is generated.
+     */
+    lambdaConfigKeySalt?:string;
 }
 
 export class ManagedStack extends cdk.Stack
@@ -54,11 +59,12 @@ export class ManagedStack extends cdk.Stack
         tmpDir,
         enableLambdaConfigLayer,
         excludeFnsFromConfigLayer,
+        lambdaConfigKeySalt,
         ...props
     }:ManagedStackProps={}){
         super(scope,id,props);
 
-        this.params=new ParamOutput({enableLambdaConfigLayer,excludeFnsFromConfigLayer});
+        this.params=new ParamOutput({enableLambdaConfigLayer,excludeFnsFromConfigLayer,lambdaConfigKeySalt});
 
         if(tmpDir){
             setTmpCdkDir(tmpDir);

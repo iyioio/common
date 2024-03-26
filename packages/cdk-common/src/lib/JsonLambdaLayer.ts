@@ -1,3 +1,4 @@
+import { strHash } from "@iyio/common";
 import { CustomResource, Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -10,6 +11,10 @@ export interface JsonLambdaLayerProps{
     bucketKey?:string;
     zipFilePath:string;
     layerProps?:lambda.LayerVersionProps;
+    /**
+     * If set and bucketKey is not defined keySalt will be used to salt the random key that is generated.
+     */
+    keySalt?:string;
 }
 
 /**
@@ -25,8 +30,9 @@ export class JsonLambdaLayer extends Construct
     public constructor(scope:Construct,name:string,{
         json,
         layerProps,
-        bucketKey='layer-source.zip',
+        bucketKey,
         zipFilePath,
+        keySalt='',
     }:JsonLambdaLayerProps){
         super(scope,name);
 
@@ -47,6 +53,10 @@ export class JsonLambdaLayer extends Construct
             const k=keys[i];
             if(!k){continue}
             values['_'+i]=json[k];
+        }
+
+        if(!bucketKey){
+            bucketKey=`layer-source-${encodeURIComponent(strHash(keySalt+keys.join(',')))}.zip`
         }
 
 

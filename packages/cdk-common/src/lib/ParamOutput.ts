@@ -24,6 +24,11 @@ export interface ParamOutputOptions
      * @default "/opt/params-output.json"
      */
     paramsConfigLayerPath?:string;
+
+    /**
+     * If set and bucketKey is not defined keySalt will be used to salt the random key that is generated.
+     */
+    lambdaConfigKeySalt?:string;
 }
 
 export class ParamOutput
@@ -49,14 +54,18 @@ export class ParamOutput
 
     public paramsConfigLayerPath:string;
 
+    public lambdaConfigKeySalt?:string;
+
     public constructor({
         enableLambdaConfigLayer=false,
         excludeFnsFromConfigLayer=[],
-        paramsConfigLayerPath='/opt/params-output.json'
+        paramsConfigLayerPath='/opt/params-output.json',
+        lambdaConfigKeySalt,
     }:ParamOutputOptions={}){
         this.enableLambdaConfigLayer=enableLambdaConfigLayer;
         this.excludeFnsFromConfigLayer=excludeFnsFromConfigLayer;
         this.paramsConfigLayerPath=paramsConfigLayerPath;
+        this.lambdaConfigKeySalt=lambdaConfigKeySalt;
     }
 
     public copyEnvVars(names:string[]){
@@ -118,7 +127,8 @@ export class ParamOutput
         if(hasFnTargets && this.enableLambdaConfigLayer){
             layer=new JsonLambdaLayer(scope,'ConfigLayer',{
                 json:varMap,
-                zipFilePath:'params-output.json'
+                zipFilePath:'params-output.json',
+                keySalt:this.lambdaConfigKeySalt,
             })
         }
 
