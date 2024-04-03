@@ -68,8 +68,8 @@ export const createSeriesQuery=(
 
         for(let rangeIndex=0;rangeIndex<ranges.length;rangeIndex++){
             const range=ranges[rangeIndex] as SeriesRange<any>;
-            // issue is here
-            const sub:Query=deepClone(seriesQueries[queryIndex] as Query);
+
+            let sub:Query=deepClone(seriesQueries[queryIndex] as Query);
 
             if(series.debug){
                 console.info(
@@ -119,14 +119,24 @@ export const createSeriesQuery=(
                 condition.conditions.push(sub.condition);
             }
             sub.condition=condition;
-            sub.columns=[funcColumn?{
+
+            const cols:NamedQueryValue[]=[funcColumn?{
                 func:funcColumn.func,
                 col:{name:funcColumn.col},
                 name:funcColumn.name
             }:{
                 func:'count',
                 name:'count',
-            }]
+            }];
+
+            if(sub.columns){
+                sub={
+                    columns:cols,
+                    table:sub
+                }
+            }else{
+                sub.columns=cols;
+            }
 
             if(series.debug&&(typeof sub.table!=='string')){
                 console.info(
