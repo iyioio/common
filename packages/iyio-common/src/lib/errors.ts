@@ -90,6 +90,14 @@ export class UnsupportedError extends BaseError
     }
 }
 
+export class NotImplementedError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.notImplemented,message);
+    }
+}
+
 export class ConfigValueNotFoundError extends BaseError
 {
     public constructor(message?:string)

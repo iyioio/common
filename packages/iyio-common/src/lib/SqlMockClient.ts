@@ -1,10 +1,12 @@
 import { ZodSchema } from "zod";
+import { CancelToken } from "./CancelToken";
 import { delayAsync, unused } from "./common-lib";
 import { NoId } from "./common-types";
 import { DataTableDescription } from "./data-table";
 import { getDataTableId } from "./data-table-lib";
+import { NotImplementedError } from "./errors";
 import { deepCompare } from "./object";
-import { ISqlClient, SqlResult } from "./sql-types";
+import { ISqlClient, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types";
 import { uuid } from "./uuid";
 
 export const getDefaultTable=():MockTable=>({
@@ -288,6 +290,16 @@ export class SqlMockClient implements ISqlClient
         }
 
         return deleted;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    beginTransactionAsync(cancel?: CancelToken | undefined): Promise<ISqlTransaction> {
+        throw new NotImplementedError();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    runTransactionAsync<T>(runAsync: (trans: ISqlTransaction, cancel?: CancelToken | undefined) => Promise<T>, options?: RunSqlTransactionOptions | undefined, cancel?: CancelToken | undefined): Promise<T> {
+        throw new NotImplementedError();
     }
 
 

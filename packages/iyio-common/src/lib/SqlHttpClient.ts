@@ -2,7 +2,7 @@ import { httpClient } from "./http.deps";
 import { HttpClient } from "./HttpClient";
 import { defineStringParam } from "./scope-lib";
 import { Scope } from "./scope-types";
-import { SqlExecCommand, SqlResult } from "./sql-types";
+import { ISqlTransaction, SqlExecCommand, SqlResult, SqlTransactionStatus } from "./sql-types";
 import { SqlBaseClient } from "./SqlBaseClient";
 
 export const sqlHttpClientUrlParam=defineStringParam('sqlHttpClientUrl');
@@ -10,6 +10,31 @@ export const sqlHttpClientUrlParam=defineStringParam('sqlHttpClientUrl');
 export interface SqlHttpClientOptions
 {
     url:string;
+}
+
+
+const execAsync=async (
+    client:HttpClient,
+    options:SqlHttpClientOptions,
+    sql:string,
+    includeResultMetadata?:boolean,
+    noLogResult?:boolean,
+    transactionId?:string
+):Promise<SqlResult>=>
+{
+    const command:SqlExecCommand={
+        sql,
+        includeResultMetadata,
+        noLogResult,
+        transactionId
+    }
+
+    const result=await client.postAsync<SqlResult>(options.url,command);
+    if(!result){
+        throw new Error('No SqlHttpClient http response')
+    }
+
+    return result;
 }
 
 export class SqlHttpClient extends SqlBaseClient
@@ -27,6 +52,7 @@ export class SqlHttpClient extends SqlBaseClient
 
     private readonly client:HttpClient;
     private readonly options:SqlHttpClientOptions;
+    protected _transactionId?:string;
 
     public constructor(client:HttpClient,options:SqlHttpClientOptions)
     {
@@ -35,19 +61,68 @@ export class SqlHttpClient extends SqlBaseClient
         this.options={...options}
     }
 
-    public async execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>
+    public execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>
     {
-        const command:SqlExecCommand={
-            sql,
-            includeResultMetadata,
-            noLogResult,
-        }
+        return execAsync(this.client,this.options,sql,includeResultMetadata,noLogResult,this._transactionId);
+    }
 
-        const result=await this.client.postAsync<SqlResult>(this.options.url,command);
-        if(!result){
-            throw new Error('No SqlHttpClient http response')
+    protected async _beginTransactionAsync():Promise<ISqlTransaction>
+    {
+        const r=await this.execAsync('BEGIN TRANSACTION');
+        if(!r.transactionId){
+            throw new Error('Failed to start transaction');
         }
+        return new SqlHttpTransaction(
+            this.client,
+            this.options,
+            r.transactionId,
+            t=>this.closeTransaction(t)
+        )
+    }
+}
 
-        return result;
+class SqlHttpTransaction extends SqlHttpClient implements ISqlTransaction
+{
+
+    public get transactionId():string{return this._transactionId??''};
+
+
+
+    private _transactionStatus:SqlTransactionStatus='waiting';
+    public get transactionStatus(){return this._transactionStatus}
+
+    public constructor(
+        client:HttpClient,
+        options:SqlHttpClientOptions,
+        transactionId:string,
+        onDispose?:(transaction:SqlHttpTransaction)=>void
+    ){
+        super(client,options);
+        this._transactionId=transactionId;
+        this.disposables.addCb(()=>{
+            onDispose?.(this);
+        })
+    }
+
+    public async commitAsync():Promise<void>
+    {
+        if(this.transactionStatus!=='waiting'){
+            throw new Error(`Transaction already has a status of ${this.transactionStatus}`);
+        }
+        this._transactionStatus='committing';
+        await this.execAsync('COMMIT TRANSACTION');
+        this._transactionStatus='committed';
+    }
+    /**
+     * Called automatically when when the transaction is disposed if not committed.
+     */
+    public async rollbackAsync():Promise<void>
+    {
+        if(this.transactionStatus!=='waiting'){
+            throw new Error(`Transaction already has a status of ${this.transactionStatus}`);
+        }
+        this._transactionStatus='rollingBack';
+        await this.execAsync('ROLLBACK TRANSACTION');
+        this._transactionStatus='rolledBack';
     }
 }

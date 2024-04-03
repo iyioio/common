@@ -1,6 +1,6 @@
-import { ExecuteStatementCommand, Field, RDSDataClient } from "@aws-sdk/client-rds-data";
+import { BeginTransactionCommand, CommitTransactionCommand, ExecuteStatementCommand, ExecuteStatementCommandInput, Field, RDSDataClient, RollbackTransactionCommand } from "@aws-sdk/client-rds-data";
 import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, safeParseNumberOrUndefined, splitSqlStatements, sql } from '@iyio/common';
+import { ISqlTransaction, IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, SqlTransactionStatus, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, safeParseNumberOrUndefined, splitSqlStatements, sql } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
@@ -40,11 +40,13 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
         );
     }
 
-    private readonly options:RdsClientOptions;
+    protected readonly options:RdsClientOptions;
 
     private readonly storeAdapterOptions:SqlStoreAdapterOptions;
 
     private readonly authServerUserDataCache:ValueCache<any>;
+
+    protected _transactionId?:string;
 
     public autoSplitStatements:boolean;
 
@@ -113,13 +115,17 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
                 sql=split[0]??''
             }
         }
-        const cmd=new ExecuteStatementCommand({
+        const input:ExecuteStatementCommandInput={
             resourceArn:this.options.clusterArn,
             secretArn:this.options.secretArn,
             database:this.options.database,
             includeResultMetadata,
-            sql
-        })
+            sql,
+        }
+        if(this._transactionId){
+            input.transactionId=this._transactionId;
+        }
+        const cmd=new ExecuteStatementCommand(input);
 
         const result=await this.getClient().send(cmd);
 
@@ -189,8 +195,83 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
         }
     }
 
+    protected async _beginTransactionAsync():Promise<ISqlTransaction>
+    {
+        const r=await this.getClient().send(new BeginTransactionCommand({
+            resourceArn:this.options.clusterArn,
+            secretArn:this.options.secretArn,
+            database:this.options.database,
+        }));
 
+        if(!r.transactionId){
+            throw new Error('Failed to start transaction');
+        }
+
+        return new SqlRdsTransaction(
+            this.options,
+            this.authServerUserDataCache,
+            this.storeAdapterOptions,
+            this.autoSplitStatements,
+            r.transactionId,
+            t=>this.closeTransaction(t)
+        )
+    }
 }
+
+class SqlRdsTransaction extends RdsClient implements ISqlTransaction
+{
+
+    public get transactionId():string{return this._transactionId??''};
+
+    private _transactionStatus:SqlTransactionStatus='waiting';
+    public get transactionStatus(){return this._transactionStatus}
+
+    public constructor(
+        options:RdsClientOptions,
+        authServerUserDataCache:ValueCache<any>,
+        storeAdapterOptions:SqlStoreAdapterOptions={},
+        autoSplitStatements=false,
+        transactionId:string,
+        onDispose?:(transaction:SqlRdsTransaction)=>void
+    ){
+        super(options,authServerUserDataCache,storeAdapterOptions,autoSplitStatements);
+        this._transactionId=transactionId;
+        this.disposables.addCb(()=>{
+            onDispose?.(this);
+        })
+    }
+
+    public async commitAsync():Promise<void>
+    {
+        if(this.transactionStatus!=='waiting'){
+            throw new Error(`Transaction already has a status of ${this.transactionStatus}`);
+        }
+        this._transactionStatus='committing';
+        await this.getClient().send(new CommitTransactionCommand({
+            resourceArn:this.options.clusterArn,
+            secretArn:this.options.secretArn,
+            transactionId:this.transactionId
+        }));
+        this._transactionStatus='committed';
+    }
+    /**
+     * Called automatically when when the transaction is disposed if not committed.
+     */
+    public async rollbackAsync():Promise<void>
+    {
+        if(this.transactionStatus!=='waiting'){
+            throw new Error(`Transaction already has a status of ${this.transactionStatus}`);
+        }
+        this._transactionStatus='rollingBack';
+        await this.getClient().send(new RollbackTransactionCommand({
+            resourceArn:this.options.clusterArn,
+            secretArn:this.options.secretArn,
+            transactionId:this.transactionId
+        }));
+        this._transactionStatus='rolledBack';
+    }
+}
+
 
 /**
  * Converts a Field object returned from AWS RDSDataClients to a raw value.

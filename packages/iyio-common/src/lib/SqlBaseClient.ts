@@ -1,25 +1,34 @@
 import { ZodSchema } from "zod";
+import { CancelToken } from "./CancelToken";
+import { DisposeContainer } from "./DisposeContainer";
+import { aryRemoveItem } from "./array";
 import { NoId } from "./common-types";
 import { DataTableDescription } from "./data-table";
 import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib";
+import { DisposedError } from "./errors";
 import { deepCompare, objGetFirstValue } from "./object";
 import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
-import { ISqlClient, SqlResult } from "./sql-types";
+import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types";
 import { zodCoerceNullDbValuesInObject } from "./zod-helpers";
 
 
 
 
-export abstract class SqlBaseClient implements ISqlClient
+
+export abstract class SqlBaseMethods implements ISqlMethods
 {
     public log:boolean=false;
 
-    /**
-     * Disposes of the client and its underling RDSDataClient
-     */
+    protected readonly disposables=new DisposeContainer();
+    private _isDisposed=false;
+    public get isDisposed(){return this._isDisposed}
     public dispose()
     {
-        // do nothing for now
+        if(this._isDisposed){
+            return;
+        }
+        this._isDisposed=true;
+        this.disposables.dispose();
     }
 
     /**
@@ -298,4 +307,62 @@ export abstract class SqlBaseClient implements ISqlClient
      * @returns an SqlResult object
      */
     public abstract execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
+}
+
+
+export abstract class SqlBaseClient extends SqlBaseMethods implements ISqlClient
+{
+
+
+    private readonly openTransactions:ISqlTransaction[]=[];
+
+    public override dispose():void{
+        super.dispose();
+        for(const t of this.openTransactions){
+            t.dispose();
+        }
+    }
+
+    public async beginTransactionAsync(cancel?:CancelToken):Promise<ISqlTransaction>
+    {
+        if(this.isDisposed){
+            throw new DisposedError();
+        }
+        const t=await this._beginTransactionAsync(cancel);
+        if(this.isDisposed){
+            t.dispose();
+            return t;
+        }
+        this.openTransactions.push(t);
+        return t;
+    }
+
+    protected abstract _beginTransactionAsync(cancel?:CancelToken):Promise<ISqlTransaction>;
+
+    protected closeTransaction(transaction:ISqlTransaction)
+    {
+        aryRemoveItem(this.openTransactions,transaction);
+    }
+
+    public async runTransactionAsync<T>(
+        runAsync:(trans:ISqlTransaction,cancel?:CancelToken)=>Promise<T>,
+        options?:RunSqlTransactionOptions,
+        cancel?:CancelToken):Promise<T>
+    {
+        const trans=await this.beginTransactionAsync(cancel);
+        try{
+            const r=await runAsync(trans,cancel);
+            if(trans.transactionStatus==='waiting' && !options?.disableAutoCommit){
+                await trans.commitAsync(cancel);
+            }
+            return r;
+        }catch(ex){
+            if(trans.transactionStatus==='waiting'){
+                await trans.rollbackAsync();
+            }
+            throw ex;
+        }
+
+    }
+
 }
