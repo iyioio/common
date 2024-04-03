@@ -400,10 +400,12 @@ export const protoInheritNodesFrom=(to:ProtoNode,from:ProtoNode,allNodes:ProtoNo
 
     inheritanceChain.push(from.name);
 
+    const omit=protoGetChildrenByName(to,'$omit',false);
+
     if(from.children){
         for(const c in from.children){
             const child=from.children[c];
-            if(!child || child.inheritedAddress || to.children?.[c]){
+            if(!child || child.inheritedAddress || to.children?.[c] || omit.some(op=>op.value===child.name || op.value===child.address)){
                 continue;
             }
             const clone=protoCloneNode(child);
