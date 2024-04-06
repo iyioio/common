@@ -140,7 +140,7 @@ export class S3Client extends AuthDependentClient<AwsS3Client> implements IWithS
             new PutObjectCommand({
                 Key:key,
                 Bucket:formatBucketName(bucket),
-                Body:value,
+                Body:(await value.arrayBuffer()) as any,
                 ContentType:value.type,
                 ContentLength:value.size
             })
