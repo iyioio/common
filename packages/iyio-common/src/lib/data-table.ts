@@ -51,6 +51,11 @@ export interface DataTableIndex
      * used with no-sql databases that replicate data when building indexes.
      */
     includeAll?:boolean;
+
+    /**
+     * If true the indexed field should contain unique values.
+     */
+    unique?:boolean;
 }
 
 export interface DataTableColInfo

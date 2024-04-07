@@ -262,6 +262,10 @@ export const generateProtoTable=async ({
                     out.push(`${tab}${tab}${tab}includeAll:true,`);
                     dbIndex.includeAll=true;
                 }
+                if(index.children?.['unique']){
+                    out.push(`${tab}${tab}${tab}unique:true,`);
+                    dbIndex.unique=true;
+                }
                 const includeProps=protoGetChildrenByName(index.children?.['include'],'prop',false);
                 if(includeProps.length){
                     const indexProps:string[]=[];

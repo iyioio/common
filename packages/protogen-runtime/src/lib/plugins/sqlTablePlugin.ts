@@ -150,7 +150,7 @@ url      = "localhost"
             if(table.indexes){
                 for(const index of table.indexes){
                     schemeOutput.push(`\n${context.tab}// ${index.name} - index`);
-                    schemeOutput.push(`${context.tab}@@index([${index.primary}${index.sort?','+index.sort:''}])`)
+                    schemeOutput.push(`${context.tab}@@${index.unique?'unique':'index'}([${index.primary}${index.sort?','+index.sort:''}])`);
                 }
             }
 
