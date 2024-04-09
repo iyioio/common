@@ -75,6 +75,9 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTab
     if(depth>20){
         throw new Error('Max escapeSqlValue depth reached');
     }
+    if(colInfo?.sqlType==='json'){
+        return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
+    }
     switch(typeof value){
 
         case 'string':

@@ -140,7 +140,7 @@ export const generateProtoTable=async ({
         let hasInfo=false;
         const colInfos:Record<string,DataTableColInfo>={};
         for(const prop of props){
-            const sqlType=prop.children?.['$sqlType']?.value?.replace(/\W/g,'');
+            const sqlType=prop.children?.['$sqlType']?.value?.replace(/\W/g,'')??(prop.children?.['json']?'json':undefined);
             const sqlLen=prop.children?.['$sqlLength']?.value;
             if(sqlType){
                 hasInfo=true;
