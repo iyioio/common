@@ -329,6 +329,7 @@ export abstract class SqlBaseClient extends SqlBaseMethods implements ISqlClient
             throw new DisposedError();
         }
         const t=await this._beginTransactionAsync(cancel);
+        t.log=this.log;
         if(this.isDisposed){
             t.dispose();
             return t;
