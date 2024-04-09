@@ -114,12 +114,13 @@ url      = "localhost"
                     }
 
                     const {type,custom}=getSqlType(child,context.nodes);
+                    const isJson=type==='Json';
                     const maxLength=getSqlMaxLength(child,longProps);
 
                     if(type){
 
                         schemeOutput.push(`${context.tab}${prop} ${type}${
-                           ( child.types[0]?.isArray && !custom)?'[]':child.optional?'?':''
+                           ( child.types[0]?.isArray && !custom && !isJson)?'[]':child.optional?'?':''
                         }${
                             prop===table.primaryKey?type==='Int'?' @id @default(autoincrement())':' @id':''
                         }${
