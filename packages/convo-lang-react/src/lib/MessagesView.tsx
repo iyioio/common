@@ -273,6 +273,7 @@ const style=atDotCss({name:'MessagesView',order:'framework',namespace:'iyio',css
         padding:@@messagePadding;
         border-radius:@@messageBorderRadius;
         white-space:pre-wrap;
+        word-break:break-word;
         font-size:@@fontSize;
         max-width:@@maxMessageWidth;
     }
