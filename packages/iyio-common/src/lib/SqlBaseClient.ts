@@ -43,13 +43,18 @@ export abstract class SqlBaseMethods implements ISqlMethods
      *          if the onlyChange parameter was supplied and their was no difference between it and
      *          the item parameter.
      */
-    public async updateAsync<T>(table:string|DataTableDescription<T>, item:T, primaryKey:keyof T, onlyChanged?:T):Promise<boolean|null>
+    public async updateAsync<T>(table:string|DataTableDescription<T>, item:Partial<T>, primaryKey:keyof T, onlyChanged?:Partial<T>):Promise<boolean|null>
     {
 
         const ot=table;
         table=getDataTableId(table);
 
         const changes:string[]=[];
+
+        const primaryKeyValue=item[primaryKey];
+        if(primaryKeyValue===undefined){
+            throw new Error(`updateAsync item primary key (${String(primaryKey)}) required`);
+        }
 
         for(const e in item){
             if( e===primaryKey ||
@@ -65,7 +70,7 @@ export abstract class SqlBaseMethods implements ISqlMethods
             return null;
         }
 
-        const sql=`UPDATE ${escapeSqlName(table)} SET ${changes.join(',')} WHERE ${escapeSqlName(primaryKey as string)}=${escapeSqlValue(item[primaryKey])}`;
+        const sql=`UPDATE ${escapeSqlName(table)} SET ${changes.join(',')} WHERE ${escapeSqlName(primaryKey as string)}=${escapeSqlValue(primaryKeyValue)}`;
 
         const r=await this.execAsync(sql);
 

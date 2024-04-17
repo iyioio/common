@@ -47,7 +47,7 @@ export interface ISqlMethods
     selectColAsync<T>(query:string):Promise<T[]>;
     deleteAsync<T>(table:string|DataTableDescription<T>,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
     execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
-    updateAsync<T>(table:string|DataTableDescription<T>,item:T,primaryKey:keyof T,onlyChanged?:T):Promise<boolean|null>;
+    updateAsync<T>(table:string|DataTableDescription<T>,item:Partial<T>,primaryKey:keyof T,onlyChanged?:Partial<T>):Promise<boolean|null>;
 }
 
 export type SqlTransactionStatus='waiting'|'committing'|'committed'|'rollingBack'|'rolledBack';
