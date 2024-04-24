@@ -112,4 +112,23 @@ export class CancelToken
             throw new CanceledError(cancelMessage);
         }
     }
+
+    private asPromise?:Promise<void>;
+    /**
+     * Returns a promise that resolves when the token is canceled. If the token is already canceled
+     * the promise is resolved immediately.
+     */
+    public toPromise():Promise<void>
+    {
+        if(this.asPromise){
+            return this.asPromise;
+        }
+        return this.asPromise=new Promise<void>(resolve=>{
+            if(this._isCanceled || !this.listeners){
+                resolve();
+                return;
+            }
+            this.listeners.push(resolve);
+        })
+    }
 }
