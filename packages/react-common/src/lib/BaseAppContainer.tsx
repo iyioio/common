@@ -29,6 +29,10 @@ export interface BaseAppContainerProps
     enableRouteRedirectFallback?:boolean;
     googleTagConfig?:GoogleTagManagerConfig|string|null;
     insertSharedStyleSheets?:boolean;
+    /**
+     * A component that is rendered while waiting for initialization to finish
+     */
+    loadingPlaceholder?:any;
 }
 
 export function BaseAppContainer({
@@ -45,7 +49,8 @@ export function BaseAppContainer({
     enableRouteRedirectFallback,
     skipInitBaseLayout,
     googleTagConfig,
-    insertSharedStyleSheets=false
+    insertSharedStyleSheets=false,
+    loadingPlaceholder=null
 }:BaseAppContainerProps){
 
     if(!skipInitBaseLayout){
@@ -56,13 +61,13 @@ export function BaseAppContainer({
 
     useGoogleTagManager(googleTagConfig);
 
-    const stateRef=useRef({scopeInit,staticEnvVars});
+    const refs=useRef({scopeInit,staticEnvVars,onScopeInited});
     const [inited,setInited]=useState(false);
     useUiReady();
 
     useEffect(()=>{
 
-        const {scopeInit,staticEnvVars}=stateRef.current;
+        const {scopeInit,staticEnvVars}=refs.current;
 
         if(isServerSide || !scopeInit){
             return;
@@ -95,14 +100,14 @@ export function BaseAppContainer({
 
     useEffect(()=>{
         if(inited){
-            onScopeInited?.(scope);
+            refs.current.onScopeInited?.(scope);
         }
-    },[inited,onScopeInited,scope])
+    },[inited,scope])
 
     useRouteRedirectFallback(inited && enableRouteRedirectFallback);
 
     if(initBeforeRender && !inited){
-        return null;
+        return loadingPlaceholder??null;
     }
 
     return (<>
