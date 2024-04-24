@@ -7,6 +7,7 @@ import * as gaEndpoints from "aws-cdk-lib/aws-globalaccelerator-endpoints";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
+import { getDefaultVpc } from './cdk-lib';
 
 export interface DomainRedirect
 {
@@ -31,7 +32,7 @@ export class RedirectApi extends Construct
 
         const {
             redirects,
-            vpc=ec2.Vpc.fromLookup(this,"DefaultVpc",{isDefault:true}),
+            vpc=getDefaultVpc(this),
         }=props;
 
         if(!redirects?.length){
@@ -105,9 +106,11 @@ export class RedirectApi extends Construct
     }
 
     private createRedirectFn(props:RedirectApiProps){
+        props={...props}
+        delete props.vpc;
         return new lambda.Function(this,'RedirectFn',{
             handler:'index.handler',
-            runtime:lambda.Runtime.NODEJS_14_X,
+            runtime:lambda.Runtime.NODEJS_18_X,
             logRetention:logs.RetentionDays.ONE_DAY,
             code:new lambda.InlineCode(`
                 var props=${JSON.stringify(props)};
