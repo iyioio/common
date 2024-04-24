@@ -29,10 +29,10 @@ export const getConvoUserMessageCompletionAsync=async (
     return r.message?.content;
 }
 
-export const getConvoJsonCompletionAsync=async (
+export const getConvoJsonCompletionAsync=async <T=any>(
     messagesOrOptions:string|ConvoCompletionOptions,
     conversationOptions?:ConversationOptions
-):Promise<any>=>{
+):Promise<T|undefined>=>{
     const c=await getConvoCompletionAsync(messagesOrOptions,conversationOptions);
 
     if(c.message?.content===undefined){
