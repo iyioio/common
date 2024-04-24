@@ -12,7 +12,7 @@ export const isRawConvoValue=(value:any):value is RawConvoValue=>{
     return typeof (value as RawConvoValue)?.rawConvoValue === 'string';
 }
 
-export const getRawConvoValueAsString=(value:any,escape:boolean=false):string=>{
+export const getRawConvoValueAsString=(value:any,escape=false):string=>{
     switch(typeof value){
 
         case 'string':
