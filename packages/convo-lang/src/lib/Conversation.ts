@@ -138,6 +138,9 @@ export class Conversation
     public get subTasksSubject():ReadonlySubject<ConvoSubTask[]>{return this._subTasks}
     public get subTasks(){return this._subTasks.value}
 
+    private readonly _beforeAppend=new Subject<ConvoAppend>();
+    public get beforeAppend():Observable<ConvoAppend>{return this._beforeAppend}
+
 
 
     /**
@@ -433,7 +436,11 @@ export class Conversation
 
         if(appendCode){
             for(const msg of messages){
-                this._convo.push(convoMessageToString(msg));
+                let messages=convoMessageToString(msg);
+                if(this._beforeAppend.observed){
+                    messages=this.transformMessageBeforeAppend(messages);
+                }
+                this._convo.push(messages);
             }
         }
 
@@ -445,6 +452,17 @@ export class Conversation
         if(!this.disableAutoFlatten && !disableAutoFlatten){
             this.autoFlattenAsync();
         }
+    }
+
+    private transformMessageBeforeAppend(messages:string):string{
+        const append:ConvoAppend={
+            text:messages,
+            messages:[]
+        }
+
+        this._beforeAppend.next(append);
+
+        return append.text;
     }
 
     public append(messages:string|(ConvoMessagePart|string)[],mergeWithPrev=false,throwOnError=true):ConvoParsingResult{
@@ -459,6 +477,11 @@ export class Conversation
                 messages=messages.map(m=>(typeof m === 'string')?m:m.content).join('');
             }
         }
+
+        if(this._beforeAppend.observed){
+            messages=this.transformMessageBeforeAppend(messages);
+        }
+
         const r=this.parseCode(messages);
         if(r.error){
             if(!throwOnError){
@@ -470,6 +493,7 @@ export class Conversation
         if(hasHidden){
             messages=visibleContent??'';
         }
+
 
         if(messages){
             if(mergeWithPrev && this._convo.length){
