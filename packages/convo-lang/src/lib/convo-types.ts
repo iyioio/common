@@ -121,6 +121,7 @@ export interface ConvoMessage
 
 export interface ConvoMessagePart
 {
+    id?:string;
     content?:string;
     hidden?:boolean;
 }
