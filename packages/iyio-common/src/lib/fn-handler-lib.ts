@@ -191,6 +191,10 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
         sub,
     }
 
+    if(fnInvokeEvent?.apiKey){
+        fnEvent.apiKey=fnInvokeEvent.apiKey;
+    }
+
     if(typeof remoteAddress === 'string'){
         fnEvent.remoteAddress=remoteAddress;
     }

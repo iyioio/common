@@ -75,6 +75,8 @@ export interface FnEvent
      * Typically a user id
      */
     sub?:string;
+
+    apiKey?:string;
 }
 
 export interface FnError
@@ -109,6 +111,7 @@ export interface FnInvokeEvent<TInput=any>
     ______isFnInvokeEvent:true;
     input?:TInput;
     jwt?:string;
+    apiKey?:string;
 }
 
 export const isFnInvokeEvent=(value:any):value is FnInvokeEvent=>{

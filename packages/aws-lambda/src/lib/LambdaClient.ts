@@ -21,6 +21,12 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
 
     public readonly clientConfig:Readonly<LambdaClientConfig>;
 
+    private _apiKey:string|undefined;
+    public setApiKey(apiKey:string|null|undefined)
+    {
+        this._apiKey=apiKey??undefined;
+    }
+
     public constructor(clientConfig:LambdaClientConfig,userDataCache:ValueCache){
 
         super(userDataCache);
@@ -76,6 +82,10 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
             ______isFnInvokeEvent:true,
             input,
             jwt:user?(await user.getJwtAsync())??undefined:undefined
+        }
+
+        if(this._apiKey){
+            eventInput.apiKey=this._apiKey;
         }
 
         const cmd=new InvokeCommand({
