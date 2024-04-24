@@ -16,6 +16,17 @@ def request_handler(path,data:Dict[str,str],method):
         return generate_document_embeddings(DocumentEmbeddingRequest(
             location=data['document-location'],
             contentType=data['content-type'],
+            contentCategoryCol='contentCategory',
+            contentTypeCol='contentType',
+            cols={
+                "sourceId":data['source-id']
+            }
+        ))
+    elif data and ('content' in data) and ('content-type' in data) and ('source-id' in data):
+        return generate_document_embeddings(DocumentEmbeddingRequest(
+            location="inline",
+            inlineContent=data['content'],
+            contentType=data['content-type'],
             cols={
                 "sourceId":data['source-id']
             }

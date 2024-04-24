@@ -6,10 +6,15 @@ class DocumentEmbeddingRequest:
     """ Defines properties for generating embeddings for a given document """
 
     # location of the document to index. Can be a file path, url or s3 url
+    # if set to "inline" the content of the inlineContent prop will be used.
     location:str
+
 
     # The content type of the document
     contentType:Optional[str]=None
+
+    # Inline content
+    inlineContent:Optional[str]=None
 
     # Name fo the table to insert embeddings into
     embeddingsTable:str='VectorIndex'

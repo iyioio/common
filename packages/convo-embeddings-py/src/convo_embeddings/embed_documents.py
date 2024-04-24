@@ -1,5 +1,6 @@
-from langchain_community.document_loaders import S3FileLoader, UnstructuredURLLoader, UnstructuredFileLoader, UnstructuredHTMLLoader, UnstructuredPDFLoader, UnstructuredMarkdownLoader, DirectoryLoader
+from langchain_community.document_loaders import S3FileLoader, TextLoader , UnstructuredURLLoader, UnstructuredFileLoader, UnstructuredHTMLLoader, UnstructuredPDFLoader, UnstructuredMarkdownLoader, DirectoryLoader
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.schema.document import Document
 from psycopg import sql, connect
 from typing import Any, Dict
 from .s3_loader import S3FileLoaderEx
@@ -13,6 +14,11 @@ import magic
 embeddings_table='VectorIndex'
 max_sql_len=65536
 
+def get_text_chunks_langchain(text:str):
+    text_splitter = CharacterTextSplitter(chunk_size=300, chunk_overlap=20)
+    docs = [Document(page_content=x) for x in text_splitter.split_text(text)]
+    return docs
+
 def generate_document_embeddings(request:DocumentEmbeddingRequest)->int:
 
     print('generate_document_embeddings',request)
@@ -24,7 +30,10 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest)->int:
     document_path=request.location
     content_type=request.contentType
     mime_path = document_path
+    direct_docs = None
 
+    if document_path == 'inline':
+        direct_docs=get_text_chunks_langchain(request.inlineContent)
     if document_path.startswith('s3://'):
         s3Path=parse_s3_path(document_path)
         file_loader=S3FileLoaderEx(
@@ -53,7 +62,7 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest)->int:
         file_loader=UnstructuredFileLoader(document_path, mode=mode)
 
 
-    docs=file_loader.load()
+    docs=direct_docs if direct_docs else file_loader.load()
 
     text_splitter=CharacterTextSplitter(chunk_size=300, chunk_overlap=20)
     docs=text_splitter.split_documents(docs)
@@ -63,7 +72,9 @@ def generate_document_embeddings(request:DocumentEmbeddingRequest)->int:
         return 0
 
     firstDoc=docs[0]
-    if firstDoc and firstDoc.metadata and firstDoc.metadata['content_type']:
+    if direct_docs:
+        content_type=request.contentType
+    elif firstDoc and firstDoc.metadata and firstDoc.metadata['content_type']:
         content_type=firstDoc.metadata['content_type']
     else:
         if firstDoc and firstDoc.metadata and firstDoc.metadata['filename']:
