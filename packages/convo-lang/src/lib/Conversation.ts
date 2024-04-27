@@ -3,9 +3,9 @@ import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, mapToConvoTags, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, isConvoThreadFilterMatch, mapToConvoTags, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTag, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
+import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFnCallInfo, ConvoFunction, ConvoFunctionDef, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTag, ConvoThreadFilter, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -69,6 +69,13 @@ export interface ConversationOptions
      * A callback used to implement rag retrieval.
      */
     ragCallback?:ConvoRagCallback;
+
+    /**
+     * An initial convo script to append to the Conversation
+     */
+    initConvo?:string;
+
+    defaultVars?:Record<string,any>;
 }
 
 export class Conversation
@@ -131,6 +138,9 @@ export class Conversation
 
     private readonly _flat:BehaviorSubject<FlatConvoConversation|null>=new BehaviorSubject<FlatConvoConversation|null>(null);
     public get flatSubject():ReadonlySubject<FlatConvoConversation|null>{return this._flat}
+    /**
+     * A reference to the last flattening of the conversation
+     */
     public get flat(){return this._flat.value}
 
 
@@ -198,6 +208,8 @@ export class Conversation
 
     private readonly defaultOptions:ConversationOptions;
 
+    public readonly defaultVars:Record<string,any>;
+
     public constructor(options:ConversationOptions={}){
         const {
             userRoles=['user'],
@@ -215,8 +227,11 @@ export class Conversation
             debug,
             debugMode,
             disableMessageCapabilities=false,
+            initConvo,
+            defaultVars,
         }=options;
         this.defaultOptions=options;
+        this.defaultVars=defaultVars?{...defaultVars}:{};
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
@@ -233,6 +248,9 @@ export class Conversation
         this.debug=debug;
         if(debugMode){
             this.debugMode=true;
+        }
+        if(initConvo){
+            this.append(initConvo);
         }
     }
 
@@ -450,7 +468,7 @@ export class Conversation
         });
 
         if(!this.disableAutoFlatten && !disableAutoFlatten){
-            this.autoFlattenAsync();
+            this.autoFlattenAsync(false);
         }
     }
 
@@ -515,27 +533,64 @@ export class Conversation
         });
 
         if(!this.disableAutoFlatten){
-            this.autoFlattenAsync();
+            this.autoFlattenAsync(false);
         }
 
         return r;
     }
 
     private autoFlattenId=0;
-    private async autoFlattenAsync(){
+    private async autoFlattenAsync(skipDelay:boolean){
         const id=++this.autoFlattenId;
-        if(this.autoFlattenDelayMs>0){
+        if(this.autoFlattenDelayMs>0 && !skipDelay){
             await delayAsync(this.autoFlattenDelayMs);
             if(this.isDisposed || id!==this.autoFlattenId){
-                return;
+                return undefined;
             }
         }
 
+        return await this.getAutoFlattenPromise(id);
+
+    }
+
+    private autoFlatPromiseRef:{promise:Promise<FlatConvoConversation|undefined>,id:number}|null=null;
+    private getAutoFlattenPromise(id:number){
+        if(this.autoFlatPromiseRef?.id===id){
+            return this.autoFlatPromiseRef.promise;
+        }
+        const promise=this.setFlattenAsync(id);
+        this.autoFlatPromiseRef={
+            id,
+            promise,
+        }
+        return promise;
+    }
+
+    private async setFlattenAsync(id:number){
         const flat=await this.flattenAsync(undefined,{setCurrent:false});
         if(this.isDisposed || id!==this.autoFlattenId){
-            return;
+            return undefined;
         }
         this.setFlat(flat,false);
+        return flat;
+    }
+
+    /**
+     * Get the flattened version of this Conversation.
+     * @param noCache If true the Conversation will not used the current cached version of the
+     *                flattening and will be re-flattened.
+     */
+    public async getLastAutoFlatAsync(noCache=false):Promise<FlatConvoConversation|undefined>
+    {
+        if(noCache){
+            return (await this.autoFlattenAsync(true))??this.flat??undefined;
+        }
+        return (
+            this.flat??
+            (await this.getAutoFlattenPromise(this.autoFlattenId))??
+            this.flat??
+            undefined
+        )
     }
 
     public appendUserMessage(message:string,options?:ConvoMessagePrefixOptions){
@@ -766,7 +821,8 @@ export class Conversation
         prevCompletion?:ConvoCompletionMessage[],
         preReturnValues?:any[],
         templates?:ConvoMessageTemplate[],
-        updateTaskCount=true
+        updateTaskCount=true,
+        lastFnCall?:ConvoFnCallInfo
     ):Promise<ConvoCompletion>{
 
         if(task===undefined){
@@ -784,7 +840,8 @@ export class Conversation
             const flat=await this.flattenAsync(flatExe,{
                 setCurrent:false,
                 task,
-                discardTemplates:!isDefaultTask || templates!==undefined
+                discardTemplates:!isDefaultTask || templates!==undefined,
+                threadFilter:additionalOptions?.threadFilter,
             });
             if(flat.templates && !templates){
                 templates=flat.templates;
@@ -923,6 +980,15 @@ export class Conversation
                     }
                     returnValues.push(callResultValue);
 
+                    if(target?.fn){
+                        lastFnCall={
+                            name:target.fn.name,
+                            message:target,
+                            fn:target.fn,
+                            returnValue:callResultValue
+                        };
+                    }
+
                     lastResultValue=(typeof callResultValue === 'function')?undefined:callResultValue;
 
                     const lines:string[]=[`${this.getPrefixTags()}> result`];
@@ -979,8 +1045,8 @@ export class Conversation
                         this.append(a);
                     }
                 }
-            }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth){
-                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth+1,completion,returnValues,templates);
+            }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth && !additionalOptions?.returnOnCalled){
+                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth+1,completion,returnValues,templates,undefined,lastFnCall);
             }
 
             if(isDefaultTask && templates?.length){
@@ -988,7 +1054,7 @@ export class Conversation
             }
 
             if(!this.disableAutoFlatten && isDefaultTask){
-                this.autoFlattenAsync();
+                this.autoFlattenAsync(false);
             }
 
 
@@ -1002,6 +1068,7 @@ export class Conversation
                 messages:completion,
                 exe,
                 returnValues,
+                lastFnCall,
                 task
             }
         }finally{
@@ -1126,6 +1193,9 @@ export class Conversation
             }
         })
         flatExe.print=this.print;
+        for(const e in this.defaultVars){
+            flatExe.setVar(true,this.defaultVars[e],e);
+        }
         return flatExe;
     }
 
@@ -1166,6 +1236,9 @@ export class Conversation
         if(this.userRoles.includes(flat.role)){
             flat.isUser=true;
         }
+        if(msg.tid){
+            flat.tid=msg.tid;
+        }
         return flat;
     }
 
@@ -1175,6 +1248,7 @@ export class Conversation
             task=defaultConvoTask,
             setCurrent=task===defaultConvoTask,
             discardTemplates,
+            threadFilter,
         }:FlattenConvoOptions={}
     ):Promise<FlatConvoConversation>{
 
@@ -1216,6 +1290,12 @@ export class Conversation
                     templates=[];
                 }
                 templates.push(tmpl);
+                continue;
+            }
+
+            threadFilter=this.getThreadFilter(exe,threadFilter);
+
+            if(threadFilter && !isConvoThreadFilterMatch(threadFilter,msg.tid)){
                 continue;
             }
 
@@ -1500,6 +1580,26 @@ export class Conversation
                 }
 
             }
+        }
+    }
+
+    private getThreadFilter(exe:ConvoExecutionContext,defaultFilter?:ConvoThreadFilter):ConvoThreadFilter|undefined
+    {
+        const tf=exe.getVar(convoVars.__threadFilter);
+        if(tf===undefined){
+            return defaultFilter;
+        }
+        if(tf){
+            switch(typeof tf){
+                case 'string':
+                    return {includeThreads:[tf]}
+                case 'object':
+                    return tf;
+                default:
+                    throw new Error('__threadFilter should be a string or object of type ConvoThreadFilter');
+            }
+        }else{
+            return undefined;
         }
     }
 

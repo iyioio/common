@@ -4,7 +4,7 @@ import { CallbackConvoCompletionService } from './CallbackConvoCompletionService
 import { Conversation } from "./Conversation";
 import { ConvoError } from './ConvoError';
 import { getConvoMetadata } from './convo-lib';
-import { ConvoErrorType, FlatConvoConversation } from "./convo-types";
+import { ConvoErrorType, ConvoThreadFilter, FlatConvoConversation } from "./convo-types";
 
 describe('convo',()=>{
 
@@ -740,6 +740,88 @@ describe('convo',()=>{
         expect(flat.ragPrefix).toBe('Use the content below to assist');
         expect(flat.ragSuffix).toBe('The content above should be helpful');
         expect(flat.messages.length).toBe(2);
+    })
+
+
+    it('Should use threads',async ()=>{
+
+        const convo=new Conversation();
+
+        convo.append(/*convo*/`
+
+            @thread A
+            > define
+            isThreadA=true
+
+            @thread B
+            > define
+            isThreadB=true
+
+            > define
+            isDefaultThread=true
+
+            > user
+            This message is in both threads
+
+            @thread A
+            > user
+            This message is in thread A
+
+            @thread B
+            > user
+            This message is in thread B
+
+        `);
+
+        const testFilterAsync=async (
+            threadFilter:ConvoThreadFilter,
+            vars:Record<string,any>,
+            messages:string[])=>
+        {
+
+            const flat=await convo.flattenAsync(undefined,{threadFilter});
+
+            for(const e in vars){
+                expect(flat.exe.getVar(e)).toBe(vars[e]);
+            }
+
+            expect(flat.messages.filter(m=>m.content).map(u=>u.content?.trim())).toEqual(messages);
+        }
+
+
+        await testFilterAsync(
+            {includeThreads:['A']},
+            {isThreadA:true,isThreadB:undefined,isDefaultThread:undefined},
+            [
+                'This message is in thread A'
+            ]
+        )
+
+        await testFilterAsync(
+            {includeThreads:['B']},
+            {isThreadA:undefined,isThreadB:true,isDefaultThread:undefined},
+            [
+                'This message is in thread B'
+            ]
+        )
+
+        await testFilterAsync(
+            {includeThreads:['A'],includeNonThreaded:true},
+            {isThreadA:true,isThreadB:undefined,isDefaultThread:true},
+            [
+                'This message is in both threads',
+                'This message is in thread A'
+            ]
+        )
+
+        await testFilterAsync(
+            {includeThreads:['B'],includeNonThreaded:true},
+            {isThreadA:undefined,isThreadB:true,isDefaultThread:true},
+            [
+                'This message is in both threads',
+                'This message is in thread B'
+            ]
+        )
     })
 
 });

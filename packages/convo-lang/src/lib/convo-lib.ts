@@ -2,7 +2,7 @@ import { UnsupportedError } from "@iyio/common";
 import { format } from "date-fns";
 import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
-import { ConvoBaseType, ConvoDocumentReference, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
+import { ConvoBaseType, ConvoDocumentReference, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoThreadFilter, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
 export const convoBodyFnName='__body';
 export const convoArgsName='__args';
@@ -131,7 +131,13 @@ export const convoVars={
     /**
      * The tolerance that determines if matched rag content should be included as contact.
      */
-    __ragTol:'__ragTol'
+    __ragTol:'__ragTol',
+
+    /**
+     * Sets the current thread filter. Can either be a string or a ConvoThreadFilter. If __threadFilter
+     * is a string it will be converted into a filter that looks like `{includeThreads:[__threadId]}`.
+     */
+    __threadFilter:'__threadFilter'
 
 } as const;
 
@@ -326,7 +332,23 @@ export const convoTags={
      * message content will still be used as the user messaged added to the conversation when clicked.
      * Suggestion message are render only and not seen by LLMs.
      */
-    suggestion:'suggestion'
+    suggestion:'suggestion',
+
+    /**
+     * Sets the threadId of the current message and all following messages. Using the `@thread` tag
+     * without a value will clear the current thread id.
+     */
+    thread:'thread',
+
+    /**
+     * Used to mark a function as a node output.
+     */
+    output:'output',
+
+    /**
+     * Used to mark a function as an error callback
+     */
+    errorCallback:'errorCallback'
 
 } as const;
 
@@ -876,4 +898,18 @@ export const getLastCompletionMessage=(messages:FlatConvoMessage[]):FlatConvoMes
         return msg;
     }
     return undefined;
+}
+
+export const isConvoThreadFilterMatch=(filter:ConvoThreadFilter,tid:string|undefined|null):boolean=>{
+    if((filter.excludeNonThreaded && !tid) || filter.excludeThreads?.includes(tid??'')){
+        return false;
+    }
+
+    if(filter.includeNonThreaded && !tid){
+        return true;
+    }else if(filter.includeThreads){
+        return filter.includeThreads.includes(tid??'');
+    }else{
+        return true;
+    }
 }

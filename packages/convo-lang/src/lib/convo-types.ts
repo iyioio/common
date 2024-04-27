@@ -117,6 +117,12 @@ export interface ConvoMessage
      * added to the conversation.
      */
     isSuggestion?:boolean;
+
+    /**
+     * Thread Id. Conversations can be divided into threads and during evaluation threads can be
+     * used to control which messages are included.
+     */
+    tid?:string;
 }
 
 export interface ConvoMessagePart
@@ -285,6 +291,38 @@ export interface ConvoFunction
     body?:ConvoStatement[];
     params:ConvoStatement[];
     paramType?:string;
+}
+
+/**
+ * Filters what messages are included in a conversation based on the rules of the filter.
+ * Exclusive rules take priority over inclusive rules.
+ */
+export interface ConvoThreadFilter
+{
+
+    /**
+     * Ids of threads to include. If defined only messages with a thread id that is included in
+     * includeThreads will be included in the evaluation of a conversation. Messages without a
+     * threadId will be included if includeNonThreaded is true.
+     */
+    includeThreads?:string[];
+
+    /**
+     * If true and a message does not have a thread id the message is included.
+     */
+    includeNonThreaded?:boolean;
+
+    /**
+     * Ids of threads to excluded. If defined any messages with a thread id that is included in
+     * excludeThreads will be excluded from the evaluation of a conversation. Messages without a
+     * threadId will be excluded if excludeNonThreaded is true.
+     */
+    excludeThreads?:string[];
+
+    /**
+     * If true and a message does not have a thread id the message is excluded.
+     */
+    excludeNonThreaded?:boolean;
 }
 
 export type ConvoParsingResult=CodeParsingResult<ConvoMessage[]>
@@ -613,7 +651,13 @@ export interface FlatConvoMessage
      * If true the message should be clickable and when clicked the content of the message should be
      * added to the conversation.
      */
-    isSuggestion?:boolean
+    isSuggestion?:boolean;
+
+    /**
+     * Thread Id. Conversations can be divided into threads and during evaluation threads can be
+     * used to control which messages are included.
+     */
+    tid?:string;
 
 }
 
@@ -646,6 +690,14 @@ export const isConvoRagMode=(value:any):value is ConvoRagMode=>(
     (typeof value === 'number')
 )
 
+export interface ConvoFnCallInfo
+{
+    name:string;
+    message:ConvoMessage;
+    fn:ConvoFunction;
+    returnValue:any;
+}
+
 export interface ConvoCompletion
 {
     status:ConvoCompletionStatus;
@@ -653,6 +705,7 @@ export interface ConvoCompletion
     messages:ConvoCompletionMessage[];
     error?:any;
     exe?:ConvoExecutionContext;
+    lastFnCall?:ConvoFnCallInfo;
     returnValues?:any[];
     task:string;
 }
@@ -821,6 +874,8 @@ export interface FlattenConvoOptions
     task?:string;
 
     discardTemplates?:boolean;
+
+    threadFilter?:ConvoThreadFilter;
 }
 
 export interface ConvoSubTask
@@ -833,10 +888,19 @@ export interface ConvoCompletionOptions
 {
     task?:string;
     append?:string;
+
     /**
-     * If true completion should stop and return when a function is called
+     * If true completion should stop and return just before a function is to be called
      */
     returnOnCall?:boolean;
+
+    /**
+     * If true completion should stop and return after a function is called before sending a response
+     * to the LLM
+     */
+    returnOnCalled?:boolean;
+
+    threadFilter?:ConvoThreadFilter;
 }
 
 export interface ConvoMessageTemplate

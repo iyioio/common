@@ -945,6 +945,12 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
                         msg.isSuggestion=true;
                         break;
 
+                    case convoTags.thread:
+                        if(tag.value){
+                            msg.tid=tag.value;
+                        }
+                        break;
+
                     default:
                         if(copyTagValues[tag.name] && tag.value){
                             (msg as any)[tag.name]=tag.value;
