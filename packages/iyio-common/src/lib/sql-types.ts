@@ -1,6 +1,6 @@
 import { ZodSchema } from "zod";
 import { CancelToken } from "./CancelToken";
-import { NoId } from "./common-types";
+import { NoId, ValueRef } from "./common-types";
 import { DataTableDescription } from "./data-table";
 
 export interface SqlRequest
@@ -47,7 +47,52 @@ export interface ISqlMethods
     selectColAsync<T>(query:string):Promise<T[]>;
     deleteAsync<T>(table:string|DataTableDescription<T>,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
     execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
+
+    /**
+     * Updates an item in a specified table.
+     * @param table The table in which the item exists
+     * @param item The item to be updated
+     * @param primaryKey The primary key of the table. In most cases this will be "id"
+     * @param onlyChanged If supplied only properties of the item that are not equal to the properties
+     *                    of onlyChanged will be updated. This can reduce the size if the SQL query
+     *                    and only update properties that need to be updated.
+     * @returns True if the item was updated, false if no changes were made to the item and null
+     *          if the onlyChange parameter was supplied and their was no difference between it and
+     *          the item parameter.
+     */
     updateAsync<T>(table:string|DataTableDescription<T>,item:Partial<T>,primaryKey:keyof T,onlyChanged?:Partial<T>):Promise<boolean|null>;
+
+    /**
+     * Updates an item in a table by coping the srcItem then calling the mutate callback using the
+     * copy of the srcItem. Only changes made to the mutation will be saved to the database.
+     * @param table The table in which the item exists
+     * @param srcItem The source item that will be copied
+     * @param mutate A callback function that will mutate a copy of the srcItem
+     * @param updateResultRef If supplied the return value of updateAsync will be placed in the ref
+     */
+    mutateAsync<T,P extends Partial<T>,I=T extends P?T:P>(
+        table:DataTableDescription<T>,
+        srcItem:Readonly<I>,
+        mutate:(copy:I)=>void|I|Promise<I|void>,
+        updateResultRef?:ValueRef<boolean|null>
+    ):Promise<I>;
+
+    /**
+     * Updates an item in a table by coping the srcItem then calling the mutate callback using the
+     * copy of the srcItem. Only changes made to the mutation will be saved to the database.
+     * @param table The table in which the item exists
+     * @param srcItem The source item that will be copied
+     * @param primaryKey The primary key of the table
+     * @param mutate A callback function that will mutate a copy of the srcItem
+     * @param updateResultRef If supplied the return value of updateAsync will be placed in the ref
+     */
+    mutateAsync<T,P extends Partial<T>,I=T extends P?T:P>(
+        table:string,
+        srcItem:Readonly<I>,
+        primaryKey:keyof T,
+        mutate:(copy:I)=>void|I|Promise<I|void>,
+        updateResultRef?:ValueRef<boolean|null>
+    ):Promise<I>;
 }
 
 export type SqlTransactionStatus='waiting'|'committing'|'committed'|'rollingBack'|'rolledBack';

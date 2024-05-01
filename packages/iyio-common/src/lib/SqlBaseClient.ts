@@ -2,7 +2,7 @@ import { ZodSchema } from "zod";
 import { CancelToken } from "./CancelToken";
 import { DisposeContainer } from "./DisposeContainer";
 import { aryRemoveItem } from "./array";
-import { NoId } from "./common-types";
+import { NoId, ValueRef } from "./common-types";
 import { DataTableDescription } from "./data-table";
 import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib";
 import { DisposedError } from "./errors";
@@ -10,10 +10,6 @@ import { deepCompare, objGetFirstValue } from "./object";
 import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
 import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types";
 import { zodCoerceNullDbValuesInObject } from "./zod-helpers";
-
-
-
-
 
 export abstract class SqlBaseMethods implements ISqlMethods
 {
@@ -29,6 +25,72 @@ export abstract class SqlBaseMethods implements ISqlMethods
         }
         this._isDisposed=true;
         this.disposables.dispose();
+    }
+
+
+
+    /**
+     * Updates an item in a table by coping the srcItem then calling the mutate callback using the
+     * copy of the srcItem. Only changes made to the mutation will be saved to the database.
+     * @param table The table in which the item exists
+     * @param srcItem The source item that will be copied
+     * @param mutate A callback function that will mutate a copy of the srcItem
+     */
+    public mutateAsync<T,P extends Partial<T>,I=T extends P?T:P>(
+        table:DataTableDescription<T>,
+        srcItem:Readonly<I>,
+        mutate:(copy:I)=>void|I|Promise<I|void>,
+        updateResultRef?:ValueRef<boolean|null>
+    ):Promise<I>;
+
+    /**
+     * Updates an item in a table by coping the srcItem then calling the mutate callback using the
+     * copy of the srcItem. Only changes made to the mutation will be saved to the database.
+     * @param table The table in which the item exists
+     * @param srcItem The source item that will be copied
+     * @param primaryKey The primary key of the table
+     * @param mutate A callback function that will mutate a copy of the srcItem
+     */
+    public mutateAsync<T,P extends Partial<T>,I=T extends P?T:P>(
+        table:string,
+        srcItem:Readonly<I>,
+        primaryKey:keyof T,
+        mutate:(copy:I)=>void|I|Promise<I|void>,
+        updateResultRef?:ValueRef<boolean|null>
+    ):Promise<I>;
+
+    async mutateAsync<T,P extends Partial<T>,I=T extends P?T:P>(
+        table:string|DataTableDescription<T>,
+        srcItem:Readonly<I>,
+        primaryKeyOrMutate:(keyof T)|((copy:I)=>void|I|Promise<void|I>),
+        mutateOrUpdateRef?:((copy:I)=>void|I|Promise<void|I>)|ValueRef<boolean|null>,
+        updateResultRef?:ValueRef<boolean|null>
+    ):Promise<I>{
+
+        const key=(typeof primaryKeyOrMutate === 'string')?primaryKeyOrMutate:(typeof table === 'object')?table.primaryKey:null;
+        if(!key){
+            throw new Error('table must be a DataTableDescription or primaryKeyOrMutate must be a string')
+        }
+
+        const copy={...srcItem};
+
+        const mutate=(typeof mutateOrUpdateRef === 'function')?mutateOrUpdateRef:(typeof primaryKeyOrMutate === 'function')?primaryKeyOrMutate:undefined;
+
+        if(!mutate){
+            if(updateResultRef){
+                updateResultRef.value=null;
+            }
+            return copy;
+        }
+
+        const mutation=(await mutate(copy))??copy;
+
+        const updateResult=await this.updateAsync<T>(table,copy as any,key as (keyof T),srcItem as any);
+        if(updateResultRef){
+            updateResultRef.value=updateResult;
+        }
+
+        return mutation;
     }
 
     /**

@@ -91,6 +91,16 @@ export interface MutableRef<T>{
     mutated?:boolean;
 }
 
+/**
+ * A boxed reference to a value
+ */
+export interface ValueRef<T>{
+    /**
+     * The referenced value
+     */
+    value:T;
+}
+
 export interface ISubscription
 {
     unsubscribe():void;
