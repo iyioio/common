@@ -1,6 +1,6 @@
 import { ZodType } from "zod";
 import { Conversation, ConversationOptions } from "./Conversation";
-import { ConvoMetadataAndTypeMap, ConvoNode, ConvoNodeExecCtx, ConvoNodeMetadata, ConvoNodeOutput } from "./convo-graph-types";
+import { ConvoMetadataAndTypeMap, ConvoNode, ConvoNodeExecCtx, ConvoNodeMetadata, ConvoNodeOutput, IHasConvoGraphDb } from "./convo-graph-types";
 import { convoTags } from "./convo-lib";
 
 export const getConvoNodeMetadataAsync=async (convo:Conversation|null):Promise<ConvoMetadataAndTypeMap>=>{
@@ -80,4 +80,14 @@ export const createConvoNodeExecCtxAsync=async (node:ConvoNode,convoOptions?:Con
             })
         }))
     }
+}
+
+export const hasConvoGraphDb=(obj:any):obj is IHasConvoGraphDb=>{
+    return (
+        obj &&
+        (typeof obj === 'object') &&
+        (Array.isArray((obj as IHasConvoGraphDb).db?.nodes)) &&
+        (Array.isArray((obj as IHasConvoGraphDb).db?.edges)) &&
+        (Array.isArray((obj as IHasConvoGraphDb).db?.traversers))
+    )?true:false
 }

@@ -1,37 +1,47 @@
+import { wAryPush, wArySplice } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { ConvoEdge, ConvoEdgeSide, ConvoGraphStore, ConvoNode, ConvoTraverser } from "./convo-graph-types";
+import { ConvoEdge, ConvoEdgeSide, ConvoGraphDb, ConvoGraphStore, ConvoGraphStoreEvt, ConvoNode, ConvoTraverser, IHasConvoGraphDb } from "./convo-graph-types";
 
-export interface ConvoMemoryGraphStoreDb
-{
-    nodes:ConvoNode[];
-    edges:ConvoEdge[];
-    traversers:ConvoTraverser[];
-}
 
 export interface ConvoMemoryGraphStoreOptions
 {
-    db?:Partial<ConvoMemoryGraphStoreDb>;
+    db?:Partial<ConvoGraphDb>;
+    graphId:string;
 }
 
-export class ConvoMemoryGraphStore implements ConvoGraphStore
+export class ConvoMemoryGraphStore implements ConvoGraphStore, IHasConvoGraphDb
 {
-    public db:ConvoMemoryGraphStoreDb;
+    public readonly graphId:string;
 
-    private readonly _onDbChange=new Subject<void>();
-    public get onDbChange():Observable<void>{return this._onDbChange}
+    public db:ConvoGraphDb;
+
+
+    private readonly _onDbChange=new Subject<ConvoGraphStoreEvt>();
+    public get onDbChange():Observable<ConvoGraphStoreEvt>{return this._onDbChange}
 
     public constructor({
+        graphId,
         db={
             nodes:[],
             edges:[],
             traversers:[],
-        }
-    }:ConvoMemoryGraphStoreOptions={}){
+        },
+    }:ConvoMemoryGraphStoreOptions){
+        this.graphId=graphId;
         this.db={
             nodes:db.nodes??[],
             edges:db.edges??[],
             traversers:db.traversers??[],
+            inputs:db.inputs??[],
         }
+        if(!this.db.inputs){
+            this.db.inputs=[];
+        }
+    }
+
+    public saveChangesAsync():Promise<void>{
+        // do nothing
+        return Promise.resolve();
     }
 
     public getNodeAsync(id:string):Promise<ConvoNode|undefined>
@@ -44,11 +54,11 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.nodes.findIndex(g=>g.id===node.id);
         if(index===-1){
-            this.db.nodes.push(node);
+            wAryPush(this.db.nodes,node);
         }else{
-            this.db.nodes[index]=node;
+            wArySplice(this.db.nodes,index,1,node);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({node,nodeId:node.id});
         return Promise.resolve();
     }
 
@@ -56,9 +66,9 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.nodes.findIndex(g=>g.id===id);
         if(index!==-1){
-            this.db.nodes.splice(index,1);
+            wArySplice(this.db.nodes,index,1);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({nodeId:id});
         return Promise.resolve();
     }
 
@@ -66,7 +76,7 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         return Promise.resolve(this.db.edges.filter(e=>side==='to'?
             e.to===nodeId:
-            (e.from===nodeId || e.from.startsWith(nodeId+'.'))
+            e.from===nodeId
         ))
     }
 
@@ -81,11 +91,11 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.edges.findIndex(g=>g.id===edge.id);
         if(index===-1){
-            this.db.edges.push(edge);
+            wAryPush(this.db.edges,edge);
         }else{
-            this.db.edges[index]=edge;
+            wArySplice(this.db.edges,index,1,edge);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({edge,edgeId:edge.id});
         return Promise.resolve();
     }
 
@@ -93,9 +103,9 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.edges.findIndex(g=>g.id===id);
         if(index!==-1){
-            this.db.edges.splice(index,1);
+            wArySplice(this.db.edges,index,1);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({edgeId:id});
         return Promise.resolve();
     }
 
@@ -111,11 +121,11 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.traversers.findIndex(g=>g.id===traverser.id);
         if(index===-1){
-            this.db.traversers.push(traverser);
+            wAryPush(this.db.traversers,traverser);
         }else{
-            this.db.traversers[index]=traverser;
+            wArySplice(this.db.traversers,index,1,traverser);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({traverser,traverserId:traverser.id});
         return Promise.resolve();
     }
 
@@ -123,9 +133,9 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore
     {
         const index=this.db.traversers.findIndex(g=>g.id===id);
         if(index!==-1){
-            this.db.traversers.splice(index,1);
+            wArySplice(this.db.traversers,index,1);
         }
-        this._onDbChange.next();
+        this._onDbChange.next({traverserId:id});
         return Promise.resolve();
     }
 }
