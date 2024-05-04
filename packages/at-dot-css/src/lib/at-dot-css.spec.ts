@@ -57,8 +57,6 @@ describe('at-css',()=>{
             `
         });
 
-        //console.log('hio 👋 👋 👋',cl);
-
         const ctrl=getAtDotCtrl(style);
         expect(ctrl).toBeTruthy();
 
