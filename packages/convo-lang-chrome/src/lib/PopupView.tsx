@@ -1,14 +1,20 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { BaseAppContainer, BaseAppContainerProps } from '@iyio/react-common';
+import { BaseAppContainer, BaseAppContainerProps, useSubject } from '@iyio/react-common';
 import { useEffect, useMemo } from "react";
-import { PopupCtrl } from "./PopupCtrl";
-import { TaskView } from "./TaskView";
+import { PopupCtrl, popCtrl } from "./PopupCtrl";
 
-export type PopupViewProps=BaseAppContainerProps;
+export interface PopupViewProps extends BaseAppContainerProps
+{
+    initCtrl?:(ctrl:PopupCtrl)=>void;
+}
 
-export function PopupView(props:PopupViewProps){
+export function PopupView({
+    initCtrl,
+    onScopeInited,
+    ...props
+}:PopupViewProps){
 
-    const ctrl=useMemo(()=>new PopupCtrl(),[]);
+    const ctrl=useMemo(popCtrl,[]);
 
     useEffect(()=>{
         return ()=>{
@@ -16,16 +22,25 @@ export function PopupView(props:PopupViewProps){
         }
     },[ctrl]);
 
+    const route=useSubject(ctrl.routeSubject);
+    const views=useSubject(ctrl.viewsSubject);
+    const view=views.find(v=>v.route===route);
+
     return (
         <BaseAppContainer
             insertSharedStyleSheets
             enableRouteRedirectFallback={false}
             initBeforeRender
+            loadingPlaceholder={<h3>Loading</h3>}
+            onScopeInited={scope=>{
+                initCtrl?.(ctrl);
+                onScopeInited?.(scope);
+            }}
             {...props}
         >
             <div className={style.root()}>
 
-                <TaskView ctrl={ctrl}/>
+                {view?.render()}
 
             </div>
         </BaseAppContainer>

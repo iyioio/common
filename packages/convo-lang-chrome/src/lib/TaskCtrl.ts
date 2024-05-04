@@ -26,6 +26,12 @@ export class TaskCtrl
     private readonly _state:BehaviorSubject<ConvoTaskState>;
     public get stateSubject():ReadonlySubject<ConvoTaskState>{return this._state}
     public get state(){return this._state.value}
+    public set state(value:ConvoTaskState){
+        if(value==this._state.value){
+            return;
+        }
+        this._state.next(value);
+    }
 
     private readonly parentCtrl:BaseConvoChromeCtrl;
 

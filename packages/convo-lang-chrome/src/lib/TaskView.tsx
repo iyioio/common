@@ -1,15 +1,15 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Form, ScrollView } from "@iyio/react-common";
 import { useState } from "react";
-import { PopupCtrl } from "./PopupCtrl";
+import { PopupCtrl, popCtrl } from "./PopupCtrl";
 
 export interface TaskViewProps
 {
-    ctrl:PopupCtrl;
+    ctrl?:PopupCtrl;
 }
 
 export function TaskView({
-    ctrl
+    ctrl=popCtrl()
 }:TaskViewProps){
 
     const [prompt,setPrompt]=useState('reply to this email');
