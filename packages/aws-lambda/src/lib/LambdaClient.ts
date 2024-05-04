@@ -40,10 +40,10 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
     public async invokeAsync<TInput,TOutput>(options:LambdaInvokeOptions<TInput>):Promise<TOutput>
     {
         const output=await this.invokeOptionalOutAsync<TInput,TOutput>(options);
-        if(output===undefined){
+        if(output===undefined && (options.outputScheme?!options.outputScheme.isOptional():true)){
             throw new Error(`No output returned by function - ${options.fn}`);
         }
-        return output;
+        return output as any;
     }
 
     public async invokeNoOutAsync<TInput,TOutput>(options:LambdaInvokeOptions<TInput>):Promise<void>
@@ -109,6 +109,9 @@ export class LambdaClient extends AuthDependentClient<AwsLambdaClient>
         }
 
         if(outputScheme){
+            if(output===null && outputScheme.isOptional()){
+                output=undefined;
+            }
             const parsed=outputScheme.safeParse(output);
             if(parsed.success===true){
                 output=parsed.data;
