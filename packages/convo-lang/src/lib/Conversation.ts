@@ -75,7 +75,17 @@ export interface ConversationOptions
      */
     initConvo?:string;
 
+    /**
+     * Called at the end of the Conversation constructor
+     */
+    onConstructed?:(convo:Conversation)=>void;
+
     defaultVars?:Record<string,any>;
+
+    /**
+     * Array of ConvoDefItems to define
+     */
+    define?:ConvoDefItem[];
 }
 
 export class Conversation
@@ -229,9 +239,11 @@ export class Conversation
             disableMessageCapabilities=false,
             initConvo,
             defaultVars,
+            onConstructed,
+            define,
         }=options;
         this.defaultOptions=options;
-        this.defaultVars=defaultVars?{...defaultVars}:{};
+        this.defaultVars=defaultVars?defaultVars:{};
         this.userRoles=userRoles;
         this.roleMap=roleMap;
         this.completionService=completionService;
@@ -250,8 +262,12 @@ export class Conversation
             this.debugMode=true;
         }
         if(initConvo){
-            this.append(initConvo);
+            this.append(initConvo,true);
         }
+        if(define){
+            this.define(define);
+        }
+        onConstructed?.(this);
     }
 
     private getMessageListCapabilities(msgs:FlatConvoMessage[]):ConvoCapability[]{
