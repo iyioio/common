@@ -57,7 +57,7 @@ export interface Query
     /**
      * A column or columns to group the group by
      */
-    groupBy?:string|string[];
+    groupBy?:string|string[]|QueryCol|QueryCol[];
 
     /**
      * Limits the number of results returned

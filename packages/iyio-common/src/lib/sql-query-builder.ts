@@ -99,7 +99,11 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
         ctx.sql.push('group by');
         const cols=Array.isArray(query.groupBy)?query.groupBy:[query.groupBy];
         for(const col of cols){
-            ctx.sql.push(escapeSqlName(col));
+            if(typeof col === 'object'){
+                appendCol(ctx,col);
+            }else{
+                ctx.sql.push(escapeSqlName(col));
+            }
             ctx.sql.push(',')
         }
         ctx.sql.pop();
