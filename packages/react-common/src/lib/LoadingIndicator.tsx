@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BehaviorSubject } from "rxjs";
-import { useSubject } from "./rxjs-hooks";
+import { useFunctionSubject } from "./rxjs-hooks";
 
 export const loadingIndicatorRendererSubject=new BehaviorSubject<((props:LoadingIndicatorProps)=>any)|null>(null);
 
@@ -13,7 +13,7 @@ export interface LoadingIndicatorProps
 
 export function LoadingIndicator(props:LoadingIndicatorProps){
 
-    const renderer=useSubject(loadingIndicatorRendererSubject);
+    const renderer=useFunctionSubject(loadingIndicatorRendererSubject);
 
     if(renderer){
         return renderer(props);
