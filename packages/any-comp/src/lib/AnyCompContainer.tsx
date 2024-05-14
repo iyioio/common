@@ -11,12 +11,16 @@ export interface AnyCompContainerProps
     comp?:AcComp;
     placeholder?:any;
     foregroundColor?:string;
+    canvasSize?:'min'|'split'|'max';
+    onCanvasSizeChange?:(value:'min'|'split'|'max')=>void;
 }
 
 export function AnyCompContainer({
     comp,
     placeholder,
-    foregroundColor='#000000'
+    foregroundColor='#000000',
+    canvasSize='split',
+    onCanvasSizeChange
 }:AnyCompContainerProps){
 
     const [props,setProps]=useState<Record<string,any>>({});
@@ -113,7 +117,12 @@ export function AnyCompContainer({
                     <Text weightBold lg key={p.name} text={`${p.name} - required before rendering`}/>
                 ))
             :
-                <div className={style.container()}>
+                <ScrollView
+                    fitToMaxSize={canvasSize==='min'?'20vh':canvasSize==='max'?undefined:'60vh'}
+                    flex1={canvasSize==='max'}
+                    className={style.mainScroll()}
+                    containerClassName={style.mainScrollContainer()}
+                >
                     <ErrorBoundary key={comp?.id}>
                         <div style={{
                             display:display?'flex':'block',
@@ -129,9 +138,9 @@ export function AnyCompContainer({
                             />
                         </div>
                     </ErrorBoundary>
-                </div>
+                </ScrollView>
             }
-            <View row justifyBetween>
+            <View row justifyBetween mb1={canvasSize==='max'}>
                 <View row className={style.bottomButtons()}>
                     <View row>
                         (
@@ -158,6 +167,15 @@ export function AnyCompContainer({
                         <SlimButton onClick={()=>setAlign(align==='flex-end'?undefined:'flex-end')} className={style.btn({active:align==='flex-end'})}>e</SlimButton>
                         )
                     </View>
+                    <View row>
+                        canvas (
+                        <SlimButton onClick={()=>onCanvasSizeChange?.('min')} className={style.btn({active:canvasSize==='min'})}>sm</SlimButton>
+                        |
+                        <SlimButton onClick={()=>onCanvasSizeChange?.('split')} className={style.btn({active:canvasSize==='split'})}>md</SlimButton>
+                        |
+                        <SlimButton onClick={()=>onCanvasSizeChange?.('max')} className={style.btn({active:canvasSize==='max'})}>lg</SlimButton>
+                        )
+                    </View>
                 </View>
                 <View row className={style.bottomButtons()}>
                     <SlimButton onClick={save}>(Save)</SlimButton>
@@ -168,7 +186,7 @@ export function AnyCompContainer({
                     <SlimButton onClick={reset}>(Reset)</SlimButton>
                 </View>
             </View>
-            <ScrollView flex1 className={style.scroll()} containerClassName={style.scrollContainer()}>
+            <ScrollView flex1 className={style.scroll({hide:canvasSize==='max'})} containerClassName={style.scrollContainer()}>
                 <View col className={style.inputContainer()} key={inputKey}>
 
                     <Text lg text="Props" />
@@ -213,14 +231,16 @@ const style=atDotCss({name:'AnyCompContainer',css:`
         color:@@foregroundColor;
         --any-comp-foreground-color:@@foregroundColor;
     }
-    @.container{
+    @.mainScroll{
+        border:var(--any-comp-border-color) 1px solid;
+        border-radius:4px;
+        margin-top:1rem;
+    }
+    @.mainScrollContainer{
         display:flex;
         flex-direction:column;
         position:relative;
-        border:var(--any-comp-border-color) 1px solid;
-        border-radius:4px;
         padding:1rem;
-        margin-top:1rem;
     }
     @.inputContainer{
         padding:1rem;
@@ -257,6 +277,9 @@ const style=atDotCss({name:'AnyCompContainer',css:`
         border:var(--any-comp-border-color) 1px solid;
         border-radius:4px;
         margin-bottom:1rem;
+    }
+    @.scroll.hide{
+        display:none;
     }
     @.scrollContainer{
         display:flex;

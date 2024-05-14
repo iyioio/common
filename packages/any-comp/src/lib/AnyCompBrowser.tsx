@@ -54,6 +54,8 @@ export function AnyCompBrowser({
         }
     },[rememberCompId]);
 
+    const [canvasSize,setCanvasSize]=useState<'min'|'split'|'max'>('split');
+
     return (
         <div className={style.root(null,null,props)} style={style.vars({
             foregroundColor,
@@ -84,9 +86,18 @@ export function AnyCompBrowser({
                         ))}
                     </select>
 
-                    <Text lg weightBold text={comp?.name??'No component selected'} />
-                    <AnyCompComment comment={comp?.comment} />
-                    <AnyCompContainer key={comp?.id??''} comp={comp} placeholder={placeholder} foregroundColor={foregroundColor} />
+                    {canvasSize!=='max' && <>
+                        <Text lg weightBold text={comp?.name??'No component selected'} />
+                        <AnyCompComment comment={comp?.comment} />
+                    </>}
+                    <AnyCompContainer
+                        key={comp?.id??''}
+                        comp={comp}
+                        placeholder={placeholder}
+                        foregroundColor={foregroundColor}
+                        canvasSize={canvasSize}
+                        onCanvasSizeChange={setCanvasSize}
+                    />
                 </View>
 
             </View>
