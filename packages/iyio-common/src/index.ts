@@ -125,6 +125,7 @@ export * from './lib/query-types';
 export * from './lib/query.deps';
 export * from './lib/queue-types';
 export * from './lib/queue.deps';
+export * from './lib/regex-lib';
 export * from './lib/resource-refs';
 export * from './lib/resource-refs-common';
 export * from './lib/roles-helper';
