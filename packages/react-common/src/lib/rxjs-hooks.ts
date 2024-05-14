@@ -30,8 +30,44 @@ export function useSubject<T>(subject:ReadonlySubject<T>|Observable<T>|undefined
 
     return value;
 }
+export function useFunctionSubject(subject:undefined):undefined;
+export function useFunctionSubject<T>(subject:ReadonlySubject<T>):T
+export function useFunctionSubject(subject:undefined):undefined;
+export function useFunctionSubject<T>(subject:ReadonlySubject<T>|undefined):T|undefined;
+export function useFunctionSubject<T>(subject:Observable<T>):T|undefined;
+export function useFunctionSubject<T>(subject:ReadonlySubject<T>|Observable<T>|undefined):T|undefined
+{
+    const [value,setValue]=useState<T|undefined>(()=>(subject as any)?.value);
 
-export const useIncrementSubject=(subject:BehaviorSubject<number>,active:boolean=true)=>{
+    useEffect(()=>{
+        if(!subject){
+            setValue(undefined);
+            return;
+        }
+        const val=(subject as any).value;
+        if(val!==undefined){
+            if(typeof val === 'function'){
+                setValue(()=>val);
+            }else{
+                setValue(val);
+            }
+        }
+        const sub=subject?.subscribe(v=>{
+            if(typeof v === 'function'){
+                setValue(()=>v);
+            }else{
+                setValue(v);
+            }
+        })
+        return ()=>{
+            sub?.unsubscribe();
+        }
+    },[subject]);
+
+    return value;
+}
+
+export const useIncrementSubject=(subject:BehaviorSubject<number>,active=true)=>{
     useEffect(()=>{
         if(!active){
             return;
