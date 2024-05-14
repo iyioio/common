@@ -125,7 +125,7 @@ export function AnyCompPropInput({
             {normalType==='string'?
                 <input
                     className={style.input()}
-                    value={value?.toString()}
+                    value={value?.toString()??''}
                     onChange={e=>setValue(e.target.value)}
                     placeholder={placeholder}
                 />
@@ -133,7 +133,7 @@ export function AnyCompPropInput({
                 <input
                     className={style.input()}
                     type="number"
-                    value={value?.toString()}
+                    value={value?.toString()??''}
                     onChange={e=>setValue(Number(e.target.value))}
                     placeholder={placeholder}
                 />
@@ -141,7 +141,7 @@ export function AnyCompPropInput({
                 <input
                     className={style.checkbox()}
                     type="checkbox"
-                    checked={value}
+                    checked={value??false}
                     onChange={e=>setValue(e.target.checked)}
                     placeholder={placeholder}
                 />
