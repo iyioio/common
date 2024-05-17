@@ -633,4 +633,68 @@ This is the next line of **paragraph** 3.
 
     });
 
+
+
+    it('should parse bold start of line',()=>{
+
+        const lines=parse(`**stuff here**`);
+
+        const line=lines[0]
+        if(!line){
+            throw new Error('Expected a line');
+        }
+
+        const node=line.nodes?.[0];
+        if(!node){
+            throw new Error('Expected a node');
+        }
+
+        expect(node.bold).toBe(true);
+        expect(line.ulType).toBeUndefined();
+
+
+    });
+
+
+
+    it('should parse link with title',()=>{
+
+        const lines=parse(`[im a link](https://google.com "Google")`);
+
+        const line=lines[0]
+        if(!line){
+            throw new Error('Expected a line');
+        }
+
+        const node=line.nodes?.[0];
+        if(!node){
+            throw new Error('Expected a node');
+        }
+
+        expect(node.link).toBe(true);
+        expect(node.url).toBe('https://google.com');
+        expect(node.title).toBe('Google');
+
+
+    });
+
+
+
+    it('should parse html tags',()=>{
+
+        const lines=parse(`<span style="color:#ff00ff">Colored Text</span>`,{parseMarkup:true});
+        const line=lines[0]
+        if(!line){
+            throw new Error('Expected a line');
+        }
+
+        const node=line.nodes?.[0];
+        if(!node){
+            throw new Error('Expected a node');
+        }
+
+
+
+    });
+
 });

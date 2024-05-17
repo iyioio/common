@@ -33,23 +33,35 @@ export const escapeHtmlKeepDoubleQuote=(str:string):string=>
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;")
          .replace(/'/g, "&#039;");
- }
+}
 
 export const unescapeHtml=(str:string):string=>{
-    return str.replace(/&([^;]{0,10});/g,(_:string,v:string)=>{
+    return unescapeReplaceHtml(str,false);
+}
+
+export const unescapeReplaceHtml=(str:string,allowLongEntities:boolean,replace?:(entity:string)=>string):string=>{
+    return str.replace(allowLongEntities?
+        /&([^;]*);/g:
+        /&([^;]{0,15});/g,
+        (_:string,v:string)=>{
         v=v.toLowerCase();
         const l=lookup[v];
         if(l){
-            return l;
+            return replace?replace(l):l;
         }
         if(v[0]==='#'){
             try{
-                return String.fromCharCode(Number(v.substring(1)))
+                let n=v.substring(1);
+                if(n[0]==='x' || n[0]==='X'){
+                    n='0'+n;
+                }
+                n=String.fromCharCode(Number(n))
+                return replace?replace(n):n;
             }catch{
                 //
             }
         }
-        return _;
+        return replace?replace(_):_;
     })
 }
 

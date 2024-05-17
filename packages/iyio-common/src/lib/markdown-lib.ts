@@ -204,7 +204,11 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
 
             if(node.imageUrl){
                 content=`<img${recordToAtts(
-                    {alt:content,src:node.imageUrl},
+                    {
+                        alt:content,
+                        src:node.imageUrl,
+                        title:node.imageTitle
+                    },
                     options.getNodeHtmlAtts?.(line,node,'imageUrl'))
                 }/>`
             }
@@ -218,7 +222,10 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
 
             if(node.link || node.url || node.email){
                 content=`<a${recordToAtts(
-                    {href:`${node.email?'mailto:':''}${node.url?escapeHtml(node.url):'#'}`},
+                    {
+                        href:`${node.email?'mailto:':''}${node.url?escapeHtml(node.url):'#'}`,
+                        title:node.title,
+                    },
                     options.getNodeHtmlAtts?.(line,node,'link'))
                 }/>${content}</a>`;
             }
@@ -235,6 +242,29 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
                     null,
                     options.getNodeHtmlAtts?.(line,node,'bold'))
                 }>${content}</strong>`;
+            }
+            if(node.markup){
+                const markup=node.markup;
+                if(markup.open){
+                    content=`<${markup.tag}`;
+                    if(markup.attributes){
+                        for(const e in markup.attributes){
+                            const v=markup.attributes[e];
+                            if(v){
+                                content+=` ${e}="${escapeHtml(v)}"`
+                            }else{
+                                content+=` ${e}`;
+                            }
+                        }
+                    }
+                    if(markup.close){
+                        content+='/>'
+                    }else{
+                        content+='>';
+                    }
+                }else if(markup.close){
+                    content=`</${markup.tag}>`;
+                }
             }
             break;
 
@@ -253,7 +283,7 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
     return content;
 }
 
-const recordToAtts=(defaults:Record<string,string>|null|undefined,record:Record<string,string|null|undefined>|null|undefined):string=>{
+const recordToAtts=(defaults:Record<string,string|null|undefined>|null|undefined,record:Record<string,string|null|undefined>|null|undefined):string=>{
     const out:string[]=[];
 
     if(record){
@@ -270,6 +300,9 @@ const recordToAtts=(defaults:Record<string,string>|null|undefined,record:Record<
     if(defaults){
         for(const e in defaults){
             const v=defaults[e];
+            if(v===null || v===undefined){
+                continue;
+            }
             const rv=record?.[e]
             if(v===undefined || v===null || (rv!==null && rv!==undefined)){
                 continue;

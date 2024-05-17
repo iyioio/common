@@ -16,6 +16,7 @@ export interface MarkdownParsingOptions extends CodeParsingOptions
 {
     startLine?:number;
     parseTags?:boolean;
+    parseMarkup?:boolean;
 }
 
 export type MarkdownParsingResult=CodeParsingResult<MarkdownLine[]>;
@@ -40,7 +41,16 @@ export interface MarkdownNode
      */
     url?:string;
 
+    /**
+     * Link title or other title
+     */
+    title?:string;
+
     imageUrl?:string;
+    /**
+     * Image title
+     */
+    imageTitle?:string;
 
     link?:boolean;
 
@@ -54,6 +64,29 @@ export interface MarkdownNode
     italic?:boolean;
 
     code?:boolean;
+
+    markup?:MarkdownMarkupTag;
+
+}
+
+/**
+ * Represents an opening or closing markup tag in a block of markdown. Markup tags in markdown
+ * are not hierarchal.
+ */
+export interface MarkdownMarkupTag
+{
+    tag:string;
+    attributes?:Record<string,string>;
+    /**
+     * True if the markup tag is a opening tag. If a tag is a self closing tag open and close
+     * will be true.
+     */
+    open?:boolean;
+    /**
+     * True if the markup tag is a closing tag. If a tag is a self closing tag open and close
+     * will be true.
+     */
+    close?:boolean;
 }
 
 export type MarkdownUnorderedListType='-'|'+'|'*';

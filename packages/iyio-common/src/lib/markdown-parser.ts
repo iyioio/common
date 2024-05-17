@@ -1,17 +1,22 @@
 import { getCodeParsingError } from "./code-parsing";
 import { CodeParser } from "./code-parsing-types";
-import { MarkdownLine, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types";
+import { unescapeHtml } from "./html";
+import { MarkdownLine, MarkdownMarkupTag, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types";
 import { isValidEmail } from "./validation";
 
 const mdReg=/([\n\r]*)([ \t]*)([^\n\r$]*)/g;
 
 const headerReg=/(#+)\s*(.*)/;
 const blockQuoteReg=/(>+)\s*(.*)/;
-const ulReg=/([*+-])[ \t]*(.*)/;
-const olReg=/([0-9]+)\.[ \t]*(.*)/;
-const hrReg=/(\*{3,}|-{3,}|\+{3,})(.*)/;
+const ulReg=/([*+-])[ \t]+(.*)/;
+const olReg=/([0-9]+)\.[ \t]+(.*)/;
+const hrReg=/^[ \t]*(\*{3,}|-{3,}|\+{3,})[ \t]*$/;
 const codeReg=/```[ \t]*(\S*)(.*)```([^\r\n]*)/gs;
 const tagReg=/@([\w-]+)[ \t]*(.*)/g;
+const urlTitleReg=/([^ \t]*)[ \t]+"([^"]*)"/;
+
+const markupReg=/<(\/?)(\w+)([^>]*)([ \t]*(\/?)[ \t]*)>/g;
+const markupAttsReg=/(\w+)([ \t]*=[ \t]*"([^"]*)")?/g
 
 
 export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
@@ -20,14 +25,69 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
         startIndex=0,
         startLine=1,
         parseTags,
+        parseMarkup,
     }:MarkdownParsingOptions={}
 ):MarkdownParsingResult=>{
+
+    //reset global regex(s)
+    mdReg.lastIndex=0;
+    codeReg.lastIndex=0;
+    tagReg.lastIndex=0;
+    unescapeReg.lastIndex=0;
+    startReg.lastIndex=0;
+    underscoreReg.lastIndex=0;
+    codeInlineReg.lastIndex=0;
+    starReg.lastIndex=0;
+    addressReg.lastIndex=0;
+    linkReg.lastIndex=0;
+    imageLinkReg.lastIndex=0;
+    markupReg.lastIndex=0;
+    markupAttsReg.lastIndex=0;
+
 
     const lines:MarkdownLine[]=[];
     let error:string|undefined;
     let index=startIndex;
     let lineNumber=startLine;
     let capturedTags:MarkdownTag[]|undefined;
+
+    const markupTags:MarkdownNode[]=[];
+    if(parseMarkup){
+        code=code.replace(markupReg,(
+            _:string,
+            isClosing:string,
+            tag:string,
+            content:string,
+            _2:string,
+            isSelfClosing:string
+        )=>{
+            const markup:MarkdownMarkupTag={
+                tag,
+            }
+            if(isSelfClosing){
+                markup.open=true;
+                markup.close=true;
+            }
+
+            if(isClosing){
+                markup.close=true;
+            }else{
+                markup.open=true;
+                let attMatch:RegExpExecArray|null;
+                while(attMatch=markupAttsReg.exec(content)){
+                    if(!markup.attributes){
+                        markup.attributes={}
+                    }
+                    markup.attributes[attMatch[1]??'']=unescapeHtml(attMatch[3]??'');
+                }
+            }
+
+            markupTags.push({markup})
+
+            return `<m:${markupTags.length-1}>`;
+        })
+    }
+
 
 
     const length=code.length;
@@ -116,7 +176,7 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
                 if(hrMatch){//hr
                     line.type='hr';
                     text=hrMatch[1];
-                }else{
+                }else if(text[1]===' ' || text[1]==='\n'){
                     line.type='list-item';
                     line.ulType=text[0];
                     const lineMatch=ulReg.exec(text);
@@ -218,7 +278,7 @@ export const parseMarkdown:CodeParser<MarkdownLine[],MarkdownParsingOptions>=(
             capturedTags=undefined;
         }
 
-        const inline=parseInline(text);
+        const inline=parseInline(text,parseMarkup?markupTags:null);
         if(typeof inline === 'string'){
             line.text=inline;
         }else{
@@ -297,7 +357,7 @@ const addressReg=/<((?:\\>|[^>])*)>/g;
 const linkReg=/\[((?:\\\]|[^\]])*)\][ \t]*\(((?:\\\)|[^)])*)\)/g;
 const imageLinkReg=/\[[ \t]*![ \t]*\[((?:\\\]|[^\]])*)\][ \t]*\(((?:\\\)|[^)])*)\)[ \t]*\][ \t]*\(((?:\\\)|[^)])*)\)/g;
 
-const parseInline=(text:string):string|MarkdownNode[]=>{
+const parseInline=(text:string,markupTags:MarkdownNode[]|null):string|MarkdownNode[]=>{
 
     startReg.lastIndex=0;
     let match=startReg.exec(text);
@@ -318,10 +378,15 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
         index=match.index+(match[1]?.length??0);
         let char=match[2]??'';
         let bold=false;
+        let italic=false;
         let isImage=false;
         if((char==='_' || char==='*') && char===text[index+1]){
             bold=true;
             index++;
+            if(char===text[index+1]){
+                italic=true;
+                index++;
+            }
         }else if(char==='!'){
             isImage=true;
             index++;
@@ -336,7 +401,7 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                 reg.lastIndex=index;
                 match=reg.exec(text);
                 if(match){
-                    const sub=parseInline(match[1]??'');
+                    const sub=parseInline(match[1]??'',markupTags);
                     let subNodes:MarkdownNode[];
                     if(typeof sub === 'string'){
                         subNodes=[{text:sub}];
@@ -347,6 +412,9 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                         nodes.push(node);
                         if(bold){
                             node.bold=true;
+                            if(italic){
+                                node.italic=true;
+                            }
                         }else{
                             node.italic=true;
                         }
@@ -354,6 +422,9 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                     index=match.index+match[0].length;
                     if(text[index]===char){
                         index++;
+                        if(text[index]===char){
+                            index++;
+                        }
                     }
                 }else{
                     nodes.push({text:char})
@@ -369,7 +440,7 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                 reg.lastIndex=index;
                 match=reg.exec(text);
                 if(match){
-                    const sub=parseInline(match[1]??'');
+                    const sub=parseInline(match[1]??'',markupTags);
                     let subNodes:MarkdownNode[];
                     if(typeof sub === 'string'){
                         subNodes=[{text:sub}];
@@ -383,6 +454,9 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                         }else{
                             if(node.text && isValidEmail(node.text)){
                                 node.email=true;
+                            }else if(markupTags && node.text?.startsWith('m:')){
+                                nodes.pop();
+                                nodes.push(markupTags[Number(node.text.substring(2))]??node);
                             }else if(!node.url && node.text){
                                 node.url=node.text.trim();
                             }
@@ -405,7 +479,7 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                         imageLinkReg.lastIndex=index-1;
                         const liMatch=imageLinkReg.exec(text);
                         if(liMatch){
-                            const sub=parseInline(liMatch[1]??'');
+                            const sub=parseInline(liMatch[1]??'',markupTags);
                             let subNodes:MarkdownNode[];
                             if(typeof sub === 'string'){
                                 subNodes=[{text:sub.trim()}];
@@ -424,7 +498,7 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                             break;
                         }
                     }
-                    const sub=parseInline(matchValue);
+                    const sub=parseInline(matchValue,markupTags);
                     let subNodes:MarkdownNode[];
                     if(typeof sub === 'string'){
                         subNodes=[{text:sub.trim()}];
@@ -435,9 +509,21 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
                     for(const node of subNodes){
                         nodes.push(node);
                         if(isImage){
-                            node.imageUrl=url;
+                            const titleMatch=urlTitleReg.exec(url);
+                            if(titleMatch){
+                                node.imageUrl=titleMatch[1];
+                                node.imageTitle=titleMatch[2];
+                            }else{
+                                node.imageUrl=url;
+                            }
                         }else{
-                            node.url=url;
+                            const titleMatch=urlTitleReg.exec(url);
+                            if(titleMatch){
+                                node.url=titleMatch[1];
+                                node.title=titleMatch[2];
+                            }else{
+                                node.url=url;
+                            }
                             node.link=true;
                         }
                     }
@@ -466,6 +552,14 @@ const parseInline=(text:string):string|MarkdownNode[]=>{
 
     if(index<text.length){
         nodes.push({text:text.substring(index)})
+    }
+
+    for(let i=0;i<nodes.length;i++){
+        const node=nodes[i];
+        if(node?.text){
+            node.text=unescapeHtml(node.text);
+        }
+
     }
 
     return nodes;
