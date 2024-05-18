@@ -839,7 +839,7 @@ const initScopeAsync=async ({
         let lastPriority=lifecycles[0]?.priority??0;
         for(const lc of lifecycles){
 
-            if((lastPriority!==lc.priority??0) && initPromises.length){
+            if((lastPriority!==(lc.priority??0)) && initPromises.length){
                 await Promise.all(initPromises);
                 cancel.throwIfCanceled();
                 lastPriority=lc.priority??0;
