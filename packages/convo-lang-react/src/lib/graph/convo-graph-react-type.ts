@@ -1,5 +1,5 @@
 import { Point, Rect } from "@iyio/common";
-import { ConvoEdge, ConvoInputTemplate, ConvoNode, ConvoTraverser } from "@iyio/convo-lang";
+import { ConvoEdge, ConvoInputTemplate, ConvoNode, ConvoSourceNode, ConvoTraverser } from "@iyio/convo-lang";
 import { BehaviorSubject } from "rxjs";
 
 export interface ConvoEntityLayoutCtrl
@@ -9,7 +9,8 @@ export interface ConvoEntityLayoutCtrl
     edge?:ConvoEdge;
     traverser?:ConvoTraverser;
     input?:ConvoInputTemplate;
-    entity:ConvoNode|ConvoEdge|ConvoTraverser|ConvoInputTemplate;
+    sourceNode?:ConvoSourceNode;
+    entity:ConvoNode|ConvoEdge|ConvoTraverser|ConvoInputTemplate|ConvoSourceNode;
     updateLayout():void;
     getElement(target:ConvoUiTarget):HTMLElement|undefined;
     getElementBounds(target:ConvoUiTarget):Rect|undefined;

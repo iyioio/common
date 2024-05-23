@@ -43,6 +43,10 @@ export function ConvoGraphCanvas({
                 <ConvoGraphEntityView key={n.id} input={n} ctrl={ctrl}/>
             ))}
 
+            {ctrl.graph.sourceNodes.map((n)=>(
+                <ConvoGraphEntityView key={n.id} sourceNode={n} ctrl={ctrl}/>
+            ))}
+
             {ctrl.graph.traversers.map((n)=>(
                 <ConvoGraphEntityView key={n.id} traverser={n} ctrl={ctrl}/>
             ))}

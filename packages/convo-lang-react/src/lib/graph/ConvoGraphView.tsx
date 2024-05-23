@@ -104,7 +104,16 @@ export function ConvoGraphView({
 
         const pt=panZoom.transformClientPointToPlane({x:e.clientX,y:e.clientY});
 
-        if(e.altKey){
+        if(e.metaKey){
+
+            wAryPush(ctrl.graph.sourceNodes,{
+                id:shortUuid(),
+                x:pt.x,
+                y:pt.y,
+                shared:true,
+                source:'> define\n'
+            });
+        }else if(e.altKey){
 
             wAryPush(ctrl.graph.inputs,{
                 id:shortUuid(),

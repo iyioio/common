@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { stopWatchingObj, wSetProp, watchObj } from "@iyio/common";
-import { ConvoEdge, ConvoInputTemplate, ConvoNode, ConvoTraverser } from "@iyio/convo-lang";
+import { ConvoEdge, ConvoInputTemplate, ConvoNode, ConvoSourceNode, ConvoTraverser } from "@iyio/convo-lang";
 import { Text, useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
 import { BehaviorSubject } from "rxjs";
@@ -8,6 +8,7 @@ import { ConvoEdgeView } from "./ConvoEdgeView";
 import { ConvoGraphViewCtrl } from "./ConvoGraphViewCtrl";
 import { ConvoInputView } from "./ConvoInputView";
 import { ConvoNodeView } from "./ConvoNodeView";
+import { ConvoSourceNodeView } from "./ConvoSourceNodeView";
 import { ConvoTraverserView } from "./ConvoTraverserView";
 import { ConvoEntityLayoutCtrl, ConvoUiTarget } from "./convo-graph-react-type";
 
@@ -17,6 +18,7 @@ export interface ConvoGraphEntityViewProps
     node?:ConvoNode;
     edge?:ConvoEdge;
     traverser?:ConvoTraverser;
+    sourceNode?:ConvoSourceNode;
     input?:ConvoInputTemplate;
 }
 
@@ -25,10 +27,11 @@ export function ConvoGraphEntityView({
     edge,
     input,
     traverser,
+    sourceNode,
     ctrl,
 }:ConvoGraphEntityViewProps){
 
-    const pos=node??edge??traverser??input;
+    const pos=node??edge??traverser??input??sourceNode;
 
     const [elem,setElem]=useState<HTMLElement|null>(null);
 
@@ -37,7 +40,7 @@ export function ConvoGraphEntityView({
     const allowDrag=useSubject(layoutCtrl?.allowDrag);
 
     useEffect(()=>{
-        if(!elem || !pos || (!input && !node && !edge && !traverser)){
+        if(!elem || !pos || (!input && !node && !edge && !traverser && !sourceNode)){
             setLayoutCtrl(null);
             return;
         }
@@ -59,6 +62,7 @@ export function ConvoGraphEntityView({
             elem,
             node,
             edge,
+            sourceNode,
             input,
             traverser,
             entity:pos,
@@ -117,7 +121,7 @@ export function ConvoGraphEntityView({
             stopWatchingObj(pos);
         }
 
-    },[elem,pos,node,input,traverser,edge,ctrl]);
+    },[elem,pos,node,input,traverser,edge,sourceNode,ctrl]);
 
     return (
         <div className={convoGraphEntityStyle.root({edge,smooth:allowDrag===false})} ref={setElem}>
@@ -130,11 +134,13 @@ export function ConvoGraphEntityView({
                 'traverser'
             :input?
                 'input'
+            :sourceNode?
+                'source'
             :
                 null
             } ({Math.round(pos?.x??0)},{Math.round(pos?.y??0)})</div>
 
-            {(node || input) && <input type="text" value={pos?.name??''} onChange={e=>wSetProp(pos,'name',e.target.value)} placeholder="Name"/>}
+            {(node || input || sourceNode) && <input type="text" value={pos?.name??''} onChange={e=>wSetProp(pos,'name',e.target.value)} placeholder="Name"/>}
 
             {!!pos?.id && <Text opacity025 xs text={`ID: ${pos.id}`}/>}
 
@@ -144,6 +150,8 @@ export function ConvoGraphEntityView({
             {edge && <ConvoEdgeView edge={edge}/>}
 
             {input && <ConvoInputView input={input}/>}
+
+            {sourceNode && <ConvoSourceNodeView src={sourceNode}/>}
 
             {traverser && <ConvoTraverserView traverser={traverser}/>}
 

@@ -73,7 +73,8 @@ export class ConvoGraphViewCtrl
                 nodes:[],
                 edges:[],
                 traversers:[],
-                inputs:[]
+                inputs:[],
+                sourceNodes:[],
             }
         }
     }
