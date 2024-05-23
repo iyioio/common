@@ -65,7 +65,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         secretManager,
         secretsName,
         apiBaseUrl,
-        chatModels=['gpt-3.5-turbo'],
+        chatModels=['gpt-4o'],
         audioModels=['whisper-1'],
         imageModels=[dalle3Model],
         visionModels=[defaultVisionModel]
@@ -414,6 +414,8 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
         }
 
         switch(model){
+            case 'gpt-4o': return 128000;
+            case 'gpt-4o-2024-05-13': return 128000;
             case 'gpt-4-1106-preview': return 128000;
             case 'gpt-4-vision-preview': return 128000;
             case 'gpt-4': return 8192;
@@ -459,6 +461,8 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const isIn=tokenType==='in';
         switch(model){
+            case 'gpt-4o':
+            case 'gpt-4o-2024-05-13': return (isIn?5:15)/1000000;
             case 'gpt-4-0125-preview':
             case 'gpt-4-1106-preview':
             case 'gpt-4-vision-preview': return (isIn?0.01:0.03)/1000;
