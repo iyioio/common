@@ -17,6 +17,7 @@ export interface ConvoGraphDb
     edges:ConvoEdge[];
     traversers:ConvoTraverser[];
     inputs:ConvoInputTemplate[];
+    sourceNodes:ConvoSourceNode[];
 }
 
 export interface ConvoNodeTypeMetadata
@@ -433,6 +434,7 @@ export interface ConvoGraphStoreEvt
     node?:ConvoNode;
     nodeId?:string;
     edge?:ConvoEdge;
+    sourceNode?:ConvoSourceNode;
     edgeId?:string;
     traverser?:ConvoTraverser;
     traverserId?:string;
@@ -485,6 +487,15 @@ export interface ConvoGraphStore
     putTraverserAsync(traverser:ConvoTraverser):Promise<void>;
 
     deleteTraverserAsync(id:string):Promise<void>;
+
+
+    getSourceNodesAsync():Promise<ConvoSourceNode[]>;
+
+    getSourceNodeAsync(id:string):Promise<ConvoSourceNode|undefined>;
+
+    putSourceNodeAsync(SourceNode:ConvoSourceNode):Promise<void>;
+
+    deleteSourceNodeAsync(id:string):Promise<void>;
 }
 
 
@@ -506,4 +517,27 @@ export interface ConvoTraverserGroup
     saveToStore:boolean;
     createTvOptions?:CreateConvoTraverserOptions;
     cancel:CancelToken;
+}
+
+
+/**
+ * Represents a convo source file
+ */
+export interface ConvoSourceNode
+{
+    id:string;
+
+    name?:string;
+
+    /**
+     * Source convo lang content
+     */
+    source:string;
+
+    type?:string;
+
+    shared?:boolean;
+
+    x?:number;
+    y?:number;
 }

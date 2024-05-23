@@ -658,6 +658,7 @@ How many fish are in the sea
                   that value will be displayed on the clickable button instead of the message content but the
                   message content will still be used as the user messaged added to the conversation when clicked.
                   Suggestion message are render only and not seen by LLMs.
+- `@import` - Allows you to import external convo-lang scripts
 
 ### Strings
 There are 3 types of string in convo.
@@ -833,6 +834,11 @@ You are a frog and you like to hop around.
 > system
 You are a dog and you like to eat dirt.
 ```
+
+## Imports
+The `@import` tag can be used to import external convo-lang scripts
+
+**(More documentation coming soon)**
 
 
 ## Keywords

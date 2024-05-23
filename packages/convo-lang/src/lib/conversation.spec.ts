@@ -824,4 +824,98 @@ describe('convo',()=>{
         )
     })
 
+
+    it('Should import',async ()=>{
+        let handlerCallCount=0;
+        const convo=new Conversation({
+            disableAutoFlatten:true,
+            importHandler:(r)=>{
+                handlerCallCount++;
+                switch(r.name){
+
+                    case 'vars':
+                        return {
+                            name:r.name,
+                            convo:/*convo*/`
+                                > define
+                                speed='fast'
+                                toSub='do it'
+
+                                @import sub
+                                > user
+                                Imported content {{subVar}}
+                            `
+                        }
+
+                    case 'sub':
+                        return {
+                            name:r.name,
+                            convo:/*convo*/`
+                                > user
+                                Sub msg - {{toSub}}
+
+                                > define
+                                subVar='Zero'
+                            `
+                        }
+
+                    case 'types':
+                        return {
+                            name:r.name,
+                            type:{
+                                name:'User',
+                                type:z.object({
+                                    name:z.string(),
+                                    age:z.number(),
+                                })
+                            }
+                        }
+                }
+                return null;
+            }
+        });
+
+        convo.append(/*convo*/`
+            > user
+            First line
+
+            @import vars
+            @import types
+            > user
+            go {{speed}}
+        `);
+
+        expect(handlerCallCount).toBe(0);
+
+        let flat=await convo.flattenAsync();
+
+        expect(handlerCallCount).toBe(3);
+        expect(flat.messages.filter(m=>m.content).map(m=>m.content?.trim())).toEqual([
+            'First line',
+            'Sub msg - do it',
+            'Imported content Zero',
+            'go fast',
+        ]);
+
+        convo.append(/*convo*/`
+            > user
+            new msg {{subVar}}
+        `)
+        flat=await convo.flattenAsync();
+
+        expect(handlerCallCount).toBe(3);
+        expect(flat.messages.filter(m=>m.content).map(m=>m.content?.trim())).toEqual([
+            'First line',
+            'Sub msg - do it',
+            'Imported content Zero',
+            'go fast',
+            'new msg Zero'
+        ]);
+
+        const userType=flat.exe.getVarAsType('User');
+        expect(userType).not.toBeUndefined();
+        expect(userType?.safeParse({name:'Ricky',age:40}).success).toBe(true);
+        expect(userType?.safeParse({name:'Ricky',age:'40'}).success).toBe(false);
+    });
+
 });

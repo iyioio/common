@@ -1,6 +1,6 @@
 import { wAryPush, wArySplice } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { ConvoEdge, ConvoEdgeSide, ConvoGraphDb, ConvoGraphStore, ConvoGraphStoreEvt, ConvoNode, ConvoTraverser, IHasConvoGraphDb } from "./convo-graph-types";
+import { ConvoEdge, ConvoEdgeSide, ConvoGraphDb, ConvoGraphStore, ConvoGraphStoreEvt, ConvoNode, ConvoSourceNode, ConvoTraverser, IHasConvoGraphDb } from "./convo-graph-types";
 
 
 export interface ConvoMemoryGraphStoreOptions
@@ -33,6 +33,7 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore, IHasConvoGraphDb
             edges:db.edges??[],
             traversers:db.traversers??[],
             inputs:db.inputs??[],
+            sourceNodes:db.sourceNodes??[],
         }
         if(!this.db.inputs){
             this.db.inputs=[];
@@ -134,6 +135,42 @@ export class ConvoMemoryGraphStore implements ConvoGraphStore, IHasConvoGraphDb
         const index=this.db.traversers.findIndex(g=>g.id===id);
         if(index!==-1){
             wArySplice(this.db.traversers,index,1);
+        }
+        this._onDbChange.next({traverserId:id});
+        return Promise.resolve();
+    }
+
+
+
+    public getSourceNodesAsync():Promise<ConvoSourceNode[]>
+    {
+        return Promise.resolve([...this.db.sourceNodes]);
+
+    }
+
+    public getSourceNodeAsync(id:string):Promise<ConvoSourceNode|undefined>
+    {
+        return Promise.resolve(this.db.sourceNodes.find(g=>g.id===id));
+
+    }
+
+    public putSourceNodeAsync(sourceNode:ConvoSourceNode):Promise<void>
+    {
+        const index=this.db.sourceNodes.findIndex(g=>g.id===sourceNode.id);
+        if(index===-1){
+            wAryPush(this.db.sourceNodes,sourceNode);
+        }else{
+            wArySplice(this.db.sourceNodes,index,1,sourceNode);
+        }
+        this._onDbChange.next({sourceNode,traverserId:sourceNode.id});
+        return Promise.resolve();
+    }
+
+    public deleteSourceNodeAsync(id:string):Promise<void>
+    {
+        const index=this.db.sourceNodes.findIndex(g=>g.id===id);
+        if(index!==-1){
+            wArySplice(this.db.sourceNodes,index,1);
         }
         this._onDbChange.next({traverserId:id});
         return Promise.resolve();

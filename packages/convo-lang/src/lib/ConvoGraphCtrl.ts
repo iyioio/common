@@ -1,4 +1,4 @@
-import { CancelToken, aryRemoveItem, createPromiseSource, deepClone, getErrorMessage, pushBehaviorSubjectAry, shortUuid, zodCoerceObject } from "@iyio/common";
+import { CancelToken, DisposeContainer, aryRemoveItem, createPromiseSource, deepClone, getErrorMessage, pushBehaviorSubjectAry, shortUuid, zodCoerceObject } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType } from "zod";
 import { Conversation, ConversationOptions } from "./Conversation";
@@ -29,27 +29,30 @@ export class ConvoGraphCtrl
     }
 
     private readonly defaultConvoOptions:ConversationOptions;
-    private getConvoOptions(tv:ConvoTraverser|undefined,initConvo?:string):ConversationOptions{
+    private async getConvoOptionsAsync(tv:ConvoTraverser|undefined,initConvo?:string):Promise<ConversationOptions>{
 
         return {
             ...this.defaultConvoOptions,
             disableAutoFlatten:true,
-            initConvo:(
-                initConvo?
-                    (
-                        this.defaultConvoOptions.initConvo?
-                            `${this.defaultConvoOptions.initConvo}\n\n${initConvo}`
-                        :
-                            initConvo
-                    )
-                :
-                    this.defaultConvoOptions.initConvo
-            ),
+            initConvo:((await this.getSharedSourceAsync())+(
+                (
+                    initConvo?
+                        (
+                            this.defaultConvoOptions.initConvo?
+                                `${this.defaultConvoOptions.initConvo}\n\n${initConvo}`
+                            :
+                                initConvo
+                        )
+                    :
+                        this.defaultConvoOptions.initConvo
+                )||''
+            ))||undefined,
             defaultVars:{
                 ...this.defaultConvoOptions.defaultVars,
                 input:tv?.payload,
                 sourceInput:tv?.payload,
-                tState:tv?.state
+                tState:tv?.state,
+                graphCtrl:this,
             }
         }
     }
@@ -62,6 +65,7 @@ export class ConvoGraphCtrl
         this.defaultConvoOptions=convoOptions;
     }
 
+    private readonly disposables=new DisposeContainer();
     private _isDisposed=false;
     public get isDisposed(){return this._isDisposed}
     public dispose()
@@ -69,7 +73,15 @@ export class ConvoGraphCtrl
         if(this._isDisposed){
             return;
         }
+        this.disposables.dispose();
         this._isDisposed=true;
+    }
+
+    public async startRunAsync(options:StartConvoTraversalOptions)
+    {
+        const tv=await this.startTraversalAsync(options);
+        await this.runGroupAsync(tv);
+        return tv;
     }
 
     public async startTraversalAsync({
@@ -270,6 +282,7 @@ export class ConvoGraphCtrl
             const newState=await this._nextAsync(tv,group);
             if(newState==='failed'){
                 if(this.hasListeners){
+                    console.log('hio 👋 👋 👋 new state',newState);
                     this.triggerEvent({
                         type:'traversal-failed',
                         text:tv.errorMessage??'Traversal failed',
@@ -281,6 +294,7 @@ export class ConvoGraphCtrl
         }catch(ex){
             tv.currentStepIndex=0;
             //throw errors can be retired
+            console.log('hio 👋 👋 👋 error caught',ex);
             if(this.hasListeners){
                 this.triggerEvent({
                     type:'traversal-failed',
@@ -313,7 +327,7 @@ export class ConvoGraphCtrl
             })
         }
 
-        const exeCtx=await createConvoNodeExecCtxAsync(node,this.getConvoOptions(tv));
+        const exeCtx=await createConvoNodeExecCtxAsync(node,await this.getConvoOptionsAsync(tv));
 
         // transform input
         let transformStep:ConvoNodeExecCtxStep|null=null;
@@ -408,7 +422,7 @@ export class ConvoGraphCtrl
             try{
                 const conversation=new Conversation({
                     disableAutoFlatten:true,
-                    initConvo:edge.conditionConvo,
+                    initConvo:(await this.getSharedSourceAsync())+edge.conditionConvo,
                     defaultVars:{input},
                 })
                 const flat=await conversation.flattenAsync();
@@ -428,6 +442,16 @@ export class ConvoGraphCtrl
 
         return edges;
 
+    }
+
+    private async getSharedSourceAsync():Promise<string>
+    {
+        const nodes=(await this.store.getSourceNodesAsync()).filter(s=>s.shared);
+        console.log('hio 👋 👋 👋 SOURCE nodes',nodes);
+        if(!nodes.length){
+            return '';
+        }
+        return nodes.map(n=>n.source??'').join('\n\n')+'\n\n';
     }
 
 
@@ -493,9 +517,13 @@ export class ConvoGraphCtrl
                     return {
                         nodeStep:transformStep,
                         convo:new Conversation({
-                            ...this.getConvoOptions(tv),
+                            ...this.getConvoOptionsAsync(tv),
                             defaultVars:exeCtx.defaultVars,
-                            initConvo:(node.sharedConvo?node.sharedConvo+'\n\n':'')+transformStep.convo
+                            initConvo:(
+                                (await this.getSharedSourceAsync())+
+                                (node.sharedConvo?node.sharedConvo+'\n\n':'')+
+                                transformStep.convo
+                            )
                         })
                     };
                 }

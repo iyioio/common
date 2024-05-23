@@ -896,6 +896,23 @@ export const parseConvoCode:CodeParser<ConvoMessage[]>=(code:string,options?:Cod
         }
     }
 
+    if(!messages.length && tags.length){
+        messages.push({
+            tags,
+            role:'define',
+            fn:{
+                body:[],
+                call:false,
+                definitionBlock:true,
+                local:false,
+                modifiers:[],
+                name:'define',
+                params:[],
+                topLevel:true
+            }
+        })
+    }
+
     finalPass: for(let i=0;i<messages.length;i++){
         const msg=messages[i];
         if(!msg){

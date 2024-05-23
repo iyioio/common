@@ -945,3 +945,25 @@ export interface AppendConvoMessageObjOptions
     disableAutoFlatten?:boolean;
     appendCode?:boolean;
 }
+
+export interface ConvoImport
+{
+    name:string;
+}
+
+export interface ConvoImportResult
+{
+    name:string;
+    /**
+     * Convo to be inserted before the import
+     */
+    convo?:string;
+
+
+    /**
+     * A type or set of types that will be converted to a convo type and imported
+     */
+    type?:ConvoTypeDef|ConvoTypeDef[];
+}
+
+export type ConvoImportHandler=(_import:ConvoImport)=>ConvoImportResult|null|undefined|Promise<ConvoImportResult|null|undefined>;

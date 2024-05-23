@@ -348,7 +348,12 @@ export const convoTags={
     /**
      * Used to mark a function as an error callback
      */
-    errorCallback:'errorCallback'
+    errorCallback:'errorCallback',
+
+    /**
+     * Used to import external convo script code
+     */
+    import:'import'
 
 } as const;
 

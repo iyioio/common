@@ -1,6 +1,6 @@
 import { ZodType } from "zod";
 import { Conversation, ConversationOptions } from "./Conversation";
-import { ConvoMetadataAndTypeMap, ConvoNode, ConvoNodeExecCtx, ConvoNodeMetadata, ConvoNodeOutput, IHasConvoGraphDb } from "./convo-graph-types";
+import { ConvoGraphDb, ConvoMetadataAndTypeMap, ConvoNode, ConvoNodeExecCtx, ConvoNodeMetadata, ConvoNodeOutput, IHasConvoGraphDb } from "./convo-graph-types";
 import { convoTags } from "./convo-lib";
 
 export const getConvoNodeMetadataAsync=async (convo:Conversation|null):Promise<ConvoMetadataAndTypeMap>=>{
@@ -61,7 +61,11 @@ export const createConvoNodeExecCtxAsync=async (node:ConvoNode,convoOptions?:Con
     const last=(node.sharedConvo || node.steps.length)?new Conversation({
         ...convoOptions,
         defaultVars,
-        initConvo:(node.sharedConvo?node.sharedConvo+'\n\n':'')+(node.steps[node.steps.length-1]?.convo??'')
+        initConvo:(
+            (convoOptions?.initConvo?convoOptions?.initConvo+'\n\n':'')+
+            (node.sharedConvo?node.sharedConvo+'\n\n':'')+
+            (node.steps[node.steps.length-1]?.convo??'')
+        )
     }):null;
 
 
@@ -76,7 +80,11 @@ export const createConvoNodeExecCtxAsync=async (node:ConvoNode,convoOptions?:Con
             convo:(i===node.steps.length-1 && last)?last:new Conversation({
                 ...convoOptions,
                 defaultVars,
-                initConvo:(node.sharedConvo?node.sharedConvo+'\n\n':'')+step.convo
+                initConvo:(
+                    (convoOptions?.initConvo?convoOptions?.initConvo+'\n\n':'')+
+                    (node.sharedConvo?node.sharedConvo+'\n\n':'')+
+                    step.convo
+                )
             })
         }))
     }
@@ -90,4 +98,29 @@ export const hasConvoGraphDb=(obj:any):obj is IHasConvoGraphDb=>{
         (Array.isArray((obj as IHasConvoGraphDb).db?.edges)) &&
         (Array.isArray((obj as IHasConvoGraphDb).db?.traversers))
     )?true:false
+}
+
+export const fixConvoGraphDb=(db:ConvoGraphDb):boolean=>{
+    let changes=false;
+    if(!db.edges){
+        db.edges=[];
+        changes=true;
+    }
+    if(!db.nodes){
+        db.nodes=[];
+        changes=true;
+    }
+    if(!db.traversers){
+        db.traversers=[];
+        changes=true;
+    }
+    if(!db.inputs){
+        db.inputs=[];
+        changes=true;
+    }
+    if(!db.sourceNodes){
+        db.sourceNodes=[];
+        changes=true;
+    }
+    return changes;
 }
