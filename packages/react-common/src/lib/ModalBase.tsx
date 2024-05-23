@@ -46,6 +46,8 @@ export interface ModalBaseProps extends ModalOpenCloseProps, PortalProps, BaseLa
     useDomPortal?:boolean;
 
     domPortalProps?:DomPortalProps;
+
+    disableDomPortalEventCapture?:boolean;
 }
 
 export function ModalBase({
@@ -68,6 +70,7 @@ export function ModalBase({
     disableEscapeListener,
     useDomPortal,
     domPortalProps,
+    disableDomPortalEventCapture,
     ...props
 }:ModalBaseProps){
 
@@ -122,7 +125,7 @@ export function ModalBase({
 
     const modalContent=(
         <div
-            {...(useDomPortal?getEventCaptureProps():undefined)}
+            {...((useDomPortal && !disableDomPortalEventCapture)?getEventCaptureProps():undefined)}
             ref={elemRef}
             style={{zIndex}}
             data-modal-id={modalId}
