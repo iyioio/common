@@ -227,7 +227,7 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
                         title:node.title,
                     },
                     options.getNodeHtmlAtts?.(line,node,'link'))
-                }/>${content}</a>`;
+                }>${content}</a>`;
             }
 
             if(node.italic){
