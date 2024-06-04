@@ -21,6 +21,7 @@ export interface UiActionItem<
     to?:string;
     type?:TType;
     action?:(item:UiActionItem<any,any,any>)=>void;
+    description?:string;
     linkTarget?:string;
     data?:TData;
     mapKey?:string|number|null;
