@@ -87,6 +87,8 @@ export const userPoolPlugin:ProtoPipelineConfigurablePlugin<typeof UserPoolPlugi
                     grantAccess:true,
                     authorizedAccessRequests:access?protoNodeChildrenToAccessRequests(access):undefined,
                     unauthorizedAccessRequests:anon?protoNodeChildrenToAccessRequests(anon):undefined,
+                    kmsKey:config?.children?.['kmsKey']?true:undefined,
+                    sesFrom:config?.children?.['sesFrom']?.value,
                     triggers,
                     domainPrefix:config?.children?.['domainPrefix']?.value,
                     oAuthCallbackUrls:protoGetChildrenByNameOrUndefined(config,'oAuthCallbackUrl',false)?.map(c=>c.value).filter(v=>v) as string[],
