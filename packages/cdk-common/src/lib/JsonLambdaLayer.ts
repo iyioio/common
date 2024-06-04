@@ -48,15 +48,17 @@ export class JsonLambdaLayer extends Construct
 
         const keys=Object.keys(json);
         keys.sort((a,b)=>a.localeCompare(b));
+        const valuesAry:string[]=[];
         const values:Record<string,any>={};
         for(let i=0;i<keys.length;i++){
             const k=keys[i];
             if(!k){continue}
             values['_'+i]=json[k];
+            valuesAry.push(JSON.stringify(json[k]??null))
         }
 
         if(!bucketKey){
-            bucketKey=`layer-source-${encodeURIComponent(strHash(keySalt+keys.join(',')))}.zip`
+            bucketKey=`layer-source-${encodeURIComponent(strHash(keySalt+keys.join(','))+'-'+strHash(valuesAry.join(',')))}.zip`
         }
 
 
