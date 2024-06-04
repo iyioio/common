@@ -2,6 +2,7 @@ import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoUserPoolCl
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as kms from "aws-cdk-lib/aws-kms";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
 import { ManagedProps, getDefaultManagedProps } from './ManagedProps';
@@ -23,6 +24,8 @@ export interface UserPoolBuilderProps{
     googleClientId?:string;
     googleClientSecret?:string;
     oAuthCallbackUrls?:string[];
+    sesFrom?:string;
+    kmsKey?:boolean;
 }
 
 export class UserPoolBuilder extends Construct implements IAccessRequestGroup
@@ -57,12 +60,16 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
         providers,
         googleClientId,
         googleClientSecret,
-        oAuthCallbackUrls
+        oAuthCallbackUrls,
+        sesFrom,
+        kmsKey:kmsKeyProp,
     }:UserPoolBuilderProps){
 
         super(scope_,id);
 
         const lambdaTriggers:cognito.UserPoolTriggers={};
+
+        const kmsKey=kmsKeyProp?new kms.Key(this,'AuthKey',{removalPolicy:cdk.RemovalPolicy.RETAIN}):undefined;
 
         if(triggers){
             for(const e in triggers){
@@ -104,7 +111,11 @@ export class UserPoolBuilder extends Construct implements IAccessRequestGroup
             },
             accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
-            lambdaTriggers
+            lambdaTriggers,
+            customSenderKmsKey:kmsKey,
+            email:sesFrom?cognito.UserPoolEmail.withSES({
+                fromEmail:sesFrom,
+            }):undefined
         });
 
         if(domainPrefix){
