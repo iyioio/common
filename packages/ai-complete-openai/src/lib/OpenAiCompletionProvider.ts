@@ -25,6 +25,7 @@ export interface OpenAiCompletionProviderOptions
 //const dalle2Model='dall-e-2';
 const dalle3Model='dall-e-3';
 const defaultVisionModel='gpt-4-vision-preview';
+const visionModels=['gpt-4-vision','gpt-4o']
 
 export class OpenAiCompletionProvider implements AiCompletionProvider
 {
@@ -134,7 +135,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
     private async completeChatAsync(lastMessage:AiCompletionMessage,request:AiCompletionRequest):Promise<AiCompletionResult>
     {
-        const useVision=request.capabilities?.includes('vision') || lastMessage.model?.includes('vision');
+        const visionCapable=request.capabilities?.includes('vision') || lastMessage.model?.includes('vision');
 
         const endpoint=lastMessage.endpoint;
 
@@ -142,10 +143,12 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
 
         const lastContentMessage=getLastNonCallAiCompleteMessage(request.messages);
 
-        const model=lastContentMessage?.model??(useVision?this._visionModel:this._chatModel);
+        const model=lastContentMessage?.model??(visionCapable?this._visionModel:this._chatModel);
         if(!model){
             throw new Error('Chat AI model not defined');
         }
+
+        const useVision=visionCapable || visionModels.some(v=>model.startsWith(v));
 
         const oMsgs:ChatCompletionMessageParam[]=[];
         for(const m of request.messages){
