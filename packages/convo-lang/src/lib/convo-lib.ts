@@ -767,6 +767,12 @@ export const createEmptyConvoTokenUsage=():ConvoTokenUsage=>({
     tokenPrice:0,
 })
 
+export const resetConvoUsageTokens=(usage:ConvoTokenUsage)=>{
+    usage.inputTokens=0;
+    usage.outputTokens=0;
+    usage.tokenPrice=0;
+}
+
 
 export const parseConvoJsonMessage=(json:string):any=>{
     return parseJson5(json

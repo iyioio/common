@@ -1,5 +1,5 @@
 import { CancelToken, Lock, delayAsync, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
-import { callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoTextCompletionAsync } from '@iyio/convo-lang';
+import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
 import { pathExistsAsync } from '@iyio/node-common';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
@@ -14,18 +14,21 @@ export class ConvoWebCrawler
 
     public readonly options:Required<ConvoWebCrawlerOptions>;
 
+    public readonly usage:ConvoTokenUsage;
+
     public constructor({
         id=format(new Date(),'yyyy-MM-dd-HH-mm')+'-'+uuid(),
         frameHeight=1024,
         frameWidth=1024,
         overlap=100,
         outDir='convo-crawler-out',
-        httpAccessPointer='https://convo-crawler-out.ngrok.io',
+        httpAccessPoint: httpAccessPointer='https://convo-crawler-out.ngrok.io',
         pagePresets=[],
         googleSearchApiKey='',
         googleSearchCx='',
         disableDefaultCss=false,
-            headed=false,
+        headed=false,
+        usage=createEmptyConvoTokenUsage(),
     }:ConvoWebCrawlerOptions){
 
         pagePresets=[...pagePresets];
@@ -36,13 +39,16 @@ export class ConvoWebCrawler
             frameWidth,
             overlap,
             outDir,
-            httpAccessPointer,
+            httpAccessPoint: httpAccessPointer,
             pagePresets,
             googleSearchApiKey,
             googleSearchCx,
             disableDefaultCss,
-            headed
+            headed,
+            usage,
         }
+
+        this.usage={...usage};
 
         if(!disableDefaultCss){
             pagePresets.push({
@@ -58,6 +64,11 @@ export class ConvoWebCrawler
             })
         }
 
+    }
+
+    public resetUsage()
+    {
+        resetConvoUsageTokens(this.usage);
     }
 
     public getPagePreset(url:string):ConvoPagePreset|undefined{
@@ -111,7 +122,6 @@ export class ConvoWebCrawler
         term,
         maxConcurrent=defaultConvoWebSearchOptionsMaxConcurrent,
         crawlOptions,
-        usage=crawlOptions?.usage??createEmptyConvoTokenUsage(),
     }:ConvoWebSearchOptions,cancel?:CancelToken):Promise<ConvoWebSearchResult>{
 
         const searchResult=await httpClient().getAsync<GoogleSearchResult>(
@@ -135,7 +145,6 @@ export class ConvoWebCrawler
         const result:ConvoWebSearchResult={
             term,
             results:[],
-            usage,
         }
 
         await Promise.all(searchResult.items.map(async link=>{
@@ -151,7 +160,6 @@ export class ConvoWebCrawler
                 await this._crawPageAsync({
                     ...crawlOptions,
                     url:link.link,
-                    usage
                 },result,1,cancel);
             }finally{
                 release();
@@ -164,7 +172,6 @@ export class ConvoWebCrawler
     public async crawPageAsync(options:ConvoWebCrawlOptions,cancel?:CancelToken):Promise<ConvoWebCrawl>{
         const crawl:ConvoWebCrawl={
             results:[],
-            usage:options.usage??createEmptyConvoTokenUsage()
         }
         await this._crawPageAsync(options,crawl,1,cancel);
         return crawl;
@@ -180,7 +187,6 @@ export class ConvoWebCrawler
         const {
             url,
             pageRequirementPrompt,
-            usage=createEmptyConvoTokenUsage(),
             maxDepth=defaultConvoWebCrawlOptionsMaxDepth
         }=options;
 
@@ -200,7 +206,7 @@ export class ConvoWebCrawler
             return;
         }
 
-        const typeParams=await callConvoFunctionAsync({usage,append:/*convo*/`
+        const typeParams=await callConvoFunctionAsync({usage:this.usage,append:/*convo*/`
             > define
             __model='gpt-4o'
             __trackTokenUsage=true
@@ -231,7 +237,7 @@ export class ConvoWebCrawler
 
 
             if(pageRequirementPrompt){
-                const r=await callConvoFunctionAsync({usage,append:/*convo*/`
+                const r=await callConvoFunctionAsync({usage:this.options.usage,append:/*convo*/`
                     > define
                     __model='gpt-4o'
                     __trackTokenUsage=true
@@ -264,7 +270,6 @@ export class ConvoWebCrawler
             if(convert){
                 const conversation=await this.convertPageAsync({
                     capture,
-                    usage
                 });
 
                 crawl.results.push(conversation);
@@ -283,7 +288,6 @@ export class ConvoWebCrawler
     public async convertPageAsync({
         captureOptions,
         url,
-        usage=createEmptyConvoTokenUsage(),
     }:ConvoPageConversionOptions,cancel?:CancelToken):Promise<ConvoPageConversion>{
 
         console.info(`id ${this.options.id}`)
@@ -306,7 +310,7 @@ export class ConvoWebCrawler
 
             console.info(`converting page ${i}`);
 
-            const value=await getConvoTextCompletionAsync({usage,append:/*convo*/`
+            const value=await getConvoTextCompletionAsync({usage:this.usage,append:/*convo*/`
                 > define
                 __model='gpt-4o'
                 __trackTokenUsage=true
@@ -351,7 +355,7 @@ export class ConvoWebCrawler
 
             await writeFile(`${outDir}/${captureOptions?.setId}-img-${i}.md`,value??'');
 
-            console.info(`page ${i} converted. Total token usage: ${convoUsageTokensToString(usage)} `);
+            console.info(`page ${i} converted. Total token usage: ${convoUsageTokensToString(this.usage)} `);
 
             return true;
 
@@ -361,7 +365,9 @@ export class ConvoWebCrawler
 
         const markdown=md.join('\n\n');
 
-        const summary=await getConvoTextCompletionAsync({usage,append:/*convo*/`
+        console.info('Generating summary');
+
+        const summary=await getConvoTextCompletionAsync({usage:this.usage,append:/*convo*/`
             > define
             __model='gpt-4o'
             __trackTokenUsage=true
@@ -385,13 +391,14 @@ export class ConvoWebCrawler
         const conversion:ConvoPageConversion={
             url:capture.url,
             markdown,
-            usage,
             summary:summary??'',
             capture,
             setId
         }
 
         await writeFile(`${outDir}/${setId}-conversion.json`,JSON.stringify(conversion,null,4));
+
+        console.info(`Page conversion token usage: ${convoUsageTokensToString(this.usage)}`)
 
         return conversion;
 
@@ -467,7 +474,7 @@ export class ConvoWebCrawler
                 const name=`${setId}-pdf.pdf`
                 pdf={
                     path:`${this.options.id}/${name}`,
-                    url:`${this.options.httpAccessPointer}/${this.options.id}/${name}`,
+                    url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
                     contentType:'application/pdf'
                 }
                 await writeFile(`${outDir}/${name}`,pdfBuffer);
@@ -495,7 +502,7 @@ export class ConvoWebCrawler
 
                     const imageMedia:ConvoCrawlerMedia={
                         path:`${this.options.id}/${name}`,
-                        url:`${this.options.httpAccessPointer}/${this.options.id}/${name}`,
+                        url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
                         contentType:'image/png'
                     }
 

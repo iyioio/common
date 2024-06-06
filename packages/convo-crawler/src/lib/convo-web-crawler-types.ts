@@ -8,13 +8,18 @@ export interface ConvoWebCrawlerOptions
     frameHeight?:number;
     overlap?:number;
     outDir?:string;
-    httpAccessPointer?:string;
+    httpAccessPoint?:string;
     pagePresets?:ConvoPagePreset[];
     disableDefaultCss?:boolean;
 
     googleSearchApiKey?:string;
     googleSearchCx?:string;
     headed?:boolean;
+
+    /**
+     * A usage object that can be used to track all LLM usage of a crawler
+     */
+    usage?:ConvoTokenUsage;
 }
 
 export interface ConvoPagePreset
@@ -122,11 +127,6 @@ export interface ConvoPageConversionOptions
     setId?:string;
 
     /**
-     * A token usage object that will be used to store captured token counts.
-     */
-    usage?:ConvoTokenUsage;
-
-    /**
      * An existing page capture. If not defined a new capture will be created.
      * `captureOptions`, `capture` or `url` must be defined or an error will be thrown.
      */
@@ -161,11 +161,6 @@ export interface ConvoPageConversion
      * A summary of the markdown document.
      */
     summary:string;
-
-    /**
-     * Stores the number of tokens used.
-     */
-    usage:ConvoTokenUsage;
 
     /**
      * The page captured used to generate the conversion.
@@ -204,21 +199,11 @@ export interface ConvoWebCrawlOptions
      * @default 3
      */
     resultLimit?:number;
-
-    /**
-     * A token usage object that will be used to store captured token counts.
-     */
-    usage?:ConvoTokenUsage;
 }
 
 export interface ConvoWebCrawl
 {
     results:ConvoPageConversion[];
-
-    /**
-     * Total number of used tokens
-     */
-    usage:ConvoTokenUsage;
 }
 
 
@@ -244,11 +229,6 @@ export interface ConvoWebSearchOptions
      * Page crawling options
      */
     crawlOptions?:Omit<ConvoWebCrawlOptions,'url'>;
-
-    /**
-     * A token usage object that will be used to store captured token counts.
-     */
-    usage?:ConvoTokenUsage;
 }
 
 export interface ConvoWebSearchResult extends ConvoWebCrawl
