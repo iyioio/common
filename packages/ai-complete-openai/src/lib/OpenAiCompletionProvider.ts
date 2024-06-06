@@ -156,16 +156,20 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
                 let content:string|Array<ChatCompletionContentPart>;
                 if(useVision){
                     const items=parseMarkdownImages(m.content??'');
-                    if(items.length===1 && (typeof items[0]?.text === 'string')){
-                        content=items[0]?.text??'';
+                    if(visionCapable || items.length==1){
+                        if(items.length===1 && (typeof items[0]?.text === 'string')){
+                            content=items[0]?.text??'';
+                        }else{
+                            content=items.map<ChatCompletionContentPart>(i=>i.image?{
+                                type:'image_url',
+                                image_url:{url:i.image.url}
+                            }:{
+                                type:'text',
+                                text:i.text??''
+                            })
+                        }
                     }else{
-                        content=items.map<ChatCompletionContentPart>(i=>i.image?{
-                            type:'image_url',
-                            image_url:{url:i.image.url}
-                        }:{
-                            type:'text',
-                            text:i.text??''
-                        })
+                        content=m.content??'';
                     }
                 }else{
                     content=m.content??'';
