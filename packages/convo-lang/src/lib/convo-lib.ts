@@ -751,6 +751,22 @@ export const parseConvoUsageTokens=(str:string):ConvoTokenUsage=>{
     }
 }
 
+export const addConvoUsageTokens=(to:ConvoTokenUsage,from:ConvoTokenUsage|string):void=>
+{
+    if(typeof from === 'string'){
+        from=parseConvoUsageTokens(from);
+    }
+    to.inputTokens+=from.inputTokens;
+    to.outputTokens+=from.outputTokens;
+    to.tokenPrice+=from.tokenPrice;
+}
+
+export const createEmptyConvoTokenUsage=():ConvoTokenUsage=>({
+    inputTokens:0,
+    outputTokens:0,
+    tokenPrice:0,
+})
+
 
 export const parseConvoJsonMessage=(json:string):any=>{
     return parseJson5(json

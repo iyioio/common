@@ -1,0 +1,4 @@
+export const defaultConvoWebCrawlOptionsMaxDepth=2;
+export const defaultConvoWebCrawlOptionsMaxConcurrent=3;
+export const defaultConvoWebCrawlOptionsResultLimit=3;
+export const defaultConvoWebSearchOptionsMaxConcurrent=3;

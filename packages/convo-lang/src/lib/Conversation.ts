@@ -3,9 +3,9 @@ import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { ZodType, ZodTypeAny, z } from "zod";
 import { ConvoError } from "./ConvoError";
 import { ConvoExecutionContext } from "./ConvoExecutionContext";
-import { containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, isConvoThreadFilterMatch, mapToConvoTags, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
+import { addConvoUsageTokens, containsConvoTag, convoDescriptionToComment, convoDisableAutoCompleteName, convoFunctions, convoLabeledScopeParamsToObj, convoMessageToString, convoRagDocRefToMessage, convoResultReturnName, convoRoles, convoStringToComment, convoTagMapToCode, convoTags, convoTagsToMap, convoTaskTriggers, convoUsageTokensToString, convoVars, defaultConvoPrintFunction, defaultConvoRagTol, defaultConvoTask, defaultConvoVisionSystemMessage, escapeConvoMessageContent, formatConvoMessage, getConvoDateString, getConvoTag, getLastCompletionMessage, isConvoThreadFilterMatch, mapToConvoTags, parseConvoJsonMessage, parseConvoMessageTemplate, spreadConvoArgs, validateConvoFunctionName, validateConvoTypeName, validateConvoVarName } from "./convo-lib";
 import { parseConvoCode } from "./convo-parser";
-import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFnCallInfo, ConvoFunction, ConvoFunctionDef, ConvoImportHandler, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTag, ConvoThreadFilter, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
+import { AppendConvoMessageObjOptions, CloneConversationOptions, ConvoAppend, ConvoCapability, ConvoCompletion, ConvoCompletionMessage, ConvoCompletionOptions, ConvoCompletionService, ConvoDefItem, ConvoDocumentReference, ConvoFlatCompletionCallback, ConvoFnCallInfo, ConvoFunction, ConvoFunctionDef, ConvoImportHandler, ConvoMarkdownLine, ConvoMessage, ConvoMessageAndOptStatement, ConvoMessagePart, ConvoMessagePrefixOptions, ConvoMessageTemplate, ConvoParsingResult, ConvoPrintFunction, ConvoRagCallback, ConvoRagMode, ConvoScopeFunction, ConvoStatement, ConvoSubTask, ConvoTag, ConvoThreadFilter, ConvoTokenUsage, ConvoTypeDef, ConvoVarDef, FlatConvoConversation, FlatConvoMessage, FlattenConvoOptions, convoObjFlag, isConvoCapability, isConvoRagMode } from "./convo-types";
 import { convoTypeToJsonScheme, schemeToConvoTypeString, zodSchemeToConvoTypeString } from "./convo-zod";
 import { convoCompletionService } from "./convo.deps";
 import { createConvoVisionFunction } from "./createConvoVisionFunction";
@@ -820,7 +820,7 @@ export class Conversation
         }else{
             this._isCompleting.next(true);
             try{
-                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
+                return await this._completeAsync(additionalOptions?.usage,task,additionalOptions,getCompletion,autoCompleteDepth,prevCompletion,preReturnValues);
             }finally{
                 this._isCompleting.next(false);
             }
@@ -832,6 +832,7 @@ export class Conversation
     public get isCompleting(){return this._isCompleting.value}
 
     private async _completeAsync(
+        usage:ConvoTokenUsage|undefined,
         task:string|undefined,
         additionalOptions:ConvoCompletionOptions|undefined,
         getCompletion:ConvoFlatCompletionCallback,
@@ -851,6 +852,8 @@ export class Conversation
         if(updateTaskCount){
             this._activeTaskCount.next(this.activeTaskCount+1);
         }
+
+        const messageStartIndex=this._messages.length;
 
         try{
             const append:string[]=[];
@@ -1064,7 +1067,7 @@ export class Conversation
                     }
                 }
             }else if(lastResultValue!==undefined && autoCompleteDepth<this.maxAutoCompleteDepth && !additionalOptions?.returnOnCalled){
-                return await this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth+1,completion,returnValues,templates,undefined,lastFnCall);
+                return await this._completeAsync(undefined,task,additionalOptions,getCompletion,autoCompleteDepth+1,completion,returnValues,templates,undefined,lastFnCall);
             }
 
             if(isDefaultTask && templates?.length){
@@ -1090,6 +1093,9 @@ export class Conversation
                 task
             }
         }finally{
+            if(usage){
+                addConvoUsageTokens(usage,this.getTokenUsage(messageStartIndex));
+            }
             if(updateTaskCount){
                 this._activeTaskCount.next(this.activeTaskCount-1);
             }
@@ -1152,7 +1158,7 @@ export class Conversation
         const remove:ConvoSubTask[]=[];
 
         const subs=tasks.map<ConvoSubTask>(task=>{
-            const promise=this._completeAsync(task,additionalOptions,getCompletion,autoCompleteDepth);
+            const promise=this._completeAsync(undefined,task,additionalOptions,getCompletion,autoCompleteDepth);
             const sub:ConvoSubTask={
                 name:task,
                 promise
@@ -1695,6 +1701,10 @@ export class Conversation
     }
 
     private isTagConditionTrue(exe:ConvoExecutionContext,tagValue:string,startIndex=0):boolean{
+        const not=tagValue.startsWith('!');
+        if(not){
+            tagValue=tagValue.substring(1).trim();
+        }
         const parts=tagValue.split(/\s+/);
         if(startIndex){
             parts.splice(0,startIndex);
@@ -1702,7 +1712,10 @@ export class Conversation
         if(parts.length<1){
             return false;
         }
-        const value=exe.getVar(parts[0]??'');
+        let value=exe.getVar(parts[0]??'');
+        if(not){
+            value=!value;
+        }
         if(parts.length===1){
             return value?true:false;
         }
@@ -2185,6 +2198,29 @@ export class Conversation
                 this.preAssignMessages.push(m);
             }
         }
+    }
+
+    /**
+     * Returns the sum of all token usage tags
+     */
+    public getTokenUsage(fromIndex=0):ConvoTokenUsage
+    {
+        const usage:ConvoTokenUsage={
+            inputTokens:0,
+            outputTokens:0,
+            tokenPrice:0,
+        }
+        for(let i=fromIndex;i<this._messages.length;i++){
+            const msg=this._messages[i];
+            if(!msg){continue}
+            const ut=getConvoTag(msg.tags,convoTags.tokenUsage);
+            if(!ut?.value){
+                continue;
+            }
+            addConvoUsageTokens(usage,ut.value);
+
+        }
+        return usage;
     }
 }
 

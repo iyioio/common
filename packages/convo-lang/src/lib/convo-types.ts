@@ -901,6 +901,11 @@ export interface ConvoCompletionOptions
     returnOnCalled?:boolean;
 
     threadFilter?:ConvoThreadFilter;
+
+    /**
+     * If defined the token usage will be added to the defined usage.
+     */
+    usage?:ConvoTokenUsage;
 }
 
 export interface ConvoMessageTemplate
