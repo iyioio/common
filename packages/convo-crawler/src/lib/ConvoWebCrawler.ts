@@ -1,12 +1,12 @@
-import { CancelToken, Lock, delayAsync, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
+import { CancelToken, Lock, delayAsync, escapeHtml, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
 import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
 import { pathExistsAsync } from '@iyio/node-common';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
-import puppeteer from 'puppeteer';
-import { defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
-import { getActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionOptions, ConvoPageImageCaptureCallback, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebSearchOptions, ConvoWebSearchResult } from './convo-web-crawler-types';
+import puppeteer, { Browser } from 'puppeteer';
+import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
+import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -29,6 +29,7 @@ export class ConvoWebCrawler
         disableDefaultCss=false,
         headed=false,
         usage=createEmptyConvoTokenUsage(),
+        debug=false,
     }:ConvoWebCrawlerOptions){
 
         pagePresets=[...pagePresets];
@@ -46,6 +47,7 @@ export class ConvoWebCrawler
             disableDefaultCss,
             headed,
             usage,
+            debug,
         }
 
         this.usage={...usage};
@@ -109,6 +111,34 @@ export class ConvoWebCrawler
 
     }
 
+
+
+    private async completeTextAsync(convo:string):Promise<string>
+    {
+        const value=await getConvoTextCompletionAsync({usage:this.usage,debug:this.options.debug,append:`
+            > define
+            __model='gpt-4o'
+            __trackTokenUsage=true
+
+            ${convo}
+        `});
+
+        return value??'';
+    }
+
+    private async callFunctionAsync<T>(convo:string):Promise<T|undefined>
+    {
+        const value=await callConvoFunctionAsync({usage:this.usage,debug:this.options.debug,append:`
+            > define
+            __model='gpt-4o'
+            __trackTokenUsage=true
+
+            ${convo}
+        `});
+
+        return value??undefined;
+    }
+
     private async getOutDirAsync():Promise<string>
     {
         const path=`${this.options.outDir}/${this.options.id}`;
@@ -116,6 +146,121 @@ export class ConvoWebCrawler
             await mkdir(path,{recursive:true});
         }
         return path;
+    }
+
+    public async runResearchAsync({
+        title,
+        subjects,
+        conclusion,
+        searchOptions,
+        searchResults,
+    }:ConvoWebResearchOptions,cancel?:CancelToken):Promise<ConvoWebResearchResult>{
+
+        if(!searchResults){
+            if(!searchOptions){
+                throw new Error('searchOptions or searchResults required')
+            }
+            searchResults=await this.searchAsync(searchOptions,cancel);
+        }
+
+        cancel?.throwIfCanceled();
+
+        const resultsMd=searchResults.results.map(r=>`URL: ${r.url}\n\n${r.summary}`).join('\n\n\n\n');
+
+        console.info('Generating subject summaries');
+
+        const subjectSummaries=await Promise.all(subjects.map<Promise<ConvoWebSubjectSummary>>(async subject=>{
+
+            const summary=await this.completeTextAsync(/*convo*/`
+
+                > define
+                multipleSubjects=${subjects.length>1}
+
+                > system
+                You are a research agent analyzing the summarization of a collection of articles.
+                Summarize the collection of articles based on the following subject.
+
+                Subject: ${escapeConvoMessageContent(subject)}
+
+                @concat
+                @condition multipleSubjects
+                > system
+                Keep in mind that multiple subject summaries will be generated based on the same article collection.
+                For now focus on the subject of "${escapeConvoMessageContent(subject)}" but if there are any important relations between the subject you can include them.
+
+                Other Subjects: ${escapeConvoMessageContent(subjects.filter(sub=>sub!==subject).join(', '))}
+
+                @concat
+                > system
+                After generating all subject summaries a finally conclusion will be generated based on "${escapeConvoMessageContent(conclusion)}".
+                Primarily focus on the subject of "${escapeConvoMessageContent(subject)}".
+
+                Do not include a title or header as part of the summary.
+
+
+                > user
+                Articles:
+
+                ${escapeConvoMessageContent(resultsMd)}
+
+            `)
+
+            return {
+                subject,
+                summary:summary??'',
+            }
+        }));
+
+        console.info('Generating conclusion');
+
+        const conclusionSummary=await this.completeTextAsync(/*convo*/`
+
+            > define
+            multipleSubjects=${subjects.length>1}
+
+            > system
+            You are a research agent writing your final conclusion about "${escapeConvoMessageContent(conclusion)}" based on a collection of articles and subject specific summaries.
+
+            Do not include a title or header as part of the conclusion.
+
+
+            > user
+            Articles:
+
+            ${escapeConvoMessageContent(resultsMd)}
+
+            > user
+            Subject Summaries:
+
+            ${subjectSummaries.map(s=>`Subject: ${escapeConvoMessageContent(s.subject)}\nSummary:\n${escapeConvoMessageContent(s.summary)}`).join('\n\n\n')}
+
+        `)
+
+
+        const result:ConvoWebResearchResult={
+            title,
+            subjects,
+            conclusion,
+            subjectSummaries,
+            conclusionSummary:conclusionSummary??'',
+            usage:this.usage,
+        }
+
+        const outDir=await this.getOutDirAsync();
+
+        await writeFile(`${outDir}/research-${Date.now()}.json`,JSON.stringify(result,null,4));
+        await writeFile(`${outDir}/research-${Date.now()}.md`,`# ${
+            escapeHtml(title)
+        }\n*date - ${
+            format(new Date(),'PPpp')
+        }*\n\n${
+            subjectSummaries.map(s=>`- [${escapeHtml(s.subject)}](#${escapeHtml(s.subject.replace(/\s/g,'-'))})`).join('\n')
+        }\n- [Conclusion](#Conclusion)\n\n\n${
+            subjectSummaries.map(s=>`## ${escapeHtml(s.subject)}\n${escapeHtml(s.summary)}`).join('\n\n\n')
+        }\n\n\n## Conclusion\n${escapeHtml(conclusionSummary??'')}`);
+
+        return result;
+
     }
 
     public async searchAsync({
@@ -145,6 +290,8 @@ export class ConvoWebCrawler
         const result:ConvoWebSearchResult={
             term,
             results:[],
+            crawled:[],
+            usage:this.usage,
         }
 
         await Promise.all(searchResult.items.map(async link=>{
@@ -157,23 +304,37 @@ export class ConvoWebCrawler
             }
 
             try{
-                await this._crawPageAsync({
-                    ...crawlOptions,
-                    url:link.link,
-                },result,1,cancel);
+                await this._crawPageAsync(
+                    {...crawlOptions,url:link.link},
+                    result,
+                    1,
+                    new Lock(crawlOptions?.maxConcurrent??defaultConvoWebCrawlOptionsMaxConcurrent),
+                    cancel
+                );
             }finally{
                 release();
             }
-        }))
+        }));
+
+        const outDir=await this.getOutDirAsync();
+
+        await writeFile(`${outDir}/search-${Date.now()}.json`,JSON.stringify(result,null,4));
 
         return result;
     }
 
     public async crawPageAsync(options:ConvoWebCrawlOptions,cancel?:CancelToken):Promise<ConvoWebCrawl>{
         const crawl:ConvoWebCrawl={
+            crawled:[],
             results:[],
         }
-        await this._crawPageAsync(options,crawl,1,cancel);
+        await this._crawPageAsync(
+            options,
+            crawl,
+            1,
+            new Lock(options.maxConcurrent??defaultConvoWebCrawlOptionsMaxConcurrent),
+            cancel
+        );
         return crawl;
     }
 
@@ -181,68 +342,56 @@ export class ConvoWebCrawler
         options:ConvoWebCrawlOptions,
         crawl:ConvoWebCrawl,
         depth:number,
+        concurrentLock:Lock,
         cancel?:CancelToken
     ):Promise<void>{
 
         const {
             url,
             pageRequirementPrompt,
-            maxDepth=defaultConvoWebCrawlOptionsMaxDepth
+            maxDepth=defaultConvoWebCrawlOptionsMaxDepth,
+            resultLimit=defaultConvoWebCrawlOptionsResultLimit,
         }=options;
 
-        if(depth>maxDepth){
+        if(depth>maxDepth || crawl.crawled.includes(url.toLowerCase())){
             return;
         }
 
-        const capture=await this.capturePageAsync({
-            url,
-            pdf:true,
-            images:true,
-        },cancel);
+        crawl.crawled.push(url.toLowerCase());
 
-        cancel?.throwIfCanceled();
-        const first=capture.images?.[0];
-        if(!first){
-            return;
-        }
+        let isMainContent:boolean|'checking'|null=null;
 
-        const typeParams=await callConvoFunctionAsync({usage:this.usage,append:/*convo*/`
-            > define
-            __model='gpt-4o'
-            __trackTokenUsage=true
-            secondImage=${JSON.stringify(capture.images?.[1]?.url)}
+        const checkForMainContent=async (images:ConvoCrawlerMedia[])=>{
+            if(images.length===0){
+                isMainContent=false;
+                return false;
+            }
+            isMainContent='checking';
+            const [typeParams,reqParams]=await Promise.all([
+                this.callFunctionAsync<{type:string}>(/*convo*/`
 
-            > classifyWebsite(
-                type:enum("landing-page" "main-content" "reference-list" "other")
-            )
-
-            > user
-            Classify the following images of a website based on their main purpose by calling the classifyWebsite function.
-            Pages that primarily link to other pages should be considered a reference-list.
-
-            > user
-            ![](${first.url})
-
-            @condition secondImage
-            > user
-            ![]({{secondImage}})
-
-        `});
-
-        let scanLinks=true;
-
-        if(typeParams?.type==='main-content'){
-
-            let convert=true;
-
-
-            if(pageRequirementPrompt){
-                const r=await callConvoFunctionAsync({usage:this.options.usage,append:/*convo*/`
                     > define
-                    __model='gpt-4o'
-                    __trackTokenUsage=true
+                    secondImage=${JSON.stringify(images[1]?.url)}
 
-                    secondImage=${JSON.stringify(capture.images?.[1]?.url)}
+                    > classifyWebsite(
+                        type:enum("landing-page" "main-content" "reference-list" "other")
+                    )
+
+                    > user
+                    Classify the following images of a website based on their main purpose by calling the classifyWebsite function.
+                    Pages that primarily link to other pages should be considered a reference-list.
+
+                    > user
+                    ![](${images[0]?.url})
+
+                    @condition secondImage
+                    > user
+                    ![]({{secondImage}})
+
+                `),
+                !pageRequirementPrompt?null:this.callFunctionAsync<{requirementsMet:boolean}>(/*convo*/`
+                    > define
+                    secondImage=${JSON.stringify(images[1]?.url)}
 
                     > setRequirementsMet(
                         # True if the given requirements where met
@@ -256,31 +405,126 @@ export class ConvoWebCrawler
                     ${escapeConvoMessageContent(pageRequirementPrompt)}
 
                     > user
-                    ![](${first.url})
+                    ![](${images[0]?.url})
 
                     @condition secondImage
                     > user
                     ![]({{secondImage}})
 
-                `})
+                `)
+            ]);
 
-                convert=r?.requirementsMet?true:false;
-            }
-
-            if(convert){
-                const conversation=await this.convertPageAsync({
-                    capture,
-                });
-
-                crawl.results.push(conversation);
-                scanLinks=false;
-            }else{
-                scanLinks=true;
-            }
+            isMainContent=(
+                typeParams?.type==='main-content' &&
+                (pageRequirementPrompt?reqParams?.requirementsMet===true:true)
+            );
+            return isMainContent;
         }
 
-        if(scanLinks){
-            //scan
+        const release=await concurrentLock.waitOrCancelAsync(cancel);
+        if(!release){
+            return;
+        }
+        let linkUrls:string[]|undefined;
+        try{
+            const browser=await this.createBrowserAsync();
+
+            try{
+                const page=await browser.newPage();
+                const conversion=await this.convertPageAsync({
+                    captureOptions:{
+                        url,
+                        browser,
+                        page,
+                    },
+                    whileSummarizingCallback:async (data,img,page,index)=>{
+                        if(crawl.results.length>=resultLimit){
+                            return false;
+                        }
+                        if(index!==1){
+                            return true;
+                        }
+                        return await checkForMainContent(data.images);
+                    }
+                },cancel);
+
+                if(crawl.results.length>=resultLimit){
+                    return;
+                }
+
+                if(isMainContent===null){// will be null if only one page was scanned
+                    await checkForMainContent(conversion.capture.images??[]);
+                }
+
+                if(crawl.results.length>=resultLimit){
+                    return;
+                }
+
+                if(isMainContent){
+                    crawl.results.push(conversion);
+                }else{
+                    const links=(await getFramesActionItems(page.frames(),false)).filter(a=>a.href);
+                    const images=conversion.capture.images;
+                    const nav=await this.callFunctionAsync<{urls:string[]}>(/*convo*/`
+                        > define
+                        secondImage=${JSON.stringify(images[1]?.url)}
+                        hasReq=${pageRequirementPrompt?'true':'false'}
+                        hasCrawlLinks=${crawl.crawled.length?'true':'false'}
+
+                        > navigateTo(
+                            # URL of new page to navigate to
+                            urls:array(string)
+                        )
+
+                        > user
+                        Based on the following links and images select the top 5 URLs to navigate to by calling navigateTo. Do not use anchor links.
+
+                        Links:
+                        ${links.map(convoWebActionItemToMdLink).join('\n')}
+
+                        @concat
+                        @condition hasCrawlLinks
+                        Do not include any of the following URLs, they have already be scanned.
+                        ${crawl.crawled.map(u=>escapeConvoMessageContent(u)).join('\n')}
+
+                        @concat
+                        @condition hasReq
+                        > user
+                        The URLs passed to navigateTo should point to pages that meet the follow requirements based on your best knowledge:
+                        ${escapeConvoMessageContent(pageRequirementPrompt??'')}
+
+                        > user
+                        ![](${images[0]?.url})
+
+                        @condition secondImage
+                        > user
+                        ![]({{secondImage}})
+
+                    `)
+
+                    if(nav?.urls.length){
+                        linkUrls=nav.urls as string[];
+                        linkUrls=linkUrls.filter(u=>!crawl.crawled.includes(u.toLowerCase()))
+                    }
+
+                }
+            }finally{
+                browser.close();
+            }
+        }finally{
+            release();
+        }
+
+        if(linkUrls?.length){
+            await Promise.all(linkUrls.map((u)=>{
+                return this._crawPageAsync(
+                    {...options,url:u},
+                    crawl,
+                    depth+1,
+                    concurrentLock,
+                    cancel,
+                )
+            }));
         }
 
     }
@@ -288,11 +532,16 @@ export class ConvoWebCrawler
     public async convertPageAsync({
         captureOptions,
         url,
+        beforeSummarizeCallback,
+        afterSummarizeCallback,
+        whileSummarizingCallback
     }:ConvoPageConversionOptions,cancel?:CancelToken):Promise<ConvoPageConversion>{
 
         console.info(`id ${this.options.id}`)
 
-        const md:string[]=[];
+        const summaries:string[]=[];
+        const images:ConvoCrawlerMedia[]=[];
+        const data:ConvoPageConversionData={summaries,images};
 
         const outDir=await this.getOutDirAsync();
 
@@ -300,22 +549,31 @@ export class ConvoWebCrawler
             if(!url){
                 throw new Error('captureOptions or url must be supplied');
             }
-            captureOptions={url,images:true,pdf:true}
-            if(!captureOptions.setId){
-                captureOptions.setId=uuid();
-            }
+            captureOptions={url}
+        }
+        if(!captureOptions.setId){
+            captureOptions.setId=uuid();
         }
 
-        const callback:ConvoPageImageCaptureCallback=async (img,page,i)=>{
+        const capture=await this.capturePageAsync({...captureOptions,imageCaptureCallback:async (img,page,index,buffer)=>{
 
-            console.info(`converting page ${i}`);
+            images.push(img);
 
-            const value=await getConvoTextCompletionAsync({usage:this.usage,append:/*convo*/`
+            console.info(`converting page ${index}`);
+
+            const beforeResult=await beforeSummarizeCallback?.(data,img,page,index,buffer);
+            if(beforeResult===false){
+                return false;
+            }
+
+            const whilePromise=whileSummarizingCallback?.(data,img,page,index,buffer);
+
+            const links=img.actionItems?.filter(a=>a.href)??[];
+
+            const value=await this.completeTextAsync(/*convo*/`
                 > define
-                __model='gpt-4o'
-                __trackTokenUsage=true
-
-                isFirst=${i?'false':'true'}
+                isFirst=${index?'false':'true'}
+                hasLinks=${links.length?'true':'false'}
 
                 > system
                 You are a web scraping agent that is converting a series of screenshots of a web page into markdown.
@@ -327,50 +585,65 @@ export class ConvoWebCrawler
                 Ignore any ads.
                 If a blank image is given respond with the text "BLANK" in all caps.
 
-                @condition isFirst
                 > user
                 Convert the following image into a detailed markdown document.
 
-                @condition !isFirst
+                @concat
+                @condition hasLinks
                 > user
-                Convert the following image into a detailed markdown document.
+                Below is a list of hyperlinks on the page. Each item in the list includes text as the link is display in the following image and its URL.
+                When converting the following image into markdown you can use the list of links to populate the generated markdown links.
+                If you are unsure of which URL to use when converting a link use an empty anchor link (a single hashtag) as the URL.
+
+                Page Hyperlinks:
+                ${links.map(convoWebActionItemToMdLink).join('\n')}
+
+                @condition !isFirst
+                @concat
+                > user
                 The following image continues where the following markdown ends.
                 The image and markdown overlap.
                 Your response should start exactly where the overlap ends.
 
                 Markdown from previous screenshot:
-                ${escapeConvoMessageContent(md[i-1]||'Empty')}
+                ${escapeConvoMessageContent(summaries[index-1]||'Empty')}
 
                 > user
                 ![](${img.url})
-            `});
+            `);
 
             cancel?.throwIfCanceled();
+
+            const whileResult=await whilePromise;
+            if(whileResult===false){
+                return false;
+            }
+
+            summaries.push(value);
+
+            const afterResult=await afterSummarizeCallback?.(data,img,page,index,buffer);
+            if(afterResult===false){
+                return false;
+            }
 
             if(value==='BLANK'){
                 return 'retry-safe'
             }
 
-            md.push(value??'');
+            await writeFile(`${outDir}/${captureOptions?.setId}-img-${index}.md`,value);
 
-            await writeFile(`${outDir}/${captureOptions?.setId}-img-${i}.md`,value??'');
-
-            console.info(`page ${i} converted. Total token usage: ${convoUsageTokensToString(this.usage)} `);
+            console.info(`page ${index} converted. Total token usage: ${convoUsageTokensToString(this.usage)} `);
 
             return true;
 
-        }
-        const capture=await this.capturePageAsync({...captureOptions,imageCaptureCallback:callback},cancel);
+        }},cancel);
         const {setId}=capture;
 
-        const markdown=md.join('\n\n');
+        const markdown=summaries.join('\n\n');
 
         console.info('Generating summary');
 
-        const summary=await getConvoTextCompletionAsync({usage:this.usage,append:/*convo*/`
-            > define
-            __model='gpt-4o'
-            __trackTokenUsage=true
+        const summary=await this.completeTextAsync(/*convo*/`
 
             > user
             Summarize the following markdown document.
@@ -379,19 +652,19 @@ export class ConvoWebCrawler
 
             ${escapeConvoMessageContent(markdown)}
 
-        `});
+        `);
 
         cancel?.throwIfCanceled();
 
 
 
         await writeFile(`${outDir}/${setId}-document.md`,markdown);
-        await writeFile(`${outDir}/${setId}-summary.md`,summary??'');
+        await writeFile(`${outDir}/${setId}-summary.md`,summary);
 
         const conversion:ConvoPageConversion={
             url:capture.url,
             markdown,
-            summary:summary??'',
+            summary:summary,
             capture,
             setId
         }
@@ -404,18 +677,28 @@ export class ConvoWebCrawler
 
     }
 
+    private async createBrowserAsync():Promise<Browser>{
+        const browser=await puppeteer.launch({
+            headless:!this.options.headed,
+             args:[
+                `--window-size=${this.options.frameWidth},${this.options.frameHeight+74}`
+            ]
+        });
+        return browser;
+    }
+
     /**
      * Captures media and content resources of a page that can be used to generate conversions and
      * summaries
      */
     public async capturePageAsync({
         url,
-        pdf:includePdf,
-        images:includeImages,
         setId=uuid(),
         css,
         captureAllImagesBeforeCallback,
-        imageCaptureCallback
+        imageCaptureCallback,
+        browser,
+        page
     }:ConvoPageCaptureOptions,cancel?:CancelToken):Promise<ConvoPageCapture>{
 
         const {
@@ -430,15 +713,15 @@ export class ConvoWebCrawler
 
         const outDir=await this.getOutDirAsync();
 
-        const browser=await puppeteer.launch({
-            headless:!this.options.headed,
-             args:[
-                `--window-size=${frameWidth},${frameHeight+74}`
-            ]
-        });
+        const keepBrowserOpen=browser?true:false;
+        if(!browser){
+            browser=await this.createBrowserAsync();
+        }
         try{
 
-            const page=await browser.newPage();
+            if(!page){
+                page=await browser.newPage();
+            }
 
             await page.setViewport({width:frameWidth,height:frameHeight});
 
@@ -467,65 +750,70 @@ export class ConvoWebCrawler
                 await delayAsync(100);
             }
 
-            if(includePdf){
-                const pdfBuffer=await page.pdf({
-                    timeout:2*60000
-                });
-                const name=`${setId}-pdf.pdf`
-                pdf={
-                    path:`${this.options.id}/${name}`,
-                    url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
-                    contentType:'application/pdf'
-                }
-                await writeFile(`${outDir}/${name}`,pdfBuffer);
-                cancel?.throwIfCanceled();
+            const pdfBuffer=await page.pdf({
+                timeout:2*60000
+            });
+            const name=`${setId}-pdf.pdf`
+            pdf={
+                path:`${this.options.id}/${name}`,
+                url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
+                contentType:'application/pdf'
             }
+            await writeFile(`${outDir}/${name}`,pdfBuffer);
+            cancel?.throwIfCanceled();
 
-            if(includeImages){
+            let completed=false;
 
-                images=[];
-                let i=0;
-                let safeMode=false;
-                while(true){
 
-                    if(i && !safeMode){
-                        await hideFramesFixedAsync(page.frames());
-                    }
-                    await delayAsync(safeMode?2000:1000);
-                    const img=await page.screenshot();
-                    if(i && !safeMode){
-                        await showFramesFixedAsync(page.frames());
-                    }
+            images=[];
+            let i=0;
+            let safeMode=false;
+            while(true){
+
+                if(i && !safeMode){
+                    await hideFramesFixedAsync(page.frames());
+                }
+                await delayAsync(safeMode?2000:500);
+
+                const actionItems=await getFramesActionItems(page.frames());
+
+                const img=await page.screenshot();
+
+                if(i && !safeMode){
+                    await showFramesFixedAsync(page.frames());
+                }
+                cancel?.throwIfCanceled();
+
+                const name=`${setId}-img-${i}`
+
+                const imageMedia:ConvoCrawlerMedia={
+                    path:`${this.options.id}/${name}.png`,
+                    url:`${this.options.httpAccessPoint}/${this.options.id}/${name}.png`,
+                    contentType:'image/png',
+                    actionItems
+                }
+
+                images.push(imageMedia)
+                await writeFile(`${outDir}/${name}.png`,img);
+                await writeFile(`${outDir}/${name}.json`,JSON.stringify(actionItems,null,4));
+                cancel?.throwIfCanceled();
+
+                if(!captureAllImagesBeforeCallback && imageCaptureCallback){
+                    const instruction=await imageCaptureCallback(imageMedia,page,i,img);
                     cancel?.throwIfCanceled();
-
-                    const name=`${setId}-img-${i}.png`
-
-                    const imageMedia:ConvoCrawlerMedia={
-                        path:`${this.options.id}/${name}`,
-                        url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
-                        contentType:'image/png'
-                    }
-
-                    images.push(imageMedia)
-                    await writeFile(`${outDir}/${name}`,img);
-                    cancel?.throwIfCanceled();
-
-                    if(!captureAllImagesBeforeCallback && imageCaptureCallback){
-                        const instruction=await imageCaptureCallback(imageMedia,page,i,img);
-                        cancel?.throwIfCanceled();
-                        if(instruction===false){
-                            break;
-                        }else if(instruction==='retry-safe'){
-                            safeMode=true;
-                            continue;
-                        }
-                    }
-
-                    i++;
-
-                    if(!await scrollDownAsync(page,frameHeight-overlap)){
+                    if(instruction===false){
                         break;
+                    }else if(instruction==='retry-safe'){
+                        safeMode=true;
+                        continue;
                     }
+                }
+
+                i++;
+
+                if(!await scrollDownAsync(page,frameHeight-overlap)){
+                    completed=true;
+                    break;
                 }
             }
 
@@ -535,8 +823,6 @@ export class ConvoWebCrawler
                 const target=document.querySelector('html')??document.body;
                 target.style.transform='';
             });
-
-            const actionItems=await getActionItems(page);
 
             if(captureAllImagesBeforeCallback && imageCaptureCallback && images){
                 for(let i=0;i<images.length;i++){
@@ -555,12 +841,14 @@ export class ConvoWebCrawler
                 images,
                 pdf,
                 setId,
-                actionItems,
+                completed,
             };
 
         }finally{
 
-            await browser.close();
+            if(!keepBrowserOpen){
+                await browser.close();
+            }
 
         }
     }

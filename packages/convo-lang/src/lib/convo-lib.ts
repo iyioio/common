@@ -353,7 +353,15 @@ export const convoTags={
     /**
      * Used to import external convo script code
      */
-    import:'import'
+    import:'import',
+
+    /**
+     * Causes a message to be concatenated with the previous message. Both the message the tag
+     * is attached to and the previous message must be content messages or the tag is ignored.
+     * When a message is concatenated to another message all other tags except the condition
+     * tag are ignored.
+     */
+    concat:'concat',
 
 } as const;
 
@@ -598,7 +606,12 @@ export const formatConvoMessage=(role:string,content:string,prefix=''):string=>{
     return `${prefix}> ${role}\n${escapeConvoMessageContent(content)}`;
 }
 
-export const escapeConvoMessageContent=(content:string,isStartOfMessage=true):string=>{
+export interface EscapeConvoMessageContentOptions
+{
+    removeNewLines?:boolean;
+}
+
+export const escapeConvoMessageContent=(content:string,isStartOfMessage=true,options?:EscapeConvoMessageContentOptions):string=>{
     // todo escape tags at end of message
 
     if(content.includes('{{')){
@@ -611,6 +624,9 @@ export const escapeConvoMessageContent=(content:string,isStartOfMessage=true):st
                 /((?:\n|\r|^)[ \t]*\\*)>/g:
                 /((?:\n|\r)[ \t]*\\*)>/g,
             (_,space)=>`${space}\\>`);
+    }
+    if(options?.removeNewLines){
+        content=content.replace(/[\n\r]/g,'');
     }
     return content;
 }

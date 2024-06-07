@@ -1,5 +1,5 @@
 import { ConvoTokenUsage } from "@iyio/convo-lang";
-import type { Page } from "puppeteer";
+import type { Browser, Page } from "puppeteer";
 
 export interface ConvoWebCrawlerOptions
 {
@@ -20,6 +20,8 @@ export interface ConvoWebCrawlerOptions
      * A usage object that can be used to track all LLM usage of a crawler
      */
     usage?:ConvoTokenUsage;
+
+    debug?:boolean;
 }
 
 export interface ConvoPagePreset
@@ -37,16 +39,6 @@ export interface ConvoPageCaptureOptions
     url:string;
 
     /**
-     * If true images should be captured
-     */
-    images?:boolean;
-
-    /**
-     * If true a PDF should be captured
-     */
-    pdf?:boolean;
-
-    /**
      * A set id used to store captured resources
      */
     setId?:string;
@@ -59,16 +51,24 @@ export interface ConvoPageCaptureOptions
     /**
      * A callback that is called after each image capture
      */
-    imageCaptureCallback?:ConvoPageImageCaptureCallback;
+    imageCaptureCallback?:ConvoPageImageCaptureInstructionCallback;
 
     /**
      * If true the captureCallback is called after all images are captured.
      */
     captureAllImagesBeforeCallback?:boolean;
 
+    browser?:Browser;
+
+    page?:Page;
+
 }
 
-export type ConvoPageImageCaptureCallback=(image:ConvoCrawlerMedia,page:Page,index:number,buffer:Buffer|null)=>void|ConvoPageImageCaptureCallbackInstruction|Promise<void|ConvoPageImageCaptureCallbackInstruction>;
+export type ConvoPageImageCaptureCallback<T>=(image:ConvoCrawlerMedia,page:Page,index:number,buffer:Buffer|null)=>T|Promise<T>;
+
+export type ConvoPageImageCaptureDataCallback<D,T>=(data:D,image:ConvoCrawlerMedia,page:Page,index:number,buffer:Buffer|null)=>T|Promise<T>;
+
+export type ConvoPageImageCaptureInstructionCallback=ConvoPageImageCaptureCallback<ConvoPageImageCaptureCallbackInstruction|void>;
 
 export type ConvoPageImageCaptureCallbackInstruction=boolean|'retry-safe';
 
@@ -82,7 +82,7 @@ export interface ConvoPageCapture
     /**
      * Path to captured images
      */
-    images?:ConvoCrawlerMedia[];
+    images:ConvoCrawlerMedia[];
 
     /**
      * Path to captured PDF
@@ -94,10 +94,7 @@ export interface ConvoPageCapture
      */
     setId:string;
 
-    /**
-     * Clickable or interact-able elements on the page
-     */
-    actionItems:ConvoPageCaptureActionItem[];
+    completed:boolean;
 }
 
 export interface ConvoPageCaptureActionItem
@@ -108,8 +105,8 @@ export interface ConvoPageCaptureActionItem
     y:number;
     w:number;
     h:number;
-    elem?:Element;
     text:string;
+    href?:string;
 }
 
 export interface ConvoCrawlerMedia
@@ -117,6 +114,7 @@ export interface ConvoCrawlerMedia
     path:string;
     url:string;
     contentType:string;
+    actionItems?:ConvoPageCaptureActionItem[];
 }
 
 export interface ConvoPageConversionOptions
@@ -143,6 +141,25 @@ export interface ConvoPageConversionOptions
      * be thrown.
      */
     url?:string;
+
+    whileSummarizingCallback?:ConvoPageImageCaptureDataCallback<ConvoPageConversionData,boolean>;
+
+    beforeSummarizeCallback?:ConvoPageImageCaptureDataCallback<ConvoPageConversionData,boolean>;
+
+    afterSummarizeCallback?:ConvoPageImageCaptureDataCallback<ConvoPageConversionData,boolean>;
+}
+
+export interface ConvoPageConversionData
+{
+    /**
+     * All summaries generated so far
+     */
+    summaries:string[];
+
+    /**
+     * All captured images so far
+     */
+    images:ConvoCrawlerMedia[];
 }
 
 export interface ConvoPageConversion
@@ -203,6 +220,7 @@ export interface ConvoWebCrawlOptions
 
 export interface ConvoWebCrawl
 {
+    crawled:string[];
     results:ConvoPageConversion[];
 }
 
@@ -237,4 +255,40 @@ export interface ConvoWebSearchResult extends ConvoWebCrawl
      * The search term used to search for pages
      */
     term:string;
+
+    usage:ConvoTokenUsage;
+}
+
+export interface ConvoWebResearchOptions
+{
+    title:string;
+
+    subjects:string[];
+
+    conclusion:string;
+
+    searchOptions?:ConvoWebSearchOptions;
+
+    searchResults?:ConvoWebSearchResult;
+}
+
+export interface ConvoWebSubjectSummary
+{
+    subject:string;
+    summary:string;
+}
+
+export interface ConvoWebResearchResult
+{
+    title:string;
+
+    subjects:string[];
+
+    conclusion:string;
+
+    subjectSummaries:ConvoWebSubjectSummary[];
+
+    conclusionSummary:string;
+
+    usage:ConvoTokenUsage;
 }

@@ -918,4 +918,118 @@ describe('convo',()=>{
         expect(userType?.safeParse({name:'Ricky',age:'40'}).success).toBe(false);
     });
 
+
+    it('Should concat',async ()=>{
+
+        const getMsgAsync=async (content:string)=>{
+            const convo=new Conversation({
+                disableAutoFlatten:true,
+            });
+            convo.append(content);
+            const flat=await convo.flattenAsync();
+            return flat.messages.filter(m=>m.content).map(m=>m.content??'');
+        }
+
+        let msgs=await getMsgAsync(/*convo*/`
+            > user
+            msg 1
+
+            @concat
+            > user
+            msg 2
+        `);
+        expect(msgs.length).toBe(1);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[0]?.includes('msg 2')).toBe(true);
+
+        msgs=await getMsgAsync(/*convo*/`
+            > user
+            msg 1
+
+            @concat
+            > user
+            msg 2
+
+            @concat
+            > user
+            msg 3
+        `);
+        expect(msgs.length).toBe(1);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[0]?.includes('msg 2')).toBe(true);
+        expect(msgs[0]?.includes('msg 3')).toBe(true);
+
+        msgs=await getMsgAsync(/*convo*/`
+            > user
+            msg 1
+
+            > user
+            msg 2
+
+            @concat
+            > user
+            msg 3
+        `);
+        expect(msgs.length).toBe(2);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[1]?.includes('msg 2')).toBe(true);
+        expect(msgs[1]?.includes('msg 3')).toBe(true);
+
+        msgs=await getMsgAsync(/*convo*/`
+            > define
+            value=true
+
+            > user
+            msg 1
+
+            @concat
+            @condition value
+            > user
+            msg 2
+        `);
+        expect(msgs.length).toBe(1);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[0]?.includes('msg 2')).toBe(true);
+
+        msgs=await getMsgAsync(/*convo*/`
+            > define
+            value=false
+
+            > user
+            msg 1
+
+            @concat
+            @condition value
+            > user
+            msg 2
+        `);
+        expect(msgs.length).toBe(1);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[0]?.includes('msg 2')).toBe(false);
+
+        msgs=await getMsgAsync(/*convo*/`
+            > define
+            a=false
+            b=true
+
+            > user
+            msg 1
+
+            @concat
+            @condition a
+            > user
+            msg 2
+
+            @concat
+            @condition b
+            > user
+            msg 3
+        `);
+        expect(msgs.length).toBe(1);
+        expect(msgs[0]?.includes('msg 1')).toBe(true);
+        expect(msgs[0]?.includes('msg 2')).toBe(false);
+        expect(msgs[0]?.includes('msg 3')).toBe(true);
+
+    });
+
 });

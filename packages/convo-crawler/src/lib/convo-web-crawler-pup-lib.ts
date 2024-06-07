@@ -2,10 +2,51 @@ import { Point, Size, delayAsync } from "@iyio/common";
 import { ElementHandle, Frame, Page } from "puppeteer";
 import { ConvoPageCaptureActionItem } from "./convo-web-crawler-types";
 
+const isFrameVisibleAsync=async (frame:Frame):Promise<boolean>=>{
+    return Promise.race([
+        _isFrameVisibleAsync(frame),
+        delayAsync(1000).then(()=>false)
+    ])
+}
+const _isFrameVisibleAsync=async (frame:Frame):Promise<boolean>=>{
+    try{
+        const iFrame=await frame.frameElement();
+        if(!iFrame){
+            return true;
+        }
+        const box=await iFrame.boundingBox();
+        if(!box){
+            return false;
+        }
+        return box.width*box.height>=20*20;
+    }catch{
+        return false;
+    }
+}
 
-export const getActionItems=async (page:Page,allFocusable=false):Promise<ConvoPageCaptureActionItem[]>=>{
+const filterVisibleFramesAsync=async (frames:Frame[]):Promise<Frame[]>=>{
+    const visible:Frame[]=[];
+    for(const f of frames){
+        if(await isFrameVisibleAsync(f)){
+            visible.push(f);
+        }
+    }
+    return visible;
+}
 
-    return await page.evaluate((allFocusable:boolean)=>{
+export const getFramesActionItems=async (frames:Frame[],inViewport=true):Promise<ConvoPageCaptureActionItem[]>=>{
+    frames=await filterVisibleFramesAsync(frames);
+    const items:ConvoPageCaptureActionItem[]=[];
+    for(const frame of frames){
+        const offset=await getFrameOffsetAsync(frame);
+        items.push(...await getActionItems(frame,inViewport,offset));
+    }
+    return items;
+}
+
+export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point={x:0,y:0}):Promise<ConvoPageCaptureActionItem[]>=>{
+
+    return await Promise.race([page.evaluate((inViewport,offset)=>{
 
         const elementIsVisibleInViewport = (box:DOMRect, partiallyVisible = false) => {
             const { top, left, bottom, right } = box;
@@ -35,7 +76,7 @@ export const getActionItems=async (page:Page,allFocusable=false):Promise<ConvoPa
             'select:not([disabled]), '+
             'textarea:not([disabled]), '+
             '[contenteditable]:not([contenteditable="false"]):not([disabled]), '+
-            `[tabindex]${allFocusable?'':':not([tabindex="-1"])'}:not([disabled]), `+
+            `[tabindex]:not([disabled]), `+
             'details:not([disabled]), '+
             'summary:not(:disabled)'
         )
@@ -49,7 +90,7 @@ export const getActionItems=async (page:Page,allFocusable=false):Promise<ConvoPa
 
             const bounds=elem.getBoundingClientRect();
 
-            if( !elementIsVisibleInViewport(bounds,true) ||
+            if( (inViewport?!elementIsVisibleInViewport(bounds,true):false) ||
                 !bounds.width ||
                 !bounds.height ||
                 !elem.checkVisibility({
@@ -73,16 +114,20 @@ export const getActionItems=async (page:Page,allFocusable=false):Promise<ConvoPa
                 '(no-text)'
             )
 
+            let href=elem.getAttribute('href')?.trim()??undefined;
+            if(href){
+                href=new URL(href,document.baseURI).href;
+            }
 
             items.push({
                 id,
-                elem,
                 type:getElemType(elem),
-                x:bounds.left,
-                y:bounds.top,
+                x:bounds.left+offset.x,
+                y:bounds.top+offset.y,
                 w:bounds.width,
                 h:bounds.height,
-                text:(text.length>20?text.substring(0,17)+'...':text).replace(/\s+/g,' ')
+                text,
+                href,
             })
 
             _id++;
@@ -90,7 +135,7 @@ export const getActionItems=async (page:Page,allFocusable=false):Promise<ConvoPa
         }
 
         return items;
-    },allFocusable);
+    },inViewport,offset),delayAsync(1000).then(()=>[])]);
 
 }
 
@@ -280,6 +325,7 @@ export const getFrameVisibleSize=async (frame:Frame):Promise<Size>=>{
 
 
 export const getFramesVisibleSize=async (frames:Frame[]):Promise<Size>=>{
+    frames=await filterVisibleFramesAsync(frames);
     const p:Size={width:0,height:0};
     for(const frame of frames){
        const c=await getFrameVisibleSize(frame);
@@ -351,6 +397,7 @@ const _scrollDownAsync=async (page:Page,distance:number):Promise<boolean>=>{
 }
 
 export const hideFramesFixedAsync=async (frames:Frame[])=>{
+    frames=await filterVisibleFramesAsync(frames);
     for(const f of frames){
         await hideFrameFixedAsync(f);
     }
@@ -383,6 +430,7 @@ export const hideFrameFixedAsync=async (frame:Frame)=>{
 }
 
 export const showFramesFixedAsync=async (frames:Frame[])=>{
+    frames=await filterVisibleFramesAsync(frames);
     for(const f of frames){
         await showFrameFixedAsync(f);
     }

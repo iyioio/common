@@ -11,8 +11,29 @@
                 "outputPath": "dist/packages/convo-crawler",
                 "main": "packages/convo-crawler/src/index.ts",
                 "tsConfig": "packages/convo-crawler/tsconfig.lib.json",
-                "assets": ["packages/convo-crawler/*.md"]
+                "assets": ["packages/convo-crawler/*.md"],
+                "esbuildTargets":[
+                    {
+                        "srcDir":"packages/convo-crawler/src/bin",
+                        "outDir":"dist/packages/convo-crawler/bin",
+                        "options":{
+                            "bundle":true,
+                            "platform":"node",
+                            "target":"node18",
+                            "minify":false,
+                            "banner": {"js":"#!/usr/bin/env node"},
+                            "sourcemap":"external"
+                        }
+                    }
+                ]
             }
+        },
+        "build-ngrok": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "cp node_modules/ngrok/bin/ngrok dist/packages/convo-crawler/bin && mv dist/packages/convo-crawler/bin/craw.js dist/packages/convo-crawler/bin/convo-web && chmod +x dist/packages/convo-crawler/bin/convo-web"
+            },
+            "dependsOn": ["build"]
         },
         "publish": {
             "executor": "nx:run-commands",

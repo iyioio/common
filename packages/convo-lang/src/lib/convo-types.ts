@@ -906,6 +906,8 @@ export interface ConvoCompletionOptions
      * If defined the token usage will be added to the defined usage.
      */
     usage?:ConvoTokenUsage;
+
+    debug?:boolean;
 }
 
 export interface ConvoMessageTemplate

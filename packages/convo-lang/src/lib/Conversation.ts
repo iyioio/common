@@ -738,11 +738,24 @@ export class Conversation
 
         const completionService=this.completionService;
 
-        return await this.tryCompleteAsync(
+        if(appendOrOptions?.debug){
+            console.info('Conversation.completeAsync:\n',appendOrOptions.append)
+        }
+
+        const result=await this.tryCompleteAsync(
             appendOrOptions?.task,
             appendOrOptions,
             flat=>completionService?.completeConvoAsync(flat)??[]
-        )
+        );
+
+        if(appendOrOptions?.debug){
+            console.info(
+                'Conversation.completeAsync Result:\n',
+                result.messages?(result.messages.length===1?result.messages[0]:result.messages):result
+            );
+        }
+
+        return result;
     }
 
     /**
@@ -1482,6 +1495,17 @@ export class Conversation
                 }
 
             }else if(msg.content!==undefined){
+                if(containsConvoTag(msg.tags,convoTags.concat)){
+                    const prev=messages[messages.length-1];
+                    if(prev?.content!==undefined){
+                        const tag=getConvoTag(msg.tags,convoTags.condition);
+                        if(tag?.value && !this.isTagConditionTrue(exe,tag.value)){
+                            continue;
+                        }
+                        prev.content+='\n\n'+msg.content
+                        continue;
+                    }
+                }
                 flat.content=msg.content;
             }else{
                 continue;
