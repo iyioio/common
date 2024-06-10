@@ -70,7 +70,7 @@ export type ConvoPageImageCaptureDataCallback<D,T>=(data:D,image:ConvoCrawlerMed
 
 export type ConvoPageImageCaptureInstructionCallback=ConvoPageImageCaptureCallback<ConvoPageImageCaptureCallbackInstruction|void>;
 
-export type ConvoPageImageCaptureCallbackInstruction=boolean|'retry-safe';
+export type ConvoPageImageCaptureCallbackInstruction=boolean|'retry-safe'|'retry';
 
 export interface ConvoPageCapture
 {
@@ -105,7 +105,12 @@ export interface ConvoPageCaptureActionItem
     y:number;
     w:number;
     h:number;
+    /**
+     * Frame index
+     */
+    f:number;
     text:string;
+    accessibilityLabel?:string;
     href?:string;
 }
 

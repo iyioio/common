@@ -1,9 +1,9 @@
 import { CancelToken, Lock, delayAsync, escapeHtml, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
-import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
+import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoCompletionAsync, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
 import { pathExistsAsync } from '@iyio/node-common';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
 import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
@@ -53,17 +53,17 @@ export class ConvoWebCrawler
         this.usage={...usage};
 
         if(!disableDefaultCss){
-            pagePresets.push({
-                css:/*css*/`
-                    #onetrust-consent-sdk, .onetrust-consent-sdk{
-                        display:none !important;
-                    }
-                    html,body{
-                        min-width:100%;
-                        min-height:100%;
-                    }
-                `
-            })
+            // pagePresets.push({
+            //     css:/*css*/`
+            //         #onetrust-consent-sdk, .onetrust-consent-sdk{
+            //             display:none !important;
+            //         }
+            //         html,body{
+            //             min-width:100%;
+            //             min-height:100%;
+            //         }
+            //     `
+            // })
         }
 
     }
@@ -111,14 +111,19 @@ export class ConvoWebCrawler
 
     }
 
+    private getHeadMsg(){
+        return `> define
+            __model='gpt-4o'
+            __trackTokenUsage=true
+        `
+    }
+
 
 
     private async completeTextAsync(convo:string):Promise<string>
     {
         const value=await getConvoTextCompletionAsync({usage:this.usage,debug:this.options.debug,append:`
-            > define
-            __model='gpt-4o'
-            __trackTokenUsage=true
+            ${this.getHeadMsg()}
 
             ${convo}
         `});
@@ -129,14 +134,29 @@ export class ConvoWebCrawler
     private async callFunctionAsync<T>(convo:string):Promise<T|undefined>
     {
         const value=await callConvoFunctionAsync({usage:this.usage,debug:this.options.debug,append:`
-            > define
-            __model='gpt-4o'
-            __trackTokenUsage=true
+            ${this.getHeadMsg()}
 
             ${convo}
         `});
 
         return value??undefined;
+    }
+
+    private async completeAsync<T=any>(convo:string):Promise<{text:string,fn?:string,args?:T}>
+    {
+        const r=await getConvoCompletionAsync({usage:this.usage,returnOnCall:true,debug:this.options.debug,append:`
+            ${this.getHeadMsg()}
+
+            ${convo}
+        `});
+
+        return {
+            text:r.message?.content??'',
+            fn:r.message?.callFn,
+            args:r.message?.callParams,
+        }
+
+
     }
 
     private async getOutDirAsync():Promise<string>
@@ -185,7 +205,7 @@ export class ConvoWebCrawler
                 @concat
                 @condition multipleSubjects
                 > system
-                Keep in mind that multiple subject summaries will be generated based on the same article collection.
+                Keep in mind that multiple subject summaries will be generated based on the same collection of articles.
                 For now focus on the subject of "${escapeConvoMessageContent(subject)}" but if there are any important relations between the subject you can include them.
 
                 Other Subjects: ${escapeConvoMessageContent(subjects.filter(sub=>sub!==subject).join(', '))}
@@ -542,6 +562,7 @@ export class ConvoWebCrawler
         const summaries:string[]=[];
         const images:ConvoCrawlerMedia[]=[];
         const data:ConvoPageConversionData={summaries,images};
+        const ignorePopups:Record<number,boolean>={}
 
         const outDir=await this.getOutDirAsync();
 
@@ -570,10 +591,15 @@ export class ConvoWebCrawler
 
             const links=img.actionItems?.filter(a=>a.href)??[];
 
-            const value=await this.completeTextAsync(/*convo*/`
+            const {text,fn}=await this.completeAsync(/*convo*/`
                 > define
                 isFirst=${index?'false':'true'}
                 hasLinks=${links.length?'true':'false'}
+                ignorePopups=${ignorePopups[index]?true:false}
+
+                # Only call if the popup is large and covers the the majority of the screenshot.
+                @condition !ignorePopups
+                > closePopup()
 
                 > system
                 You are a web scraping agent that is converting a series of screenshots of a web page into markdown.
@@ -585,14 +611,18 @@ export class ConvoWebCrawler
                 Ignore any ads.
                 If a blank image is given respond with the text "BLANK" in all caps.
 
+                @condition !ignorePopups
+                > system
+                If the screenshot has a popup that covers the majority of the page and the popup has buttons to close or accept the terms of the popup call the closePopup function.
+
                 > user
-                Convert the following image into a detailed markdown document.
+                Convert the following image into a detailed markdown document or call closePopup.
 
                 @concat
                 @condition hasLinks
                 > user
                 Below is a list of hyperlinks on the page. Each item in the list includes text as the link is display in the following image and its URL.
-                When converting the following image into markdown you can use the list of links to populate the generated markdown links.
+                When converting the following image into markdown you can use the following list of links to populate the generated markdown links.
                 If you are unsure of which URL to use when converting a link use an empty anchor link (a single hashtag) as the URL.
 
                 Page Hyperlinks:
@@ -619,18 +649,32 @@ export class ConvoWebCrawler
                 return false;
             }
 
-            summaries.push(value);
+            if(fn){
+                console.info(`${url} as a popup. Will try to close the popup by calling ${fn}`);
+
+                const closed=await this.tryClosePopupAsync(img,page,cancel);
+                cancel?.throwIfCanceled();
+
+                if(!closed){
+                    console.info(`False popup identification. Ignoring popups for index ${index}`);
+                    ignorePopups[index]=true;
+                }
+
+                return 'retry';
+            }
+
+            summaries.push(text);
 
             const afterResult=await afterSummarizeCallback?.(data,img,page,index,buffer);
             if(afterResult===false){
                 return false;
             }
 
-            if(value==='BLANK'){
+            if(text==='BLANK'){
                 return 'retry-safe'
             }
 
-            await writeFile(`${outDir}/${captureOptions?.setId}-img-${index}.md`,value);
+            await writeFile(`${outDir}/${captureOptions?.setId}-img-${index}.md`,text);
 
             console.info(`page ${index} converted. Total token usage: ${convoUsageTokensToString(this.usage)} `);
 
@@ -675,6 +719,64 @@ export class ConvoWebCrawler
 
         return conversion;
 
+    }
+
+    private async tryClosePopupAsync(img:ConvoCrawlerMedia,page:Page,cancel?:CancelToken):Promise<boolean>{
+
+        const actionItems=(await getFramesActionItems(page.frames())).filter(a=>a.text);
+
+        const buttons=actionItems.map(a=>({
+            id:a.id,
+            text:a.text,
+            type:a.type,
+            link:a.href?.startsWith('#')?undefined:a.href
+        }))
+
+        console.info('Clickable items',buttons);
+
+        cancel?.throwIfCanceled();
+
+        const {args,fn}=await this.completeAsync<{id?:string,text?:string}>(/*convo*/`
+            > click(
+                # The id of the button from the Clickable List
+                id:string
+
+                # The text content of the button to click
+                text?:string
+            )
+
+            > notFound()
+
+            > user
+            If the following screenshot has a popup that covers the majority of the page call the click function to click to click the appropriate button to close the popup.
+            If the screenshot does not appear to have a popup call the noFound function.
+            Avoid clicking on buttons that link to other pages or result in viewing content other than the main content of the page.
+            If a popup is found and it is a cookies banner accept all cookies.
+
+            Below a list of buttons with corresponding IDs in the screenshot.
+
+            Buttons:
+            ${JSON.stringify(buttons,null,4)}
+
+            > user
+            ![](${img.url})
+        `);
+
+        console.info('tryClose',fn,args);
+
+        if(!args?.id){
+            return false;
+        }
+
+        const item=actionItems.find(a=>a.id===args.id);
+        if(!item){
+            return false;
+        }
+        await page.mouse.click(item.x+item.w/2,item.y+item.h/2)
+
+        await delayAsync(2000);
+
+        return true;
     }
 
     private async createBrowserAsync():Promise<Browser>{
@@ -744,10 +846,20 @@ export class ConvoWebCrawler
 
             const preset=this.getPagePreset(url);
             if(css || preset?.css){
-                await page.evaluate((css)=>{
-                    document.head.insertAdjacentHTML('beforeend',`<style>${css}</style>`);
-                },`${preset?.css??''}\n${css??''}`)
-                await delayAsync(100);
+                try{
+                    await page.evaluate((css)=>{
+                        if(window.CSSStyleSheet){
+                            const sheet=new CSSStyleSheet()
+                            sheet.replaceSync(css);
+                            document.adoptedStyleSheets.push(sheet);
+                        }else{
+                            document.head.insertAdjacentHTML('beforeend',`<style>${css}</style>`);
+                        }
+                    },`${preset?.css??''}\n${css??''}`)
+                    await delayAsync(100);
+                }catch(ex){
+                    console.error('Failed to insert style sheet. Will continue without style sheet',ex);
+                }
             }
 
             const pdfBuffer=await page.pdf({
@@ -767,6 +879,7 @@ export class ConvoWebCrawler
 
             images=[];
             let i=0;
+            let tryIndex=0;
             let safeMode=false;
             while(true){
 
@@ -784,7 +897,7 @@ export class ConvoWebCrawler
                 }
                 cancel?.throwIfCanceled();
 
-                const name=`${setId}-img-${i}`
+                const name=`${setId}-img-${i}-${tryIndex}`
 
                 const imageMedia:ConvoCrawlerMedia={
                     path:`${this.options.id}/${name}.png`,
@@ -798,16 +911,22 @@ export class ConvoWebCrawler
                 await writeFile(`${outDir}/${name}.json`,JSON.stringify(actionItems,null,4));
                 cancel?.throwIfCanceled();
 
+                tryIndex++;
+
                 if(!captureAllImagesBeforeCallback && imageCaptureCallback){
                     const instruction=await imageCaptureCallback(imageMedia,page,i,img);
                     cancel?.throwIfCanceled();
                     if(instruction===false){
                         break;
+                    }else if(instruction==='retry'){
+                        continue;
                     }else if(instruction==='retry-safe'){
                         safeMode=true;
                         continue;
                     }
                 }
+
+                tryIndex=0;
 
                 i++;
 

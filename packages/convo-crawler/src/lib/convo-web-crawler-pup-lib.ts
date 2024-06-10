@@ -10,6 +10,9 @@ const isFrameVisibleAsync=async (frame:Frame):Promise<boolean>=>{
 }
 const _isFrameVisibleAsync=async (frame:Frame):Promise<boolean>=>{
     try{
+        if(frame.detached){
+            return false;
+        }
         const iFrame=await frame.frameElement();
         if(!iFrame){
             return true;
@@ -37,17 +40,38 @@ const filterVisibleFramesAsync=async (frames:Frame[]):Promise<Frame[]>=>{
 export const getFramesActionItems=async (frames:Frame[],inViewport=true):Promise<ConvoPageCaptureActionItem[]>=>{
     frames=await filterVisibleFramesAsync(frames);
     const items:ConvoPageCaptureActionItem[]=[];
-    for(const frame of frames){
+    for(let i=0;i<frames.length;i++){
+        const frame=frames[i];
+        if(!frame){continue}
+
         const offset=await getFrameOffsetAsync(frame);
-        items.push(...await getActionItems(frame,inViewport,offset));
+        items.push(...await getActionItems(frame,i,inViewport,offset));
     }
     return items;
 }
 
-export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point={x:0,y:0}):Promise<ConvoPageCaptureActionItem[]>=>{
-
-    return await Promise.race([page.evaluate((inViewport,offset)=>{
-
+export const getActionItems=async (page:Page|Frame,frameIndex=0,inViewport=true,offset:Point={x:0,y:0}):Promise<ConvoPageCaptureActionItem[]>=>{
+    const max=3;
+    for(let t=0;t<max;t++){
+        try{
+            const r=await Promise.race([
+                _getActionItems(page,frameIndex,inViewport,offset),
+                delayAsync(1000).then(()=>false)
+            ]);
+            if(Array.isArray(r)){
+                return r;
+            }
+        }catch(ex){
+            console.error(`getActionItems attempt ${t+1} or ${max} failed`,ex)
+        }
+    }
+    return []
+}
+const _getActionItems=async (page:Page|Frame,frameIndex:number,inViewport=true,offset:Point={x:0,y:0}):Promise<ConvoPageCaptureActionItem[]>=>{
+    if((page instanceof Frame) && page.detached){
+        return []
+    }
+    return await page.evaluate((inViewport,frameIndex,offset)=>{
         const elementIsVisibleInViewport = (box:DOMRect, partiallyVisible = false) => {
             const { top, left, bottom, right } = box;
             const { innerHeight, innerWidth } = window;
@@ -67,6 +91,16 @@ export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point=
             }else{
                 return elem.tagName;
             }
+        }
+
+        const isClickableAt=(elem:Element,bound:DOMRect)=>{
+            const x=bound.x+bound.width/2-offset.x;
+            const y=bound.y+bound.height/2-offset.y;
+            const atPoint=document.elementFromPoint(x,y);
+            if(!atPoint){
+                return false;
+            }
+            return elem===atPoint || elem.contains(atPoint);
         }
 
         const list=document.querySelectorAll(
@@ -91,14 +125,14 @@ export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point=
             const bounds=elem.getBoundingClientRect();
 
             if( (inViewport?!elementIsVisibleInViewport(bounds,true):false) ||
-                !bounds.width ||
-                !bounds.height ||
-                !elem.checkVisibility({
+                bounds.width*bounds.height<10 ||
+                (!elem.checkVisibility({
                     contentVisibilityAuto:true,
                     contentVisibilityCss:true,
                     opacityProperty:true,
                     visibilityProperty:true
-                } as any)
+                } as any)) ||
+                (inViewport?!isClickableAt(elem,bounds):false)
             ){
                 continue;
             }
@@ -106,12 +140,9 @@ export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point=
             const id=_id.toString(16).toUpperCase()
 
             const text=(
-                elem.getAttribute('aria-label')||
+                (elem as any).innerText?.trim()||
                 elem.getAttribute('placeholder')||
-                elem.getAttribute('data-tooltip')||
-                elem.getAttribute('title')||
-                (elem as any).innerText||
-                '(no-text)'
+                ''
             )
 
             let href=elem.getAttribute('href')?.trim()??undefined;
@@ -127,7 +158,14 @@ export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point=
                 w:bounds.width,
                 h:bounds.height,
                 text,
+                accessibilityLabel:(
+                    elem.getAttribute('aria-label')||
+                    elem.getAttribute('data-tooltip')||
+                    elem.getAttribute('title')||
+                    undefined
+                ),
                 href,
+                f:frameIndex
             })
 
             _id++;
@@ -135,7 +173,7 @@ export const getActionItems=async (page:Page|Frame,inViewport=true,offset:Point=
         }
 
         return items;
-    },inViewport,offset),delayAsync(1000).then(()=>[])]);
+    },inViewport,frameIndex,offset);
 
 }
 
@@ -148,13 +186,21 @@ export interface ElementUnderOptions extends Point
 export const getElementsUnderAsync=async (options:ElementUnderOptions,frame:Frame):Promise<ElementHandle[]>=>{
 
     try{
-        options={...options}
 
+        if(frame.detached){
+            return [];
+        }
+
+        options={...options}
 
         const under=options.under??[];
         delete options.under;
 
         const frameOffset=await getFrameOffsetAsync(frame);
+
+        if(frame.detached){
+            return [];
+        }
 
         options.x-=frameOffset.x;
         options.y-=frameOffset.y;
@@ -249,6 +295,10 @@ const _getFrameOffsetAsync=async (frame:Frame):Promise<Point>=>{
 
     try{
 
+        if(frame.detached){
+            return pt;
+        }
+
         let offsetFrame=frame;
         let parent=offsetFrame.parentFrame();
         while(parent){
@@ -280,7 +330,16 @@ const _getFrameOffsetAsync=async (frame:Frame):Promise<Point>=>{
 export const getFrameVisibleSize=async (frame:Frame):Promise<Size>=>{
 
     try{
+
+        if(frame.detached){
+            return {width:0,height:0};
+        }
+
         const frameOffset=await getFrameOffsetAsync(frame);
+
+        if(frame.detached){
+            return {width:0,height:0};
+        }
 
         return await frame.evaluate((frameOffset)=>{
             let w=0,h=0;
@@ -368,7 +427,7 @@ const _scrollDownAsync=async (page:Page,distance:number):Promise<boolean>=>{
 
     const under:ElementHandle[]=[];
 
-    const frames=[page.mainFrame()]
+    const frames=await filterVisibleFramesAsync(page.frames());
     for(const f of frames){
         await getElementsUnderAsync({
             x:viewPort.width/2,
@@ -383,11 +442,16 @@ const _scrollDownAsync=async (page:Page,distance:number):Promise<boolean>=>{
         return false;
     }
 
-    return await scrollElem.evaluate((e,distance)=>{
-        const top=e.scrollTop;
-        e.scrollTo({top:top+distance,behavior:'instant'})
-        return top!==e.scrollTop;
-    },distance)
+    try{
+        return await scrollElem.evaluate((e,distance)=>{
+            const top=e.scrollTop;
+            e.scrollTo({top:top+distance,behavior:'instant'})
+            return top!==e.scrollTop;
+        },distance)
+    }catch(ex){
+        console.error('scrollDownAsync failed. continuing',ex);
+        return false;
+    }
 
     // await page.mouse.move(Math.round(viewPort.width/2),Math.round(viewPort.height/2));
 
@@ -404,6 +468,10 @@ export const hideFramesFixedAsync=async (frames:Frame[])=>{
 }
 export const hideFrameFixedAsync=async (frame:Frame)=>{
     try{
+
+        if(frame.detached){
+            return;
+        }
 
         await Promise.race([frame.evaluate(()=>{
             const all=document.querySelectorAll('*');
@@ -437,6 +505,10 @@ export const showFramesFixedAsync=async (frames:Frame[])=>{
 }
 export const showFrameFixedAsync=async (frame:Frame)=>{
     try{
+
+        if(frame.detached){
+            return;
+        }
 
         await Promise.race([frame.evaluate(()=>{
             const all=document.querySelectorAll('*');
