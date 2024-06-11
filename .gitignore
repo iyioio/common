@@ -60,4 +60,4 @@ venv
 
 /tmp-*
 
-/convo-crawler-out
+/convo-crawler-*

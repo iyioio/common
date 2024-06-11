@@ -1,8 +1,10 @@
-import { CancelToken, Lock, delayAsync, escapeHtml, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
+import { CancelToken, Lock, delayAsync, escapeHtml, getErrorMessage, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
 import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoCompletionAsync, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
-import { pathExistsAsync } from '@iyio/node-common';
+import { pathExistsAsync, readFileAsStringAsync } from '@iyio/node-common';
+import { spawn } from 'child_process';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
@@ -24,6 +26,7 @@ export class ConvoWebCrawler
         frameWidth=1024,
         overlap=100,
         outDir='convo-crawler-out',
+        dataDir='convo-crawler-data',
         httpAccessPoint: httpAccessPointer='https://convo-crawler-out.ngrok.io',
         pagePresets=[],
         googleSearchApiKey='',
@@ -33,6 +36,10 @@ export class ConvoWebCrawler
         usage=createEmptyConvoTokenUsage(),
         debug=false,
         discardOutput=false,
+        browserConnectWsUrl='',
+        chromeDataDir='convo-crawler-browser-profile',
+        chromeBinPath='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        useChrome=false
     }:ConvoWebCrawlerOptions){
 
         pagePresets=[...pagePresets];
@@ -43,6 +50,7 @@ export class ConvoWebCrawler
             frameWidth,
             overlap,
             outDir,
+            dataDir,
             httpAccessPoint: httpAccessPointer,
             pagePresets,
             googleSearchApiKey,
@@ -52,6 +60,10 @@ export class ConvoWebCrawler
             usage,
             debug,
             discardOutput,
+            browserConnectWsUrl,
+            chromeDataDir,
+            chromeBinPath,
+            useChrome,
         }
 
         this.usage={...usage};
@@ -190,6 +202,14 @@ export class ConvoWebCrawler
             await mkdir(path,{recursive:true});
         }
         return path;
+    }
+
+    private async getDataDirAsync():Promise<string>
+    {
+        if(!await pathExistsAsync(this.options.dataDir)){
+            await mkdir(this.options.dataDir,{recursive:true});
+        }
+        return this.options.dataDir;
     }
 
     public async runResearchAsync({
@@ -475,10 +495,11 @@ export class ConvoWebCrawler
         }
         let linkUrls:string[]|undefined;
         try{
-            const browser=await this.createBrowserAsync();
+            const browser=await this.getBrowserAsync();
 
+            let page:Page|undefined;
             try{
-                const page=await browser.newPage();
+                page=await browser.newPage();
                 const conversion=await this.convertPageAsync({
                     captureOptions:{
                         url,
@@ -559,7 +580,7 @@ export class ConvoWebCrawler
             }catch(ex){
                 console.error(`Crawl page failed. Will continue crawling - ${url}`,ex);
             }finally{
-                browser.close();
+                await page?.close();
             }
         }finally{
             release();
@@ -812,14 +833,82 @@ export class ConvoWebCrawler
         return true;
     }
 
-    private async createBrowserAsync():Promise<Browser>{
-        const browser=await puppeteer.launch({
-            headless:!this.options.headed,
-             args:[
-                `--window-size=${this.options.frameWidth},${this.options.frameHeight+74}`
-            ]
-        });
-        return browser;
+    private _browser:Promise<Browser>|null=null;
+    public async getBrowserAsync():Promise<Browser>{
+        return await this._browser??(this._browser=(async ()=>{
+            if(!this.options.useChrome){
+                return await puppeteer.launch({
+                    headless:!this.options.headed,
+                    args:[
+                        `--window-size=${this.options.frameWidth},${this.options.frameHeight+74}`
+                    ]
+                });
+            }
+            if(this.options.browserConnectWsUrl){
+                return puppeteer.connect({
+                    browserWSEndpoint:this.options.browserConnectWsUrl
+                })
+            }
+            const dataDir=await this.getDataDirAsync();
+            const urlPath=join(dataDir,'chrome-remote-debugger-url.txt');
+            if(await pathExistsAsync(urlPath)){
+                const url=await readFileAsStringAsync(urlPath);
+                console.info(`Connecting to remote debugging session - ${url}`)
+                try{
+                    return await puppeteer.connect({
+                        browserWSEndpoint:url
+                    })
+                }catch{
+                    console.info('Saved chrome remote debugger URL no longer open');
+                }
+            }
+            const newUrl=await new Promise<string>((resolve,reject)=>{
+                try{
+
+                    const proc=spawn(
+                        this.options.chromeBinPath,
+                        [
+                            this.options.chromeBinPath,
+                            '--remote-debugging-port=9321',
+                            '--no-first-run',
+                            '--no-default-browser-check',
+                            `--user-data-dir=${this.options.chromeDataDir}`
+                        ],{detached:true});
+                    let found=false;
+                    const listener=(data:any)=>{
+                        try{
+                            if(typeof data !== 'string'){
+                                data=data?.toString()??'';
+                            }
+                            const match=/ws:\/\/\S+/i.exec(data);
+                            if(match){
+                                found=true;
+                                resolve(match[0]);
+                            }
+                        }catch(ex){
+                            reject(getErrorMessage(ex,'Reading proc data failed'))
+                            proc.kill();
+                        }
+                    }
+                    proc.stderr?.on('data',listener);
+                    proc.stdout?.on('data',listener);
+                    setTimeout(()=>{
+                        if(!found){
+                            reject('Start remote debugging timed out');
+                            proc.kill();
+                        }
+                    },5000);
+
+                }catch(ex){
+                    reject(ex);
+                }
+            })
+            await writeFile(urlPath,newUrl);
+            console.info(`Connecting to remote debugging session - ${newUrl}`)
+            return await puppeteer.connect({
+                browserWSEndpoint:newUrl
+            })
+        })())
     }
 
     /**
@@ -833,7 +922,8 @@ export class ConvoWebCrawler
         captureAllImagesBeforeCallback,
         imageCaptureCallback,
         browser,
-        page
+        page,
+        maxCaptureCount=100
     }:ConvoPageCaptureOptions,cancel?:CancelToken):Promise<ConvoPageCapture>{
 
         const {
@@ -850,7 +940,7 @@ export class ConvoWebCrawler
 
         const keepBrowserOpen=browser?true:false;
         if(!browser){
-            browser=await this.createBrowserAsync();
+            browser=await this.getBrowserAsync();
         }
         try{
 
@@ -918,7 +1008,7 @@ export class ConvoWebCrawler
             let i=0;
             let tryIndex=0;
             let safeMode=false;
-            while(true){
+            while(i<maxCaptureCount){
 
                 if(i && !safeMode){
                     await hideFramesFixedAsync(page.frames());
@@ -1009,7 +1099,7 @@ export class ConvoWebCrawler
         }finally{
 
             if(!keepBrowserOpen){
-                await browser.close();
+                await page?.close();
             }
 
         }

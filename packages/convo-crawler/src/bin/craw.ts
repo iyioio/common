@@ -43,6 +43,16 @@ interface Args
     writePreviewer?:string;
 
     serve?:boolean|number;
+
+    browserConnectWsUrl?:string;
+
+    chromeBinPath?:string;
+
+    chromeDataDir?:string;
+
+    useChrome?:boolean;
+
+    openChrome?:boolean;
 }
 
 const args=parseCliArgsT<Args>({
@@ -57,12 +67,17 @@ const args=parseCliArgsT<Args>({
         researchSubject:args=>args,
         researchConclusion:args=>args[0],
         autoTunnel:args=>args.length?true:false,
+        openChrome:args=>args.length?true:false,
+        useChrome:args=>args.length?true:false,
         dev:args=>args.length?true:false,
         debug:args=>args.length?true:false,
         serve:args=>{
             const p=Number(args[0]);
             return isFinite(p)?p:true;
-        }
+        },
+        browserConnectWsUrl:args=>args[0],
+        chromeBinPath:args=>args[0],
+        chromeDataDir:args=>args[0],
     }
 }).parsed as Args
 
@@ -86,7 +101,7 @@ const main=async ()=>{
     await rootScope.getInitPromise();
 
     let httpAccessPoint:string|undefined;
-    if(args.autoTunnel){
+    if(args.autoTunnel && !args.openChrome){
         httpAccessPoint=await startTmpTunnelAsync(
             args.serve===true?defaultConvoCrawlerWebServerPort:
             args.serve===false?undefined:args.serve);
@@ -101,8 +116,19 @@ const main=async ()=>{
         googleSearchCx:process.env['NX_GOOGLE_SEARCH_CX'],
         headed:true,
         httpAccessPoint,
-        debug:args.debug
+        debug:args.debug,
+        browserConnectWsUrl:args.browserConnectWsUrl,
+        chromeBinPath:args.chromeBinPath,
+        chromeDataDir:args.chromeDataDir,
+        useChrome:args.useChrome||args.openChrome,
     });
+
+    if(args.openChrome){
+        const browser=await crawler.getBrowserAsync();
+        await browser.newPage();
+        process.exit(0);
+        return;
+    }
 
     try{
 
@@ -259,7 +285,12 @@ const main=async ()=>{
 --researchSubject      subject         A subject that should be searched. Multiple subjects can be researched by supplying multiple --researchSubject arguments
 --researchConclusion   conclusion      The conclusion that should be derived from research
 --autoTunnel                           Opens a temporary Ngrok tunnel for relaying images to external LLMs
---serve               [ port = 8899 ]  Starts a webserver that allows you to browse outputs
+--serve                [ port = 8899 ] Starts a webserver that allows you to browse outputs
+--browserConnectWsUrl  url             A Chrome remote debugger URL
+--chromeBinPath        path            Custom path to a chrome binary
+--chromeDataDir        path            Path to a directory to start chrome user profile data
+--useChrome                            Auto launches and uses a standard chrome instance with a stable user profile
+--openChrome                           Opens an instance of Chrome that can be used to sign-in or do other browser related tasks before scraping
 --debug                                Print debug information
 
 

@@ -8,6 +8,7 @@ export interface ConvoWebCrawlerOptions
     frameHeight?:number;
     overlap?:number;
     outDir?:string;
+    dataDir?:string;
     httpAccessPoint?:string;
     pagePresets?:ConvoPagePreset[];
     disableDefaultCss?:boolean;
@@ -27,6 +28,27 @@ export interface ConvoWebCrawlerOptions
      * If true the output object of the crawler will not be populated.
      */
     discardOutput?:boolean;
+
+    /**
+     * Websocket URL to a chrome remote debugger
+     */
+    browserConnectWsUrl?:string;
+
+    /**
+     * Path to the chrome binary used to start a chrome debugging session
+     */
+    chromeBinPath?:string;
+
+    /**
+     * Path to a directory to store chrome profile
+     */
+    chromeDataDir?:string;
+
+    /**
+     * Auto launches and uses a standard chrome instance with a stable user profile using defaults
+     * for `browserConnectWsUrl`, `chromeBinPath` and `chromeDataDir`
+     */
+    useChrome?:boolean;
 }
 
 export interface ConvoPagePreset
@@ -75,6 +97,12 @@ export interface ConvoPageCaptureOptions
     browser?:Browser;
 
     page?:Page;
+
+    /**
+     * The max number of images to capture
+     * @default 100
+     */
+    maxCaptureCount?:number;
 
 }
 
