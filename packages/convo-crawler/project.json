@@ -48,6 +48,12 @@
                 "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-crawler/tsconfig.lib.json packages/convo-crawler/src/bin/craw.ts $@"
             }
         },
+        "dev": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/convo-crawler/tsconfig.lib.json packages/convo-crawler/src/bin/craw.ts --dev --autoTunnel $@"
+            }
+        },
         "lint": {
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
