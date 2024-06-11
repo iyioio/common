@@ -22,6 +22,11 @@ export interface ConvoWebCrawlerOptions
     usage?:ConvoTokenUsage;
 
     debug?:boolean;
+
+    /**
+     * If true the output object of the crawler will not be populated.
+     */
+    discardOutput?:boolean;
 }
 
 export interface ConvoPagePreset
@@ -29,6 +34,15 @@ export interface ConvoPagePreset
     url?:string;
     match?:RegExp;
     css?:string;
+}
+
+export interface ConvoWebCrawlerOutput
+{
+    usage:ConvoTokenUsage;
+    captures:ConvoPageCapture[];
+    conversions:ConvoPageConversion[];
+    research:ConvoWebResearchResult[];
+
 }
 
 export interface ConvoPageCaptureOptions
@@ -185,14 +199,15 @@ export interface ConvoPageConversion
     summary:string;
 
     /**
-     * The page captured used to generate the conversion.
-     */
-    capture:ConvoPageCapture;
-
-    /**
      * The set id used to store captured resources.
      */
     setId:string;
+}
+
+export interface ConvoPageConversionResult
+{
+    conversion:ConvoPageConversion;
+    capture:ConvoPageCapture;
 }
 
 export interface ConvoWebCrawlOptions
@@ -226,7 +241,7 @@ export interface ConvoWebCrawlOptions
 export interface ConvoWebCrawl
 {
     crawled:string[];
-    results:ConvoPageConversion[];
+    results:ConvoPageConversionResult[];
 }
 
 

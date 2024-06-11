@@ -6,7 +6,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -15,6 +15,8 @@ export class ConvoWebCrawler
     public readonly options:Required<ConvoWebCrawlerOptions>;
 
     public readonly usage:ConvoTokenUsage;
+
+    public readonly output:ConvoWebCrawlerOutput;
 
     public constructor({
         id=format(new Date(),'yyyy-MM-dd-HH-mm')+'-'+uuid(),
@@ -30,6 +32,7 @@ export class ConvoWebCrawler
         headed=false,
         usage=createEmptyConvoTokenUsage(),
         debug=false,
+        discardOutput=false,
     }:ConvoWebCrawlerOptions){
 
         pagePresets=[...pagePresets];
@@ -48,9 +51,17 @@ export class ConvoWebCrawler
             headed,
             usage,
             debug,
+            discardOutput,
         }
 
         this.usage={...usage};
+
+        this.output={
+            usage:this.usage,
+            captures:[],
+            conversions:[],
+            research:[],
+        }
 
         if(!disableDefaultCss){
             // pagePresets.push({
@@ -66,6 +77,19 @@ export class ConvoWebCrawler
             // })
         }
 
+    }
+
+    public async writeOutputAsync(path?:string){
+        const outDir=await this.getOutDirAsync();
+        if(!path){
+            path=`${outDir}/_output.json`;
+        }
+        await writeFile(path,JSON.stringify(this.output,null,4));
+        return path;
+    }
+
+    public async writePreviewer(){
+        //const html=createWebCrawlerOutputPreviewer();
     }
 
     public resetUsage()
@@ -185,7 +209,7 @@ export class ConvoWebCrawler
 
         cancel?.throwIfCanceled();
 
-        const resultsMd=searchResults.results.map(r=>`URL: ${r.url}\n\n${r.summary}`).join('\n\n\n\n');
+        const resultsMd=searchResults.results.map(r=>`URL: ${r.conversion.url}\n\n${r.conversion.summary}`).join('\n\n\n\n');
 
         console.info('Generating subject summaries');
 
@@ -278,6 +302,10 @@ export class ConvoWebCrawler
         }\n- [Conclusion](#Conclusion)\n\n\n${
             subjectSummaries.map(s=>`## ${escapeHtml(s.subject)}\n${escapeHtml(s.summary)}`).join('\n\n\n')
         }\n\n\n## Conclusion\n${escapeHtml(conclusionSummary??'')}`);
+
+        if(!this.options.discardOutput){
+            this.output.research.push(result);
+        }
 
         return result;
 
@@ -528,6 +556,8 @@ export class ConvoWebCrawler
                     }
 
                 }
+            }catch(ex){
+                console.error(`Crawl page failed. Will continue crawling - ${url}`,ex);
             }finally{
                 browser.close();
             }
@@ -555,7 +585,7 @@ export class ConvoWebCrawler
         beforeSummarizeCallback,
         afterSummarizeCallback,
         whileSummarizingCallback
-    }:ConvoPageConversionOptions,cancel?:CancelToken):Promise<ConvoPageConversion>{
+    }:ConvoPageConversionOptions,cancel?:CancelToken):Promise<ConvoPageConversionResult>{
 
         console.info(`id ${this.options.id}`)
 
@@ -606,10 +636,10 @@ export class ConvoWebCrawler
                 Convert tables, graphs and charts into markdown tables with a detailed description.
                 If a graph or chart can not be converted into a markdown table convert it to [Mermaid](https://mermaid.js.org/) diagram in a code block.
                 Convert images into markdown images with a detailed description in the alt text area and if you don't know the full URL to the image use an empty anchor link (a single hash tag).
-                Do not enclose your responses in a markdown code block.
                 Ignore any site navigation UI elements.
                 Ignore any ads.
                 If a blank image is given respond with the text "BLANK" in all caps.
+                Do not enclose your responses in a markdown code block.
 
                 @condition !ignorePopups
                 > system
@@ -709,15 +739,18 @@ export class ConvoWebCrawler
             url:capture.url,
             markdown,
             summary:summary,
-            capture,
             setId
+        }
+
+        if(!this.options.discardOutput){
+            this.output.conversions.push(conversion);
         }
 
         await writeFile(`${outDir}/${setId}-conversion.json`,JSON.stringify(conversion,null,4));
 
         console.info(`Page conversion token usage: ${convoUsageTokensToString(this.usage)}`)
 
-        return conversion;
+        return {conversion,capture};
 
     }
 
@@ -862,17 +895,21 @@ export class ConvoWebCrawler
                 }
             }
 
-            const pdfBuffer=await page.pdf({
-                timeout:2*60000
-            });
-            const name=`${setId}-pdf.pdf`
-            pdf={
-                path:`${this.options.id}/${name}`,
-                url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
-                contentType:'application/pdf'
+            try{
+                const pdfBuffer=await page.pdf({
+                    timeout:60000
+                });
+                const name=`${setId}-pdf.pdf`
+                pdf={
+                    path:`${this.options.id}/${name}`,
+                    url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
+                    contentType:'application/pdf'
+                }
+                await writeFile(`${outDir}/${name}`,pdfBuffer);
+                cancel?.throwIfCanceled();
+            }catch(ex){
+                console.error(`PDF conversion failed - ${url}`,ex);
             }
-            await writeFile(`${outDir}/${name}`,pdfBuffer);
-            cancel?.throwIfCanceled();
 
             let completed=false;
 
@@ -955,13 +992,19 @@ export class ConvoWebCrawler
                 }
             }
 
-            return {
+            const pageCapture:ConvoPageCapture={
                 url,
                 images,
                 pdf,
                 setId,
                 completed,
             };
+
+            if(!this.options.discardOutput){
+                this.output.captures.push(pageCapture);
+            }
+
+            return pageCapture;
 
         }finally{
 
