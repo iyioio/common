@@ -32,6 +32,15 @@ export const getFullPath=(path:string)=>{
     }
 }
 
+export const isDirAsync=async (path:string):Promise<boolean|null>=>{
+    try{
+        const s=await stat(path);
+        return s.isDirectory();
+    }catch{
+        return null;
+    }
+}
+
 export const isDirSync=(path:string):boolean|null=>{
     try{
         const stat=statSync(path);
