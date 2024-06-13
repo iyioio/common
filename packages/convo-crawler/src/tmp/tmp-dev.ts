@@ -7,7 +7,7 @@ export const doConvoCrawlerDevStuffAsync=async (crawler:ConvoWebCrawler)=>{
         //'https://investors.apogeetherapeutics.com/news-events/news'
         //'https://www.prnewswire.com/news-releases/apogee-therapeutics-launches-with-169-million-to-develop-potentially-best-in-class-therapies-for-immunological-and-inflammatory-disorders-301696381.html'
         //'https://www.sec.gov/ixviewer/ix.html?doc=/Archives/edgar/data/0001018724/000101872424000083/amzn-20240331.htm'
-        'https://www.sec.gov/ix?doc=/Archives/edgar/data/0001018724/000101872424000083/amzn-20240331.htm' // with iframe
+        //'https://www.sec.gov/ix?doc=/Archives/edgar/data/0001018724/000101872424000083/amzn-20240331.htm' // with iframe
         //'https://www.youtube.com/'
         //'https://finance.yahoo.com/quote/APGE/?guccounter=1&guce_referrer=aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&guce_referrer_sig=AQAAADddFlUFWmyvBKfu4mmWacbtR7fIp-mcXwlA1OCR9Qz-y5fbCvHuQ7bqzYY0h5JgMhr8Cmnz9bAH6teyU4O7rryLqMJCVJLAMqfrwimf0zj-08NFTYwWY_cvGG2fA8sMHJCtb5l98G2s7G_qL6fW9pxxPDtmGD8BWvoYd_4kTvx8'
         //'https://www.spacex.com/updates'
@@ -20,6 +20,9 @@ export const doConvoCrawlerDevStuffAsync=async (crawler:ConvoWebCrawler)=>{
         //'https://www.3i.com/infrastructure/' // multiple banners
         //'https://allarity.com/'
         //'https://www.dobs.pa.gov/Documents/Publications/Brochures/The%20Basics%20for%20Investing%20in%20Stocks.pdf'
+        //'https://websites.umich.edu/~antigran/InteriorDesignBooks/ARCH%20X%20454A%20Elements%20of%20Design%20I/Art%20Fundamentals%20Theory%20and%20Practice,%2012th%20Edition%20by%20Otto%20G.%20Ocvirk,%20Robert%20Stinson,%20Philip%20R.%20Wigg,%20Robert%20O.%20Bone,%20David%20L.%20Cayton.pdf',
+        //'file:///Users/scott/docs/learning-content/Random.pdf'
+        'http://localhost:3000/Random.pdf'
     )
 
     //await crawler.testAsync(url);

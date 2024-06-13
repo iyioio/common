@@ -984,8 +984,6 @@ export class ConvoWebCrawler
                 await page.setContent(getConvoWebCrawlerPdfViewer({url,width:frameWidth,height:frameHeight}));
                 await page.evaluate(`window.__convoWebLoadPdf(${JSON.stringify(url)})`);
                 await page.evaluate('window.__convoWebNextPdfPage()');
-
-
             }else{
                 const preset=this.getPagePreset(url);
                 if(css || preset?.css){

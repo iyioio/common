@@ -18,7 +18,7 @@ export const getConvoWebCrawlerPdfViewer=({
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convo Web PDF Viewer</title>
-    <script src="//mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf_viewer.min.css"/>
     <style>
         html,body{
@@ -54,7 +54,7 @@ export const getConvoWebCrawlerPdfViewer=({
         let pageNumber=0;
 
         // The workerSrc property shall be specified.
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://mozilla.github.io/pdf.js/build/pdf.worker.mjs';
 
 
         window.__convoWebLoadPdf=async (url)=>{
@@ -90,8 +90,11 @@ export const getConvoWebCrawlerPdfViewer=({
 
             console.log('view port',{ar,dar,dv,scale,viewport,page,pdf})
 
+            document.getElementById('pdf-canvas')?.remove();
             // Prepare canvas using PDF page dimensions
-            const canvas = document.getElementById('pdf-canvas');
+            const canvas = document.createElement('canvas');
+            canvas.id='pdf-canvas';
+            document.body.append(canvas);
             const context = canvas.getContext('2d');
             canvas.width = cw;
             canvas.height = ch;
@@ -119,7 +122,6 @@ export const getConvoWebCrawlerPdfViewer=({
 <body>
     <h1 class="loading">Loading PDF...</h1>
     <span class="loading">${url}</span>
-    <canvas id="pdf-canvas"></canvas>
 </body>
 </html>`
     )
