@@ -23,6 +23,11 @@ interface Args
     url?:string;
 
     /**
+     * Captures a url
+     */
+    capture?:string;
+
+    /**
      * Preforms a google search and scrapes top search result
      */
     search?:string;
@@ -61,6 +66,7 @@ const args=parseCliArgsT<Args>({
     startIndex:2,
     converter:{
         url:args=>args[0],
+        capture:args=>args[0],
         search:args=>args[0],
         writePreviewer:args=>args[0],
         pageRequirement:args=>args[0],
@@ -157,6 +163,11 @@ const main=async ()=>{
             return;
         }
 
+        if(args.capture){
+            await crawler.capturePageAsync({url:args.capture});
+            done=true;
+        }
+
         if(args.url){
             await crawler.convertPageAsync({url:args.url});
             done=true;
@@ -213,8 +224,9 @@ const main=async ()=>{
             console.info(`Output written to ${await realpath(outPath)}`);
         }else{
             console.info(`Usage:
---url                  url             scrape a URL
---search               term            preforms a search and scrapes the top results
+--url                  url             scrapes and converts a URL into a markdown document with a summarization
+--capture              url             Captures a URL as a set of images and a PDF
+--search               term            Preforms a search and scrapes the top results
 --pageRequirement      prompt          A prompt that is used to check if a page should be scraped
 --researchTitle        title           Title for research document
 --researchSubject      subject         A subject that should be searched. Multiple subjects can be researched by supplying multiple --researchSubject arguments

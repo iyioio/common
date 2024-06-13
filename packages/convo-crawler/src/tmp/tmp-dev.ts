@@ -19,6 +19,7 @@ export const doConvoCrawlerDevStuffAsync=async (crawler:ConvoWebCrawler)=>{
         //'https://www.sec.gov/comments/sr-iex-2019-15/sriex201915.htm' // trusted error
         //'https://www.3i.com/infrastructure/' // multiple banners
         //'https://allarity.com/'
+        //'https://www.dobs.pa.gov/Documents/Publications/Brochures/The%20Basics%20for%20Investing%20in%20Stocks.pdf'
     )
 
     //await crawler.testAsync(url);

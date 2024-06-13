@@ -5,8 +5,9 @@ import { spawn } from 'child_process';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer, { Browser, HTTPResponse, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
+import { getConvoWebCrawlerPdfViewer } from './convo-web-crawler-pdf-viewer';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
 import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
@@ -950,56 +951,81 @@ export class ConvoWebCrawler
 
             await page.setViewport({width:frameWidth,height:frameHeight});
 
-            let navigated=false;
+            let response:HTTPResponse|null=null;
             for(let t=0;t<3;t++){
                 try{
-                    await page.goto(url,{timeout:30000,waitUntil:['load','domcontentloaded']});
+                    response=await page.goto(url,{timeout:30000,waitUntil:['load','domcontentloaded']});
                 }catch(ex){
                     console.error('Navigation error',ex);
                 }
-                navigated=true;
             }
-            if(!navigated){
+            if(!response){
                 throw new Error(`Failed to navigate to ${url} after max attempts`);
             }
 
+            let isPdf=false;
+            try{
+                isPdf=await page.evaluate(()=>{
+                    const embed=document.body.children[0];
+                    return document.body.children.length===0 || ((
+                        embed &&
+                        (embed instanceof HTMLEmbedElement) &&
+                        embed.type==='application/pdf'
+                    )?true:false)
+                })
+            }catch(ex){
+                console.error('Unable to determine if content is a PDF. Assuming content is not a PDF',ex);
+            }
+
+
             cancel?.throwIfCanceled();
 
-            await delayAsync(3000);
+            if(isPdf){
+                await page.setContent(getConvoWebCrawlerPdfViewer({url,width:frameWidth,height:frameHeight}));
+                await page.evaluate(`window.__convoWebLoadPdf(${JSON.stringify(url)})`);
+                await page.evaluate('window.__convoWebNextPdfPage()');
 
-            const preset=this.getPagePreset(url);
-            if(css || preset?.css){
+
+            }else{
+                const preset=this.getPagePreset(url);
+                if(css || preset?.css){
+                    try{
+                        await page.evaluate((css)=>{
+                            if(window.CSSStyleSheet){
+                                const sheet=new CSSStyleSheet()
+                                sheet.replaceSync(css);
+                                document.adoptedStyleSheets.push(sheet);
+                            }else{
+                                document.head.insertAdjacentHTML('beforeend',`<style>${css}</style>`);
+                            }
+                        },`${preset?.css??''}\n${css??''}`)
+                        await delayAsync(100);
+                    }catch(ex){
+                        console.error('Failed to insert style sheet. Will continue without style sheet',ex);
+                    }
+                }
+            }
+
+            if(!isPdf){
                 try{
-                    await page.evaluate((css)=>{
-                        if(window.CSSStyleSheet){
-                            const sheet=new CSSStyleSheet()
-                            sheet.replaceSync(css);
-                            document.adoptedStyleSheets.push(sheet);
-                        }else{
-                            document.head.insertAdjacentHTML('beforeend',`<style>${css}</style>`);
-                        }
-                    },`${preset?.css??''}\n${css??''}`)
-                    await delayAsync(100);
+                    const pdfBuffer=await page.pdf({
+                        timeout:60000
+                    });
+                    const pdfName=`${setId}-pdf.pdf`
+                    pdf={
+                        path:`${this.options.id}/${pdfName}`,
+                        url:`${this.options.httpAccessPoint}/${this.options.id}/${pdfName}`,
+                        contentType:'application/pdf'
+                    }
+                    await writeFile(`${outDir}/${pdfName}`,pdfBuffer);
+                    cancel?.throwIfCanceled();
                 }catch(ex){
-                    console.error('Failed to insert style sheet. Will continue without style sheet',ex);
+                    console.error(`PDF conversion failed - ${url}`,ex);
+
                 }
             }
 
-            try{
-                const pdfBuffer=await page.pdf({
-                    timeout:60000
-                });
-                const name=`${setId}-pdf.pdf`
-                pdf={
-                    path:`${this.options.id}/${name}`,
-                    url:`${this.options.httpAccessPoint}/${this.options.id}/${name}`,
-                    contentType:'application/pdf'
-                }
-                await writeFile(`${outDir}/${name}`,pdfBuffer);
-                cancel?.throwIfCanceled();
-            }catch(ex){
-                console.error(`PDF conversion failed - ${url}`,ex);
-            }
+
 
             let completed=false;
 
@@ -1010,7 +1036,7 @@ export class ConvoWebCrawler
             let safeMode=false;
             while(i<maxCaptureCount){
 
-                if(i && !safeMode){
+                if(i && !safeMode && !isPdf){
                     await hideFramesFixedAsync(page.frames());
                 }
                 await delayAsync(safeMode?2000:500);
@@ -1019,7 +1045,7 @@ export class ConvoWebCrawler
 
                 const img=await page.screenshot();
 
-                if(i && !safeMode){
+                if(i && !safeMode && !isPdf){
                     await showFramesFixedAsync(page.frames());
                 }
                 cancel?.throwIfCanceled();
@@ -1057,18 +1083,13 @@ export class ConvoWebCrawler
 
                 i++;
 
-                if(!await scrollDownAsync(page,frameHeight-overlap)){
+                if(!await (isPdf?page.evaluate('window.__convoWebNextPdfPage()'):scrollDownAsync(page,frameHeight-overlap))){
                     completed=true;
                     break;
                 }
             }
 
             cancel?.throwIfCanceled();
-
-            await page.evaluate(()=>{
-                const target=document.querySelector('html')??document.body;
-                target.style.transform='';
-            });
 
             if(captureAllImagesBeforeCallback && imageCaptureCallback && images){
                 for(let i=0;i<images.length;i++){
