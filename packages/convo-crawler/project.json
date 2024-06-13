@@ -31,7 +31,7 @@
         "build-ngrok": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "cp node_modules/ngrok/bin/ngrok dist/packages/convo-crawler/bin && mv dist/packages/convo-crawler/bin/craw.js dist/packages/convo-crawler/bin/convo-web && chmod +x dist/packages/convo-crawler/bin/convo-web"
+                "command": "cp node_modules/ngrok/bin/ngrok dist/packages/convo-crawler/bin && mv dist/packages/convo-crawler/bin/convo-web.js dist/packages/convo-crawler/bin/convo-web && chmod +x dist/packages/convo-crawler/bin/convo-web && cd dist/packages/convo-crawler && zip -vr convo-web.zip bin -x \"*.DS_Store\""
             },
             "dependsOn": ["build"]
         },
