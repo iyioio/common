@@ -35,6 +35,13 @@
             },
             "dependsOn": ["build"]
         },
+        "build-docker": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "cp -r packages/convo-crawler/docker dist/packages/convo-crawler/docker && cd dist/packages/convo-crawler/docker && ./build-container.sh"
+            },
+            "dependsOn": ["build"]
+        },
         "publish": {
             "executor": "nx:run-commands",
             "options": {
