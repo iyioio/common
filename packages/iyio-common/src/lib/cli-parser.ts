@@ -20,7 +20,7 @@ export interface ParseCliArgsOptions
 
     /**
      * Can be used to pass the remaining args after the specified arg to a rest param
-     * @default "=="
+     * @default "--"
      */
     restSeparator?:string;
 
