@@ -39,8 +39,10 @@ export class ConvoWebCrawler
         discardOutput=false,
         browserConnectWsUrl='',
         chromeDataDir='convo-crawler-browser-profile',
-        chromeBinPath='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-        useChrome=false
+        chromeBinPath='',
+        useChrome=false,
+        launchArgs=[],
+        chromeNoSandbox=false,
     }:ConvoWebCrawlerOptions){
 
         pagePresets=[...pagePresets];
@@ -65,6 +67,8 @@ export class ConvoWebCrawler
             chromeDataDir,
             chromeBinPath,
             useChrome,
+            launchArgs,
+            chromeNoSandbox
         }
 
         this.usage={...usage};
@@ -196,7 +200,11 @@ export class ConvoWebCrawler
 
     }
 
-    private async getOutDirAsync():Promise<string>
+    public setHttpAccessPoint(url:string){
+        this.options.httpAccessPoint=url;
+    }
+
+    public async getOutDirAsync():Promise<string>
     {
         const path=`${this.options.outDir}/${this.options.id}`;
         if(!await pathExistsAsync(path)){
@@ -205,7 +213,7 @@ export class ConvoWebCrawler
         return path;
     }
 
-    private async getDataDirAsync():Promise<string>
+    public async getDataDirAsync():Promise<string>
     {
         if(!await pathExistsAsync(this.options.dataDir)){
             await mkdir(this.options.dataDir,{recursive:true});
@@ -841,7 +849,8 @@ export class ConvoWebCrawler
                 return await puppeteer.launch({
                     headless:!this.options.headed,
                     args:[
-                        `--window-size=${this.options.frameWidth},${this.options.frameHeight+74}`
+                        `--window-size=${this.options.frameWidth},${this.options.frameHeight+74}`,
+                        ...this.options.launchArgs
                     ]
                 });
             }
@@ -863,18 +872,23 @@ export class ConvoWebCrawler
                     console.info('Saved chrome remote debugger URL no longer open');
                 }
             }
+            const binPath=this.options.chromeBinPath||await getChromePathAsync();
+            if(!binPath){
+                throw new Error('Unable to determine google chrome bin path');
+            }
+
             const newUrl=await new Promise<string>((resolve,reject)=>{
                 try{
-
                     const proc=spawn(
-                        this.options.chromeBinPath,
+                        binPath,
                         [
-                            this.options.chromeBinPath,
                             '--remote-debugging-port=9321',
                             '--no-first-run',
                             '--no-default-browser-check',
-                            `--user-data-dir=${this.options.chromeDataDir}`
-                        ],{detached:true});
+                            `--user-data-dir=${this.options.chromeDataDir}`,
+                            this.options.chromeNoSandbox?'--no-sandbox':'',
+                            ...this.options.launchArgs
+                        ].filter(a=>a),{detached:true});
                     let found=false;
                     const listener=(data:any)=>{
                         try{
@@ -1123,4 +1137,17 @@ export class ConvoWebCrawler
 
         }
     }
+}
+
+const chromePaths=[
+    '/usr/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+]
+const getChromePathAsync=async ()=>{
+    for(const p of chromePaths){
+        if(await pathExistsAsync(p)){
+            return p;
+        }
+    }
+    return null;
 }

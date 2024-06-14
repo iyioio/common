@@ -59,11 +59,16 @@ interface Args
     useChrome?:boolean;
 
     openChrome?:boolean;
+
+    chromeNoSandbox?:boolean;
+
+    launchArgs?:string[];
 }
 
 const args=parseCliArgsT<Args>({
     args:process.argv,
     startIndex:2,
+    restKey:'launchArgs',
     converter:{
         url:args=>args[0],
         capture:args=>args[0],
@@ -73,6 +78,8 @@ const args=parseCliArgsT<Args>({
         researchTitle:args=>args[0],
         researchSubject:args=>args,
         researchConclusion:args=>args[0],
+        chromeNoSandbox:args=>args.length?true:false,
+        launchArgs:()=>[],
         autoTunnel:args=>args.length?true:false,
         openChrome:args=>args.length?true:false,
         useChrome:args=>args.length?true:false,
@@ -103,6 +110,22 @@ const main=async ()=>{
 
     await rootScope.getInitPromise();
 
+    const crawler=new ConvoWebCrawler({
+        googleSearchApiKey:process.env['NX_GOOGLE_SEARCH_API_KEY'],
+        googleSearchCx:process.env['NX_GOOGLE_SEARCH_CX'],
+        headed:true,
+        debug:args.debug,
+        browserConnectWsUrl:args.browserConnectWsUrl,
+        chromeBinPath:args.chromeBinPath,
+        chromeDataDir:args.chromeDataDir,
+        useChrome:args.useChrome||args.openChrome,
+        launchArgs:args.launchArgs,
+        chromeNoSandbox:args.chromeNoSandbox,
+    });
+
+    // Call before starting tunnel
+    await crawler.getOutDirAsync();
+
     let httpAccessPoint:string|undefined;
     if(args.autoTunnel && !args.openChrome){
         httpAccessPoint=await startTmpTunnelAsync(
@@ -114,17 +137,9 @@ const main=async ()=>{
         console.info(`Tunnel URL ${httpAccessPoint}`)
     }
 
-    const crawler=new ConvoWebCrawler({
-        googleSearchApiKey:process.env['NX_GOOGLE_SEARCH_API_KEY'],
-        googleSearchCx:process.env['NX_GOOGLE_SEARCH_CX'],
-        headed:true,
-        httpAccessPoint,
-        debug:args.debug,
-        browserConnectWsUrl:args.browserConnectWsUrl,
-        chromeBinPath:args.chromeBinPath,
-        chromeDataDir:args.chromeDataDir,
-        useChrome:args.useChrome||args.openChrome,
-    });
+    if(httpAccessPoint){
+        crawler.setHttpAccessPoint(httpAccessPoint);
+    }
 
     if(args.openChrome){
         const browser=await crawler.getBrowserAsync();
@@ -238,8 +253,9 @@ const main=async ()=>{
 --chromeDataDir        path            Path to a directory to start chrome user profile data
 --useChrome                            Auto launches and uses a standard chrome instance with a stable user profile
 --openChrome                           Opens an instance of Chrome that can be used to sign-in or do other browser related tasks before scraping
+--chromeNoSandbox                      Causes Chrome and Chromium to be launched in no sandbox mode by passing the --no-sandbox args
 --debug                                Print debug information
-
+--                    ... rest         All arguments passed after -- are passed to Chrome or Chromium
 
 Scrape a single URL:
 convo-web --url https://example.com

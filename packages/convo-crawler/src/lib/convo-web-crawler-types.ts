@@ -45,6 +45,16 @@ export interface ConvoWebCrawlerOptions
     chromeDataDir?:string;
 
     /**
+     * If true google chrome should run in no sandbox mode
+     */
+    chromeNoSandbox?:boolean;
+
+    /**
+     * Additional launch args to pass to chrome or chromium
+     */
+    launchArgs?:string[];
+
+    /**
      * Auto launches and uses a standard chrome instance with a stable user profile using defaults
      * for `browserConnectWsUrl`, `chromeBinPath` and `chromeDataDir`
      */
