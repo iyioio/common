@@ -1,6 +1,7 @@
 import { ParamTypeDef } from '@iyio/common';
 import { Duration, IgnoreMode } from 'aws-cdk-lib';
 import * as autoScaling from "aws-cdk-lib/aws-applicationautoscaling";
+import * as autoScalingBase from "aws-cdk-lib/aws-autoscaling";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecra from 'aws-cdk-lib/aws-ecr-assets';
 import * as ecsAssets from 'aws-cdk-lib/aws-ecr-assets';
@@ -100,6 +101,11 @@ export interface ContainerProps
      */
     scaleDownSeconds?:number;
 
+    /**
+     * The value for the size (in MiB) of the /dev/shm volume. This parameter maps to the --shm-size option to docker run
+     */
+    sharedMemorySizeMb?:number;
+
     taskArnParam?:ParamTypeDef<string>;
     serviceArnParam?:ParamTypeDef<string>;
     grantName?:string;
@@ -107,6 +113,8 @@ export interface ContainerProps
     accessRequests?:AccessRequestDescription[];
     grantAccessRequests?:PassiveAccessGrantDescription[];
     noPassiveAccess?:boolean;
+    ec2Type?:string;
+    privileged?:boolean;
 
     /**
      * A command that can be used to override the default command of the container image
@@ -140,9 +148,12 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         file='Dockerfile',
         vCpuCount=256,
         memoryMb=2048,
+        sharedMemorySizeMb,
         cpuArchitecture='x86_64',
         vpc,
         cmd,
+        ec2Type,
+        privileged,
         enableExecuteCommand,
         enableScaling=false,
         minInstanceCount=1,
@@ -185,7 +196,9 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
         const cpuType=cpuArchitecture==='x86_64'?ecs.CpuArchitecture.X86_64:ecs.CpuArchitecture.ARM64;
         const osType=ecs.OperatingSystemFamily.LINUX;
 
-        const task=new ecs.FargateTaskDefinition(this,`Task`,{
+        const task=ec2Type?new ecs.Ec2TaskDefinition(this,'Ec2Task',{
+
+        }):new ecs.FargateTaskDefinition(this,`Task`,{
             cpu:vCpuCount,
             memoryLimitMiB:memoryMb,
             runtimePlatform:{
@@ -229,7 +242,14 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 timeout:Duration.seconds(healthCheckTimeoutSeconds),
                 startPeriod:Duration.seconds(healthCheckStartSeconds),
             },
-            command:cmd
+            command:cmd,
+
+            // ec2 mode
+            privileged,
+            linuxParameters:sharedMemorySizeMb===undefined?undefined:new ecs.LinuxParameters(this,'LP',{
+                sharedMemorySize:sharedMemorySizeMb,
+            }),
+            memoryLimitMiB:ec2Type?memoryMb:undefined,
 
         });
         this.container=container;
@@ -237,7 +257,12 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
             containerPort:port,
         })
 
-        const service=new ecs.FargateService(this,"FargateService",{
+        const service=ec2Type?new ecs.Ec2Service(this,"Ec2Service",{
+            cluster,
+            taskDefinition:task,
+            desiredCount:minInstanceCount,
+            enableExecuteCommand,
+        }):new ecs.FargateService(this,"FargateService",{
             cluster,
             taskDefinition:task,
             desiredCount:minInstanceCount,
@@ -260,6 +285,19 @@ export class Container extends Construct implements IAccessGrantGroup, IAccessRe
                 scaleOutCooldown:Duration.seconds(scaleUpSeconds),
             })
             this.scaling=scaling;
+        }
+        if(ec2Type){
+            const asg=new autoScalingBase.AutoScalingGroup(this,'AutoScalingGroup',{
+                vpc,
+                instanceType:new ec2.InstanceType(ec2Type),
+                machineImage:ecs.EcsOptimizedImage.amazonLinux2(cpuArchitecture==='x86_64'?ecs.AmiHardwareType.STANDARD:ecs.AmiHardwareType.ARM),
+                minCapacity:minInstanceCount,
+                maxCapacity:maxInstanceCount
+            });
+            const cp=new ecs.AsgCapacityProvider(this,'CapacityProvider',{
+                autoScalingGroup:asg
+            })
+            cluster.addAsgCapacityProvider(cp);
         }
 
 

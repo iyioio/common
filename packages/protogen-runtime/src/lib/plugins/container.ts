@@ -97,6 +97,9 @@ export const containerPlugin:ProtoPipelineConfigurablePlugin<typeof ContainerPlu
                         targetCpuUsage:safeParseNumberOrUndefined(c['targetCpuUsage']?.value),
                         scaleUpSeconds:safeParseNumberOrUndefined(c['scaleUpSeconds']?.value),
                         scaleDownSeconds:safeParseNumberOrUndefined(c['scaleDownSeconds']?.value),
+                        ec2Type:c['ec2Type']?.value,
+                        privileged:c['privileged']?true:undefined,
+                        sharedMemorySizeMb:safeParseNumberOrUndefined(c['sharedMemorySizeMb']?.value),
                         cmd,
                         ignoreOverrides:(
                             !ignoreOverrides?
