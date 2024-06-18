@@ -54,7 +54,7 @@ export class JsonLambdaLayer extends Construct
             const k=keys[i];
             if(!k){continue}
             values['_'+i]=json[k];
-            valuesAry.push(JSON.stringify(json[k]??null))
+            valuesAry.push(JSON.stringify(json[k]??null).replace(/\$\{Token\[TOKEN.\w+\]\}/g,'${Token[TOKEN]}'))
         }
 
         if(!bucketKey){
