@@ -56,8 +56,9 @@ class CrawlerPreviewer
                 head=`
                     <span>${head}</span>
                     <span>
-                        <button onclick="${cr}.loadFileAsync('${path}')">html</button>
-                        <button onclick="${cr}.loadFileAsync('${path}',{plain:true})">markdown</button>
+                        <button class="button" onclick="${cr}.loadFileAsync('${path}')">html</button>
+                        <button class="button" onclick="${cr}.loadFileAsync('${path}',{plain:true})">markdown</button>
+                        <a class="button" target="_blank" href="${path}?format=pdf">PDF</a>
                     </span>
                 `;
                 if(options?.plain){
@@ -113,6 +114,15 @@ class CrawlerPreviewer
             })
         })
     }
+
+    public initListeners()
+    {
+        window.addEventListener('message',evt=>{
+            if(evt.data==='convo-reload'){
+                location.reload();
+            }
+        })
+    }
 }
 
 const escapeHtml=(str:string):string=>
@@ -129,10 +139,13 @@ const escapeHtml=(str:string):string=>
 }
 
 const previewer=new CrawlerPreviewer();
+previewer.initListeners();
 (window as any).__CrawlerPreviewer__=previewer;
 }
 
-const fnName='_________convoWebCrawlerOutputPreviewer'
+const fnName='_________convoWebCrawlerOutputPreviewer';
+
+const maxNameLength=22;
 
 export interface CreateWebCrawlerOutputPreviewerOptions
 {
@@ -164,9 +177,6 @@ export const createWebCrawlerOutputPreviewer=({
     }
 
     const fnJs=convoWebCrawlerOutputPreviewer.toString().replace(/^function\s+\w+/,`function ${fnName}`);
-    let group='';
-    let groupName='';
-    const gl=6;
     return (
 `<!DOCTYPE html>
 <html lang="en">
@@ -191,36 +201,23 @@ export const createWebCrawlerOutputPreviewer=({
             <div class="scroll-container">
                 <ul class="file-list">
                     ${back?'<li><a href="..">back</a></li>':''}
-                    ${fileAction==='load-file'?files.map((f,index)=>{
+                    ${fileAction==='load-file'?files.map((f)=>{
 
-                        const swg=startWithGuidReg.test(f);
-
-                        const sub=f.substring(0,gl);
-                        let writeGroupName=false
-                        if(sub!==group){
-                            let i=0;
-                            const next=files[index+1]??''
-                            for(;i<f.length;i++){
-                                if(f[i]!==next[i]){
-                                    break;
-                                }
-                            }
-                            groupName=f.substring(0,i);
-                            writeGroupName=true;
+                        let name=f;
+                        if(name.length>maxNameLength){
+                            name=name.substring(0,Math.floor(maxNameLength/2-3))+'...'+name.substring(name.length-Math.floor(maxNameLength/2))
                         }
 
-                        group=sub;
 
                         return (
-                            ((writeGroupName && swg)?`<li class="file-group">${groupName.endsWith('-')?groupName.substring(0,groupName.length-1):groupName}</li>`:'')+
-                            `<li><button class="file-button" onclick='${cr}.loadFileAsync(${JSON.stringify(`/${baseDir}/${f}`)})'>${swg?f.substring(groupName.length):f}</button></li>`
+                            `<li><button class="file-button" onclick='${cr}.loadFileAsync(${JSON.stringify(`/${baseDir}/${f}`)})'>${escapeHtml(name)}</button></li>`
                         )
 
                     }).join('\n'):''}
 
                     ${fileAction==='link'?files.map((f)=>{
                         return (
-                            `<li><a href="${escapeHtml(f)}" class="file-button">${escapeHtml(f.replace(enbWithGuidReg,''))}</button></li>`
+                            `<li><a href="${escapeHtml(f)}" class="file-button">${escapeHtml(f.replace(enbWithGuidReg,''))}</a></li>`
                         )
 
                     }).join('\n'):''}
@@ -229,7 +226,7 @@ export const createWebCrawlerOutputPreviewer=({
             </div>
         </div>
         <div class="main-content">
-            <div class="main-head">${title??''}</div>
+            ${title?`<div class="main-head">${escapeHtml(title)}</div>`:''}
             <div id="render-area"></div>
         </div>
     </div>
@@ -291,9 +288,10 @@ body{
 .file-list{
     list-style:none;
     margin:0;
-    padding:0;
     display:flex;
     flex-direction:column;
+    gap:0.5rem;
+    padding:0.7rem;
 }
 .file-button{
     border:none;
@@ -334,5 +332,15 @@ body{
 }
 .hljs{
     _background:transparent !important;
+}
+.button{
+    background: #ffffff;
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    letter-spacing: 0.05em;
+    border:1px solid #aaa;
+    text-decoration:none;
+    font-size:1rem;
+    color:#333;
 }
 `

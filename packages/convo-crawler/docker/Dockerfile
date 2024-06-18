@@ -2,6 +2,8 @@
 
 FROM  --platform=linux/amd64 ubuntu:20.04
 
+SHELL ["/bin/bash", "-c"]
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NODE_VERSION=v18.17.1
 ENV NVM_DIR /usr/src/.nvm
@@ -30,15 +32,18 @@ RUN apt-get install -y \
     wmctrl \
     dbus-x11 \
     python3 \
+    python3-pip \
     build-essential \
     libssl-dev \
     git
 
 # install nvm
-RUN \
-    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash && \
-    . $NVM_DIR/nvm.sh && \
-    nvm install $NODE_VERSION
+RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+RUN ls -la /root
+RUN cat /root/.profile
+RUN cat /root/.bashrc
+RUN . $NVM_DIR/nvm.sh && nvm
+RUN . $NVM_DIR/nvm.sh && nvm install 18.17.1
 
 # install chrome
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -48,19 +53,25 @@ RUN rm google-chrome-stable_current_amd64.deb
 # install NPM Deps
 RUN npm i ngrok
 
+
 RUN mkdir $APP_DIR/bin
 
 # build / install websoketify
+# RUN \
+#     git clone https://github.com/novnc/websockify-other.git && \
+#     cd websockify-other/c && \
+#     make && \
+#     cp websockify $APP_DIR/bin
 RUN \
-    git clone https://github.com/novnc/websockify-other.git && \
-    cd websockify-other/c && \
-    make && \
-    cp websockify $APP_DIR/bin
+    git clone https://github.com/novnc/websockify.git && \
+    cd websockify && \
+    python3 -m pip install setuptools numpy requests jwcrypto redis && \
+    python3 setup.py install && \
+    cp run ../bin
 
 
-RUN echo 2
-COPY docker/bootstrap.sh .
-COPY ./bin/convo-web.js bin/convo-web
+COPY packages/convo-crawler/docker/bootstrap.sh .
+COPY dist-cached/packages/convo-crawler/bin/convo-web.js bin/convo-web
 
 RUN \
     cp node_modules/ngrok/bin/ngrok $APP_DIR/bin && \
@@ -68,5 +79,6 @@ RUN \
     chmod +x ./bootstrap.sh && \
     chown apps:apps -R $APP_DIR
 
+USER apps
 
 CMD '/app/bootstrap.sh'

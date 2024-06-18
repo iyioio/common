@@ -205,7 +205,7 @@ export const getElementsUnderAsync=async (options:ElementUnderOptions,frame:Fram
         options.x-=frameOffset.x;
         options.y-=frameOffset.y;
 
-        const r=await frame.evaluateHandle((options:ElementUnderOptions)=>{
+        const r=await Promise.race([frame.evaluateHandle((options:ElementUnderOptions)=>{
 
             const isHit=(bounds:DOMRect)=>{
                 return bounds.left<=options.x && bounds.right>=options.x && bounds.top<=options.y && bounds.bottom>=options.y;
@@ -257,9 +257,10 @@ export const getElementsUnderAsync=async (options:ElementUnderOptions,frame:Fram
 
             return null;
 
-        },options);
+        },options),delayAsync(2000).then(()=>null)]);
 
-        const elem=r.asElement();
+
+        const elem=r?.asElement?.();
         if(elem){
             const isIFrame=await elem.evaluate(e=>e instanceof HTMLIFrameElement);
             const contentFrame=isIFrame?await elem.contentFrame():null;

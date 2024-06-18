@@ -10,6 +10,7 @@ main() {
     launch_xvfb
     launch_window_manager
     dbus-launch
+    open_tunnel
     run_vnc_server
 }
 
@@ -72,6 +73,15 @@ run_vnc_server() {
 
     x11vnc -display ${DISPLAY} -forever ${passwordArgument} &
     wait $!
+}
+
+open_tunnel() {
+    if [ "$CONVO_AGENT_TUNNEL_PREFIX" != "" ]; then
+        convo-web --openTunnel $CONVO_AGENT_TUNNEL_PREFIX &
+        convo-web --serve 8099 &
+    fi
+    echo 'start websockify 5910 -> 127.0.0.1:5900'
+    websockify 5910 127.0.0.1:5900 &
 }
 
 control_c() {

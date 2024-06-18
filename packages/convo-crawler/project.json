@@ -11,7 +11,7 @@
                 "outputPath": "dist/packages/convo-crawler",
                 "main": "packages/convo-crawler/src/index.ts",
                 "tsConfig": "packages/convo-crawler/tsconfig.lib.json",
-                "assets": ["packages/convo-crawler/*.md"],
+                "assets": ["packages/convo-crawler/*.md","packages/convo-crawler/docker/*"],
                 "esbuildTargets":[
                     {
                         "srcDir":"packages/convo-crawler/src/bin",
@@ -38,7 +38,8 @@
         "build-docker": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "cp -r packages/convo-crawler/docker dist/packages/convo-crawler/docker && cd dist/packages/convo-crawler/docker && ./build-container.sh"
+                "cwd": "dist/packages/convo-crawler/docker",
+                "command": "./build-container.sh"
             },
             "dependsOn": ["build"]
         },

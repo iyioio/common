@@ -350,3 +350,15 @@ export interface ConvoWebResearchResult
 
     usage:ConvoTokenUsage;
 }
+
+export interface ConvoWebSearchAndResearchOptions
+{
+    search?:ConvoWebSearchOptions;
+    research:ConvoWebResearchOptions;
+}
+
+export interface ConvoWebTunnelUrls
+{
+    http?:string;
+    vnc?:string;
+}

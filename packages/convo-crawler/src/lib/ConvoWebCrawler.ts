@@ -3,13 +3,13 @@ import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, crea
 import { pathExistsAsync, readFileAsStringAsync } from '@iyio/node-common';
 import { spawn } from 'child_process';
 import { format } from 'date-fns';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, readdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 import puppeteer, { Browser, HTTPResponse, Page } from 'puppeteer';
-import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebSearchOptionsMaxConcurrent } from './convo-web-crawler-lib';
+import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebDataDir, defaultConvoWebOutDir, defaultConvoWebSearchOptionsMaxConcurrent, getConvoWebDataDirAsync } from './convo-web-crawler-lib';
 import { getConvoWebCrawlerPdfViewer } from './convo-web-crawler-pdf-viewer';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -26,8 +26,8 @@ export class ConvoWebCrawler
         frameHeight=1024,
         frameWidth=1024,
         overlap=100,
-        outDir='convo-crawler-out',
-        dataDir='convo-crawler-data',
+        outDir=defaultConvoWebOutDir,
+        dataDir=defaultConvoWebDataDir,
         httpAccessPoint: httpAccessPointer='https://convo-crawler-out.ngrok.io',
         pagePresets=[],
         googleSearchApiKey='',
@@ -215,10 +215,44 @@ export class ConvoWebCrawler
 
     public async getDataDirAsync():Promise<string>
     {
-        if(!await pathExistsAsync(this.options.dataDir)){
-            await mkdir(this.options.dataDir,{recursive:true});
+        return await getConvoWebDataDirAsync(this.options.dataDir);
+    }
+
+    public async getResearchDocumentsAsync(limit?:number):Promise<string[]>{
+        const docs:string[]=[];
+        if(limit!==undefined && limit<=0){
+            return docs;
         }
-        return this.options.dataDir;
+        const dirs=await readdir(this.options.outDir,{withFileTypes:true});
+        dirs.sort();
+        for(let i=dirs.length-1;i>=0;i--){
+            const dir=dirs[i];
+            if(!dir?.isDirectory()){continue}
+
+            const sub=await readdir(join(this.options.outDir,dir.name));
+            for(const s of sub){
+                if(s.startsWith('research') && s.endsWith('.md')){
+                    const content=await readFileAsStringAsync(join(this.options.outDir,dir.name,s));
+                    docs.push(content);
+                    if(limit!==undefined && docs.length>=limit){
+                        return docs;
+                    }
+                }
+            }
+
+        }
+        return docs;
+    }
+
+    public async searchAndRunResearchAsync({
+        search,
+        research
+    }:ConvoWebSearchAndResearchOptions,cancel?:CancelToken):Promise<ConvoWebResearchResult>{
+        research={...research}
+        if(search){
+            research.searchResults=await this.searchAsync(search,cancel);
+        }
+        return await this.runResearchAsync(research,cancel);
     }
 
     public async runResearchAsync({
@@ -734,9 +768,11 @@ export class ConvoWebCrawler
                 return 'retry-safe'
             }
 
-            await writeFile(`${outDir}/${captureOptions?.setId}-img-${index}.md`,text);
+            const conversionPath=`${outDir}/${captureOptions?.setId}-img-${index}.md`;
+            await writeFile(conversionPath,text);
 
             console.info(`page ${index} converted. Total token usage: ${convoUsageTokensToString(this.usage)} `);
+            console.info(`conversion written to - ${conversionPath}`);
 
             return true;
 
@@ -844,7 +880,7 @@ export class ConvoWebCrawler
 
     private _browser:Promise<Browser>|null=null;
     public async getBrowserAsync():Promise<Browser>{
-        return await this._browser??(this._browser=(async ()=>{
+        return await (this._browser??(this._browser=(async ()=>{
             if(!this.options.useChrome){
                 return await puppeteer.launch({
                     headless:!this.options.headed,
@@ -923,7 +959,7 @@ export class ConvoWebCrawler
             return await puppeteer.connect({
                 browserWSEndpoint:newUrl
             })
-        })())
+        })()))
     }
 
     /**
@@ -1018,24 +1054,24 @@ export class ConvoWebCrawler
                 }
             }
 
-            if(!isPdf){
-                try{
-                    const pdfBuffer=await page.pdf({
-                        timeout:60000
-                    });
-                    const pdfName=`${setId}-pdf.pdf`
-                    pdf={
-                        path:`${this.options.id}/${pdfName}`,
-                        url:`${this.options.httpAccessPoint}/${this.options.id}/${pdfName}`,
-                        contentType:'application/pdf'
-                    }
-                    await writeFile(`${outDir}/${pdfName}`,pdfBuffer);
-                    cancel?.throwIfCanceled();
-                }catch(ex){
-                    console.error(`PDF conversion failed - ${url}`,ex);
+            // if(!isPdf){
+            //     try{
+            //         const pdfBuffer=await page.pdf({
+            //             timeout:60000
+            //         });
+            //         const pdfName=`${setId}-pdf.pdf`
+            //         pdf={
+            //             path:`${this.options.id}/${pdfName}`,
+            //             url:`${this.options.httpAccessPoint}/${this.options.id}/${pdfName}`,
+            //             contentType:'application/pdf'
+            //         }
+            //         await writeFile(`${outDir}/${pdfName}`,pdfBuffer);
+            //         cancel?.throwIfCanceled();
+            //     }catch(ex){
+            //         console.error(`PDF conversion failed - ${url}`,ex);
 
-                }
-            }
+            //     }
+            // }
 
 
 

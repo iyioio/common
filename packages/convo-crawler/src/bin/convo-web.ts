@@ -2,12 +2,12 @@
 import { aiCompleteConvoModule } from "@iyio/ai-complete";
 //import { aiCompleteLambdaModule } from "@iyio/ai-complete-lambda";
 import { openAiModule } from "@iyio/ai-complete-openai";
-import { EnvParams, ScopeRegistration, delayAsync, getErrorMessage, initRootScope, parseCliArgsT, rootScope } from "@iyio/common";
+import { EnvParams, ScopeRegistration, delayAsync, getErrorMessage, initRootScope, parseCliArgsT, rootScope, safeParseNumberOrUndefined } from "@iyio/common";
 import { realpath, writeFile } from "fs/promises";
 import { join } from "path";
 import { ConvoWebCrawler } from "../lib/ConvoWebCrawler";
 import { writeConvoCrawlerPreviewAsync } from "../lib/convo-web-crawler-output-previewer-writer";
-import { ConvoWebSearchResult } from "../lib/convo-web-crawler-types";
+import { ConvoWebSearchResult, ConvoWebTunnelUrls } from "../lib/convo-web-crawler-types";
 import { defaultConvoCrawlerWebServerPort, runConvoCrawlerWebServer } from "../lib/convo-web-crawler-webserver";
 import { doConvoCrawlerDevStuffAsync } from "../tmp/tmp-dev";
 import { loadTmpEnv } from "../tmp/tmp-env";
@@ -63,6 +63,14 @@ interface Args
     chromeNoSandbox?:boolean;
 
     launchArgs?:string[];
+
+    openTunnel?:string;
+
+    httpAccessPoint?:string;
+
+    maxSearchConcurrent?:number;
+
+    maxCrawlConcurrent?:number;
 }
 
 const args=parseCliArgsT<Args>({
@@ -79,7 +87,7 @@ const args=parseCliArgsT<Args>({
         researchSubject:args=>args,
         researchConclusion:args=>args[0],
         chromeNoSandbox:args=>args.length?true:false,
-        launchArgs:()=>[],
+        launchArgs:args=>args,
         autoTunnel:args=>args.length?true:false,
         openChrome:args=>args.length?true:false,
         useChrome:args=>args.length?true:false,
@@ -92,6 +100,10 @@ const args=parseCliArgsT<Args>({
         browserConnectWsUrl:args=>args[0],
         chromeBinPath:args=>args[0],
         chromeDataDir:args=>args[0],
+        openTunnel:args=>args[0],
+        httpAccessPoint:args=>args[0],
+        maxCrawlConcurrent:args=>safeParseNumberOrUndefined(args[0]),
+        maxSearchConcurrent:args=>safeParseNumberOrUndefined(args[0]),
     }
 }).parsed as Args
 
@@ -110,6 +122,8 @@ const main=async ()=>{
 
     await rootScope.getInitPromise();
 
+    console.info('convo-web args',args);
+
     const crawler=new ConvoWebCrawler({
         googleSearchApiKey:process.env['NX_GOOGLE_SEARCH_API_KEY'],
         googleSearchCx:process.env['NX_GOOGLE_SEARCH_CX'],
@@ -121,6 +135,7 @@ const main=async ()=>{
         useChrome:args.useChrome||args.openChrome,
         launchArgs:args.launchArgs,
         chromeNoSandbox:args.chromeNoSandbox,
+        httpAccessPoint:args.httpAccessPoint
     });
 
     // Call before starting tunnel
@@ -135,6 +150,20 @@ const main=async ()=>{
             httpAccessPoint=httpAccessPoint.substring(0,httpAccessPoint.length-1);
         }
         console.info(`Tunnel URL ${httpAccessPoint}`)
+    }
+
+    if(args.openTunnel){
+        const dataDir=await crawler.getDataDirAsync();
+        const urls:ConvoWebTunnelUrls={
+            http:await startTmpTunnelAsync(8099,`convo-api-${args.openTunnel}`),
+            vnc:await startTmpTunnelAsync(5910,`convo-display-${args.openTunnel}`)
+        }
+        await writeFile(join(dataDir,'tunnel-urls.json'),JSON.stringify(urls))
+        console.info('api and display tunnels open',urls);
+        while(true){
+            await delayAsync(60000);
+        }
+        return;
     }
 
     if(httpAccessPoint){
@@ -194,8 +223,10 @@ const main=async ()=>{
             searchResults=await crawler.searchAsync({
                 term:args.search,
                 crawlOptions:{
-                    pageRequirementPrompt:args.pageRequirement
-                }
+                    pageRequirementPrompt:args.pageRequirement,
+                    maxConcurrent:args.maxCrawlConcurrent
+                },
+                maxConcurrent:args.maxSearchConcurrent
             })
             done=true;
         }
