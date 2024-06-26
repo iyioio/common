@@ -150,11 +150,18 @@ const maxNameLength=22;
 export interface CreateWebCrawlerOutputPreviewerOptions
 {
     baseDir:string;
-    files:string[];
+    files:ConvoWebFileRef[];
     fileAction:'load-file'|'link';
     title?:string;
     back?:boolean;
     wideLinks?:boolean;
+}
+
+export interface ConvoWebFileRef
+{
+    name:string;
+    path:string;
+    date?:string;
 }
 
 const startWithGuidReg=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
@@ -173,7 +180,7 @@ export const createWebCrawlerOutputPreviewer=({
     files=[...files];
     files.sort();
     if(fileAction==='load-file'){
-        files.sort((a,b)=>(startWithGuidReg.test(a)?1:0)-(startWithGuidReg.test(b)?1:0));
+        files.sort((a,b)=>(startWithGuidReg.test(a.name)?1:0)-(startWithGuidReg.test(b.name)?1:0));
     }
 
     const fnJs=convoWebCrawlerOutputPreviewer.toString().replace(/^function\s+\w+/,`function ${fnName}`);
@@ -203,21 +210,21 @@ export const createWebCrawlerOutputPreviewer=({
                     ${back?'<li><a href="..">back</a></li>':''}
                     ${fileAction==='load-file'?files.map((f)=>{
 
-                        let name=f;
+                        let name=f.name;
                         if(name.length>maxNameLength){
                             name=name.substring(0,Math.floor(maxNameLength/2-3))+'...'+name.substring(name.length-Math.floor(maxNameLength/2))
                         }
 
 
                         return (
-                            `<li><button class="file-button" onclick='${cr}.loadFileAsync(${JSON.stringify(`/${baseDir}/${f}`)})'>${escapeHtml(name)}</button></li>`
+                            `<li><button class="file-button" onclick='${cr}.loadFileAsync(${JSON.stringify(`/${baseDir}/${f.path}`)})'>${escapeHtml(name)}</button></li>`
                         )
 
                     }).join('\n'):''}
 
                     ${fileAction==='link'?files.map((f)=>{
                         return (
-                            `<li><a href="${escapeHtml(f)}" class="file-button">${escapeHtml(f.replace(enbWithGuidReg,''))}</a></li>`
+                            `<li><a href="${escapeHtml(f.path)}" class="file-button">${escapeHtml(f.name.replace(enbWithGuidReg,''))}</a></li>`
                         )
 
                     }).join('\n'):''}

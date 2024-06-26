@@ -76,6 +76,15 @@ export interface ConvoWebCrawlerOutput
     research:ConvoWebResearchResult[];
 
 }
+export interface ConvoWebCrawlerInput
+{
+    name:string;
+    search?:ConvoWebSearchOptions;
+    research?:ConvoWebResearchOptions;
+    convert?:ConvoPageConversionOptions;
+    capture?:ConvoPageCaptureOptions;
+
+}
 
 export interface ConvoPageCaptureOptions
 {

@@ -9,7 +9,7 @@ import puppeteer, { Browser, HTTPResponse, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebDataDir, defaultConvoWebOutDir, defaultConvoWebSearchOptionsMaxConcurrent, getConvoWebDataDirAsync } from './convo-web-crawler-lib';
 import { getConvoWebCrawlerPdfViewer } from './convo-web-crawler-pdf-viewer';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerInput, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -244,10 +244,24 @@ export class ConvoWebCrawler
         return docs;
     }
 
+    public async writeInputAsync(input:ConvoWebCrawlerInput):Promise<void>
+    {
+        const outDir=await this.getOutDirAsync();
+        await writeFile(join(outDir,'_input.json'),JSON.stringify(input,null,4))
+    }
+
     public async searchAndRunResearchAsync({
         search,
         research
     }:ConvoWebSearchAndResearchOptions,cancel?:CancelToken):Promise<ConvoWebResearchResult>{
+
+
+        await this.writeInputAsync({
+            name:research.title,
+            research,
+            search
+        })
+
         research={...research}
         if(search){
             research.searchResults=await this.searchAsync(search,cancel);
@@ -255,20 +269,23 @@ export class ConvoWebCrawler
         return await this.runResearchAsync(research,cancel);
     }
 
-    public async runResearchAsync({
-        title,
-        subjects,
-        conclusion,
-        searchOptions,
-        searchResults,
-    }:ConvoWebResearchOptions,cancel?:CancelToken):Promise<ConvoWebResearchResult>{
+    public async runResearchAsync(options:ConvoWebResearchOptions,cancel?:CancelToken):Promise<ConvoWebResearchResult>{
 
-        if(!searchResults){
-            if(!searchOptions){
+        if(!options.searchResults){
+            if(!options.searchOptions){
                 throw new Error('searchOptions or searchResults required')
             }
-            searchResults=await this.searchAsync(searchOptions,cancel);
+            options={...options}
+            options.searchResults=await this.searchAsync(options.searchOptions as ConvoWebSearchOptions,cancel);
         }
+
+        const {
+            title,
+            subjects,
+            conclusion,
+            searchOptions,
+            searchResults,
+        }=options;
 
         cancel?.throwIfCanceled();
 

@@ -7,7 +7,7 @@ import { realpath, writeFile } from "fs/promises";
 import { join } from "path";
 import { ConvoWebCrawler } from "../lib/ConvoWebCrawler";
 import { writeConvoCrawlerPreviewAsync } from "../lib/convo-web-crawler-output-previewer-writer";
-import { ConvoWebSearchResult, ConvoWebTunnelUrls } from "../lib/convo-web-crawler-types";
+import { ConvoWebResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebTunnelUrls } from "../lib/convo-web-crawler-types";
 import { defaultConvoCrawlerWebServerPort, runConvoCrawlerWebServer } from "../lib/convo-web-crawler-webserver";
 import { doConvoCrawlerDevStuffAsync } from "../tmp/tmp-dev";
 import { loadTmpEnv } from "../tmp/tmp-env";
@@ -220,14 +220,23 @@ const main=async ()=>{
         let searchResults:ConvoWebSearchResult|undefined;
 
         if(args.search){
-            searchResults=await crawler.searchAsync({
+
+            const options:ConvoWebSearchOptions={
                 term:args.search,
                 crawlOptions:{
                     pageRequirementPrompt:args.pageRequirement,
                     maxConcurrent:args.maxCrawlConcurrent
                 },
                 maxConcurrent:args.maxSearchConcurrent
+            }
+
+            await crawler.writeInputAsync({
+                name:args.researchTitle||args.search,
+                search:options
             })
+
+            searchResults=await crawler.searchAsync(options);
+
             done=true;
         }
 
@@ -256,12 +265,19 @@ const main=async ()=>{
                 return;
             }
 
-            await crawler.runResearchAsync({
+            const options:ConvoWebResearchOptions={
                 title:args.researchTitle,
                 subjects:args.researchSubject,
                 conclusion:args.researchConclusion,
                 searchResults,
-            });
+            }
+
+            await crawler.writeInputAsync({
+                name:args.researchTitle,
+                research:options,
+            })
+
+            await crawler.runResearchAsync(options);
             done=true;
         }
 
