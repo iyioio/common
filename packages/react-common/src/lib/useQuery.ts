@@ -2,7 +2,7 @@ import { Query, queryClient } from "@iyio/common";
 import { useEffect, useState } from "react";
 import { useDeepCompareItem } from "./useCompareItem";
 
-export const useQuery=<T>(query:Query|null|undefined):T[]|undefined=>{
+export const useQuery=<T>(query:Query|null|undefined,refresh?:number):T[]|undefined=>{
 
     const q=useDeepCompareItem(query);
 
@@ -28,7 +28,7 @@ export const useQuery=<T>(query:Query|null|undefined):T[]|undefined=>{
             m=false;
         }
 
-    },[q]);
+    },[q,refresh]);
 
     return value;
 }

@@ -50,7 +50,10 @@ export const markdownLineToStringBuffer=(
         }
     }
 
-    if((line.type==='p' || line.type==='code-block') && isHtml){
+    if( (line.type==='p' || line.type==='code-block') &&
+        isHtml &&
+        (options.singleLine?(options.getLineHtmlAtts?true:false):true)
+    ){
         out.push(`<p${recordToAtts(
             null,
             options.getLineHtmlAtts?.(line,'p'))

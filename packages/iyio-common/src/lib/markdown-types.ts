@@ -135,6 +135,7 @@ export type MarkdownOutputFormat='plain'|'markdown'|'html';
 export interface MarkdownOutputOptions
 {
     format:MarkdownOutputFormat;
+    singleLine?:boolean;
 
     getNodeHtmlAtts?:(line:MarkdownLine,node:MarkdownNode,prop:keyof MarkdownNode)=>Record<string,string>|null|undefined;
     getLineHtmlAtts?:(line:MarkdownLine,prop:(keyof MarkdownLine)|'p'|'hr'|'code')=>Record<string,string|null|undefined>|null|undefined;
