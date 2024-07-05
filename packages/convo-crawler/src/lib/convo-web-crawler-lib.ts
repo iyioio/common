@@ -2,7 +2,7 @@ import { escapeConvoMessageContent } from "@iyio/convo-lang";
 import { pathExistsAsync, readFileAsJsonAsync } from "@iyio/node-common";
 import { mkdir } from "fs/promises";
 import { join } from "path";
-import { ConvoPageCaptureActionItem, ConvoWebCrawlerOptions, ConvoWebTunnelUrls } from "./convo-web-crawler-types";
+import { ConvoPageCaptureActionItem, ConvoWebCrawlerOptions, ConvoWebInstruction, ConvoWebTunnelUrls } from "./convo-web-crawler-types";
 
 export const defaultConvoWebCrawlOptionsMaxDepth=2;
 export const defaultConvoWebCrawlOptionsMaxConcurrent=3;
@@ -41,4 +41,29 @@ export const getConvoWebDataDirAsync=async (dataDir:string):Promise<string>=>
         await mkdir(dataDir,{recursive:true});
     }
     return dataDir;
+}
+
+
+export const parseConvoWebInstruction=(instruction:string,index=0):ConvoWebInstruction=>{
+    const parts=instruction.split('::');
+    if(parts.length===1){
+        return {
+            id:(index+1).toString(),
+            title:`Instruction ${(index+1).toString()}`,
+            instruction:parts[0]??''
+        }
+    }else if(parts.length===2){
+        return {
+            id:(index+1).toString(),
+            title:parts[0]??'',
+            instruction:parts[1]??''
+        }
+    }else{
+        return {
+            id:parts.shift()??'',
+            title:parts.shift()??'',
+            instruction:parts.join('::')
+        }
+    }
+
 }

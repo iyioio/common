@@ -9,7 +9,7 @@ import puppeteer, { Browser, HTTPResponse, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebDataDir, defaultConvoWebOutDir, defaultConvoWebSearchOptionsMaxConcurrent, getConvoWebDataDirAsync } from './convo-web-crawler-lib';
 import { getConvoWebCrawlerPdfViewer } from './convo-web-crawler-pdf-viewer';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerInput, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerInput, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebExecuteInstructionsOptions, ConvoWebInstruction, ConvoWebInstructionResult, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -283,8 +283,10 @@ export class ConvoWebCrawler
             title,
             subjects,
             conclusion,
-            searchOptions,
             searchResults,
+            instructions,
+            executeInstructionInParallel,
+            maxInstructions,
         }=options;
 
         cancel?.throwIfCanceled();
@@ -370,10 +372,7 @@ export class ConvoWebCrawler
             usage:this.usage,
         }
 
-        const outDir=await this.getOutDirAsync();
-
-        await writeFile(`${outDir}/research-${Date.now()}.json`,JSON.stringify(result,null,4));
-        await writeFile(`${outDir}/research-${Date.now()}.md`,`# ${
+        let research=`# ${
             escapeHtml(title)
         }\n*date - ${
             format(new Date(),'PPpp')
@@ -381,7 +380,29 @@ export class ConvoWebCrawler
             subjectSummaries.map(s=>`- [${escapeHtml(s.subject)}](#${escapeHtml(s.subject.replace(/\s/g,'-'))})`).join('\n')
         }\n- [Conclusion](#Conclusion)\n\n\n${
             subjectSummaries.map(s=>`## ${escapeHtml(s.subject)}\n${escapeHtml(s.summary)}`).join('\n\n\n')
-        }\n\n\n## Conclusion\n${escapeHtml(conclusionSummary??'')}`);
+        }\n\n\n## Conclusion\n${escapeHtml(conclusionSummary??'')}\n\n\n## Sources\n${
+            searchResults.crawled.map(u=>`- ${escapeHtml(u)}`).join('\n')
+        }`
+
+        if(instructions){
+
+            const r=await this.executeInstructionsAsync({
+                researchDocument:research,
+                instructions,
+                executeInstructionInParallel,
+                maxInstructions
+            })
+
+            if(r){
+                research+='\n\n\n'+r;
+            }
+
+        }
+
+        const outDir=await this.getOutDirAsync();
+
+        await writeFile(`${outDir}/research-${Date.now()}.json`,JSON.stringify(result,null,4));
+        await writeFile(`${outDir}/research-${Date.now()}.md`,research);
 
         if(!this.options.discardOutput){
             this.output.research.push(result);
@@ -389,6 +410,161 @@ export class ConvoWebCrawler
 
         return result;
 
+    }
+
+    public async executeInstructionsAsync({
+        outPath,
+        sourcePath,
+        researchDocument,
+        instructions,
+        executeInstructionInParallel,
+        maxInstructions=Math.max(10,instructions.length*4),
+    }:ConvoWebExecuteInstructionsOptions):Promise<string>{
+
+        if(sourcePath && !researchDocument){
+            researchDocument=await readFileAsStringAsync(sourcePath);
+        }
+
+        if(!researchDocument){
+
+        }
+
+        let results:(ConvoWebInstructionResult&{instruction?:ConvoWebInstruction})[];
+
+        if(executeInstructionInParallel){
+            results=await Promise.all(instructions.map(i=>this.executeInstructionAsync(researchDocument??'',i)));
+        }else{
+            results=[];
+            for(let i=0,total=0;i<instructions.length;i++){
+                if(total>maxInstructions){
+                    console.error('!!maxInstructions reached. Stopping instruction execution early');
+                    break;
+                }
+                total++;
+                const instruction=instructions[i];
+                if(!instruction){continue}
+
+                const r=await this.executeInstructionAsync(
+                    researchDocument??'',
+                    instruction,
+                    instructions,
+                    results
+                )
+                results.push({...r,instruction});
+                if(r.stop){
+                    break;
+                }
+                if(r.goto){
+                    const index=instructions.findIndex(i=>i.id===r.goto);
+                    if(index===-1){
+                        console.error(`Invalid goto instruction id given by LLM. Will stop instruction execution now. id:${r.stop}`);
+                        break;
+                    }
+                    i=index-1;
+                }
+
+            }
+        }
+
+        const contentResults=results.filter(r=>r.text);
+
+        const output=(contentResults.length?
+            '## Instructions\n\n\n'+contentResults.map(r=>(
+                `### ${escapeHtml(r.instruction?.title??r.instruction?.instruction??r.instruction?.id??'')}\n${escapeHtml(r.text??'')}`
+            )).join('\n\n\n')
+        :
+            ''
+        )
+
+        if(outPath){
+            await writeFile(outPath,output);
+        }
+
+        return output;
+
+    }
+
+    private async executeInstructionAsync(
+        researchDocument:string,
+        instruction:ConvoWebInstruction,
+        instructionList?:ConvoWebInstruction[],
+        prevResults?:(ConvoWebInstructionResult&{instruction?:ConvoWebInstruction})[],
+        perspective:string='research assistant',
+    ):Promise<ConvoWebInstructionResult>{
+
+        if(prevResults?.length){
+            researchDocument+='\n\n# Previously Executed Instructions:\n\n\n'+prevResults.map((r,i)=>(
+                `## ${
+                    escapeConvoMessageContent(r.instruction?.title??r.instruction?.id??'')
+                }\nid: ${
+                    escapeConvoMessageContent(r.instruction?.id??'')
+                }\ninstruction: ${
+                    escapeConvoMessageContent(r.instruction?.instruction??'')
+                }\nresult:${
+                    r.goto?`gotoInstruction(${escapeConvoMessageContent(r.goto??'')})`:
+                    r.stop?'stopExecution()':
+                    r.skip?'skipInstruction()':
+                    escapeConvoMessageContent(r.text??'')
+                }`
+            )).join('\n\n\n')
+        }
+
+        const result=await this.completeAsync(/*convo*/`
+
+            > define
+            hasList=${instructionList?.length?true:false}
+
+            > system
+            You are a ${perspective} executing instructions based on a research document.
+
+            @concat
+            @condition hasList
+            > system
+            Instruction List:
+            | id | Currently executing | title |
+            |----|---------------------|-------|
+            ${instructionList?.map(i=>`| ${escapeConvoMessageContent(i.id)} | ${i.id===instruction.id} | ${escapeConvoMessageContent(i.title)} |`).join('\n')}
+
+            # goes to the specified instruction based on the id of the instruction. Only call when explicity told to by the user.
+            > gotoInstruction(
+                # Id of instruction to goto
+                id:string
+            )
+
+            # Skips the current instruction. Only call when explicity told to by the user.
+            > skipInstruction()
+
+            # Stops execution of all instructions. Only call when explicity told to by the user.
+            > stopExecution()
+
+            > user
+            Execute the following instruction based on the following research document. If you are unable to executed the instruction call the skipInstruction function
+
+            Instruction:
+            - id: ${escapeConvoMessageContent(instruction.id)}
+            - title: ${escapeConvoMessageContent(instruction.title)}
+            - instruction: ${escapeConvoMessageContent(instruction.instruction)}
+
+            Research Document:
+            ${escapeConvoMessageContent(researchDocument)}
+        `);
+
+        if(result.fn){
+            if(result.fn==='gotoInstruction'){
+                if(typeof result.args.id!=='string'){
+                    throw new Error('executeInstructionAsync - Goto id not a string');
+                }
+                return {goto:result.args.id}
+            }else if(result.fn==='stopExecution'){
+                return {stop:true}
+            }else if(result.fn==='skipInstruction'){
+                return {skip:true}
+            }else{
+                throw new Error(`executeInstructionAsync - Invalid function called - ${result.fn}`);
+            }
+        }else{
+            return {text:result.text}
+        }
     }
 
     public async searchAsync({
@@ -561,6 +737,7 @@ export class ConvoWebCrawler
             try{
                 page=await browser.newPage();
                 const conversion=await this.convertPageAsync({
+                    summaryInstructions:options.summaryInstructions,
                     captureOptions:{
                         url,
                         browser,
@@ -663,6 +840,7 @@ export class ConvoWebCrawler
     public async convertPageAsync({
         captureOptions,
         url,
+        summaryInstructions='Include important financial numbers that would be important to a financial advisor.',
         beforeSummarizeCallback,
         afterSummarizeCallback,
         whileSummarizingCallback
@@ -804,7 +982,9 @@ export class ConvoWebCrawler
 
             > user
             Summarize the following markdown document.
-            Include important financial numbers that would be important to a financial advisor.
+
+            ${summaryInstructions}
+
             Format the summary using markdown. Do not enclose your responses in a markdown code block.
 
             ${escapeConvoMessageContent(markdown)}

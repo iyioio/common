@@ -208,6 +208,11 @@ export interface ConvoPageConversionOptions
      */
     url?:string;
 
+    /**
+     * Instructions passed to the LLM when summarizing the page
+     */
+    summaryInstructions?:string;
+
     whileSummarizingCallback?:ConvoPageImageCaptureDataCallback<ConvoPageConversionData,boolean>;
 
     beforeSummarizeCallback?:ConvoPageImageCaptureDataCallback<ConvoPageConversionData,boolean>;
@@ -279,6 +284,11 @@ export interface ConvoWebCrawlOptions
     pageRequirementPrompt?:string;
 
     /**
+     * Instructions passed to the LLM when summarizing the page
+     */
+    summaryInstructions?:string;
+
+    /**
      * The max number of results that should be returned
      * @default 3
      */
@@ -334,9 +344,41 @@ export interface ConvoWebResearchOptions
 
     conclusion:string;
 
+    instructions?:ConvoWebInstruction[];
+
+    executeInstructionInParallel?:boolean;
+
+    maxInstructions?:number;
+
     searchOptions?:ConvoWebSearchOptions;
 
     searchResults?:ConvoWebSearchResult;
+}
+
+export interface ConvoWebExecuteInstructionsOptions
+{
+    outPath?:string;
+    sourcePath?:string;
+    researchDocument?:string;
+    instructions:ConvoWebInstruction[];
+    executeInstructionInParallel?:boolean;
+    maxInstructions?:number;
+
+}
+
+export interface ConvoWebInstruction
+{
+    id:string;
+    title:string;
+    instruction:string;
+}
+
+export interface ConvoWebInstructionResult
+{
+    text?:string;
+    goto?:string;
+    stop?:boolean;
+    skip?:boolean;
 }
 
 export interface ConvoWebSubjectSummary
