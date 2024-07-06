@@ -1,7 +1,10 @@
+import { safeParseNumber } from "@iyio/common";
 import { ConvoWebCrawler } from "./ConvoWebCrawler";
 import { getConvoCrawlerApiOptionsFromEnvAsync } from "./convo-web-crawler-lib";
 import { writeConvoCrawlerIndexAsync } from "./convo-web-crawler-output-previewer-writer";
 import { ConvoWebRoute, createConvoWebHandlerResult } from "./convo-web-routing";
+
+const createCrawlerAsync=async ()=>new ConvoWebCrawler(await getConvoCrawlerApiOptionsFromEnvAsync());
 
 export const convoWebRoutes:ConvoWebRoute[]=[
 
@@ -23,7 +26,7 @@ export const convoWebRoutes:ConvoWebRoute[]=[
         method:'POST',
         path:'/api/capture',
         handler:async ({body})=>{
-            const crawler=new ConvoWebCrawler(await getConvoCrawlerApiOptionsFromEnvAsync());
+            const crawler=await createCrawlerAsync();
             return await crawler.capturePageAsync(body);
         }
     },
@@ -32,7 +35,7 @@ export const convoWebRoutes:ConvoWebRoute[]=[
         method:'POST',
         path:'/api/convert',
         handler:async ({body})=>{
-            const crawler=new ConvoWebCrawler(await getConvoCrawlerApiOptionsFromEnvAsync());
+            const crawler=await createCrawlerAsync();
             return await crawler.convertPageAsync(body);
         }
     },
@@ -41,7 +44,7 @@ export const convoWebRoutes:ConvoWebRoute[]=[
         method:'POST',
         path:'/api/research',
         handler:async ({body})=>{
-            const crawler=new ConvoWebCrawler(await getConvoCrawlerApiOptionsFromEnvAsync());
+            const crawler=await createCrawlerAsync();
             return await crawler.searchAndRunResearchAsync(body);
         }
     },
@@ -49,9 +52,38 @@ export const convoWebRoutes:ConvoWebRoute[]=[
     {
         method:'GET',
         path:'/api/research',
-        handler:async ()=>{
-            const crawler=new ConvoWebCrawler(await getConvoCrawlerApiOptionsFromEnvAsync());
-            return await crawler.getResearchDocumentsAsync(10);
+        handler:async ({query})=>{
+            const crawler=await createCrawlerAsync();
+            return await crawler.getResearchInfoListAsync(safeParseNumber(query['limit'],100));
+        }
+    },
+
+    {
+        method:'GET',
+        match:/^\/api\/research\/([^/]+)$/,
+        handler:async ({query})=>{
+            const crawler=await createCrawlerAsync();
+            return await crawler.getResearchResultAsync(query['1']??'');
+        }
+    },
+
+    {
+        method:'GET',
+        match:/^\/api\/research\/([^/]+)\/doc$/,
+        handler:async ({query})=>{
+            const crawler=await createCrawlerAsync();
+            return createConvoWebHandlerResult({
+                markdown:await crawler.getResearchDocumentAsync(query['1']??'')
+            });
+        }
+    },
+
+    {
+        method:'GET',
+        path:'/api/research-docs',
+        handler:async ({query})=>{
+            const crawler=await createCrawlerAsync();
+            return await crawler.getResearchDocumentsAsync(safeParseNumber(query['limit'],10));
         }
     },
 

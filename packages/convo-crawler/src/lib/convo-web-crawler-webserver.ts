@@ -1,4 +1,4 @@
-import { getContentType, getErrorMessage, queryParamsToObject } from "@iyio/common";
+import { asArrayItem, getContentType, getErrorMessage, queryParamsToObject } from "@iyio/common";
 import { readFileAsStringAsync } from "@iyio/node-common";
 import { Stats, createReadStream } from "fs";
 import { stat } from "fs/promises";
@@ -42,6 +42,8 @@ export const runConvoCrawlerWebServer=({
         const method=req.method??'GET';
         console.info(`request ${path} -> ${filepath}`)
         let html:string|undefined;
+        let markdown:string|undefined;
+        let text:string|undefined;
         let json:any;
         let outPath:string|undefined;
         let outSize:number=0;
@@ -72,6 +74,18 @@ export const runConvoCrawlerWebServer=({
         try{
             const route=getConvoWebRoute(path,method,convoWebRoutes);
             if(route){
+                const regex=asArrayItem(route.match);
+                if(regex){
+                    const match=regex.exec(path);
+                    if(match){
+                        for(let i=1;i<match.length;i++){
+                            const value=match[i];
+                            if(!value){continue}
+                            query[i.toString()]=value;
+
+                        }
+                    }
+                }
                 let body:any=undefined;
                 if(req.readable && (req.method==='POST' || req.method==='PUT')){
                     body=await new Promise<any>((resolve,reject)=>{
@@ -98,10 +112,13 @@ export const runConvoCrawlerWebServer=({
                     filePath:filepath,
                     body,
                     method,
+                    query
                 });
                 if(isConvoWebHandlerResult(result)){
                     json=result.json;
                     html=result.html;
+                    markdown=result.markdown;
+                    text=result.text;
                     outPath=result.filePath;
                 }else{
                     json=result;
@@ -135,6 +152,14 @@ export const runConvoCrawlerWebServer=({
             res.setHeader('Content-Type','text/html');
             res.statusCode=200;
             res.end(html);
+        }else if(markdown){
+            res.setHeader('Content-Type','text/markdown');
+            res.statusCode=200;
+            res.end(markdown);
+        }else if(text){
+            res.setHeader('Content-Type','text/plain');
+            res.statusCode=200;
+            res.end(text);
         }else if(json!==undefined){
             res.setHeader('Content-Type','application/json');
             req.statusCode=200;

@@ -1,6 +1,6 @@
 import { CancelToken, Lock, delayAsync, escapeHtml, getErrorMessage, httpClient, strCaseInsensitiveCompare, uuid } from '@iyio/common';
 import { ConvoTokenUsage, callConvoFunctionAsync, convoUsageTokensToString, createEmptyConvoTokenUsage, escapeConvoMessageContent, getConvoCompletionAsync, getConvoTextCompletionAsync, resetConvoUsageTokens } from '@iyio/convo-lang';
-import { pathExistsAsync, readFileAsStringAsync } from '@iyio/node-common';
+import { pathExistsAsync, readFileAsJsonAsync, readFileAsStringAsync } from '@iyio/node-common';
 import { spawn } from 'child_process';
 import { format } from 'date-fns';
 import { mkdir, readdir, writeFile } from 'fs/promises';
@@ -9,7 +9,7 @@ import puppeteer, { Browser, HTTPResponse, Page } from 'puppeteer';
 import { convoWebActionItemToMdLink, defaultConvoWebCrawlOptionsMaxConcurrent, defaultConvoWebCrawlOptionsMaxDepth, defaultConvoWebCrawlOptionsResultLimit, defaultConvoWebDataDir, defaultConvoWebOutDir, defaultConvoWebSearchOptionsMaxConcurrent, getConvoWebDataDirAsync } from './convo-web-crawler-lib';
 import { getConvoWebCrawlerPdfViewer } from './convo-web-crawler-pdf-viewer';
 import { getFramesActionItems, hideFramesFixedAsync, scrollDownAsync, showFramesFixedAsync } from './convo-web-crawler-pup-lib';
-import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerInput, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebExecuteInstructionsOptions, ConvoWebInstruction, ConvoWebInstructionResult, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
+import { ConvoCrawlerMedia, ConvoPageCapture, ConvoPageCaptureOptions, ConvoPageConversion, ConvoPageConversionData, ConvoPageConversionOptions, ConvoPageConversionResult, ConvoPagePreset, ConvoResearchInfo, ConvoWebCrawl, ConvoWebCrawlOptions, ConvoWebCrawlerInput, ConvoWebCrawlerOptions, ConvoWebCrawlerOutput, ConvoWebExecuteInstructionsOptions, ConvoWebInstruction, ConvoWebInstructionResult, ConvoWebResearchOptions, ConvoWebResearchResult, ConvoWebSearchAndResearchOptions, ConvoWebSearchOptions, ConvoWebSearchResult, ConvoWebSubjectSummary } from './convo-web-crawler-types';
 import { GoogleSearchResult } from './google-search-types';
 
 export class ConvoWebCrawler
@@ -242,6 +242,65 @@ export class ConvoWebCrawler
 
         }
         return docs;
+    }
+
+    public async getResearchInfoListAsync(limit?:number):Promise<ConvoResearchInfo[]>{
+        const docs:ConvoResearchInfo[]=[];
+        if(limit!==undefined && limit<=0){
+            return docs;
+        }
+        const dirs=await readdir(this.options.outDir,{withFileTypes:true});
+        dirs.sort();
+        for(let i=dirs.length-1;i>=0;i--){
+            const dir=dirs[i];
+            if(!dir?.isDirectory()){continue}
+
+            const sub=await readdir(join(this.options.outDir,dir.name));
+            for(const s of sub){
+                if(s.startsWith('research') && s.endsWith('.json')){
+                    const result=await readFileAsJsonAsync<ConvoWebResearchResult>(join(this.options.outDir,dir.name,s));
+                    docs.push({
+                        id:encodeURIComponent(dir.name+'/'+s.substring(0,s.length-5)),
+                        name:result.title,
+                    });
+                    if(limit!==undefined && docs.length>=limit){
+                        return docs;
+                    }
+                }
+            }
+
+        }
+        return docs;
+    }
+
+    public async getResearchResultAsync(id:string):Promise<ConvoWebResearchResult|undefined>{
+        id=decodeURIComponent(id);
+        if(id.includes('..') || id.startsWith('/')){
+            return undefined;
+        }
+        try{
+            return await readFileAsJsonAsync(join(this.options.outDir,id+'.json'))
+        }catch{
+            return undefined;
+        }
+    }
+
+    public async getResearchDocumentAsync(id:string):Promise<string|undefined>{
+        id=decodeURIComponent(id);
+        if(id.includes('..') || id.startsWith('/')){
+            return undefined;
+        }
+        const dirPath=join(this.options.outDir,id.split('/')[0]??'');
+        if(!pathExistsAsync(dirPath)){
+            return undefined;
+        }
+        const items=await readdir(dirPath);
+        for(const p of items){
+            if(p.startsWith('research') && p.endsWith('.md')){
+                return await readFileAsStringAsync(join(dirPath,p))
+            }
+        }
+        return undefined;
     }
 
     public async writeInputAsync(input:ConvoWebCrawlerInput):Promise<void>

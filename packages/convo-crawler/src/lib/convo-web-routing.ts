@@ -6,6 +6,8 @@ export interface ConvoWebHandlerResult
 {
     [convoWebResultFlag]:true;
     html?:string;
+    markdown?:string;
+    text?:string;
     filePath?:string;
     json?:any;
 }
@@ -13,6 +15,7 @@ export interface ConvoWebHandlerResult
 export interface ConvoWebRequestContext
 {
     path:string;
+    query:Record<string,string>;
     filePath:string;
     body?:any;
     method:string;

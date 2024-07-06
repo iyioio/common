@@ -413,3 +413,9 @@ export interface ConvoWebTunnelUrls
     http?:string;
     vnc?:string;
 }
+
+export interface ConvoResearchInfo
+{
+    name:string;
+    id:string;
+}

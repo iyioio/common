@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { wAryRemove, wSetProp, wSetPropOrDeleteFalsy } from "@iyio/common";
 import { ConvoInputTemplate } from "@iyio/convo-lang";
-import { SlimButton, Text, View, useSubject, useWProp } from "@iyio/react-common";
+import { ScrollView, SlimButton, Text, View, useSubject, useWProp } from "@iyio/react-common";
 import { LazyCodeInput } from "@iyio/syn-taxi";
 import { useCallback, useState } from "react";
 import { ConvoNodeSelector } from "./ConvoNodeSelector";
@@ -25,17 +25,23 @@ export function ConvoInputView({
 
     const sources=useSubject(ctrl.inputSourcesSubject);
     const [source,setSource]=useState<ConvoInputSource|null>(null);
-    const loadSource=()=>{
+    const loadSource=async ()=>{
         if(!source){
             return;
         }
+        let value:any;
+        if(source.getValue){
+            value=await source.getValue(source.id);
+        }else{
+            value=source.value;
+        }
         wSetProp(input,'name',source.title);
-        if(typeof source.value === 'string'){
+        if(typeof value === 'string'){
             wSetProp(input,'isJson',false);
-            wSetProp(input,'value',source.value);
+            wSetProp(input,'value',value);
         }else{
             wSetProp(input,'isJson',true);
-            wSetProp(input,'value',JSON.stringify(source.value,null,4));
+            wSetProp(input,'value',JSON.stringify(value,null,4));
         }
     }
 
@@ -87,15 +93,15 @@ export function ConvoInputView({
                 <input type="checkbox" checked={isJson??false} onChange={e=>wSetPropOrDeleteFalsy(input,'isJson',e.target.checked)}/>
             </View>
 
-            <LazyCodeInput
-                mt050
-                lineNumbers
-                language={isJson?'json':'tex'}
-                value={code}
-                onChange={setCode}
-                logParsed
-                bottomPadding={10}
-            />
+            <ScrollView mt050 fitToMaxSize="400px" className={style.scroll()}>
+                <LazyCodeInput
+                    lineNumbers
+                    language={isJson?'json':'tex'}
+                    value={code}
+                    onChange={setCode}
+                    bottomPadding={10}
+                />
+            </ScrollView>
 
             <View row justifyBetween>
 
@@ -124,5 +130,16 @@ const style=atDotCss({name:'ConvoInputView',css:`
     }
     @.select{
         max-width:350px;
+    }
+    @.scroll > div::-webkit-scrollbar{
+        width:16px;
+        border-radius:2px;
+        margin:0;
+    }
+    @.scroll > div::-webkit-scrollbar-thumb{
+        border-radius:4px;
+        border:3px solid #2C2C2C;
+        cursor:pointer;
+
     }
 `});

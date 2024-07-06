@@ -39,5 +39,6 @@ export interface ConvoInputSource
 {
     id:string;
     title:string;
-    value:any;
+    value?:any;
+    getValue?:(id:string)=>any|Promise<any>
 }
