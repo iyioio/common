@@ -1,3 +1,4 @@
+
 /**
  * Escapes special regular expression characters
  */
@@ -8,7 +9,7 @@ export const escapeRegex=(input:string):string=>{
 export type StarStringStartEndOfInput='none'|'start'|'end'|'both';
 /**
  * Creates a regular expression from the given string where star (*) characters are converted to `.*?`
- * @param str The string to convert
+ * @param starString The string to convert
  * @param startEndOfInput Controls start and end of characters.
  *                        For the string abc*123 the following start and end of input characters will be used.
  *                        none - /abc.*?123/
@@ -18,11 +19,11 @@ export type StarStringStartEndOfInput='none'|'start'|'end'|'both';
  * @params flags flags passed to the Regex constructor
  */
 export const starStringToRegex=(
-    str:string,
+    starString:string,
     flags?:string,
     startEndOfInput:StarStringStartEndOfInput='both',
 ):RegExp=>{
-    const parts=str.split('*');
+    const parts=starString.split('*');
     for(let i=0;i<parts.length;i++){
         parts[i]=escapeRegex(parts[i] as string);
     }
@@ -32,4 +33,25 @@ export const starStringToRegex=(
         (startEndOfInput==='both' || startEndOfInput==='end'?'$':''),
         flags
     )
+}
+
+export const starStringTest=(
+    starString:string,
+    value:string,
+    flags?:string,
+    startEndOfInput:StarStringStartEndOfInput='both'
+):boolean=>{
+    try{
+        if(starString.includes('*')){
+            return starStringToRegex(starString).test(value);
+        }
+        if(flags?.includes('i')){
+            return starString.localeCompare(value,undefined,{sensitivity:'accent'})===0
+        }else{
+            return starString===value;
+        }
+    }catch(ex){
+        console.error(`Invalid starString - (${starString})`)
+        return false;
+    }
 }
