@@ -47,8 +47,9 @@ export const strFirstToLower=(str:string)=>
 }
 
 
-export const addSpacesToCamelCase=(value:string):string=>{
-    return camelCaseToSnakeCase(value,' ');
+export const addSpacesToCamelCase=(value:string,firstToUpper=false):string=>{
+    const v=camelCaseToSnakeCase(value,' ');
+    return firstToUpper?strFirstToUpper(v):v;
 }
 
 export const camelCaseToSnakeCase=(value:string,separator='_',toCase?:'upper'|'lower'):string=>{
