@@ -105,8 +105,13 @@ export abstract class SqlBaseMethods implements ISqlMethods
      *          if the onlyChange parameter was supplied and their was no difference between it and
      *          the item parameter.
      */
-    public async updateAsync<T>(table:string|DataTableDescription<T>, item:Partial<T>, primaryKey:keyof T, onlyChanged?:Partial<T>):Promise<boolean|null>
-    {
+    public async updateAsync<T>(
+        table:string|DataTableDescription<T>,
+        item:Partial<T>,
+        primaryKey:keyof T,
+        onlyChanged?:Partial<T>,
+        nullOptionals?:boolean
+    ):Promise<boolean|null>{
 
         const ot=table;
         table=getDataTableId(table);
@@ -126,6 +131,17 @@ export abstract class SqlBaseMethods implements ISqlMethods
             }
 
             changes.push(`${escapeSqlName(e)}=${escapeSqlValue(item[e],getDataTableColInfo(ot,e))}`);
+        }
+
+        if(nullOptionals && (typeof ot ==='object') && ot.colInfos){
+            for(const e in ot.colInfos){
+                const name=ot.colInfos[e]?.name;
+                if(!name || (name in item) || name===primaryKey){
+                    continue;
+                }
+
+                changes.push(`${escapeSqlName(name)}=NULL`);
+            }
         }
 
         if(!changes.length){

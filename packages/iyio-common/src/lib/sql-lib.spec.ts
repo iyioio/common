@@ -1,4 +1,4 @@
-import { splitSqlStatements } from "./sql-lib"
+import { escapeSqlValue, splitSqlStatements } from "./sql-lib"
 
 
 describe('sql-lib',()=>{
@@ -258,5 +258,9 @@ CREATE INDEX "VectorIndex_int10_idx" ON "VectorIndex"("int10");`
         ])
 
     })
+
+     it('should escape single quotes',()=>{
+        expect(escapeSqlValue("'single'")).toBe("''single''")
+     });
 
 })

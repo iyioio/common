@@ -56,11 +56,19 @@ export interface ISqlMethods
      * @param onlyChanged If supplied only properties of the item that are not equal to the properties
      *                    of onlyChanged will be updated. This can reduce the size if the SQL query
      *                    and only update properties that need to be updated.
+     * @param nullOptionals If true and a data table description is provided undefined props will
+                            be set to null in the database
      * @returns True if the item was updated, false if no changes were made to the item and null
      *          if the onlyChange parameter was supplied and their was no difference between it and
      *          the item parameter.
      */
-    updateAsync<T>(table:string|DataTableDescription<T>,item:Partial<T>,primaryKey:keyof T,onlyChanged?:Partial<T>):Promise<boolean|null>;
+    updateAsync<T>(
+        table:string|DataTableDescription<T>,
+        item:Partial<T>,
+        primaryKey:keyof T,
+        onlyChanged?:Partial<T>,
+        includeUndefined?:boolean
+    ):Promise<boolean|null>;
 
     /**
      * Updates an item in a table by coping the srcItem then calling the mutate callback using the
