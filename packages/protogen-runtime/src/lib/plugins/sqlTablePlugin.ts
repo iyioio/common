@@ -80,6 +80,10 @@ export const sqlTablePlugin:ProtoPipelineConfigurablePlugin<typeof SqlTableConfi
             tableIndexFilename:sqlTableIndexFilename,
             dataTableDescriptionPackage,
             allTableArrayName:allSqlTableArrayName,
+            getColInfo:(node)=>{
+                const {type}=getSqlType(node,context.nodes);
+                return type?{type}:undefined;
+            },
             ...tsConfig,
         })
 

@@ -5,6 +5,12 @@ import { SharedTsPluginConfig, getTsSchemeName } from "./sharedTsConfig";
 
 const notWordRegex=/\W/g;
 
+export interface GeneratedProtoTableColInfo
+{
+    type:string;
+    length?:number;
+}
+
 export interface DataTableDescriptionRef extends DataTableDescription<any>
 {
     tableIdParamName?:string;
@@ -45,6 +51,8 @@ export interface GenerateProtoTableOptions extends SharedTsPluginConfig{
 
     tableType?:string;
 
+    getColInfo?:(prop:ProtoNode)=>GeneratedProtoTableColInfo|undefined|null;
+
 }
 
 export interface GenerateProtoTableResult
@@ -79,6 +87,7 @@ export const generateProtoTable=async ({
     allTableArrayName,
     paramNameSuffix='',
     tableType,
+    getColInfo,
     ...tsConfig
 }:GenerateProtoTableOptions):Promise<GenerateProtoTableResult|null>=>{
 
@@ -137,13 +146,12 @@ export const generateProtoTable=async ({
 
 
 
-        let hasInfo=false;
         const colInfos:Record<string,DataTableColInfo>={};
         for(const prop of props){
-            const sqlType=prop.children?.['$sqlType']?.value?.replace(/\W/g,'')??(prop.children?.['json']?'json':undefined);
-            const sqlLen=prop.children?.['$sqlLength']?.value;
+            const info=getColInfo?.(prop);
+            const sqlType=prop.children?.['$sqlType']?.value?.replace(/\W/g,'')??(prop.children?.['json']?'json':undefined)??info?.type;
+            const sqlLen=prop.children?.['$sqlLength']?.value??info?.length;
             if(sqlType){
-                hasInfo=true;
                 colInfos[prop.name]={
                     name:prop.name,
                     sqlType,
@@ -152,9 +160,7 @@ export const generateProtoTable=async ({
             }
         }
 
-        if(hasInfo){
-            out.push(`${tab}colInfos:${JSON.stringify(colInfos)},`);
-        }
+        out.push(`${tab}colInfos:${JSON.stringify(colInfos)},`);
 
         const config=node.children?.['$table']?.children??{};
         let configValue:string|undefined;
