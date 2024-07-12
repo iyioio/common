@@ -4,7 +4,7 @@ import { unescapeHtml } from "./html";
 import { MarkdownLine, MarkdownMarkupTag, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types";
 import { isValidEmail } from "./validation";
 
-const mdReg=/([\n\r]*)([ \t]*)([^\n\r$]*)/g;
+const mdReg=/([\n\r]*)([ \t]*)([^\n\r]*)/g;
 
 const headerReg=/(#+)\s*(.*)/;
 const blockQuoteReg=/(>+)\s*(.*)/;
