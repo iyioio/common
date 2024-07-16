@@ -1,6 +1,6 @@
 {
     "name": "@iyio/aws-sqs",
-    "version": "0.5.17",
+    "version": "0.5.18",
     "type": "commonjs",
     "sideEffects": false
 }

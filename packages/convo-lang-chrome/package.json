@@ -1,6 +1,6 @@
 {
     "name": "@iyio/convo-lang-chrome",
-    "version": "0.5.17",
+    "version": "0.5.18",
     "type": "commonjs",
     "sideEffects": false
 }
