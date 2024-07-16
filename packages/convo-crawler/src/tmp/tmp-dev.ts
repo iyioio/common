@@ -9,12 +9,12 @@ export const doConvoCrawlerDevStuffAsync=async (crawler:ConvoWebCrawler)=>{
         //'https://www.sec.gov/ixviewer/ix.html?doc=/Archives/edgar/data/0001018724/000101872424000083/amzn-20240331.htm'
         //'https://www.sec.gov/ix?doc=/Archives/edgar/data/0001018724/000101872424000083/amzn-20240331.htm' // with iframe
         //'https://www.youtube.com/'
-        //'https://finance.yahoo.com/quote/APGE/?guccounter=1&guce_referrer=aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&guce_referrer_sig=AQAAADddFlUFWmyvBKfu4mmWacbtR7fIp-mcXwlA1OCR9Qz-y5fbCvHuQ7bqzYY0h5JgMhr8Cmnz9bAH6teyU4O7rryLqMJCVJLAMqfrwimf0zj-08NFTYwWY_cvGG2fA8sMHJCtb5l98G2s7G_qL6fW9pxxPDtmGD8BWvoYd_4kTvx8'
+        'https://finance.yahoo.com/quote/APGE/?guccounter=1&guce_referrer=aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&guce_referrer_sig=AQAAADddFlUFWmyvBKfu4mmWacbtR7fIp-mcXwlA1OCR9Qz-y5fbCvHuQ7bqzYY0h5JgMhr8Cmnz9bAH6teyU4O7rryLqMJCVJLAMqfrwimf0zj-08NFTYwWY_cvGG2fA8sMHJCtb5l98G2s7G_qL6fW9pxxPDtmGD8BWvoYd_4kTvx8'
         //'https://www.spacex.com/updates'
         //'https://intellspot.com/wp-content/uploads/2017/12/bar-chart-example.png'
         //'https://ppcexpo.com/blog/wp-content/uploads/2022/07/time-series-graph-examples.jpg'
         //'https://cdn.ablebits.com/_img-blog/pie-chart/excel-pie-chart.png'
-        //'https://policyviz.com/wp-content/uploads/2018/02/share-of-us-agricultural-exports-value-01.png'
+        //'https://policyviz.com/wp-content/uploads/2018/02/share-of-us-agricultural-exports-value-01.png' // multi-pie
         //'https://www.includehelp.com/ds/Images/graph-a.jpg'
         //'https://www.sec.gov/comments/sr-iex-2019-15/sriex201915.htm' // trusted error
         //'https://www.3i.com/infrastructure/' // multiple banners
@@ -22,14 +22,14 @@ export const doConvoCrawlerDevStuffAsync=async (crawler:ConvoWebCrawler)=>{
         //'https://www.dobs.pa.gov/Documents/Publications/Brochures/The%20Basics%20for%20Investing%20in%20Stocks.pdf'
         //'https://websites.umich.edu/~antigran/InteriorDesignBooks/ARCH%20X%20454A%20Elements%20of%20Design%20I/Art%20Fundamentals%20Theory%20and%20Practice,%2012th%20Edition%20by%20Otto%20G.%20Ocvirk,%20Robert%20Stinson,%20Philip%20R.%20Wigg,%20Robert%20O.%20Bone,%20David%20L.%20Cayton.pdf',
         //'file:///Users/scott/docs/learning-content/Random.pdf'
-        'http://localhost:3000/Random.pdf'
+        //'http://localhost:3000/Random.pdf'
     )
 
     //await crawler.testAsync(url);
 
-    //await crawler.capturePageAsync({url});
+    await crawler.capturePageAsync({url});
 
-    await crawler.convertPageAsync({url});
+    //await crawler.convertPageAsync({url});
 
 
     // await crawler.searchAsync({
