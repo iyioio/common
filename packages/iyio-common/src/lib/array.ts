@@ -319,3 +319,20 @@ export const aryUnique=<T>(ary:T[]):T[]=>{
     }
     return unique;
 }
+
+export const aryUnorderedCompare=(a:any[]|null|undefined,b:any[]|null|undefined):boolean=>{
+    if(!a || !b || a.length!==b.length){
+        return false;
+    }
+    for(let i=0;i<a.length;i++){
+        if(!b.includes(a[i])){
+            return false;
+        }
+    }
+    for(let i=0;i<b.length;i++){
+        if(!a.includes(b[i])){
+            return false;
+        }
+    }
+    return true;
+}
