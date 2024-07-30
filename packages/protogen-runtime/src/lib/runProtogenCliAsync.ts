@@ -79,7 +79,16 @@ export const runProtogenCliAsync=async ({
         const plugins=config.plugins??[];
         for(const p of plugins){
 
-            const [source,_name,...paths]=p.split(':');
+            if(typeof p === 'object'){
+                pipeline.plugins.push(p);
+                continue;
+            }
+
+            const [_order,source,_name,...paths]=p.split(':');
+            const order=Number(_order);
+            if(!isFinite(order)){
+                throw new Error('order is not a number');
+            }
             if(source===undefined){
                 continue;
             }
@@ -97,6 +106,7 @@ export const runProtogenCliAsync=async ({
                     throw new Error('Unable to determine plugin stage by name')
                 }
                 pipeline.plugins.push({
+                    order,
                     name,
                     source,
                     paths,
@@ -105,6 +115,7 @@ export const runProtogenCliAsync=async ({
 
             }else if(typeof plugin === 'object'){
                 pipeline.plugins.push({
+                    order,
                     name,
                     source,
                     paths,
@@ -138,6 +149,8 @@ export const runProtogenCliAsync=async ({
                 }
             }
         }
+
+        pipeline.plugins.sort((a,b)=>a.order-b.order)
 
         onPipelineReady?.(pipeline);
 

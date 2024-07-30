@@ -52,6 +52,7 @@ export * from './lib/base-layout-theme-generator';
 export * from './lib/base64';
 export * from './lib/blob-lib';
 export * from './lib/cdk-common-const';
+export * from './lib/cdk-common-types';
 export * from './lib/cli-parser';
 export * from './lib/client-download';
 export * from './lib/clipboard';

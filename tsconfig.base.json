@@ -44,6 +44,9 @@
             "@iyio/protogen-runtime": [
                 "packages/protogen-runtime/src/index.ts"
             ],
+            "@iyio/protogen-cdk": [
+                "packages/protogen-cdk/src/index.ts"
+            ],
             "@iyio/react-common": ["packages/react-common/src/index.ts"],
             "@iyio/svg-charts": ["packages/svg-charts/src/index.ts"],
             "@iyio/svg-charts-react": [

@@ -1,6 +1,7 @@
+import { PassiveAccessGrantDescription } from "@iyio/common";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { addPolicyToGrantee } from './cdk-lib';
-import { AccessGranter, AccessRequest, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget } from "./cdk-types";
+import { AccessGranter, AccessRequest, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget } from "./cdk-types";
 
 
 export const grantAccessRequest=(request:AccessRequest,granter:AccessGranter)=>{

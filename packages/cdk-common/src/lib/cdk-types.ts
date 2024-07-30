@@ -1,4 +1,4 @@
-import type { HttpMethod, ParamTypeDef } from "@iyio/common";
+import type { AccessRequestDescription, HttpMethod, ParamTypeDef, PassiveAccessGrantDescription } from "@iyio/common";
 import * as ag from "aws-cdk-lib/aws-apigateway";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cognito from "aws-cdk-lib/aws-cognito";
@@ -68,17 +68,6 @@ export type Grantee = iam.IGrantable & {
     addToPolicy?(statement:iam.PolicyStatement):void;
 }
 
-export const allCommonAccessTypes=['read','write','delete','invoke','list','scan','query','auth'] as const;
-export type CommonAccessType=typeof allCommonAccessTypes[number];
-
-
-export interface IamPolicyDescription
-{
-    allow:boolean;
-    actions:string[];
-    resources:string[];
-}
-
 export interface AccessGranter
 {
     grantName:string;
@@ -92,12 +81,7 @@ export interface IAccessGrantGroup
     accessGrants:AccessGranter[];
 }
 
-export interface AccessRequestDescription
-{
-    grantName:string;
-    types?:CommonAccessType[];
-    iamPolicy?:IamPolicyDescription;
-}
+
 
 export interface AccessRequest extends AccessRequestDescription
 {
@@ -105,22 +89,7 @@ export interface AccessRequest extends AccessRequestDescription
     varContainer?:EnvVarTarget;
 }
 
-export interface PassiveAccessGrantDescription
-{
-    grantName:string;
-    /**
-     * If true all fns should be granted access
-     */
-    allFns?:boolean;
 
-    /**
-     * If true all passive targets should be grated access
-     */
-    all?:boolean;
-
-    targetName?:string;
-    types?:CommonAccessType[];
-}
 
 export interface PassiveAccessTarget
 {
@@ -202,13 +171,6 @@ export interface NamedResource
     staticWebsite?:StaticWebSite;
     userPoolBuilder?:UserPoolBuilder;
     onReady?:(managed:ManagedProps)=>void;
-}
-
-export interface IEventDestination
-{
-    type:string;
-    targetName:string;
-    props?:Record<string,string>;
 }
 
 export interface IEventTarget

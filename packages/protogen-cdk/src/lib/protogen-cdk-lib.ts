@@ -1,4 +1,4 @@
-import { IEventDestination } from '@iyio/cdk-common';
+import { IEventDestination } from '@iyio/common';
 import { ProtoNode, protoChildrenToStringRecordOrUndefined, protoGetChildrenByNameOrUndefined } from "@iyio/protogen";
 
 export const parseProtoEventDestinations=(node:ProtoNode):IEventDestination[]|undefined=>{

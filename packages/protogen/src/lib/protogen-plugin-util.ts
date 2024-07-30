@@ -1,5 +1,4 @@
-import type { AccessRequestDescription, CommonAccessType, PassiveAccessGrantDescription } from "@iyio/cdk-common";
-import { HashMap, aryRemoveItem, iamPolicyGrantName, joinPaths, strFirstToLower } from "@iyio/common";
+import { AccessRequestDescription, CommonAccessType, HashMap, PassiveAccessGrantDescription, aryRemoveItem, iamPolicyGrantName, joinPaths, strFirstToLower } from "@iyio/common";
 import { ProtoLibStyle, ProtoParamType } from "./protogen-pipeline-types";
 import { ProtoNode } from "./protogen-types";
 

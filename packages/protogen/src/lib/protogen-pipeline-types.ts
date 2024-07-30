@@ -133,6 +133,7 @@ export type ProtoPipelinePlugin=Omit<ProtoPipelineConfigurablePlugin<any,null>,'
 
 export interface ProtoPipelinePluginInfo
 {
+    order:number;
     name:string;
     source:string;
     paths:string[];
@@ -152,7 +153,7 @@ export interface ProtoPipeline
 export interface ProtoPipelineConfig
 {
     inputs?:string[];
-    plugins?:string[];
+    plugins?:(string|ProtoPipelinePluginInfo)[];
     workingDirectory?:string;
     verbose?:boolean;
     loadDefaultPlugins?:boolean;

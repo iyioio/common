@@ -1,6 +1,7 @@
 import { arySingle } from '@iyio/common';
 import { pathExistsAsync } from '@iyio/node-common';
 import { ProtoConfig } from '@iyio/protogen';
+import { getCdkProtoPipelinePlugins } from '@iyio/protogen-cdk';
 import { runProtogenCliAsync } from '@iyio/protogen-runtime';
 import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
@@ -31,6 +32,12 @@ export default async function protogenApiHandler (req: NextApiRequest, res: Next
             snapshotDir='.protogen/snapshots',
             defaultFile='protogen'
         }=JSON.parse(json) as ProtoConfig;
+
+        if(!pipeline.plugins){
+            pipeline.plugins=[];
+        }
+
+        pipeline.plugins.push(...getCdkProtoPipelinePlugins());
 
         if(!pipeline.workingDirectory && configPath){
             pipeline.workingDirectory=dirname(configPath);

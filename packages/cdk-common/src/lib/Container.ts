@@ -1,4 +1,4 @@
-import { ParamTypeDef } from '@iyio/common';
+import { AccessRequestDescription, ParamTypeDef, PassiveAccessGrantDescription } from '@iyio/common';
 import { Duration, IgnoreMode } from 'aws-cdk-lib';
 import * as autoScaling from "aws-cdk-lib/aws-applicationautoscaling";
 import * as autoScalingBase from "aws-cdk-lib/aws-autoscaling";
@@ -11,7 +11,7 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { getDefaultVpc } from './cdk-lib';
-import { AccessGranter, AccessRequest, AccessRequestDescription, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessGrantDescription, PassiveAccessTarget } from './cdk-types';
+import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget } from './cdk-types';
 import { requireDefaultCluster } from './cluster-lib';
 import { defaultContainerIgnoreOverrides, getCdkContainerIgnorePaths } from './getCdkContainerIgnorePaths';
 

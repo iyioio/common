@@ -1,4 +1,4 @@
-import { ParamTypeDef, strToUpperSnakeCase } from "@iyio/common";
+import { IEventDestination, ParamTypeDef, strToUpperSnakeCase } from "@iyio/common";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import * as cfo from "aws-cdk-lib/aws-cloudfront-origins";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -7,7 +7,7 @@ import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { AccessGranter, IAccessGrantGroup, IEventDestination } from "./cdk-types";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { createBucket } from "./createBucket";
 
 export interface BucketBuilderProps

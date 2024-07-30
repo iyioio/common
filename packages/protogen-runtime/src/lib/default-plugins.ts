@@ -1,31 +1,20 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
 import { actionPlugin } from "./plugins/actionPlugin";
-import { aiCompletionPlugin } from "./plugins/aiCompletionPlugin";
-import { apiPlugin } from "./plugins/api";
 import { assignPlugin } from "./plugins/assignPlugin";
 import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
-import { bucketPlugin } from "./plugins/bucketPlugin";
 import { callablePlugin } from "./plugins/callablePlugin";
-import { containerPlugin } from "./plugins/container";
 import { fileReader } from "./plugins/fileReader";
 import { fileWriter } from "./plugins/fileWriter";
 import { functionPlugin } from "./plugins/functionPlugin";
 import { markdownParser } from "./plugins/markdownParser";
-import { nextJsAppPlugin } from "./plugins/nextJsAppPlugin";
-import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin";
 import { packagePlugin } from "./plugins/packagePlugin";
 import { paramPlugin } from "./plugins/paramPlugin";
-import { queuePlugin } from "./plugins/queuePlugin";
 import { reactCompPlugin } from "./plugins/reactCompPlugin";
-import { secretPlugin } from "./plugins/secretPlugin";
-import { serverFnPlugin } from "./plugins/serverFnPlugin";
-import { sqlClusterPlugin } from "./plugins/sqlClusterPlugin";
 import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin";
 import { sqlTablePlugin } from "./plugins/sqlTablePlugin";
 import { tablePlugin } from "./plugins/tablePlugin";
 import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
 import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin";
-import { userPoolPlugin } from "./plugins/userPoolPlugin";
 import { zodPlugin } from "./plugins/zodPlugin";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
@@ -33,6 +22,7 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
 
         //// Read
         {
+            order:100,
             name:'fileReader',
             source:'@',
             paths:[],
@@ -43,6 +33,7 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
 
         //// Parse
         {
+            order:200,
             name:'markdownParser',
             source:'@',
             paths:[],
@@ -53,144 +44,91 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
 
         //// Generate
         {
+            order:300,
             name:'packagePlugin',
             source:'@',
             paths:[],
             plugin:packagePlugin
         },
         {
+            order:400,
             name:'tsProtoNodePlugin',
             source:'@',
             paths:[],
             plugin:tsProtoNodePlugin
         },
         {
+            order:500,
             name:'zodPlugin',
             source:'@',
             paths:[],
             plugin:zodPlugin
         },
         {
+            order:600,
             name:'functionPlugin',
             source:'@',
             paths:[],
             plugin:functionPlugin
         },
         {
+            order:600,
             name:'tablePlugin',
             source:'@',
             paths:[],
             plugin:tablePlugin
         },
         {
+            order:600,
             name:'sqlTablePlugin',
             source:'@',
             paths:[],
             plugin:sqlTablePlugin
         },
         {
+            order:600,
             name:'actionPlugin',
             source:'@',
             paths:[],
             plugin:actionPlugin
         },
         {
+            order:600,
             name:'reactPlugin',
             source:'@',
             paths:[],
             plugin:reactCompPlugin
         },
         {
-            name:'userPoolPlugin',
-            source:'@',
-            paths:[],
-            plugin:userPoolPlugin
-        },
-        {
-            name:'secretPlugin',
-            source:'@',
-            paths:[],
-            plugin:secretPlugin
-        },
-        {
-            name:'serverFnPlugin',
-            source:'@',
-            paths:[],
-            plugin:serverFnPlugin
-        },
-        {
-            name:'aiCompletionPlugin',
-            source:'@',
-            paths:[],
-            plugin:aiCompletionPlugin
-        },
-        {
-            name:'bucketPlugin',
-            source:'@',
-            paths:[],
-            plugin:bucketPlugin
-        },
-        {
-            name:'queuePlugin',
-            source:'@',
-            paths:[],
-            plugin:queuePlugin
-        },
-        {
-            name:'sqlClusterPlugin',
-            source:'@',
-            paths:[],
-            plugin:sqlClusterPlugin
-        },
-        {
+            order:600,
             name:'callablePlugin',
             source:'@',
             paths:[],
             plugin:callablePlugin
         },
         {
-            name:'nextJsAppPlugin',
-            source:'@',
-            paths:[],
-            plugin:nextJsAppPlugin
-        },
-        {
-            name:'nextJsPagePlugin',
-            source:'@',
-            paths:[],
-            plugin:nextJsPagePlugin
-        },
-        {
+            order:600,
             name:'assignPlugin',
             source:'@',
             paths:[],
             plugin:assignPlugin
         },
         {
-            name:'apiPlugin',
-            source:'@',
-            paths:[],
-            plugin:apiPlugin
-        },
-        {
-            name:'containerPlugin',
-            source:'@',
-            paths:[],
-            plugin:containerPlugin
-        },
-        {
+            order:600,
             name:'sqlMigrationsPlugin',
             source:'@',
             paths:[],
             plugin:sqlMigrationsPlugin
         },
         {// should always be the second to last generator
+            order:1000,
             name:'paramPlugin',
             source:'@',
             paths:[],
             plugin:paramPlugin
         },
         {// should always be the last generator
+            order:1100,
             name:'autoPackageIndexPlugin',
             source:'@',
             paths:[],
@@ -199,6 +137,7 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
 
         //// Write
         {
+            order:2000,
             name:'fileWriter',
             source:'@',
             paths:[],
@@ -207,6 +146,7 @@ export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
             }
         },
         {
+            order:2100,
             name:'tsConfigPlugin',
             source:'@',
             paths:[],
