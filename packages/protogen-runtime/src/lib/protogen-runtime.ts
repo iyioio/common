@@ -83,6 +83,7 @@ export const executeProtoPluginAsync=async (plugin?:ProtoPipelinePlugin)=>{
     const callback=plugin?.[ctx.stage];
     if(callback){
         await callback(ctx,null,{
+            order:0,
             name:'@',// todo - update - pass correct param from executor
             source:'@',// todo - update - pass correct param from executor
             paths:[],// todo - update - pass correct param from executor
