@@ -260,7 +260,12 @@ CREATE INDEX "VectorIndex_int10_idx" ON "VectorIndex"("int10");`
     })
 
      it('should escape single quotes',()=>{
-        expect(escapeSqlValue("it's a good day")).toBe("'it''s a good day'")
+
+        expect(escapeSqlValue("it's a good day")).toBe("'it''s a good day'");
+
+        expect(escapeSqlValue({value:'ok'})).toBe(`'{"value":"ok"}'`);
+
+        expect(escapeSqlValue({value:"ok's"})).toBe(`'{"value":"ok''s"}'`);
      });
 
 })

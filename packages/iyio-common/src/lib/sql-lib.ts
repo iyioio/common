@@ -117,7 +117,7 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTab
                     (options?.inConditionValue?')':wrapArray?'}\'':'')
                 );
             }else{
-                return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
+                return escapeSqlString(JSON.stringify(value));
             }
 
     }
