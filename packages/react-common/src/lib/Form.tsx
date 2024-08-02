@@ -4,6 +4,7 @@ import { CSSProperties } from "react";
 export interface FormProps
 {
     onSubmit?:()=>void;
+    onSubmitData?:(data:Record<string,any>)=>void;
     children?:any;
     style?:CSSProperties;
 
@@ -11,6 +12,7 @@ export interface FormProps
 
 export function Form({
     onSubmit,
+    onSubmitData,
     children,
     style,
     ...props
@@ -20,6 +22,11 @@ export function Form({
         <form style={style} onSubmit={e=>{
             e.preventDefault();
             onSubmit?.();
+            if(onSubmitData && e.target instanceof HTMLFormElement){
+                const data:any=new FormData(e.target);
+                const value=Object.fromEntries(data.entries());
+                onSubmitData(value);
+            }
         }} className={bcn(props,"Form")}>
             {children}
         </form>
