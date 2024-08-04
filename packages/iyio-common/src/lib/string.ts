@@ -81,6 +81,15 @@ export const camelCaseToSnakeCase=(value:string,separator='_',toCase?:'upper'|'l
     return value;
 }
 
+export const snakeCaseToCamelCase=(value:string,separator='_',firstToUpper=false):string=>{
+    return (
+        value
+        .split(separator)
+        .map((v,i)=>(i===0 && !firstToUpper)?v:(v.substring(0,1).toUpperCase()+v.substring(1)))
+        .join('')
+    );
+}
+
 export const strToUpperSnakeCase=(value:string):string=>{
     return value.replace(/([a-z])([A-Z]+)/g,(_,l,u)=>l+'_'+u).toUpperCase();
 }
