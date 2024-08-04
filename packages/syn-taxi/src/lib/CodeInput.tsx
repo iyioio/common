@@ -36,6 +36,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
     fillScrollHeight?:boolean;
 
     parser?:CodeParser<P>;
+    parserOptions?:any;
     parsingDelayMs?:number;
     onParsed?:(result:CodeParsingResult)=>void;
     logParsed?:boolean;
@@ -62,6 +63,7 @@ export function CodeInput<P=any>({
     lineNumbers,
     errors,
     parser,
+    parserOptions,
     onParsed,
     logParsed,
     parsingDelayMs=700,
@@ -110,7 +112,10 @@ export function CodeInput<P=any>({
         if(parser){
             const iv=setTimeout(()=>{
                 try{
-                    const r=parser(value,debugParser?debugParser===true?{debug:console.info}:{debug:debugParser}:undefined);
+                    const r=parser(value,{
+                        debug:debugParser?debugParser===true?console.info:debugParser:undefined,
+                        ...parserOptions
+                    });
                     if(logParsed){
                         console.info('CodeInput parsing result',r)
                     }
@@ -145,7 +150,7 @@ export function CodeInput<P=any>({
             setParsingErrors(undefined);
             return undefined;
         }
-    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs,logParsed,debugParser]);
+    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs,logParsed,debugParser,parserOptions]);
 
     useEffect(()=>{
         onElem?.(code);
