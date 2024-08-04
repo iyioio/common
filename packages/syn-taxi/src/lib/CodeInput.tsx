@@ -1,5 +1,5 @@
 import { atDotCss } from '@iyio/at-dot-css';
-import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, CodeParsingResult, escapeHtml, strLineCount } from '@iyio/common';
+import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, CodeParsingResult, escapeHtml, getSubstringCount, strLineCount } from '@iyio/common';
 import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Lang } from 'shiki';
@@ -42,6 +42,9 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
     logParsed?:boolean;
     debugParser?:boolean|((...args:any[])=>void);
     bottomPadding?:number|string;
+
+    highlightPrefix?:string;
+    highlightSuffix?:string;
 }
 
 export function CodeInput<P=any>({
@@ -70,6 +73,8 @@ export function CodeInput<P=any>({
     debugParser,
     bottomPadding=500,
     fillScrollHeight,
+    highlightPrefix,
+    highlightSuffix,
     ...props
 }:CodeInputProps<P>){
 
@@ -92,27 +97,41 @@ export function CodeInput<P=any>({
             return;
         }
 
-        code.innerHTML=sh.codeToHtml(value,{lang:language});
-        let minWidth=0;
-        const codeElem=code.querySelector('code');
-        if(codeElem){
-            for(let i=0;i<codeElem.children.length;i++){
-                const item=codeElem.children.item(i);
-                if(!item){
-                    continue;
-                }
-                const w=(item as HTMLElement).offsetWidth;
-                if(w && w>minWidth){
-                    minWidth=w;
-                }
+        const fullValue=(highlightPrefix??'')+value+(highlightSuffix??'');
+        let lineOptions:LineOption[]=[];
+        if(highlightPrefix){
+            const n=getSubstringCount(highlightPrefix,'\n');
+            for(let i=1;i<=n;i++){
+                lineOptions.push({
+                    line:i,
+                    classes:['hide-prefix']
+                })
             }
+        }
+        if(highlightSuffix){
+            const n=getSubstringCount(highlightSuffix,'\n');
+            const lineCount=getSubstringCount(fullValue,'\n');
+            for(let i=0;i<n;i++){
+                lineOptions.push({
+                    line:lineCount-i+1,
+                    classes:['hide-suffix']
+                })
+            }
+        }
+
+        let highlighted=sh.codeToHtml(fullValue,{lang:language,lineOptions});
+        code.innerHTML=highlighted;
+        const codeElem=code.querySelector('code');
+        let minWidth=0;
+        if(codeElem){
+            minWidth=processLines(codeElem);
         }
         textArea.style.minWidth=minWidth+'px';
 
         if(parser){
             const iv=setTimeout(()=>{
                 try{
-                    const r=parser(value,{
+                    const r=parser(fullValue,{
                         debug:debugParser?debugParser===true?console.info:debugParser:undefined,
                         ...parserOptions
                     });
@@ -125,11 +144,12 @@ export function CodeInput<P=any>({
                     if(r.error){
                         console.info('⛔️ CodeInput parsing error',r.error);
                         console.info(r.error.near);
-                        code.innerHTML=sh.codeToHtml(value,{lang:language,lineOptions:[
+                        code.innerHTML=sh.codeToHtml(fullValue,{lang:language,lineOptions:[
                             {
                                 line:r.error.lineNumber,
                                 classes:['CodeInput-errorLine']
-                            }
+                            },
+                            ...lineOptions
                         ]}).replace(
                             /class="[^"]*CodeInput-errorLine[^"]*"[^>]*>/g,
                             v=>`${v}<div class="CodeInput-error">${
@@ -138,6 +158,10 @@ export function CodeInput<P=any>({
                                 '&nbsp;'.repeat((r.error?.col??0)-1)+'_'
                             }</div>`
                         );
+                        const codeElem=code.querySelector('code');
+                        if(codeElem){
+                            processLines(codeElem);
+                        }
                     }
                 }catch(ex){
                     setParsingErrors([0]);
@@ -150,7 +174,11 @@ export function CodeInput<P=any>({
             setParsingErrors(undefined);
             return undefined;
         }
-    },[code,textArea,valueOverride,value,language,sh,parser,parsingDelayMs,logParsed,debugParser,parserOptions]);
+    },[
+        code,textArea,valueOverride,value,language,sh,parser,
+        parsingDelayMs,logParsed,debugParser,parserOptions,
+        highlightPrefix,highlightSuffix
+    ]);
 
     useEffect(()=>{
         onElem?.(code);
@@ -371,4 +399,46 @@ const style=atDotCss({name:'CodeInput',css:`
         top:0;
         color:#ff000088;
     }
+    .CodeInput .hide-prefix, .CodeInput .hide-suffix{
+        display:none;
+    }
 `});
+
+interface LineOption {
+    /**
+     * 1-based line number.
+     */
+    line: number;
+    classes?: string[];
+}
+
+const processLines=(codeElem:HTMLElement)=>{
+    let minWidth=0;
+    for(let i=0;i<codeElem.children.length;i++){
+        const item=codeElem.children.item(i);
+        if(!item){
+            continue;
+        }
+        if(item.classList.contains('hide-prefix')){
+            const text=item.nextSibling;
+            if(text instanceof Text){
+                text.remove();
+            }
+            item.remove();
+            continue;
+        }
+        if(item.classList.contains('hide-suffix')){
+            const text=item.previousSibling;
+            if(text instanceof Text){
+                text.remove();
+            }
+            item.remove();
+            continue;
+        }
+        const w=(item as HTMLElement).offsetWidth;
+        if(w && w>minWidth){
+            minWidth=w;
+        }
+    }
+    return minWidth;
+}
