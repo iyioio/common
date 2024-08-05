@@ -8,10 +8,37 @@ let defaultHighlighter:Promise<Highlighter>|null;
 const loadLangMap:Record<string,Promise<void>>={};
 
 export const loadShikiLangAsync=(name:string)=>{
-    return loadLangMap[name]??(loadLangMap[name]=_loadShikiLangAsync(name));
+    return loadLangMap[name]??(loadLangMap[name]=_loadShikiLangAsync(0,name));
 }
 
-const _loadShikiLangAsync=async (name:string,scope=`source.${name}`)=>{
+const langDeps:Record<string,string[]>={
+    mdx:['tsx'],
+    convo:['json','xml','javascript','python'],
+}
+
+const loadDepsAsync=async (depth:number,name:string,scope=`source.${name}`)=>{
+    if(depth>5){
+        return;
+    }
+    const depList=langDeps[name];
+    if(!depList){
+        return;
+    }
+
+}
+
+const _loadShikiLangAsync=async (depth:number,name:string,scope=`source.${name}`)=>{
+
+    if(depth>5){
+        return;
+    }
+
+    const depList=langDeps[name];
+    if(depList){
+        for(const dep of depList){
+            await _loadShikiLangAsync(depth+1,dep);
+        }
+    }
 
     const sh=await getShikiAsync();
 
@@ -115,7 +142,8 @@ const convo={
                 { "include": "#embed" },
                 { "include": "#markdownLink" },
                 { "include": "#comment" },
-                { "include": "#tag" }
+                { "include": "#tag" },
+                { "include": "#fenced_code_block"}
             ]
         },
         "interpolation":{
@@ -506,7 +534,154 @@ const convo={
         "pipe":{
             "match":"<<",
             "name":"keyword.control"
+        },
+
+        "fenced_code_block": {
+            "patterns": [
+                {"include": "#fenced_code_block_json"},
+                {"include": "#fenced_code_block_xml"},
+                {"include": "#fenced_code_block_js"},
+                {"include": "#fenced_code_block_python"},
+            ]
+        },
+
+        "fenced_code_block_json": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:(json|json5|sublime-settings|sublime-menu|sublime-keymap|sublime-mousemap|sublime-theme|sublime-build|sublime-project|sublime-completions)((\\s+|:|,|\\{|\\?)[^`]*)?$)",
+      "name": "markup.fenced_code.block.markdown",
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        },
+        "5": {
+          "name": "fenced_code.block.language.attributes.markdown"
         }
+      },
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
+          "contentName": "meta.embedded.block.json",
+          "patterns": [
+            {
+              "include": "source.json"
+            }
+          ]
+        }
+      ]
+    },
+
+    "fenced_code_block_xml": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:(xml|xsd|tld|jsp|pt|cpt|dtml|rss|opml)((\\s+|:|,|\\{|\\?)[^`]*)?$)",
+      "name": "markup.fenced_code.block.markdown",
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        },
+        "5": {
+          "name": "fenced_code.block.language.attributes.markdown"
+        }
+      },
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
+          "contentName": "meta.embedded.block.xml",
+          "patterns": [
+            {
+              "include": "text.xml"
+            }
+          ]
+        }
+      ]
+    },
+
+    "fenced_code_block_js": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:(js|jsx|javascript|es6|mjs|cjs|dataviewjs|\\{\\.js.+?\\})((\\s+|:|,|\\{|\\?)[^`]*)?$)",
+      "name": "markup.fenced_code.block.markdown",
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        },
+        "5": {
+          "name": "fenced_code.block.language.attributes.markdown"
+        }
+      },
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
+          "contentName": "meta.embedded.block.javascript",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+
+    "fenced_code_block_python": {
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:(python|py|py3|rpy|pyw|cpy|SConstruct|Sconstruct|sconstruct|SConscript|gyp|gypi|\\{\\.python.+?\\})((\\s+|:|,|\\{|\\?)[^`]*)?$)",
+      "name": "markup.fenced_code.block.markdown",
+      "end": "(^|\\G)(\\2|\\s{0,3})(\\3)\\s*$",
+      "beginCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        },
+        "4": {
+          "name": "fenced_code.block.language.markdown"
+        },
+        "5": {
+          "name": "fenced_code.block.language.attributes.markdown"
+        }
+      },
+      "endCaptures": {
+        "3": {
+          "name": "punctuation.definition.markdown"
+        }
+      },
+      "patterns": [
+        {
+          "begin": "(^|\\G)(\\s*)(.*)",
+          "while": "(^|\\G)(?!\\s*([`~]{3,})\\s*$)",
+          "contentName": "meta.embedded.block.python",
+          "patterns": [
+            {
+              "include": "source.python"
+            }
+          ]
+        }
+      ]
+    },
+
+
     }
 
 }
