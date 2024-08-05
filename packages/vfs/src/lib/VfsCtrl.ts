@@ -6,7 +6,7 @@ import { VfsConfig, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOpti
 
 export interface VfsCtrlOptions
 {
-    config:VfsConfig;
+    config?:VfsConfig;
     /**
      * @default {searchRootScope:true}
      */
@@ -29,12 +29,18 @@ export class VfsCtrl
     }
 
     public constructor({
-        config,
+        config={mountPoints:[]},
         mntProviderConfig={searchRootScope:true}
-    }:VfsCtrlOptions){
+    }:VfsCtrlOptions={}){
+        console.log('hio 👋 👋 👋 NEW ',config);
         this.config=deepClone(config);
         sortVfsMntPt(this.config.mountPoints);
         this.mntProviderConfig=mntProviderConfig;
+        if(mntProviderConfig.ctrls){
+            for(const ctrl of mntProviderConfig.ctrls){
+                this.registerMntCtrl(ctrl);
+            }
+        }
     }
 
     private readonly disposables=new DisposeContainer();
@@ -199,7 +205,7 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.mkDirAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
-    public async rmDirAsync(path:string):Promise<VfsItem>
+    public async removeAsync(path:string):Promise<VfsItem>
     {
         const mnt=this.getMntPt(path);
         if(!mnt){
@@ -217,7 +223,7 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.readStringAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
-    public async writeStringAsync(path:string,content:string):Promise<void>
+    public async writeStringAsync(path:string,content:string):Promise<VfsItem>
     {
         const mnt=this.getMntPt(path);
         if(!mnt){
@@ -226,7 +232,7 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.writeStringAsync(this,mnt,path,getVfsSourceUrl(mnt,path),content);
     }
-    public async appendStringAsync(path:string,content:string):Promise<void>
+    public async appendStringAsync(path:string,content:string):Promise<VfsItem>
     {
         const mnt=this.getMntPt(path);
         if(!mnt){
@@ -244,16 +250,23 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.readBufferAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
-    public async writeBufferAsync(path:string,buffer:Uint8Array):Promise<void>
+    public async writeBufferAsync(path:string,buffer:Uint8Array|Blob|Blob[]|string):Promise<VfsItem>
     {
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
         }
         const ctrl=await this.requireMntCtrlAsync(mnt);
+
+        if(typeof buffer === 'string'){
+            buffer=Buffer.from(buffer);
+        }else if(Array.isArray(buffer)){
+            buffer=new Blob(buffer);
+        }
+
         return await ctrl.writeBufferAsync(this,mnt,path,getVfsSourceUrl(mnt,path),buffer);
     }
-    public async writeStreamAsync(path:string,stream:VfsReadStream):Promise<void>
+    public async writeStreamAsync(path:string,stream:VfsReadStream):Promise<VfsItem>
     {
         const mnt=this.getMntPt(path);
         if(!mnt){

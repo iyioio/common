@@ -44,12 +44,14 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             }
 
             const isDir=s.isDirectory();
+            const name=getFileName(path);
 
             return {
                 type:isDir?'dir':'file',
                 path,
-                name:getFileName(path),
+                name,
                 size:isDir?undefined:s.size,
+                contentType:isDir?getContentType(name):undefined,
             }
 
         }catch{
@@ -74,6 +76,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
 
         const dirItems=await readdir(sourceUrl,{withFileTypes:true});
 
+        dirItems.sort((a,b)=>((a.isDirectory()?'a':'b')+a.name).localeCompare((b.isDirectory()?'a':'b')+b.name));
+
         const items:VfsItem[]=[];
 
         for(let i=options.offset??0;i<dirItems.length && items.length<(options.limit??dirItems.length);i++){
@@ -86,6 +90,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
                 type:isDir?'dir':'file',
                 path:joinPaths(options.path,item.name),
                 name:getFileName(item.name),
+                contentType:isDir?undefined:getContentType(item.name),
             })
         }
 
@@ -152,22 +157,32 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         return (await this._readAsync(sourceUrl)).toString()
     }
 
-    protected override _writeStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>=>
+    protected override _writeStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>=>
     {
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
         await writeFile(sourceUrl,content);
+        const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
+        if(!item){
+            throw new Error('Item to returned');
+        }
+        return item;
     }
 
-    protected override _appendStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>=>
+    protected override _appendStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>=>
     {
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
         await appendFile(sourceUrl,content);
+        const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
+        if(!item){
+            throw new Error('Item to returned');
+        }
+        return item;
     }
 
     protected override _readBufferAsync=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<Uint8Array>=>
@@ -175,31 +190,43 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         return this._readAsync(sourceUrl);
     }
 
-    protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array):Promise<void>=>
+    protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob):Promise<VfsItem>=>
     {
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
-        await writeFile(sourceUrl,buffer);
+        await writeFile(sourceUrl,(buffer instanceof Blob)?new Uint8Array(await buffer.arrayBuffer()):buffer);
+        const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
+        if(!item){
+            throw new Error('Item to returned');
+        }
+        return item;
     }
 
-    protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<void>=>
+    protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>=>
     {
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
         const writeStream=createWriteStream(sourceUrl);
-        return await new Promise<void>((resolve,reject)=>{
+        return await new Promise<VfsItem>((resolve,reject)=>{
             writeStream.on('open',()=>{
                 stream.pipe(writeStream);
             })
             let error=false;
             writeStream.on('close',()=>{
-                if(!error){
-                    resolve();
+                if(error){
+                    return;
                 }
+                this._getItemAsync(fs,mnt,path,sourceUrl).then(item=>{
+                    if(item){
+                        resolve(item);
+                    }else{
+                        reject(new Error('Item to returned'))
+                    }
+                }).catch(err=>reject(err));
             })
             writeStream.on('error',err=>{
                 error=true;

@@ -89,7 +89,7 @@ export const createVfsApiRoutes=({
                     throw new BadRequestError('Deleting root not permitted');
                 }
 
-                return await getFs().rmDirAsync(path);
+                return await getFs().removeAsync(path);
 
             }
         },
@@ -164,9 +164,7 @@ export const createVfsApiRoutes=({
                     throw new BadRequestError();
                 }
 
-                await getFs().writeStringAsync(path,body);
-
-                return true;
+                return await getFs().writeStringAsync(path,body);
 
             }
         },
@@ -184,9 +182,7 @@ export const createVfsApiRoutes=({
                     throw new BadRequestError();
                 }
 
-                await getFs().appendStringAsync(path,body);
-
-                return true;
+                return await getFs().appendStringAsync(path,body);
 
             }
         },
@@ -234,7 +230,7 @@ export const createVfsApiRoutes=({
                 const fs=getFs();
 
                 if(await fs.canWriteStream(path)){
-                    await fs.writeStreamAsync(path,req);
+                    return await fs.writeStreamAsync(path,req);
                 }else{
                     const chunks:Buffer[]=[];
                     const str=await new Promise<string>((resolve, reject) => {
@@ -243,10 +239,8 @@ export const createVfsApiRoutes=({
                         req.on('end',()=>resolve(Buffer.concat(chunks).toString('utf8')));
                     })
 
-                    await fs.writeStringAsync(path,str);
+                    return await fs.writeStringAsync(path,str);
                 }
-
-                return true;
 
             }
         },

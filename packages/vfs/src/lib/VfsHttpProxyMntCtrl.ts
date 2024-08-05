@@ -1,4 +1,4 @@
-import { HttpClient, httpClient } from "@iyio/common";
+import { HttpClient, httpClient, joinPaths } from "@iyio/common";
 import { VfsCtrl } from "./VfsCtrl";
 import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
 import { vfsMntTypes } from "./vfs-lib";
@@ -8,6 +8,10 @@ export interface VfsHttpProxyMntCtrlOptions extends VfsMntCtrlOptions
 {
     baseUrl:string;
     httpClient?:HttpClient;
+    /**
+     * Used to assign items a url that don't have one defined
+     */
+    itemUrlPrefix?:string;
 }
 
 export class VfsHttpProxyMntCtrl extends VfsMntCtrl
@@ -17,18 +21,22 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
 
     private readonly baseUrl:string;
 
+    private readonly itemUrlPrefix?:string;
+
     public constructor({
         baseUrl,
         httpClient,
+        itemUrlPrefix,
         ...options
     }:VfsHttpProxyMntCtrlOptions){
         super({
             ...options,
-            type:vfsMntTypes.file,
+            type:vfsMntTypes.httpProxy,
             removeProtocolFromSourceUrls:true,
         })
         this._httpClient=httpClient;
         this.baseUrl=baseUrl;
+        this.itemUrlPrefix=itemUrlPrefix;
         if(this.baseUrl.endsWith('/')){
             this.baseUrl=this.baseUrl.substring(0,this.baseUrl.length-1);
         }
@@ -48,9 +56,22 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         return `${this.baseUrl}/${action}/${sourceUrl}`;
     }
 
-    protected override _getItemAsync=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsItemGetOptions):Promise<VfsItem|undefined>=>
+    private setItemUrl(item:VfsItem|null|undefined){
+        if(!item || item.url){
+            return;
+        }
+        if(this.itemUrlPrefix){
+            item.url=joinPaths(this.itemUrlPrefix,item.path);
+        }else if(item.type!=='dir'){
+            item.url=this.getUrl(item.path,'stream')
+        }
+    }
+
+    protected override _getItemAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsItemGetOptions):Promise<VfsItem|undefined>=>
     {
-        return this.getHttpClient().getAsync(this.getUrl(sourceUrl,'item'));
+        const item=await this.getHttpClient().getAsync<VfsItem>(this.getUrl(sourceUrl,'item'));
+        this.setItemUrl(item);
+        return item;
     }
 
     protected override _readDirAsync=async (fs:VfsCtrl,mnt:VfsMntPt,options:VfsDirReadOptions,sourceUrl:string|undefined):Promise<VfsDirReadResult>=>
@@ -58,6 +79,9 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         const r=await this.getHttpClient().getAsync<VfsDirReadResult>(this.getUrl(sourceUrl,'dir'));
         if(!r){
             throw new Error('vfs api did not return a result');
+        }
+        for(const item of r.items){
+            this.setItemUrl(item);
         }
         return r;
     }
@@ -68,15 +92,17 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         if(!r){
             throw new Error('vfs api did not return a result');
         }
+        this.setItemUrl(r);
         return r;
     }
 
     protected override _removeAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem>=>
     {
-        const r=await this.getHttpClient().deleteAsync<VfsItem>(this.getUrl(sourceUrl,'dir'));
+        const r=await this.getHttpClient().deleteAsync<VfsItem>(this.getUrl(sourceUrl,'item'));
         if(!r){
             throw new Error('vfs api did not return a result');
         }
+        this.setItemUrl(r);
         return r;
 
     }
@@ -90,14 +116,22 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         return r;
     }
 
-    protected override _writeStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>=>
+    protected override _writeStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>=>
     {
-        await this.getHttpClient().postAsync(this.getUrl(sourceUrl,'string'),content);
+        const r=await this.getHttpClient().postAsync<VfsItem>(this.getUrl(sourceUrl,'string'),content);
+        if(!r){
+            throw new Error('Item not returned');
+        }
+        return r;
     }
 
-    protected override _appendStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>=>
+    protected override _appendStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>=>
     {
-        await this.getHttpClient().putAsync(this.getUrl(sourceUrl,'string'),content);
+        const r=await this.getHttpClient().putAsync<VfsItem>(this.getUrl(sourceUrl,'string'),content);
+        if(!r){
+            throw new Error('Item not returned');
+        }
+        return r;
     }
 
     protected override _readBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<Uint8Array>=>
@@ -113,12 +147,16 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         return new Uint8Array(await blob.arrayBuffer());
     }
 
-    protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array):Promise<void>=>
+    protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob):Promise<VfsItem>=>
     {
-        await this.getHttpClient().postResponseAsync(this.getUrl(sourceUrl,'stream'),new Blob([buffer]));
+        const r=await this.getHttpClient().postResponseAsync(this.getUrl(sourceUrl,'stream'),(buffer instanceof Blob)?buffer:new Blob([buffer]));
+        if(!r){
+            throw new Error('No http response returned')
+        }
+        return await r.json();
     }
 
-    // protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<void>=>
+    // protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>=>
     // {
     //     const blob=new Blob();
     //     const ws=new WritableStream();

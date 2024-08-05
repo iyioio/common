@@ -153,7 +153,7 @@ export abstract class VfsMntCtrl
     /**
      * Write a string to a file
      */
-    public writeStringAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>
+    public writeStringAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>
     {
         if(!this._writeStringAsync){
             throw new UnsupportedError(`writeStringAsync not supported by mount controller of type ${this.type}`);
@@ -161,12 +161,12 @@ export abstract class VfsMntCtrl
         return this._writeStringAsync(fs,mnt,path,this.formatSourceUrl(sourceUrl),content);
     }
 
-    protected readonly _writeStringAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string)=>Promise<void>;
+    protected readonly _writeStringAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string)=>Promise<VfsItem>;
 
     /**
      * Appends a string to a file or creates the file is it does not exist
      */
-    public appendStringAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<void>
+    public appendStringAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string):Promise<VfsItem>
     {
         if(!this._appendStringAsync){
             throw new UnsupportedError(`appendStringAsync not supported by mount controller of type ${this.type}`);
@@ -174,7 +174,7 @@ export abstract class VfsMntCtrl
         return this._appendStringAsync(fs,mnt,path,this.formatSourceUrl(sourceUrl),content);
     }
 
-    protected readonly _appendStringAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string)=>Promise<void>;
+    protected readonly _appendStringAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,content:string)=>Promise<VfsItem>;
 
 
     /**
@@ -194,7 +194,7 @@ export abstract class VfsMntCtrl
     /**
      * Writes a buffer to a file
      */
-    public writeBufferAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array):Promise<void>
+    public writeBufferAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob):Promise<VfsItem>
     {
         if(!this._writeBufferAsync){
             throw new UnsupportedError(`writeBufferAsync not supported by mount controller of type ${this.type}`);
@@ -202,13 +202,13 @@ export abstract class VfsMntCtrl
         return this._writeBufferAsync(fs,mnt,path,this.formatSourceUrl(sourceUrl),buffer);
     }
 
-    protected readonly _writeBufferAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array)=>Promise<void>;
+    protected readonly _writeBufferAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob)=>Promise<VfsItem>;
 
 
     /**
      * Writes a stream to a file
      */
-    public writeStreamAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<void>
+    public writeStreamAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>
     {
         if(!this._writeStreamAsync){
             throw new UnsupportedError(`writeStreamAsync not supported by mount controller of type ${this.type}`);
@@ -216,7 +216,7 @@ export abstract class VfsMntCtrl
         return this._writeStreamAsync(fs,mnt,path,this.formatSourceUrl(sourceUrl),stream);
     }
 
-    protected readonly _writeStreamAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream)=>Promise<void>;
+    protected readonly _writeStreamAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream)=>Promise<VfsItem>;
 
 
     /**

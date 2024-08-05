@@ -44,6 +44,13 @@ export interface VfsItem
      */
     size?:number;
 
+    contentType?:string;
+
+    /**
+     * A http url where the file can be reached
+     */
+    url?:string;
+
 }
 
 /**
@@ -60,6 +67,8 @@ export interface VfsItemGetOptions
 export interface VfsMntPtProviderConfig
 {
     getCtrl?:(mnt:VfsMntPt)=>Promise<VfsMntCtrl|undefined>|VfsMntCtrl|undefined;
+
+    ctrls?:VfsMntCtrl[];
 
     /**
      * If true the default convoMountPointFactory will be used which searches for controls in the

@@ -1,4 +1,5 @@
 export * from './lib/VfsCtrl';
+export * from './lib/VfsHttpProxyMntCtrl';
 export * from './lib/VfsMntCtrl';
 export * from './lib/vfs-deps';
 export * from './lib/vfs-lib';
