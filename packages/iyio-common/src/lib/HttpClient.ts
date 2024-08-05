@@ -179,6 +179,7 @@ export class HttpClient
             includeDefaultHeadersWithHeaders,
             log,
             ignoreErrors,
+            rawBody,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -204,7 +205,7 @@ export class HttpClient
             const baseRequest:BaseHttpRequest={
                 uri,
                 method,
-                body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
+                body:rawBody?body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
                 headers:deleteUndefined<any>((headers && !includeDefaultHeadersWithHeaders)?headers:{
                     "Authorization":jwt?'Bearer '+jwt:undefined,
                     "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
@@ -289,6 +290,21 @@ export class HttpClient
             return undefined;
         }
         return await response.text();
+    }
+
+    /**
+     * Sends a GET Request to the given URI and returns a raw Response object.
+     * @param uri endpoint URI
+     * @param options additional request options
+     * @returns A raw Response object.
+     */
+    public postResponseAsync(uri:string,body:any,options?:HttpClientRequestOptions):Promise<Response|undefined>
+    {
+        return this.requestAsync<Response>('POST',uri,body,{
+            returnFetchResponse:true,
+            rawBody:true,
+            ...options
+        });
     }
 
     /**

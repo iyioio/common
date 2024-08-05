@@ -74,6 +74,11 @@ export interface HttpClientRequestOptions
      * If true error status codes are ignored
      */
     ignoreErrors?:boolean;
+
+    /**
+     * If true body should be passed directly
+     */
+    rawBody?:boolean;
 }
 
 export interface HttpFetcher{
