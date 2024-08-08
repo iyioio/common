@@ -1,6 +1,7 @@
 import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
-import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes } from "@iyio/vfs";
+import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
+import chokidar from 'chokidar';
 import { Dirent, createReadStream, createWriteStream } from "fs";
 import { appendFile, mkdir, readFile, readdir, rm, stat, unlink, writeFile } from "fs/promises";
 
@@ -27,8 +28,80 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             removeProtocolFromSourceUrls:true,
         })
         this.ignoreFilenames=ignoreFilenames;
-
     }
+
+    protected override _watch=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsWatchOptions):VfsWatchHandle|undefined=>
+    {
+        if(!sourceUrl){
+            return undefined;
+        }
+
+        try{
+            const ignore=options?.ignore;
+            const watcher=chokidar.watch(sourceUrl,{
+                ignoreInitial:true,
+                alwaysStat:true,
+                depth:options?.recursive?undefined:0,
+                ignored:ignore?(path:string)=>{
+                    return !testVfsFilter(path,ignore);
+                }:undefined
+            })
+
+            const trigger=(targetPath:string,path:string,type:VfsItemType,changeType:VfsItemChangeType)=>{
+                console.info(`VfsDiskMntCtrl ${changeType} ${type} - ${path} -> ${targetPath}`);
+                this._onItemsChange.next({
+                    type:'vfsItemChange',
+                    key:path,
+                    value:{
+                        changeType,
+                        item:{
+                            name:getFileName(path),
+                            path,
+                            type
+                        }
+                    }
+                })
+            }
+
+            watcher.on('all',(event, targetPath, stats)=>{
+
+                const path=vfsSourcePathToVirtualPath(targetPath,mnt);
+                if(!path){
+                    return;
+                }
+
+                const changeType:VfsItemChangeType=(
+                    event==='change'?
+                        'change'
+                    :event==='add' || event==='addDir'?
+                        'add'
+                    :
+                        'remove'
+                );
+
+                if(stats){
+                    trigger(targetPath,path,stats.isDirectory()?'dir':'file',changeType);
+                }else{
+                    stat(targetPath)
+                        .then(s=>trigger(targetPath,path,s.isDirectory()?'dir':'file',changeType))
+                        .catch(err=>console.error(`Get stats for ${targetPath} failed while watching mount`,err))
+                }
+
+            })
+            // watcher.on('close',()=>{
+            //     resolve();
+            // })
+            return {
+                dispose:()=>{
+                    watcher.close();
+                }
+            }
+        }catch(ex){
+            console.error('Unable to start directory watcher')
+            return undefined;
+        }
+    }
+
 
     protected override _getItemAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsItemGetOptions):Promise<VfsItem|undefined>=>
     {

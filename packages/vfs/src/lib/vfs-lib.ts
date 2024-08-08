@@ -1,13 +1,23 @@
 // Convo FS is a virtual filesystem
 
-import { joinPaths, starStringTest } from "@iyio/common";
-import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsMntPt } from "./vfs-types";
+import { EvtTrigger, ValueCondition, getFileName, joinPaths, starStringTest } from "@iyio/common";
+import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
 
 
 export const vfsMntTypes={
     file:'file',
     httpProxy:'httpProxy',
 } as const;
+
+export const defaultVfsIgnoreFiles=[
+    '.DS_Store'
+]
+
+export const vfsTopic='vfs';
+
+export const vfsTriggerTopic='vfs-trigger';
+
+export const vfsDefaultConfigFileName='.vfs-config';
 
 /**
  * Sorts an array of mounts using the length of the mount point in descending order. This
@@ -91,7 +101,21 @@ export const createNotFoundVfsDirReadResult=(options:VfsDirReadOptions):VfsDirRe
     }
 }
 
-export const testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boolean=>{
+export const testVfsFilter=(filename:string,filter:(VfsFilter|null|undefined)[]|VfsFilter|null|undefined):boolean=>{
+    filename=getFileName(filename);
+    if(Array.isArray(filter)){
+        for(const f of filter){
+            if(!_testVfsFilter(filename,f)){
+                return false;
+            }
+        }
+        return true;
+    }else{
+        return _testVfsFilter(filename,filter);
+    }
+}
+
+const _testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boolean=>{
     if(!filter){
         return true;
     }
@@ -115,6 +139,76 @@ export const testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boo
     return true;
 }
 
-export const defaultVfsIgnoreFiles=[
-    '.DS_Store'
-]
+export const normalizeVfsPath=(path:string):string=>{
+
+    if(path.endsWith('/')){
+        path=path.substring(0,path.length-1);
+    }
+
+    if(!path.startsWith('/')){
+        path='/'+path;
+    }
+    return path;
+}
+
+export const vfsSourcePathToVirtualPath=(sourcePath:string,mnt:VfsMntPt):string|undefined=>{
+    if(!mnt.sourceUrl){
+        return undefined;
+    }
+    sourcePath=normalizeVfsPath(sourcePath);
+    const mntPath=normalizeVfsPath(mnt.sourceUrl);
+
+    if(!sourcePath.startsWith(mntPath)){
+        return undefined;
+    }
+    sourcePath=sourcePath.substring(mntPath.length);
+    if(sourcePath.startsWith('/')){
+        sourcePath=sourcePath.substring(1);
+    }
+    return joinPaths(mnt.mountPath,sourcePath);
+}
+
+export const mergeVfsLocalFsConfig=(target:VfsLocalFsConfig,add:VfsLocalFsConfig):void=>{
+    if(add.triggers){
+        if(!target.triggers){
+            target.triggers=[];
+        }
+        target.triggers.push(...add.triggers);
+    }
+}
+
+export const autoFormatVfsTriggers=(triggers:EvtTrigger[])=>{
+    for(const t of triggers){
+        autoFormatVfsTrigger(t);
+    }
+}
+export const autoFormatVfsTrigger=(trigger:EvtTrigger)=>{
+    if(!trigger.matchKey.includes('*')){
+        return;
+    }
+
+    const parts=trigger.matchKey.split('*');
+    trigger.matchStart=true;
+    const cond:ValueCondition=parts.length===2?{
+        path:'evt.value.item.path',
+        op:'ends-with',
+        value:parts[1] as string,
+    }:{
+        path:'evt.value.item.path',
+        op:'star-match',
+        value:trigger.matchKey,
+    }
+    if(trigger.condition){
+        trigger.condition={
+            op:'and',
+            conditions:[
+                cond,
+                trigger.condition
+            ]
+        }
+    }else{
+        trigger.condition=cond;
+    }
+    trigger.matchKey=parts[0] as string;
+
+}

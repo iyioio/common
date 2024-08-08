@@ -1,8 +1,29 @@
+import { DisposeCallback, Evt, EvtTrigger } from "@iyio/common";
 import type { VfsMntCtrl } from "./VfsMntCtrl";
 
 export interface VfsConfig
 {
     mountPoints:VfsMntPt[];
+
+    triggers?:EvtTrigger[];
+
+    /**
+     * If true file system configuration via local config files will be enabled. Each individual
+     * mount point must also enable this option for local file based configuration to be enabled.
+     */
+    allowLocalConfig?:boolean;
+
+    /**
+     * Name of the config files in local mount directories. Mount points can override this value.
+     * @default ".vsf-config"
+     */
+    localConfigFileName?:string;
+
+    /**
+     * If true config files will be read recursively. Each individual mount point must also enable
+     * this option for recursive configuration to be enabled.
+     */
+    allowRecursiveLocalConfig?:boolean;
 }
 
 export interface VfsMntPt
@@ -19,6 +40,31 @@ export interface VfsMntPt
      * define a sourceUrl its controller will be responsible for translating virtual paths
      */
     sourceUrl?:string;
+
+    /**
+     * If true file system configuration via local config files will be enabled. The mount point's
+     * parent file system controller must also enable this option for local file based
+     * configuration to be enabled.
+     */
+    allowLocalConfig?:boolean;
+
+    /**
+     * Name of the config files in local mount directories. Defaults to the value defined by the
+     * mount points parent file system controller. Defaults the the point point's parent file
+     * system controller's value.
+     */
+    localConfigFileName?:string;
+
+    /**
+     * If true config files will be read recursively. The mount point's parent file system controller
+     * must also enable this option for recursive configuration to be enabled.
+     */
+    allowRecursiveLocalConfig?:boolean;
+}
+
+export interface VfsLocalFsConfig
+{
+    triggers?:EvtTrigger[];
 }
 
 export type VfsItemType='file'|'dir';
@@ -64,6 +110,17 @@ export interface VfsItemGetOptions
     includeSize?:boolean;
 }
 
+export interface VfsWatchOptions
+{
+    recursive?:boolean;
+    ignore?:VfsFilter[];
+}
+
+export interface VfsWatchHandle
+{
+    dispose?:DisposeCallback;
+}
+
 export interface VfsMntPtProviderConfig
 {
     getCtrl?:(mnt:VfsMntPt)=>Promise<VfsMntCtrl|undefined>|VfsMntCtrl|undefined;
@@ -79,6 +136,8 @@ export interface VfsMntPtProviderConfig
 
 export interface VfsFilter
 {
+    equals?:string;
+    contains?:string;
     startsWith?:string;
     endsWith?:string;
     match?:RegExp|string;
@@ -113,3 +172,24 @@ export interface VfsReadStreamWrapper
     size?:number;
     contentType?:string;
 }
+
+export type VfsItemChangeType='add'|'change'|'remove';
+
+export interface VfsItemChange
+{
+    changeType:VfsItemChangeType;
+    item:VfsItem;
+}
+export const vfsItemChangeEvtType='vfsItemChange';
+
+export type VfsItemChangeEvt=Evt<typeof vfsItemChangeEvtType,VfsItemChange>;
+
+export const isVfsItemChangeEvt=(value:Evt):value is VfsItemChangeEvt=>value.type===vfsItemChangeEvtType;
+
+export interface VfsTrigger extends VfsItemChange
+{
+    trigger:EvtTrigger;
+}
+export const vfsTriggerEvtType='vfsTrigger';
+export type VfsTriggerEvt=Evt<typeof vfsTriggerEvtType,VfsTrigger>;
+export const isVfsTriggerEvt=(value:Evt):value is VfsTriggerEvt=>value.type===vfsTriggerEvtType;

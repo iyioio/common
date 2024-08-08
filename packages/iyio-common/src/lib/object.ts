@@ -2,14 +2,38 @@ import { HashMap } from "./common-types";
 
 export type KeyComparer=(key:string,depth:number,a:any,b:any,state:any)=>boolean|undefined;
 
+export interface DeepCompareOptions
+{
+    /**
+     * If true the b value will be allowed to define additional keys that a does not have
+     */
+    ignoreExtraBKeys?:boolean;
+
+    keyComparer?:KeyComparer;
+
+    keyComparerState?:any;
+}
+
 export const deepCompare=(
     a:any,
     b:any,
-    keyComparer?:KeyComparer,
+    keyComparerOrOptions?:KeyComparer|DeepCompareOptions,
     keyComparerState?:any,
     maxDepth=200,
-    depth=0
+    depth=0,
 ):boolean=>{
+
+    let keyComparer:KeyComparer|undefined;
+    let options:DeepCompareOptions|undefined;
+    if(keyComparerOrOptions){
+        if(typeof keyComparerOrOptions === 'function'){
+            keyComparer=keyComparerOrOptions;
+        }else{
+            options=keyComparerOrOptions;
+            keyComparer=options.keyComparer;
+            keyComparerState=options.keyComparerState;
+        }
+    }
 
     if(maxDepth<0){
         throw new Error('deepCompare max depth reached');
@@ -35,7 +59,7 @@ export const deepCompare=(
             return false;
         }
         for(let i=0;i<a.length;i++){
-            if(!deepCompare(a[i],b[i],keyComparer,keyComparerState,maxDepth,depth+1))
+            if(!deepCompare(a[i],b[i],keyComparerOrOptions,keyComparerState,maxDepth,depth+1))
             {
                 return false;
             }
@@ -52,17 +76,19 @@ export const deepCompare=(
                     continue;
                 }
             }
-            if(!deepCompare(a[e],b[e],keyComparer,keyComparerState,maxDepth,depth+1))
+            if(!deepCompare(a[e],b[e],keyComparerOrOptions,keyComparerState,maxDepth,depth+1))
             {
                 return false;
             }
         }
-        let dc=0;
-        for(const e in b){// eslint-disable-line
-            dc++;
-        }
-        if(ac!==dc){// ;)
-            return false;
+        if(!options || !options.ignoreExtraBKeys){
+            let dc=0;
+            for(const e in b){// eslint-disable-line
+                dc++;
+            }
+            if(ac!==dc){// ;)
+                return false;
+            }
         }
     }
 
@@ -197,6 +223,29 @@ export const deleteAllObjProps=(obj:any)=>{
     for(const e in obj){
         delete obj[e];
     }
+}
+
+export const setValueByPath=(target:any,path:string,value:any,rootGetter?:(key:string|number)=>any):boolean=>{
+
+    const parts=path.split('.');
+    const setterKey=parts.pop();
+    if(!setterKey){
+        return false;
+    }
+    if(parts.length){
+        target=getValueByAryPath(target,parts,undefined,undefined,rootGetter);
+    }
+
+    if(!target || (typeof target !== 'object')){
+        return false;
+    }
+
+    if(value===undefined){
+        delete target[setterKey];
+    }else{
+        target[setterKey]=value;
+    }
+    return true;
 }
 
 export const getValueByPath=(value:any,path:string,defaultValue:any=undefined,rootGetter?:(key:string)=>any):any=>{

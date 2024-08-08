@@ -257,7 +257,7 @@ export type QueryConditionOrGroup=QueryCondition|QueryGroupCondition;
 export const queryFunctions=[
     'count','sum','avg','min','max','round',
     'lower','upper','len','trim','ltrim','rtrim','concat','replace','strcmp',
-    'reverse','coalesce'
+    'reverse','coalesce','any','all'
 ] as const;
 Object.freeze(queryFunctions);
 /**

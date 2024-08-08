@@ -1,6 +1,7 @@
 import { DisposeContainer, UnsupportedError, getUriProtocol, joinPaths, removeUriProtocol } from "@iyio/common";
+import { Observable, Subject } from "rxjs";
 import { VfsCtrl } from "./VfsCtrl";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper } from "./vfs-types";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsMntCtrlOptionsBase
 {
@@ -31,10 +32,14 @@ export abstract class VfsMntCtrl
     public get canWriteBuffer(){return this._writeBufferAsync!==undefined}
     public get canWriteStream(){return this._writeStreamAsync!==undefined}
     public get canGetReadStream(){return this._getReadStream!==undefined}
+    public get canWatch(){return this._watch!==undefined}
 
     protected readonly removeProtocolFromSourceUrls?:boolean;
     protected readonly addProtocolToSourceUrls?:string;
     protected readonly sourceUrlPrefix?:string;
+
+    protected readonly _onItemsChange=new Subject<VfsItemChangeEvt>();
+    public get onItemsChange():Observable<VfsItemChangeEvt>{return this._onItemsChange}
 
 
     protected constructor({
@@ -80,6 +85,18 @@ export abstract class VfsMntCtrl
 
         return sourceUrl;
     }
+
+
+    /**
+     * Starts watching a directory. A watch handle is returned if watching successfully starts.
+     */
+    public watch(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsWatchOptions):VfsWatchHandle|undefined
+    {
+        return this._watch?.(fs,mnt,path,this.formatSourceUrl(sourceUrl),options);
+    }
+
+    protected readonly _watch?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsWatchOptions)=>VfsWatchHandle|undefined;
+
 
 
     /**

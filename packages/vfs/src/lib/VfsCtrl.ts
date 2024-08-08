@@ -1,8 +1,10 @@
-import { DisposeContainer, deepClone } from "@iyio/common";
+import { DisposeCallback, DisposeContainer, EvtQueue, deepClone } from "@iyio/common";
+import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
+import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
 import { vfsMntPtProvider } from "./vfs-deps";
-import { createNotFoundVfsDirReadResult, getVfsSourceUrl, sortVfsMntPt } from "./vfs-lib";
-import { VfsConfig, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper } from "./vfs-types";
+import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, vfsTopic } from "./vfs-lib";
+import { VfsConfig, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsCtrlOptions
 {
@@ -21,6 +23,9 @@ export class VfsCtrl
 
     private readonly mntProviderConfig:VfsMntPtProviderConfig;
 
+    private readonly _onItemsChange=new Subject<VfsItemChangeEvt>();
+    public get onItemsChange():Observable<VfsItemChangeEvt>{return this._onItemsChange}
+
     /**
      * Returns a deep clone of the filesystem's config
      */
@@ -30,9 +35,8 @@ export class VfsCtrl
 
     public constructor({
         config={mountPoints:[]},
-        mntProviderConfig={searchRootScope:true}
+        mntProviderConfig={searchRootScope:true},
     }:VfsCtrlOptions={}){
-        console.log('hio 👋 👋 👋 NEW ',config);
         this.config=deepClone(config);
         sortVfsMntPt(this.config.mountPoints);
         this.mntProviderConfig=mntProviderConfig;
@@ -55,6 +59,28 @@ export class VfsCtrl
         this.disposables.dispose();
     }
 
+    public publishTo(queue:EvtQueue,topic=vfsTopic):DisposeCallback
+    {
+        const sub=this.onItemsChange.subscribe(e=>{
+            queue.queue(topic,e);
+        });
+
+        return ()=>{
+            sub.unsubscribe();
+        }
+    }
+
+    public createTriggerCtrl(options:VfsTriggerCtrlOptionsBase):VfsTriggerCtrl
+    {
+        const triggerCtrl=new VfsTriggerCtrl({
+            vfs:this,
+            config:this.config,
+            ...options
+        });
+        this.disposables.add(triggerCtrl);
+        return triggerCtrl;
+    }
+
 
 
     public async canGetItem(path:string){return (await this.getMntCtrlAsync(path))?.canGetItem??false}
@@ -68,9 +94,10 @@ export class VfsCtrl
     public async canWriteBuffer(path:string){return (await this.getMntCtrlAsync(path))?.canWriteBuffer??false}
     public async canWriteStream(path:string){return (await this.getMntCtrlAsync(path))?.canWriteStream??false}
     public async canGetReadStream(path:string){return (await this.getMntCtrlAsync(path))?.canGetReadStream??false}
+    public async canWatch(path:string){return (await this.getMntCtrlAsync(path))?.canWatch??false}
 
     private readonly mntCtrlLookup:Record<string,VfsMntCtrl>={}
-    private readonly mntCtrls:VfsMntCtrl[]=[];
+    private readonly mntCtrls:CtrlInfo[]=[];
 
     /**
      * Registers a new mount controller. Only 1 mount controller per type is allowed.
@@ -83,10 +110,40 @@ export class VfsCtrl
             throw new Error('A mount point control of type "${ctrl.type}" has already been registered')
         }
         this.mntCtrlLookup[ctrl.type]=ctrl;
-        this.mntCtrls.push(ctrl);
-        if(disposeWithFs){
-            this.disposables.add(ctrl);
+        const sub=ctrl.onItemsChange.subscribe(evt=>{
+            this._onItemsChange.next(evt);
+        })
+        let connected=true;
+        const info:CtrlInfo={
+            ctrl,
+            dispose:()=>{
+                if(!connected){
+                    return;
+                }
+                const i=this.mntCtrls.findIndex(info=>info.ctrl===ctrl);
+                if(i===-1){
+                    throw new Error('VfsMntCtrl info not found in list of controllers');
+                }
+                connected=false;
+                sub.unsubscribe();
+                this.mntCtrls.splice(i,1);
+                delete this.mntCtrlLookup[ctrl.type];
+                if(disposeWithFs){
+                    ctrl.dispose();
+                }
+            }
+        };
+        this.mntCtrls.push(info);
+        this.disposables.addCb(info.dispose);
+    }
+
+    unregisterMntCtrl(ctrl:VfsMntCtrl){
+        const info=this.mntCtrls.find(i=>i.ctrl===ctrl);
+        if(!info){
+            return false;
         }
+        info.dispose();
+        return true;
     }
 
     public addMntPt(mnt:VfsMntPt):void{
@@ -167,6 +224,75 @@ export class VfsCtrl
         return undefined;
     }
 
+    private readonly watchHandles:Record<string,WatchHandle>={}
+    public async startWatchingAllAsync(options?:VfsWatchOptions):Promise<number>{
+        const results=await Promise.all(this.config.mountPoints.map(m=>this.startWatchingAsync(m,options)))
+        return results.reduce((p,c)=>p+(c?1:0),0);
+    }
+
+    public async startWatchingAsync(path:string|VfsMntPt,options?:VfsWatchOptions):Promise<boolean>
+    {
+        if(typeof path==='object'){
+            path=path.mountPath
+        }
+
+        path=normalizeVfsPath(path);
+
+        let wh=this.watchHandles[path];
+        if(wh){
+            wh.refCount++;
+            return true;
+        }
+
+        const mnt=this.getMntPt(path);
+        if(!mnt){
+            return false;
+        }
+        const ctrl=await this.getMntCtrlAsync(mnt);
+        if(!ctrl || !ctrl.canWatch){
+            return false;
+        }
+
+        const handle=ctrl.watch(this,mnt,path,getVfsSourceUrl(mnt,path),options);
+        if(!handle){
+            return false;
+        }
+
+        wh={
+            handle,
+            refCount:1,
+        }
+
+        this.watchHandles[path]=wh;
+
+        return true;
+    }
+
+    public stopWatchAsync(path:string|VfsMntPt):boolean{
+
+        if(typeof path==='object'){
+            path=path.mountPath
+        }
+
+        path=normalizeVfsPath(path);
+
+        let wh=this.watchHandles[path];
+        if(!wh){
+            return false;
+        }
+        wh.refCount--;
+        if(!wh.refCount){
+            delete this.watchHandles[path];
+            wh.handle.dispose?.();
+        }
+        return true;
+    }
+
+    public getWatchRefCount(path:string):number{
+        path=normalizeVfsPath(path);
+        return this.watchHandles[path]?.refCount??0;
+    }
+
     /**
      * Gets a single item by path.
      */
@@ -213,6 +339,14 @@ export class VfsCtrl
         }
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.removeAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
+    }
+    public async tryReadStringAsync(path:string):Promise<string|undefined>
+    {
+        try{
+            return await this.readStringAsync(path);
+        }catch{
+            return undefined;
+        }
     }
     public async readStringAsync(path:string):Promise<string>
     {
@@ -284,4 +418,18 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.getReadStreamAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
+}
+
+
+
+interface CtrlInfo
+{
+    ctrl:VfsMntCtrl;
+    dispose:()=>void;
+}
+
+interface WatchHandle
+{
+    handle:VfsWatchHandle;
+    refCount:number;
 }

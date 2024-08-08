@@ -28,6 +28,7 @@
         "aws-jwt-verify": "^4.0.0",
         "blurhash": "^2.0.5",
         "cdk": "2.100",
+        "chokidar": "^3.6.0",
         "constructs": "^10.1.308",
         "core-js": "^3.6.5",
         "date-fns": "^2.29.3",

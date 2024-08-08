@@ -1,6 +1,6 @@
 import { BadRequestError, asArray, escapeRegex, getContentType, safeParseNumberOrUndefined } from "@iyio/common";
 import { HttpRoute, createHttpHandlerResult } from "@iyio/node-common";
-import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt } from "@iyio/vfs";
+import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt, vfs } from "@iyio/vfs";
 
 export interface VfsHttpRouteOptions
 {
@@ -42,7 +42,7 @@ export const createVfsApiRoutes=({
                 _fs=fs;
             }
         }else{
-            _fs=new VfsCtrl({config:{mountPoints:[]}});
+            _fs=vfs();
         }
 
         if(mntCtrl){
@@ -103,6 +103,8 @@ export const createVfsApiRoutes=({
 
                 const path=getPath(query);
 
+                const equals=query['equals'];
+                const contains=query['contains'];
                 const startsWith=query['startsWith'];
                 const endsWith=query['endsWith'];
                 const match=query['match'];
@@ -111,9 +113,11 @@ export const createVfsApiRoutes=({
                     path:path,
                     offset:safeParseNumberOrUndefined(query['offset']),
                     limit:safeParseNumberOrUndefined(query['limit']),
-                    filter:(startsWith || endsWith || match)?{
+                    filter:(startsWith || endsWith || match || equals || contains)?{
                         startsWith,
                         endsWith,
+                        equals,
+                        contains,
                         match:match?new RegExp(match):undefined,
                     }:undefined
                 }

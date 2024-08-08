@@ -49,7 +49,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 
 export function CodeInput<P=any>({
     tab='    ',
-    language='auto',
+    language:_language='auto',
     value,
     readOnly,
     valueOverride,
@@ -78,6 +78,15 @@ export function CodeInput<P=any>({
     ...props
 }:CodeInputProps<P>){
 
+    const [language,setLanguage]=useState(_language);
+    useEffect(()=>{
+        setLanguage(_language);
+    },[_language]);
+    useEffect(()=>{
+        if(_language==='text' && jsonStart.test(value) && jsonEnd.test(value)){
+            setLanguage('json');
+        }
+    },[value,_language]);
 
     const sh=useShiki(language);
 
@@ -442,3 +451,6 @@ const processLines=(codeElem:HTMLElement)=>{
     }
     return minWidth;
 }
+
+const jsonStart=/^\s*\{/;
+const jsonEnd=/\}\s*$/;
