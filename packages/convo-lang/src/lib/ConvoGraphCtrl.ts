@@ -282,7 +282,6 @@ export class ConvoGraphCtrl
             const newState=await this._nextAsync(tv,group);
             if(newState==='failed'){
                 if(this.hasListeners){
-                    console.log('hio 👋 👋 👋 new state',newState);
                     this.triggerEvent({
                         type:'traversal-failed',
                         text:tv.errorMessage??'Traversal failed',
@@ -294,7 +293,6 @@ export class ConvoGraphCtrl
         }catch(ex){
             tv.currentStepIndex=0;
             //throw errors can be retired
-            console.log('hio 👋 👋 👋 error caught',ex);
             if(this.hasListeners){
                 this.triggerEvent({
                     type:'traversal-failed',
@@ -447,7 +445,6 @@ export class ConvoGraphCtrl
     private async getSharedSourceAsync():Promise<string>
     {
         const nodes=(await this.store.getSourceNodesAsync()).filter(s=>s.shared);
-        console.log('hio 👋 👋 👋 SOURCE nodes',nodes);
         if(!nodes.length){
             return '';
         }
