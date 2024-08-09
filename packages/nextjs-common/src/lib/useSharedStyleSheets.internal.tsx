@@ -38,3 +38,65 @@ export const useNextJsStyleSheets=()=>{
     return sheets;
 
 }
+
+export const useWorkaroundForNextJsOutOfOrderStyleSheets=():boolean=>{
+
+    const [refresh,setRefresh]=useState(false);
+    useEffect(()=>{
+        if(refresh){
+            setRefresh(false);
+        }
+    },[refresh]);
+
+    useEffect(()=>{
+        let iv:any=null;
+        let m=true;
+        const sub=sharedStyleSheetsUpdateSubject.subscribe(()=>{
+            if(!sharedStyleSheets.length){
+                return;
+            }
+            clearInterval(iv);
+            iv=setInterval(()=>{
+                if(!m){
+                    return;
+                }
+                let prev=sharedStyleSheets[0];
+                if(!prev){
+                    return;
+                }
+                let prevElem=globalThis.document?.getElementById(prev.id);
+                if(!prevElem){
+                    return;
+                }
+
+                for(let i=1;i<sharedStyleSheets.length;i++){
+                    const sheet=sharedStyleSheets[i];
+                    if(!sheet){
+                        return;
+                    }
+                    const sheetElem=globalThis.document?.getElementById(sheet.id);
+                    if(!sheetElem){
+                        return;
+                    }
+
+                    if(sheetElem.previousElementSibling!==prevElem){
+                        clearInterval(iv);
+                        setRefresh(true);
+                        return;
+                    }
+                }
+
+                clearInterval(iv);
+                sub.unsubscribe();
+
+            },10);
+        })
+        return ()=>{
+            m=false;
+            sub.unsubscribe();
+            clearInterval(iv);
+        }
+    },[]);
+
+    return refresh;
+}
