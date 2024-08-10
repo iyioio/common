@@ -67,7 +67,13 @@ export const getEvtTriggerValue=(trigger:EvtTrigger,ctx:EvtTriggerCtx):any=>{
         if(!sourcePath){
             continue;
         }
-        setValueByPath(value,prop,getValueByPath(ctx,sourcePath));
+        if(sourcePath.includes('{{')){
+            setValueByPath(value,prop,sourcePath.replace(/\{\{(.*?)\}\}/g,(_,name:string)=>{
+                return getValueByPath(ctx,name)
+            }));
+        }else{
+            setValueByPath(value,prop,getValueByPath(ctx,sourcePath));
+        }
     }
 
     return value;
