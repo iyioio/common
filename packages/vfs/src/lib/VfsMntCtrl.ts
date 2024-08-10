@@ -33,6 +33,7 @@ export abstract class VfsMntCtrl
     public get canWriteStream(){return this._writeStreamAsync!==undefined}
     public get canGetReadStream(){return this._getReadStream!==undefined}
     public get canWatch(){return this._watch!==undefined}
+    public get canTouch(){return this._touchAsync!==undefined}
 
     protected readonly removeProtocolFromSourceUrls?:boolean;
     protected readonly addProtocolToSourceUrls?:string;
@@ -85,6 +86,21 @@ export abstract class VfsMntCtrl
 
         return sourceUrl;
     }
+
+
+    /**
+     * Touches a file either creating it or trigging a change
+     */
+    public touchAsync(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem>
+    {
+        if(!this._touchAsync){
+            throw new UnsupportedError(`touchAsync not supported by mount controller of type ${this.type}`);
+        }
+        return this._touchAsync?.(fs,mnt,path,this.formatSourceUrl(sourceUrl));
+    }
+
+    protected readonly _touchAsync?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined)=>Promise<VfsItem>;
+
 
 
     /**

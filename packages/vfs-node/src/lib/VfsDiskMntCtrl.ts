@@ -1,5 +1,5 @@
 import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths } from "@iyio/common";
-import { pathExistsAsync } from "@iyio/node-common";
+import { execAsync, pathExistsAsync } from "@iyio/node-common";
 import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
 import chokidar from 'chokidar';
 import { Dirent, createReadStream, createWriteStream } from "fs";
@@ -57,7 +57,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
                         item:{
                             name:getFileName(path),
                             path,
-                            type
+                            type,
+                            contentType:getContentType(path)
                         }
                     }
                 })
@@ -100,6 +101,19 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             console.error('Unable to start directory watcher')
             return undefined;
         }
+    }
+
+    protected override _touchAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem>=>{
+        if(!sourceUrl){
+            throw new Error('sourceUrl required');
+        }
+        await this.makeDirectoryForFileAsync(sourceUrl);
+        await execAsync(`touch '${sourceUrl.replace(/'/g,'')}'`);
+        const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
+        if(!item){
+            throw new Error('Unable to get touched file');
+        }
+        return item;
     }
 
 

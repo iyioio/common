@@ -95,6 +95,7 @@ export class VfsCtrl
     public async canWriteStream(path:string){return (await this.getMntCtrlAsync(path))?.canWriteStream??false}
     public async canGetReadStream(path:string){return (await this.getMntCtrlAsync(path))?.canGetReadStream??false}
     public async canWatch(path:string){return (await this.getMntCtrlAsync(path))?.canWatch??false}
+    public async canTouch(path:string){return (await this.getMntCtrlAsync(path))?.canTouch??false}
 
     private readonly mntCtrlLookup:Record<string,VfsMntCtrl>={}
     private readonly mntCtrls:CtrlInfo[]=[];
@@ -291,6 +292,22 @@ export class VfsCtrl
     public getWatchRefCount(path:string):number{
         path=normalizeVfsPath(path);
         return this.watchHandles[path]?.refCount??0;
+    }
+
+    /**
+     * Touches a file either creating it or trigging a change
+     */
+    public async touchAsync(path:string):Promise<VfsItem|undefined>
+    {
+        const mnt=this.getMntPt(path);
+        if(!mnt){
+            return undefined;
+        }
+        const ctrl=await this.getMntCtrlAsync(mnt);
+        if(!ctrl){
+            return undefined;
+        }
+        return await ctrl.touchAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
 
     /**

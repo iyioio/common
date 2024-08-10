@@ -67,6 +67,15 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         }
     }
 
+    protected override _touchAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem>=>{
+        const item=await this.getHttpClient().postAsync<VfsItem>(this.getUrl(sourceUrl,'touch'),{});
+        if(!item){
+            throw new Error('Touched file not returned')
+        }
+        this.setItemUrl(item);
+        return item;
+    }
+
     protected override _getItemAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,options?:VfsItemGetOptions):Promise<VfsItem|undefined>=>
     {
         const item=await this.getHttpClient().getAsync<VfsItem>(this.getUrl(sourceUrl,'item'));

@@ -142,6 +142,20 @@ export const createVfsApiRoutes=({
         },
 
         {
+            method:'POST',
+            match:new RegExp(`${regPrefix}/touch(/.*|$)`),
+            handler:async ({
+                query,
+            })=>{
+
+                const path=getPath(query);
+
+                return await getFs().touchAsync(path);
+
+            }
+        },
+
+        {
             method:'GET',
             match:new RegExp(`${regPrefix}/string(/.*|$)`),
             handler:async ({
