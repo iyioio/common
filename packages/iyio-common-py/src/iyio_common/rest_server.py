@@ -31,10 +31,16 @@ def create_rest_handler(
             self.send_header("Access-Control-Allow-Credentials", "true")
 
         def handle_body_request(self,method):
-            print(method+" "+self.path)
 
             parsed=urllib.parse.urlparse(self.path)
             path=parsed.path
+
+            apiIndex=path.index('/api/')
+            print('apiIndex',apiIndex)
+            if apiIndex != -1:
+                path=path[apiIndex+4:]
+
+            print(method+" "+path)
 
             content_len = int(self.headers.get('Content-Length'))
             post_body = json.loads(self.rfile.read(content_len))
