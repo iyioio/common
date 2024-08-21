@@ -1,7 +1,7 @@
 import { BaseError, asArrayItem, getContentType, getErrorMessage, queryParamsToObject } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
 import { createReadStream } from "fs";
-import { createServer } from "http";
+import { Server, createServer } from "http";
 import { Readable } from "node:stream";
 import { join } from "path";
 import { HttpRoute, defaultHttpServerPort, getHttpRoute, isHttpHandlerResult } from "./http-server-lib";
@@ -31,8 +31,9 @@ export const createHttpServer=({
     removeApiFromPathStart,
     routes,
     serverName='api server'
-}:HttpServerOptions)=>{
-    createServer(async (req,res)=>{
+}:HttpServerOptions):Server=>{
+    const server=createServer(async (req,res)=>{
+        const method=req.method??'GET';
         let path=(req.url??'/');
         if(!path.startsWith('/')){
             path='/'+path;
@@ -43,14 +44,13 @@ export const createHttpServer=({
                 path='/'+path;
             }
         }
-        console.info(`request ${path}, pid:${process.pid}`);
+        console.info(`request ${method}:${path}, pid:${process.pid}`);
         const qi=path.indexOf('?');
         const query:Record<string,string>=qi===-1?{}:queryParamsToObject(path.substring(qi));
         if(qi!==-1){
             path=path.substring(0,qi);
         }
         const filepath=join(baseDir,path.replace(/^\//,'').replace(/\/\.{2,}\//g,'/_/'));
-        const method=req.method??'GET';
         let html:string|undefined;
         let markdown:string|undefined;
         let text:string|undefined;
@@ -211,9 +211,13 @@ export const createHttpServer=({
             res.statusCode=404;
             res.end('404');
         }
-    }).listen({
+    })
+
+    server.listen({
         port,
         exclusive:false,
     });
+
     console.info(`${serverName} listening on port ${port} - ${displayUrl||`http://localhost:${port}`}`);
+    return server;
 }
