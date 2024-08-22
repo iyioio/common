@@ -63,7 +63,7 @@ export const sql=(strings:TemplateStringsArray,...values:any[])=>{
         strAry.push(strings[i] as string);
     }
 
-    return strAry.join('').trim();
+    return strAry.join('');
 }
 
 
