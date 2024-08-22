@@ -516,7 +516,8 @@ export const objGetFirstValue=(obj:HashMap):any=>{
 export const objectToQueryParams=(obj:HashMap):string=>{
     const values:string[]=[];
     for(const e in obj){
-        values.push(encodeURIComponent(e)+'='+encodeURIComponent(obj[e]?.toString()??'true'))
+        const v=obj[e]
+        values.push(encodeURIComponent(e)+'='+encodeURIComponent((Array.isArray(v)?v.join(','):v?.toString())??'true'))
     }
     return values.join('&');
 }
