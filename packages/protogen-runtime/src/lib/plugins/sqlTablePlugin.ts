@@ -195,7 +195,7 @@ const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):{type:string|undefined,c
 
     let dbType=(node.children?.['$sqlType']?.value??node.children?.['$dbType']?.value)?.trim();
     if(dbType){
-        const len=(node.children?.['$sqlLength']?.value??node.children?.['$dbLength']?.value)?.trim();
+        const len=(node.children?.['$sqlLength']?.value??node.children?.['$dbLength']?.value??node.children?.['max']?.value)?.trim();
         if(len){
             dbType+=`(${len})`
         }
@@ -232,7 +232,7 @@ const getSqlType=(node:ProtoNode,allNodes?:ProtoNode[]):{type:string|undefined,c
 const getSqlMaxLength=(node:ProtoNode,longProps:string[]):number|null=>{
     const maxChild=node.children?.['max'];
     if(maxChild){
-        const n=parseNum(node.value);
+        const n=parseNum(maxChild.value);
         if(n!==undefined){
             return n;
         }
