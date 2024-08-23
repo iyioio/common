@@ -1,43 +1,31 @@
 
-import { createBase64DataUrl } from '@iyio/common';
 import { useEffect, useState } from 'react';
-import { BUNDLED_LANGUAGES, Highlighter, Lang, getHighlighter } from 'shiki';
+import { Subject } from 'rxjs';
+import { Highlighter, BundledLanguage as Lang, createHighlighter } from 'shiki';
+import { bundledLanguages } from 'shiki/langs';
 
 let defaultHighlighter:Promise<Highlighter>|null;
 
 const loadLangMap:Record<string,Promise<void>>={};
+
+const onLangLoad=new Subject<string>();
 
 export const loadShikiLangAsync=(name:string)=>{
     return loadLangMap[name]??(loadLangMap[name]=_loadShikiLangAsync(0,name));
 }
 
 const langDeps:Record<string,string[]>={
-    mdx:['tsx'],
+    //mdx:['tsx'],
     convo:['json','xml','javascript','python'],
 }
 
-const loadDepsAsync=async (depth:number,name:string,scope=`source.${name}`)=>{
-    if(depth>5){
+const _loadShikiLangAsync=async (
+    depth:number,
+    name:string,
+)=>{
+
+    if(depth>10){
         return;
-    }
-    const depList=langDeps[name];
-    if(!depList){
-        return;
-    }
-
-}
-
-const _loadShikiLangAsync=async (depth:number,name:string,scope=`source.${name}`)=>{
-
-    if(depth>5){
-        return;
-    }
-
-    const depList=langDeps[name];
-    if(depList){
-        for(const dep of depList){
-            await _loadShikiLangAsync(depth+1,dep);
-        }
     }
 
     const sh=await getShikiAsync();
@@ -46,30 +34,43 @@ const _loadShikiLangAsync=async (depth:number,name:string,scope=`source.${name}`
         return;
     }
 
-    if(BUNDLED_LANGUAGES.some(l=>l.id===name)){
-        await sh.loadLanguage(name as Lang);
-    }else{
+    try{
+        await sh.loadLanguage((name==='convo'?convo:name) as any);
+        onLangLoad.next(name);
+    }catch{
+        //
+    }
 
-        await sh.loadLanguage({
-            id:name,
-            scopeName:scope,
-            displayName:name,
-            path:name==='convo'?createBase64DataUrl(JSON.stringify(convo),'application/json'):`highlighting/languages/${name}.tmLanguage.json`,
+    const bundled=(await bundledLanguages[name as Lang]?.())?.default;
 
-        })
+    const depList=langDeps[name];
+    if(depList){
+        for(const dep of depList){
+            await _loadShikiLangAsync(depth+1,dep);
+        }
+    }
+
+    if(bundled){
+        for(const b of bundled){
+            if(b.embeddedLangs){
+                for(const e of b.embeddedLangs){
+                    await _loadShikiLangAsync(depth+1,e);
+                }
+            }
+            if(b.embeddedLangsLazy){
+                for(const e of b.embeddedLangsLazy){
+                    await _loadShikiLangAsync(depth+1,e);
+                }
+            }
+        }
     }
 }
 
 export const getShikiAsync=():Promise<Highlighter>=>{
     if(!defaultHighlighter){
-        defaultHighlighter=getHighlighter({
-            theme:'dark-plus',
+        defaultHighlighter=createHighlighter({
+            themes:['dark-plus'],
             langs:[],
-            paths:{
-                themes:'/highlighting/themes',
-                languages:'/highlighting/languages',
-                wasm:'/highlighting'
-            }
         });
     }
     return defaultHighlighter;
@@ -78,8 +79,7 @@ export const getShikiAsync=():Promise<Highlighter>=>{
 export const useShiki=(language?:string)=>{
 
     const [sh,setSh]=useState<Highlighter|null>(null);
-
-    const [langSh,setLangSh]=useState<Highlighter|null>(null);
+    const [loadIndex,setLoadIndex]=useState(0);
 
 
     useEffect(()=>{
@@ -96,26 +96,40 @@ export const useShiki=(language?:string)=>{
     },[]);
 
     useEffect(()=>{
-        setLangSh(null);
+        setLoadIndex(v=>v+1);
         if(!sh || !language){
             return;
         }
-
         let m=true;
-
         loadShikiLangAsync(language).then(()=>{
             if(m){
-                setLangSh(sh);
+                setLoadIndex(v=>v+1);
             }
         })
-
         return ()=>{
             m=false;
         }
 
     },[language,sh]);
 
-    return language?langSh:sh;
+    useEffect(()=>{
+        let iv:any=undefined;
+        let m=true;
+        const sub=onLangLoad.subscribe(()=>{
+            iv=setTimeout(()=>{
+                clearTimeout(iv);
+                if(m){
+                    setLoadIndex(v=>v+1);
+                }
+            },100);
+        })
+        return ()=>{
+            sub.unsubscribe();
+            m=false;
+        }
+    },[]);
+
+    return {sh,loadIndex};
 }
 
 const convo={

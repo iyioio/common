@@ -22,7 +22,7 @@ export function CodeView({
     style.root();
 
     const code=value||children||'';
-    const sh=useShiki(language);
+    const {sh,loadIndex}=useShiki(language);
 
     const [elem,setElem]=useState<HTMLElement|null>(null);
 
@@ -30,12 +30,12 @@ export function CodeView({
         if(!elem || !sh){
             return;
         }
-        elem.innerHTML=sh.codeToHtml(code,{lang:language});
+        elem.innerHTML=sh.codeToHtml(code,{lang:language?sh.getLoadedLanguages().includes(language)?language:'text':'text',theme:'dark-plus'});
         if(noBg){
             elem.querySelectorAll('pre').forEach(e=>e.style.backgroundColor='transparent')
         }
 
-    },[sh,code,elem,language,noBg]);
+    },[sh,loadIndex,code,elem,language,noBg]);
 
     return (
         <pre className="CodeView" style={style.vars({wrap:wrap?'pre-wrap':'pre'})}><code ref={setElem}/></pre>

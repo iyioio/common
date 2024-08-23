@@ -2,7 +2,6 @@ import { atDotCss } from '@iyio/at-dot-css';
 import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, CodeParsingResult, escapeHtml, getSubstringCount, strLineCount } from '@iyio/common';
 import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Lang } from 'shiki';
 import { dt } from '../lib/lib-design-tokens';
 import { LineNumbers } from './LineNumbers';
 import { useShiki } from './shiki';
@@ -88,7 +87,7 @@ export function CodeInput<P=any>({
         }
     },[value,_language]);
 
-    const sh=useShiki(language);
+    const {sh,loadIndex}=useShiki(language);
 
     const [parsingErrors,setParsingErrors]=useState<(CodeParsingError|number)[]|undefined>(undefined);
 
@@ -102,7 +101,7 @@ export function CodeInput<P=any>({
 
         setParsingErrors(undefined);
 
-        if(!code || !sh || !textArea || !sh.getLoadedLanguages().includes(language as Lang)){
+        if(!code || !textArea || !sh){
             return;
         }
 
@@ -127,8 +126,26 @@ export function CodeInput<P=any>({
                 })
             }
         }
-
-        let highlighted=sh.codeToHtml(fullValue,{lang:language,lineOptions});
+        let iv:any=undefined;
+        let highlighted:string;
+        try{
+            highlighted=sh.codeToHtml(fullValue,{
+                lang:sh.getLoadedLanguages().includes(language)?language:'text',
+                theme:'dark-plus',
+                transformers:[{
+                    line:function(elem,line){
+                        for(const lo of lineOptions){
+                            if(lo.line===line && lo.classes){
+                                this.addClassToHast(elem,lo.classes)
+                            }
+                        }
+                    }
+                }]
+            });
+        }catch(ex){
+            console.error('code to html failed',ex);
+            return;
+        }
         code.innerHTML=highlighted;
         const codeElem=code.querySelector('code');
         let minWidth=0;
@@ -138,7 +155,7 @@ export function CodeInput<P=any>({
         textArea.style.minWidth=minWidth+'px';
 
         if(parser){
-            const iv=setTimeout(()=>{
+            iv=setTimeout(()=>{
                 try{
                     const r=parser(fullValue,{
                         debug:debugParser?debugParser===true?console.info:debugParser:undefined,
@@ -153,13 +170,18 @@ export function CodeInput<P=any>({
                     if(r.error){
                         console.info('⛔️ CodeInput parsing error',r.error);
                         console.info(r.error.near);
-                        code.innerHTML=sh.codeToHtml(fullValue,{lang:language,lineOptions:[
-                            {
-                                line:r.error.lineNumber,
-                                classes:['CodeInput-errorLine']
-                            },
-                            ...lineOptions
-                        ]}).replace(
+                        code.innerHTML=sh.codeToHtml(fullValue,{lang:language,theme:'dark-plus',transformers:[{
+                            line:function(elem,line){
+                                if(line===r.error?.lineNumber){
+                                    this.addClassToHast(elem,'CodeInput-errorLine')
+                                }
+                                for(const lo of lineOptions){
+                                    if(lo.line===line && lo.classes){
+                                        this.addClassToHast(elem,lo.classes)
+                                    }
+                                }
+                            }
+                        }]}).replace(
                             /class="[^"]*CodeInput-errorLine[^"]*"[^>]*>/g,
                             v=>`${v}<div class="CodeInput-error">${
                                 escapeHtml(r.error?.message??'')
@@ -176,15 +198,17 @@ export function CodeInput<P=any>({
                     setParsingErrors([0]);
                 }
             },parsingDelayMs);
-            return ()=>{
-                clearTimeout(iv);
-            }
+
         }else{
             setParsingErrors(undefined);
             return undefined;
         }
+
+        return ()=>{
+            clearTimeout(iv);
+        }
     },[
-        code,textArea,valueOverride,value,language,sh,parser,
+        code,textArea,valueOverride,value,language,parser,sh,loadIndex,
         parsingDelayMs,logParsed,debugParser,parserOptions,
         highlightPrefix,highlightSuffix
     ]);
@@ -267,7 +291,7 @@ export function CodeInput<P=any>({
     return (
         <>
             <div
-                className={style.root({loading:!sh,tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},null,props)}
+                className={style.root({tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},null,props)}
                 style={{
                     minHeight:fillScrollHeight?`var(${scrollViewContainerMinHeightCssVar})`:undefined
                 }}
@@ -359,9 +383,6 @@ const style=atDotCss({name:'CodeInput',css:`
         outline:none;
         outline-width:0;
         cursor:text;
-    }
-    .CodeInput.loading textarea{
-        color:unset;
     }
     .CodeInput.readOnly textarea{
         pointer-events:none;
