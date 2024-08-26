@@ -24,6 +24,7 @@ export interface StaticWebSiteProps
     nxExportedPackage?:string;
     path?:string;
     cdn?:boolean;
+    cdnCors?:boolean;
     domainName?:string;
     additionalDomainNames?:string[];
     envVars?:HashMap<string>;
@@ -49,6 +50,7 @@ export class StaticWebSite extends Construct {
         path,
         nxExportedPackage,
         cdn=false,
+        cdnCors=false,
         domainName,
         additionalDomainNames,
         envVars,
@@ -328,6 +330,14 @@ export class StaticWebSite extends Construct {
                 ],
 
             });
+
+            if(cdnCors){
+                const cfnDistribution = dist.node.defaultChild as cf.CfnDistribution;
+                cfnDistribution.addPropertyOverride(
+                    'DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId',
+                    cf.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT_AND_SECURITY_HEADERS.responseHeadersPolicyId
+                );
+            }
 
             this.distributionUrl=`https://${dist.distributionDomainName}`;
 

@@ -110,6 +110,7 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                                 ignorePaths:ignorePaths.length?ignorePaths.map(p=>p.value??'').filter(v=>v):undefined,
                                 nxExportedPackage:name,
                                 cdn:true,
+                                cdnCors:node.children?.['cors']?true:undefined,
                                 domainName:domains[0]?.value?.trim(),
                                 additionalDomainNames:domains.length>1?domains.map(d=>d.value?.trim()).filter((d,i)=>d && i>0) as string[]:undefined,
                                 createOutputs:true,
