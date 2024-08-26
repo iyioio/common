@@ -231,12 +231,15 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         return item;
     }
 
-    private _readAsync(sourceUrl:string|undefined):Promise<Buffer>
+    private async _readAsync(sourceUrl:string|undefined):Promise<Buffer>
     {
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
-        return readFile(sourceUrl);
+        if(!await pathExistsAsync(sourceUrl)){
+            throw new NotFoundError();
+        }
+        return await readFile(sourceUrl);
     }
 
     protected override _readStringAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<string>=>
@@ -297,7 +300,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
-        const writeStream=createWriteStream(sourceUrl);
+        const writeStream=createWriteStream(sourceUrl,{flags:'w',autoClose:true});
         return await new Promise<VfsItem>((resolve,reject)=>{
             writeStream.on('open',()=>{
                 stream.pipe(writeStream);
