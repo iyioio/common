@@ -1,4 +1,4 @@
-import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, aiCompletionFnArnParam } from '@iyio/ai-complete';
+import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, CompletionOptions, aiCompletionFnArnParam } from '@iyio/ai-complete';
 import { LambdaClient } from '@iyio/aws-lambda';
 import { Scope } from '@iyio/common';
 
@@ -40,6 +40,11 @@ export class LambdaAiCompletionProvider implements AiCompletionProvider
             outputScheme:AiCompletionResultScheme,
             // todo - add input and output schemes
         })
+    }
+
+    public toModelFormat(lastMessage:AiCompletionMessage,request:AiCompletionRequest,options?:CompletionOptions):any
+    {
+        return undefined;
     }
 
 }
