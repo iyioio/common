@@ -153,6 +153,7 @@ export class VfsCtrl
     }
 
     public removeMntPt(path:string):VfsMntPt|undefined{
+        path=normalizeVfsPath(path);
         for(let i=0;i<this.config.mountPoints.length;i++){
             const item=this.config.mountPoints[i];
             if(item?.mountPath===path){
@@ -213,9 +214,7 @@ export class VfsCtrl
 
     public getMntPt(path:string):VfsMntPt|undefined
     {
-        if(!path.startsWith('/')){
-            path='/'+path;
-        }
+        path=normalizeVfsPath(path);
         for(let i=0;i<this.config.mountPoints.length;i++){
             const m=this.config.mountPoints[i];
             if(path.startsWith(m?.mountPath??'')){
@@ -299,6 +298,7 @@ export class VfsCtrl
      */
     public async touchAsync(path:string):Promise<VfsItem|undefined>
     {
+        path=normalizeVfsPath(path);
         const mnt=this.getMntPt(path);
         if(!mnt){
             return undefined;
@@ -315,6 +315,8 @@ export class VfsCtrl
      */
     public async getItemAsync(path:string,options?:VfsItemGetOptions):Promise<VfsItem|undefined>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             return undefined;
@@ -341,6 +343,8 @@ export class VfsCtrl
     }
     public async mkDirAsync(path:string):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -350,6 +354,8 @@ export class VfsCtrl
     }
     public async removeAsync(path:string):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -365,8 +371,29 @@ export class VfsCtrl
             return undefined;
         }
     }
+    public async readObjectAsync<T=any>(path:string):Promise<T|undefined>{
+
+        let value:any;
+
+        try{
+            value=await this.readStringAsync(path);
+        }catch{
+            return undefined;
+        }
+
+        try{
+            return JSON.parse(value);
+        }catch(ex){
+            console.error(`Parse loaded vfs value failed. path:${path}`,ex);
+            return undefined;
+        }
+
+
+    }
     public async readStringAsync(path:string):Promise<string>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -376,6 +403,8 @@ export class VfsCtrl
     }
     public async writeStringAsync(path:string,content:string):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -383,8 +412,14 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.writeStringAsync(this,mnt,path,getVfsSourceUrl(mnt,path),content);
     }
+    public async writeObjectAsync(path:string,value:any):Promise<VfsItem>
+    {
+        return await this.writeStringAsync(path,JSON.stringify(value));
+    }
     public async appendStringAsync(path:string,content:string):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -394,6 +429,8 @@ export class VfsCtrl
     }
     public async readBufferAsync(path:string):Promise<Uint8Array>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -403,6 +440,8 @@ export class VfsCtrl
     }
     public async writeBufferAsync(path:string,buffer:Uint8Array|Blob|Blob[]|string):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -419,6 +458,8 @@ export class VfsCtrl
     }
     public async writeStreamAsync(path:string,stream:VfsReadStream):Promise<VfsItem>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);
@@ -428,6 +469,8 @@ export class VfsCtrl
     }
     public async getReadStreamAsync(path:string):Promise<VfsReadStreamWrapper>
     {
+        path=normalizeVfsPath(path);
+
         const mnt=this.getMntPt(path);
         if(!mnt){
             throw new Error(`No mount point found for path ${path}`);

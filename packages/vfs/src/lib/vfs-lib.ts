@@ -1,6 +1,6 @@
 // Convo FS is a virtual filesystem
 
-import { EvtTrigger, ValueCondition, getFileName, joinPaths, starStringTest } from "@iyio/common";
+import { EvtTrigger, ValueCondition, currentBaseUser, getFileName, joinPaths, starStringTest } from "@iyio/common";
 import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
 
 
@@ -47,6 +47,9 @@ export const sortVfsMntPt=(mountPoints:VfsMntPt[])=>{
  * disk path:            https://example.com/user-files/docs/report.txt
  */
 export const getVfsSourceUrl=(mnt:VfsMntPt,virtualPath:string,throwOnInvalidPaths=true):string|undefined=>{
+
+    virtualPath=normalizeVfsPath(virtualPath);
+
     if(mnt.sourceUrl===undefined){
         return undefined;
     }
@@ -141,6 +144,11 @@ const _testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boolean=>
 
 export const normalizeVfsPath=(path:string):string=>{
 
+    if(path.startsWith('~')){
+        const user=currentBaseUser.get();
+        path=`/users/${user?.id||'null'}${path.substring(1)}`
+    }
+
     if(path.endsWith('/')){
         path=path.substring(0,path.length-1);
     }
@@ -211,4 +219,8 @@ export const autoFormatVfsTrigger=(trigger:EvtTrigger)=>{
     }
     trigger.matchKey=parts[0] as string;
 
+}
+
+export const isVfsFilePath=(path:string)=>{
+    return path.startsWith('/') || path.startsWith('~/') || path.startsWith('./');
 }
