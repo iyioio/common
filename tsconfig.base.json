@@ -64,7 +64,8 @@
             "@iyio/rtxt": ["packages/rtxt/src/index.ts"],
             "@iyio/iyio-util-fns": ["packages/iyio-util-fns/src/index.ts"],
             "@iyio/vfs": ["packages/vfs/src/index.ts"],
-            "@iyio/vfs-node": ["packages/vfs-node/src/index.ts"]
+            "@iyio/vfs-node": ["packages/vfs-node/src/index.ts"],
+            "@iyio/vfs-react": ["packages/vfs-react/src/index.ts"]
         }
     },
     "exclude": ["node_modules", "tmp","tmpl"]
