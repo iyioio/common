@@ -18,6 +18,8 @@ export interface HttpHandlerResult
     keepStreamOpen?:boolean;
     contentType?:string;
     size?:number;
+    redirect?:string;
+    statusCode?:number;
 }
 
 export interface HttpRequestContext extends HttpRequestContextBase

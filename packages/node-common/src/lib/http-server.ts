@@ -1,4 +1,4 @@
-import { BaseError, asArrayItem, getContentType, getErrorMessage, queryParamsToObject } from "@iyio/common";
+import { BaseError, asArrayItem, getContentType, getErrorMessage, getUriProtocol, joinPaths, queryParamsToObject } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
 import { createReadStream } from "fs";
 import { Server, createServer } from "http";
@@ -23,6 +23,9 @@ export interface HttpServerOptions
     routes:HttpRoute[];
     removeApiFromPathStart?:boolean;
     serverName?:string;
+    hostname?:string;
+    addHostToRedirects?:boolean;
+    https?:boolean;
 }
 export const createHttpServer=({
     port=defaultHttpServerPort,
@@ -30,7 +33,10 @@ export const createHttpServer=({
     displayUrl,
     removeApiFromPathStart,
     routes,
-    serverName='api server'
+    serverName='api server',
+    hostname,
+    addHostToRedirects,
+    https,
 }:HttpServerOptions):Server=>{
     const server=createServer(async (req,res)=>{
         const method=req.method??'GET';
@@ -60,6 +66,8 @@ export const createHttpServer=({
         let keepStreamOpen:boolean|undefined;
         let outSize:number=0;
         let contentType:string|undefined;
+        let redirect:string|undefined;
+        let statusCode:number|undefined;
 
         for(const e in defaultCorsHeaders){
             res.setHeader(e,defaultCorsHeaders[e]??'');
@@ -124,6 +132,8 @@ export const createHttpServer=({
                     stream=result.stream;
                     keepStreamOpen=result.keepStreamOpen;
                     contentType=result.contentType;
+                    redirect=result.redirect;
+                    statusCode=result.statusCode;
                     if(result.size){
                         outSize=result.size;
                     }
@@ -147,21 +157,31 @@ export const createHttpServer=({
             res.end(getErrorMessage(ex)+'\n\n\n'+(ex as any)?.stack)
             return;
         }
-        if(html){
+        if(redirect!==undefined){
+            if(addHostToRedirects && !getUriProtocol(redirect)){
+                const host=hostname || req.headers['host'] || req.headers['Host'];
+                if(host){
+                    redirect=joinPaths(`${(host==='localhost' && https===undefined)?'http':https===false?('http'):'https'}://${host}`,redirect);
+                }
+            }
+            res.setHeader('Location',redirect);
+            res.statusCode=statusCode??301;
+            res.end();
+        }else if(html){
             res.setHeader('Content-Type',contentType??'text/html');
-            res.statusCode=200;
+            res.statusCode=statusCode??200;
             res.end(html);
         }else if(markdown){
             res.setHeader('Content-Type',contentType??'text/markdown');
-            res.statusCode=200;
+            res.statusCode=statusCode??200;
             res.end(markdown);
         }else if(text){
             res.setHeader('Content-Type',contentType??'text/plain');
-            res.statusCode=200;
+            res.statusCode=statusCode??200;
             res.end(text);
         }else if(json!==undefined){
             res.setHeader('Content-Type',contentType??'application/json');
-            req.statusCode=200;
+            res.statusCode=statusCode??200;
             let text:string='null';
             try{
                 text=JSON.stringify(json);
@@ -170,7 +190,7 @@ export const createHttpServer=({
             }
             res.end(text);
         }else if(stream){
-            res.statusCode=200;
+            res.statusCode=statusCode??200;
             res.setHeader('Content-type',contentType??'text/plain');
             if(outSize){
                 res.setHeader('Content-Length',outSize.toString());
@@ -189,7 +209,7 @@ export const createHttpServer=({
             stream.pipe(res);
         }else if(outPath && await pathExistsAsync(outPath)){
 
-            res.statusCode=200;
+            res.statusCode=statusCode??200;
             const fileStream=createReadStream(outPath);
             fileStream.on('open',()=>{
                 res.setHeader('Content-type',contentType??getContentType(outPath));
@@ -208,7 +228,7 @@ export const createHttpServer=({
             })
         }else{
             res.setHeader('Content-Type','text/plain');
-            res.statusCode=404;
+            res.statusCode=statusCode??404;
             res.end('404');
         }
     })
