@@ -22,12 +22,15 @@ export interface UiActionItem<
     type?:TType;
     action?:(item:UiActionItem<any,any,any>)=>void;
     description?:string;
+    imageDescription?:string;
+    imageSrc?:string;
     linkTarget?:string;
     data?:TData;
     mapKey?:string|number|null;
     selected?:boolean;
     primary?:boolean;
     secondary?:boolean;
+    order?:number;
 }
 
 export interface UiActionSubItem<
