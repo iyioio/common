@@ -215,9 +215,9 @@ export const arySingle=<T>(value:T[]|T):T|undefined=>{
     return Array.isArray(value)?value[0]:value;
 }
 
-export const uint32ArrayToNumberArray=(input:Uint32Array)=>{
-    const ary:number[]=Array(input.length*4);
-    for(let i=0;i<input.length;i++){
+export const uint32ArrayToNumberArray=(input:Uint32Array,length=input.length)=>{
+    const ary:number[]=Array(length*4);
+    for(let i=0;i<length;i++){
         const n=input[i] as number;
         ary[i*4]=n&255;
         ary[i*4+1]=(n>>8)&255

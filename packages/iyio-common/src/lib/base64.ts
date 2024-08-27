@@ -82,9 +82,9 @@ export const base64EncodeAry=(input:number[],keyStr:string=defaultBase64Chars):s
 /**
  * Encodes an array of numbers into a base 64 string
  */
-export const base64EncodeUint32Array=(input:Uint32Array,keyStr:string=defaultBase64Chars):string=>
+export const base64EncodeUint32Array=(input:Uint32Array,keyStr:string=defaultBase64Chars,aryLength=input.length):string=>
 {
-    return base64EncodeAry(uint32ArrayToNumberArray(input),keyStr);
+    return base64EncodeAry(uint32ArrayToNumberArray(input,aryLength),keyStr);
 }
 
 /**
