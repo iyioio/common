@@ -178,7 +178,9 @@ export const getImageSizeAsync=async (src:string|Blob|MediaSource):Promise<Size>
 }
 
 export const loadImageAsync=(src:string|Blob|MediaSource):Promise<HTMLImageElement>=>{
+    let revokeUrl=false;
     if(typeof src !== 'string'){
+        revokeUrl=true;
         src=URL.createObjectURL(src);
     }
 
@@ -186,9 +188,15 @@ export const loadImageAsync=(src:string|Blob|MediaSource):Promise<HTMLImageEleme
         const img=new Image();
         img.crossOrigin='Anonymous'
         img.onload=()=>{
-            resolve(img)
+            if(revokeUrl){
+                URL.revokeObjectURL(src as string);
+            }
+            resolve(img);
         }
         img.onerror=(e)=>{
+            if(revokeUrl){
+                URL.revokeObjectURL(src as string);
+            }
             reject(e);
         }
         img.src=src as string;
