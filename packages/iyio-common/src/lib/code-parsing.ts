@@ -85,7 +85,7 @@ export const setIndentation=(indent:number,code:string,{
             }
         }
     }else{
-        baseInd=getLineIndentation(lines[0] as string);
+        baseInd=getLineIndentation(lines[0]??'');
     }
 
     const indSp=' '.repeat(indent);
