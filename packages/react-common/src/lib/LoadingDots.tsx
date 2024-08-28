@@ -26,9 +26,9 @@ export function LoadingDots({
             viewBox={inset?`${-inset} ${-inset} ${41+inset*2} ${10+inset*2}`:"0 0 41 10"}
             fill="none"
         >
-            <circle style={style.vars({order:0})} cx="5.76367" cy="5" r="5" fill="white"/>
-            <circle style={style.vars({order:1})} cx="20.7637" cy="5" r="5" fill="white"/>
-            <circle style={style.vars({order:2})} cx="35.7637" cy="5" r="5" fill="white"/>
+            <circle style={style.vars({order:0})} cx="5.76367" cy="5" r="5"/>
+            <circle style={style.vars({order:1})} cx="20.7637" cy="5" r="5"/>
+            <circle style={style.vars({order:2})} cx="35.7637" cy="5" r="5"/>
         </svg>
     )
 
@@ -51,6 +51,7 @@ const style=atDotCss({name:'LoadingDots',namespace:'iyio',order:'framework',css:
     @.root circle{
         animation:@@@dot 1s ease-in-out infinite;
         animation-delay: calc(@@order * 150ms);
+        fill:var(--iyio-LoadingDots-color,#ffffff)
     }
 
     @.root.disabled circle{
