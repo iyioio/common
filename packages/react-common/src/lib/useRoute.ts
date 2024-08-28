@@ -1,5 +1,5 @@
 import { HashMap, RouteInfo, UiRouterEvtListener, uiRouterService, uuid } from "@iyio/common";
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export const useRoute=():RouteInfo=>
 {
@@ -49,4 +49,28 @@ export const useRoutingListener=(listener:UiRouterEvtListener|null|undefined)=>{
         return routeServer.addListenerWithDispose(evt=>refs.current.listener?.(evt));
 
     },[])
+}
+
+
+export const useRouteChanged=()=>{
+
+    const [changed,setChanged]=useState(false);
+    const [ready,setReady]=useState(false);
+
+    useEffect(()=>{
+        const iv=setTimeout(()=>{
+            setReady(true);
+        },1000);
+        return ()=>{
+            clearTimeout(iv);
+        }
+    },[]);
+
+    useRoutingListener(()=>{
+        if(ready){
+            setChanged(true);
+        }
+    })
+
+    return changed;
 }
