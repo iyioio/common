@@ -178,7 +178,7 @@ export class VfsCtrl
             mnt=m;
         }
 
-        let ctrl=this.mntCtrlLookup[mnt.type];
+        let ctrl:VfsMntCtrl|undefined=this.mntCtrlLookup[mnt.type];
         if(ctrl){
             return ctrl;
         }
