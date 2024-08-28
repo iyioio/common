@@ -485,7 +485,7 @@ const convo={
             }
         },
         "typeKeyword":{
-            "match":"\\b(string|number|int|boolean|time|void|any|map|array)\\b",
+            "match":"\\b(string|number|int|boolean|time|void|any|map|array|object)\\b",
             "captures":{
                 "1":{
                     "name":"entity.name.type"
