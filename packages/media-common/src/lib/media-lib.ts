@@ -203,6 +203,32 @@ export const loadImageAsync=(src:string|Blob|MediaSource):Promise<HTMLImageEleme
     })
 }
 
+export const loadAudioAsync=(src:string|Blob|MediaSource):Promise<HTMLAudioElement>=>{
+    let revokeUrl=false;
+    if(typeof src !== 'string'){
+        revokeUrl=true;
+        src=URL.createObjectURL(src);
+    }
+
+    return new Promise<HTMLAudioElement>((resolve,reject)=>{
+        const elem=new Audio();
+        elem.crossOrigin='Anonymous'
+        elem.onload=()=>{
+            if(revokeUrl){
+                URL.revokeObjectURL(src as string);
+            }
+            resolve(elem);
+        }
+        elem.onerror=(e)=>{
+            if(revokeUrl){
+                URL.revokeObjectURL(src as string);
+            }
+            reject(e);
+        }
+        elem.src=src as string;
+    })
+}
+
 export const imageSourceToImageDataAsync=async (src:string|Blob|MediaSource,width?:number,height?:number):Promise<ImageData>=>{
     const img=await loadImageAsync(src);
     const canvas=document.createElement('canvas');
