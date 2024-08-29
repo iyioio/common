@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { tscExecutor } from '@nrwl/js/src/executors/tsc/tsc.impl';
-import type { ExecutorOptions } from '@nrwl/js/src/utils/schema';
+import { tscExecutor } from '@nx/js/src/executors/tsc/tsc.impl';
+import type { ExecutorOptions } from '@nx/js/src/utils/schema';
 import { build as buildWithEsbuild } from 'esbuild';
 import { access, readFile, readdir, realpath, stat, writeFile } from 'fs/promises';
 import { EsbuildTarget, LibBuilderExecutorSchema } from './schema';

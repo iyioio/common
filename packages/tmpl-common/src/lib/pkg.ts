@@ -8,18 +8,6 @@ export const pkg=({
     namespace,
 }:PkgOptions)=>{
     const files={
-".bablerc":
-/*bablerc*/`{
-    "presets": [
-        [
-            "@nrwl/js/babel",
-            {
-                "useBuiltIns": "usage"
-            }
-        ]
-    ]
-}
-`,
 ".eslintrc.json":
 /*json*/`{
     "extends": ["../../.eslintrc.json"],

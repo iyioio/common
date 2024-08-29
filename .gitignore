@@ -47,6 +47,7 @@ Thumbs.db
 .test-data
 .protogen
 .protogen-testing
+/.nx
 
 # Next.js
 .next

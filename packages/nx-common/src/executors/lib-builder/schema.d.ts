@@ -1,4 +1,4 @@
-import type { ExecutorOptions } from '@nrwl/js/src/utils/schema';
+import type { ExecutorOptions } from '@nx/js/src/utils/schema';
 import { BuildOptions } from 'esbuild';
 
 export interface EsbuildTarget

@@ -19,19 +19,6 @@ export const nxLibraryTemplate=({
 
     const outputs:Record<string,string>={
 
-        '.bablerc':
-`{
-    "presets": [
-        [
-            "@nrwl/js/babel",
-            {
-                "useBuiltIns": "usage"
-            }
-        ]
-    ]
-}
-`,
-
         '.eslintrc.json':
 `{
     "extends": ["../../.eslintrc.json"],
