@@ -4,13 +4,39 @@ import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffe
 import { BehaviorSubject } from "rxjs";
 import { PanZoomControls } from "./PanZoomControls";
 
+export type PanZoomDragElem=HTMLElement|SVGElement;
+
+export type PanZoomGetAnchorPoint=(elem:Element)=>Point|null|undefined;
+
 export interface DragTarget{
     selector?:(elem:Element)=>boolean;
     className?:string;
     targetParentClass?:string;
     skipSetTransform?:boolean;
+
+    /**
+     * Called on the end of dragging and when the element of the drag target is an HTMLElement.
+     * Use onElementMove is you need to support non HTMLElement element types.
+     */
     onEnd?:(pt:Point,elem:HTMLElement)=>void;
+
+    /**
+     * Called each move step of dragging and when the element of the drag target is an HTMLElement.
+     * Use onElementMove is you need to support non HTMLElement element types.
+     */
     onMove?:(pt:Point,elem:HTMLElement)=>void;
+
+    /**
+     * Called on the end of dragging.
+     */
+    onElementEnd?:(pt:Point,elem:PanZoomDragElem)=>void;
+
+    /**
+     * Called each move step of dragging.
+     */
+    onElementMove?:(pt:Point,elem:PanZoomDragElem)=>void;
+
+    getAnchorPt?:PanZoomGetAnchorPoint;
 }
 
 /**
@@ -204,7 +230,7 @@ export function PanZoomView({
         dragKeyDown:false,
         lastMiddleUp:0,
 
-        dragTarget:null as {elem:HTMLElement,dt:DragTarget}|null,
+        dragTarget:null as {elem:PanZoomDragElem,dt:DragTarget}|null,
         dragX:0,
         dragY:0,
         dragAnchorX:0,
@@ -217,6 +243,7 @@ export function PanZoomView({
         disabled,
         bound,
         forcePreventDragSelection,
+
     })
     stateRef.current.mode=mode;
     stateRef.current.ignore=ignore;
@@ -260,7 +287,14 @@ export function PanZoomView({
             const t=state.dragTarget;
             state.dragTarget=null;
             state.ignoreRest=false;
-            t?.dt.onEnd?.({x:state.dragX,y:state.dragY},t.elem);
+            if(!t){
+                return;
+            }
+            if(t.elem instanceof HTMLElement){
+                t.dt.onEnd?.({x:state.dragX,y:state.dragY},t.elem);
+            }
+            t.dt.onElementEnd?.({x:state.dragX,y:state.dragY},t.elem);
+
         }
 
         if(points.length===0){
@@ -286,7 +320,7 @@ export function PanZoomView({
                 if(t.targetParentClass){
                     match=matchHierarchy(match as EventTarget,t.targetParentClass);
                 }
-                if(match instanceof HTMLElement){
+                if((match instanceof HTMLElement) || (match instanceof SVGElement)){
                     state.dragTarget={elem:match,dt:t};
                     break;
                 }
@@ -330,11 +364,19 @@ export function PanZoomView({
 
             if(state.anchorPanT===null || state.anchorPanCount!==points.length){
                 if(state.dragTarget){
-                    const match=/translate\(\s*([-\d.]+)px[,\s]*([-\d.]+)px\s*\)/i.exec(state.dragTarget.elem.style.transform??'');
-                    state.dragAnchorX=match?Number(match[1]):0;
-                    state.dragAnchorY=match?Number(match[2]):0;
-                    state.anchorX=x;
-                    state.anchorY=y;
+                    if(state.dragTarget.dt.getAnchorPt){
+                        const pt=state.dragTarget.dt.getAnchorPt(state.dragTarget.elem)??{x:0,y:0};
+                        state.dragAnchorX=pt.x;
+                        state.dragAnchorY=pt.y;
+                        state.anchorX=pt.x;
+                        state.anchorY=pt.y;
+                    }else{
+                        const match=/translate\(\s*([-\d.]+)px[,\s]*([-\d.]+)px\s*\)/i.exec(state.dragTarget.elem.style.transform??'');
+                        state.dragAnchorX=match?Number(match[1]):0;
+                        state.dragAnchorY=match?Number(match[2]):0;
+                        state.anchorX=x;
+                        state.anchorY=y;
+                    }
                 }else{
                     if(shouldIgnore(t1.target)){
                         state.ignoreRest=true;
@@ -401,7 +443,11 @@ export function PanZoomView({
             if(!state.dragTarget.dt.skipSetTransform){
                 state.dragTarget.elem.style.transform=`translate(${state.dragX}px,${state.dragY}px)`
             }
-            state.dragTarget.dt.onMove?.({x:state.dragX,y:state.dragY},state.dragTarget.elem);
+            const e=state.dragTarget.elem;
+            if(e instanceof HTMLElement){
+                state.dragTarget.dt.onMove?.({x:state.dragX,y:state.dragY},e);
+            }
+            state.dragTarget.dt.onElementMove?.({x:state.dragX,y:state.dragY},e);
         }else{
             const pState=state.ctrl.state.value;
             if((pState.x!==state.x || pState.y!==state.y || pState.scale!==state.scale) && !dragTargetOnly){
@@ -438,6 +484,9 @@ export function PanZoomView({
     },[onPoints])
 
     const onMouseDown=useCallback((e:MouseEvent)=>{
+        if(e.button===2){
+            return;
+        }
         if(stateRef.current.forcePreventDragSelection){
             e.preventDefault();
         }
@@ -459,6 +508,9 @@ export function PanZoomView({
     },[onPoints]);
 
     const onMouseMove=useCallback((e:MouseEvent)=>{
+        if(e.button===2){
+            return;
+        }
         const state=stateRef.current;
         if(state.isTouch || !state.mouseDown){
             return;
@@ -471,8 +523,10 @@ export function PanZoomView({
         }])
     },[onPoints]);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const onMouseUp=useCallback((e:MouseEvent)=>{
+        if(e.button===2){
+            return;
+        }
         const state=stateRef.current;
         if(state.isTouch){
             return;
@@ -763,9 +817,10 @@ export class PanZoomCtrl
 
     public transformClientPointToPlane(pt:Point):Point
     {
+        const bounds=this.refs.rootElem?.getBoundingClientRect();
         return {
-            x:(pt.x-this.state.value.x)/this.state.value.scale,
-            y:(pt.y-this.state.value.y)/this.state.value.scale,
+            x:(pt.x-this.state.value.x)/this.state.value.scale-(bounds?.x??0)/this.state.value.scale,
+            y:(pt.y-this.state.value.y)/this.state.value.scale-(bounds?.y??0)/this.state.value.scale,
         }
     }
 
