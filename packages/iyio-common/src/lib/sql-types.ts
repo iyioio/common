@@ -32,6 +32,14 @@ export interface SqlResult
     transactionId?:string;
 }
 
+export interface SqlExecOptions
+{
+    /**
+     * The database the command should be executed in. If null no database should be used.
+     */
+    database?:string|null;
+}
+
 export interface ISqlMethods
 {
     log:boolean;
@@ -46,7 +54,7 @@ export interface ISqlMethods
     selectFromFirstOrDefaultAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T|undefined>;
     selectColAsync<T>(query:string):Promise<T[]>;
     deleteAsync<T>(table:string|DataTableDescription<T>,colName:keyof T,colValue:T[keyof T]):Promise<boolean|undefined>;
-    execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean):Promise<SqlResult>;
+    execAsync(sql:string,includeResultMetadata?:boolean,noLogResult?:boolean,options?:SqlExecOptions):Promise<SqlResult>;
 
     /**
      * Updates an item in a specified table.

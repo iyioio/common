@@ -45,7 +45,10 @@ export class ${constructName} extends SqlClusterBuilder
 
 const clusters:SqlClusterBuilderCluster[]=[${clusters.map((c,i)=>`
     {
-        ...${JSON.stringify(c)},${c.migrations?`
+        ...${JSON.stringify(c)},
+        defaultDatabaseName:process.env['DATABASE_NAME_OVERRIDE']||${JSON.stringify(c.defaultDatabaseName??null)},${c.migrations?`
+        clusterIdentifier:process.env['DATABASE_CLUSTER_ID'],
+        secretArn:process.env['DATABASE_SECRET_ARN'],
         migrations:_migrations${i}`:''}
     }`).join(',')}
 ]

@@ -9,7 +9,8 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "preserveSymlinks": true,
-        "noUncheckedIndexedAccess": true
+        "noUncheckedIndexedAccess": true,
+        "target": "ES2020"
     },
     "files": [],
     "include": [],

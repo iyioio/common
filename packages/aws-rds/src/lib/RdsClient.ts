@@ -1,6 +1,6 @@
-import { BeginTransactionCommand, CommitTransactionCommand, ExecuteStatementCommand, ExecuteStatementCommandInput, Field, RDSDataClient, RollbackTransactionCommand } from "@aws-sdk/client-rds-data";
+import { BeginTransactionCommand, CommitTransactionCommand, ExecuteStatementCommand, ExecuteStatementCommandInput, Field, RDSDataClient, RollbackTransactionCommand, } from "@aws-sdk/client-rds-data";
 import { AwsAuthProvider, AwsAuthProviders, awsRegionParam } from "@iyio/aws";
-import { ISqlTransaction, IWithStoreAdapter, Scope, SqlBaseClient, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, SqlTransactionStatus, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, safeParseNumberOrUndefined, splitSqlStatements, sql } from '@iyio/common';
+import { ISqlTransaction, IWithStoreAdapter, Scope, SqlBaseClient, SqlExecOptions, SqlResult, SqlRow, SqlStoreAdapter, SqlStoreAdapterOptions, SqlTransactionStatus, TypeDef, ValueCache, authService, defineStringParam, delayAsync, minuteMs, safeParseNumberOrUndefined, splitSqlStatements, sql } from '@iyio/common';
 
 export const rdsClusterArnParam=defineStringParam('rdsClusterArn');
 export const rdsSecretArnParam=defineStringParam('rdsSecretArn');
@@ -91,13 +91,15 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
      *                              the returned data.
      * @returns an ExecuteStatementCommandOutput object
      */
-    public async sendAsync(sql:string,includeResultMetadata=false)
+    public async sendAsync(sql:string,includeResultMetadata=false,options?:SqlExecOptions)
     {
         if(this.log){
             console.info(sql)
         }
 
         const t=Date.now();
+
+        const db=options?.database===null?undefined:(options?.database??this.options.database);
 
         if(this.autoSplitStatements){
             const split=splitSqlStatements(sql);
@@ -107,7 +109,7 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
                     await this.getClient().send(new ExecuteStatementCommand({
                         resourceArn:this.options.clusterArn,
                         secretArn:this.options.secretArn,
-                        database:this.options.database,
+                        database:db,
                         sql:s
                     }));
                 }
@@ -118,7 +120,7 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
         const input:ExecuteStatementCommandInput={
             resourceArn:this.options.clusterArn,
             secretArn:this.options.secretArn,
-            database:this.options.database,
+            database:db,
             includeResultMetadata,
             sql,
         }
@@ -144,9 +146,9 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
      * @param noLogResult If true logging is disable even if the client is configured to log results
      * @returns an SqlResult object
      */
-    public async execAsync(sql:string,includeResultMetadata=false,noLogResult=false):Promise<SqlResult>
+    public async execAsync(sql:string,includeResultMetadata=false,noLogResult=false,options?:SqlExecOptions):Promise<SqlResult>
     {
-        const r=await this.sendAsync(sql,includeResultMetadata);
+        const r=await this.sendAsync(sql,includeResultMetadata,options);
         let rows:SqlRow[]|undefined;
         if(r.columnMetadata && r.records){
             rows=[];

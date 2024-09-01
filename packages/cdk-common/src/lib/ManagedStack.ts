@@ -12,7 +12,7 @@ import { setDefaultClusterProps } from './cluster-lib';
 
 export interface ManagedStackProps extends cdk.StackProps, ParamOutputOptions
 {
-    defaultVpc?:ec2.IVpc;
+    defaultVpc?:ec2.IVpc|((scope:ManagedStack)=>ec2.IVpc);
     disableFargateAutoScaling?:boolean;
     dedicatedVpc?:boolean;
     tmpDir?:string;
@@ -71,7 +71,7 @@ export class ManagedStack extends cdk.Stack
         }
 
         if(defaultVpc){
-            setDefaultVpc(defaultVpc);
+            setDefaultVpc((typeof defaultVpc === 'function')?defaultVpc(this):defaultVpc);
         }else if(dedicatedVpc){
             setDefaultVpc(new ec2.Vpc(this,'DefaultVpc',{}))
         }

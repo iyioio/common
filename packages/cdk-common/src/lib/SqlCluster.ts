@@ -5,6 +5,7 @@ import { ArnFormat } from "aws-cdk-lib";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as rds from "aws-cdk-lib/aws-rds";
+import * as secrets from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { SqlDbMigrator, SqlDbMigratorOptions } from "./SqlDbMigrator";
@@ -26,8 +27,13 @@ export interface SqlClusterOptionsBase
     autoPauseMinutes?:number|null;
     migrations?:SqlMigration[];
     migratorOptions?:Partial<SqlDbMigratorOptions>;
-    rdsVersion?:1|2;
+    rdsVersion?:1|2|'by-id';
     version?:string;
+    /**
+     * The id of an existing cluster to attach to instead of creating new.
+     */
+    clusterIdentifier?:string;
+    secretArn?:string;
 }
 
 export interface SqlClusterOptions extends SqlClusterOptionsBase
@@ -43,6 +49,7 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
     public constructor(scope:Construct,id:string,{
         vpc,
         defaultDatabaseName,
+        clusterIdentifier,
         rdsVersion=1,
         minCapacity=rdsVersion===2?0.5:2,
         maxCapacity=2,
@@ -50,6 +57,7 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
         migrations,
         migratorOptions,
         version,
+        secretArn,
         managed:{
             params,
             accessManager,
@@ -58,6 +66,10 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
     }:SqlClusterOptions){
 
         super(scope,id);
+
+        if(clusterIdentifier){
+            rdsVersion='by-id';
+        }
 
         const postgresVersion=version?
             (rds.AuroraPostgresEngineVersion as any)['VER_'+version.replace(/\D/g,'_')]:
@@ -92,8 +104,13 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
             vpc,
         });
 
+        const existingCluster=rdsVersion!=='by-id'?null:rds.DatabaseCluster.fromDatabaseClusterAttributes(this,'Rds',{
+            clusterIdentifier:clusterIdentifier??'no-arn',
+            engine:rds.DatabaseClusterEngine.auroraPostgres({version:postgresVersion}),
+        })
+
         const cluster=dbClusterV1??dbClusterV2;
-        const secret=cluster?.secret;
+        const secret=secretArn?(secrets.Secret.fromSecretCompleteArn(this,'ImportedSecret',secretArn)):cluster?.secret;
         if(!secret){
             throw new Error('Cluster secret not found');
         }
@@ -120,6 +137,23 @@ export class SqlCluster extends Construct implements IAccessGrantGroup{
                     actions:DATA_API_ACTIONS,
                     resourceArns:['*'],
                     scope:dbClusterV2,
+                });
+                secret.grantRead(g);
+            }
+        }else if(existingCluster){
+            rdsVersion=2;
+            arn=cdk.Stack.of(this).formatArn({
+                service:'rds',
+                resource:'cluster',
+                arnFormat:ArnFormat.COLON_RESOURCE_NAME,
+                resourceName:existingCluster.clusterIdentifier,
+            });
+            grantDataApiAccess=g=>{
+                iam.Grant.addToPrincipal({
+                    grantee:g,
+                    actions:DATA_API_ACTIONS,
+                    resourceArns:['*'],
+                    scope:existingCluster,
                 });
                 secret.grantRead(g);
             }

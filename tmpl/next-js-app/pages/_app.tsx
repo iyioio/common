@@ -27,8 +27,8 @@ export default function App(props:AppProps){
                 <meta property="og:title" content="___$siteTitle___" />
                 <meta property="og:description" content="___$siteDescription___" />
                 <meta property="og:type" content="website" />
-                <meta property="og:image" content={`https://${process.env['NX_FRONTEND_DOMAIN']}/logo.png`} />
-                <meta property="og:url" content={`https://${process.env['NX_FRONTEND_DOMAIN']}/`} />
+                <meta property="og:image" content={`https://${process.env['NX_PUBLIC_FRONTEND_DOMAIN']}/logo.png`} />
+                <meta property="og:url" content={`https://${process.env['NX_PUBLIC_FRONTEND_DOMAIN']}/`} />
             </Head>
 
         </NextJsApp>

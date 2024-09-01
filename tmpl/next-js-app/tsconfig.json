@@ -13,7 +13,8 @@
         "isolatedModules": true,
         "incremental": true,
         "types": ["jest", "node"],
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "target": "ES2020"
     },
     "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "next-env.d.ts"],
     "exclude": [

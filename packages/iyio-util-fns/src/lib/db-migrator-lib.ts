@@ -1,6 +1,6 @@
 import { AwsAuthProviders, OnEventRequest, OnEventResponse } from "@iyio/aws";
 import { RdsClient, applyDbMigrationAsync, forceClearAllMigrationsAsync } from "@iyio/aws-rds";
-import { SqlMigration, authService, delayAsync } from "@iyio/common";
+import { SqlMigration, authService, delayAsync, sql } from "@iyio/common";
 
 const physicalResourceId='SqlDbMigration_HyEQhCoDFzbiL1tfx6UU';
 
@@ -11,11 +11,13 @@ export async function migrateDb(
 
     console.info('create/update',JSON.stringify(event));
 
+    const database=event.ResourceProperties['databaseName'];
+
     const client=new RdsClient({
         awsAuth:AwsAuthProviders,
         clusterArn:event.ResourceProperties['clusterArn'],
         secretArn:event.ResourceProperties['secretArn'],
-        database:event.ResourceProperties['databaseName'],
+        database,
         region:process.env['AWS_REGION']??'',
     },authService().userDataCache,undefined,event.ResourceProperties['rdsVersion']==='2');
 
@@ -42,6 +44,12 @@ export async function migrateDb(
         }
 
         if(reset!=='AND_LEAVE_EMPTY'){
+            try{
+                await client.execAsync(sql`CREATE DATABASE ${{name:database}}`,undefined,undefined,{database:null});
+            }catch(ex){
+                console.log('hio 👋 👋 👋 db may already exist',database,ex);
+                //
+            }
             await applyDbMigrationAsync(client,migrations,targetMigration);
         }
 

@@ -5,7 +5,7 @@ import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, A
 import { AuthenticationDetails, CognitoAccessToken, CognitoIdToken, CognitoRefreshToken, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoOAuthRedirectUriParam, cognitoOAuthScopesParams, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
 
-const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']);
+const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']??process.env['NX_PUBLIC_TRACK_COGNITO_ISSUED_CREDS']);
 
 /**
  * Used for testing
