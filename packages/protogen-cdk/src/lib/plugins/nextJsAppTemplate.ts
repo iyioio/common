@@ -24,12 +24,6 @@ export const nextJsAppTemplate=({
     devPort,
 }:NextJsAppTemplateOptions)=>{
     const files={
-".babelrc":
-/*babelrc*/`{
-    "presets": ["@nrwl/next/babel"],
-    "plugins": []
-}
-`,
 ".eslintrc.json":
 /*json*/`{
     "extends": [
