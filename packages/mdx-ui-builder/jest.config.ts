@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: 'ui-builder',
+    displayName: 'mdx-ui-builder',
     preset: '../../jest.preset.js',
     testEnvironment: 'node',
     transform: {
@@ -10,5 +10,5 @@ export default {
         ],
     },
     moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageDirectory: '../../coverage/packages/ui-builder',
+    coverageDirectory: '../../coverage/packages/mdx-ui-builder',
 };

@@ -1,23 +1,23 @@
 {
-    "name": "ui-builder",
+    "name": "mdx-ui-builder",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "packages/ui-builder/src",
+    "sourceRoot": "packages/mdx-ui-builder/src",
     "projectType": "library",
     "targets": {
         "build": {
             "executor": "@iyio/nx-common:lib-builder",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/packages/ui-builder",
-                "main": "packages/ui-builder/src/index.ts",
-                "tsConfig": "packages/ui-builder/tsconfig.lib.json",
-                "assets": ["packages/ui-builder/*.md"]
+                "outputPath": "dist/packages/mdx-ui-builder",
+                "main": "packages/mdx-ui-builder/src/index.ts",
+                "tsConfig": "packages/mdx-ui-builder/tsconfig.lib.json",
+                "assets": ["packages/mdx-ui-builder/*.md"]
             }
         },
         "publish": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "node tools/scripts/publish.mjs ui-builder {args.ver} {args.tag}"
+                "command": "node tools/scripts/publish.mjs mdx-ui-builder {args.ver} {args.tag}"
             },
             "dependsOn": ["build"]
         },
@@ -25,14 +25,14 @@
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": ["packages/ui-builder/**/*.ts"]
+                "lintFilePatterns": ["packages/mdx-ui-builder/**/*.ts"]
             }
         },
         "test": {
             "executor": "@nrwl/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
-                "jestConfig": "packages/ui-builder/jest.config.ts",
+                "jestConfig": "packages/mdx-ui-builder/jest.config.ts",
                 "passWithNoTests": true
             },
             "configurations": {
