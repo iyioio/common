@@ -182,3 +182,44 @@ const starMatch=(value:any,condValue:any)=>{
         return starStringTest(condValue,value);
     }
 }
+
+export interface CloneValueConditionOptions
+{
+    removeMetadata?:boolean;
+}
+export const cloneValueCondition=(value:ValueCondition,options?:CloneValueConditionOptions):ValueCondition=>{
+
+    value={...value};
+
+    if(options?.removeMetadata){
+        delete value.metadata;
+    }else if(value.metadata){
+        value.metadata={...value.metadata}
+    }
+
+    if(isValueConditionGroup(value)){
+        const cond=value.conditions;
+        value.conditions=[];
+        for(const c of cond){
+            if(c){
+                value.conditions.push(cloneValueCondition(c,options));
+            }
+        }
+    }
+
+    return value;
+}
+
+export const valueConditionHasValue=(value:ValueCondition):boolean=>{
+    if(isValueConditionGroup(value)){
+        for(let i=0;i<value.conditions.length;i++){
+            const item=value.conditions[i];
+            if(item && valueConditionHasValue(item)){
+                return true;
+            }
+        }
+        return false;
+    }else{
+        return true;
+    }
+}
