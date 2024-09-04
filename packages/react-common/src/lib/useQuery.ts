@@ -2,11 +2,32 @@ import { Query, queryClient } from "@iyio/common";
 import { useEffect, useState } from "react";
 import { useDeepCompareItem } from "./useCompareItem";
 
-export const useQuery=<T>(query:Query|null|undefined,refresh?:number):T[]|undefined=>{
+const queryCache:Record<string,Promise<any[]>>={};
+
+let lastLocation:string|undefined;
+
+export interface UseQueryOptions
+{
+    refresh?:number;
+    cache?:boolean|'location';
+}
+
+export const useQuery=<T>(query:Query|null|undefined,refreshOrOptions?:number|UseQueryOptions):T[]|undefined=>{
+
+    let refresh:number|undefined;
+    let cache:boolean|'location'=false;
+
+    if(typeof refreshOrOptions==='number'){
+        refresh=refreshOrOptions;
+    }else if(refreshOrOptions){
+        refresh=refreshOrOptions.refresh;
+        cache=refreshOrOptions.cache??false;
+    }
 
     const q=useDeepCompareItem(query);
 
     const [value,setValue]=useState<T[]|undefined>(undefined);
+
 
     useEffect(()=>{
 
@@ -16,8 +37,28 @@ export const useQuery=<T>(query:Query|null|undefined,refresh?:number):T[]|undefi
         }
 
         let m=true;
+        let promise:Promise<any[]>|undefined;
 
-        queryClient().selectQueryItemsAsync(q).then(v=>{
+        if(cache){
+            const locKey=location.toString()+':::';
+            if(cache==='location' && lastLocation!==locKey){
+                lastLocation=locKey;
+                for(const e in queryCache){
+                    if(e.startsWith(locKey)){
+                        delete queryCache[e];
+                    }
+                }
+            }
+            const key=(cache==='location'?locKey:'')+JSON.stringify(q);
+            if(refresh){
+                delete queryCache[key];
+            }
+            promise=queryCache[key]??(queryCache[key]=queryClient().selectQueryItemsAsync(q));
+        }else{
+            promise=queryClient().selectQueryItemsAsync(q);
+        }
+
+        promise?.then(v=>{
             if(!m){
                 return;
             }
@@ -28,7 +69,7 @@ export const useQuery=<T>(query:Query|null|undefined,refresh?:number):T[]|undefi
             m=false;
         }
 
-    },[q,refresh]);
+    },[q,refresh,cache]);
 
     return value;
 }
