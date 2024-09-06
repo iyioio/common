@@ -26,28 +26,38 @@ export const compileMdxUiAsync=async (code:string,{
     const importReplacements:MdxUiImportReplacement[]=[];
     if(importReplacer){
         const replaced:string[]=[];
-        code=code.replace(/(^|\n)\s*import\s*\{([^}]*)\}[^'"]*['"]([^'"]+)['"]\s*;?/,(m,_,_names:string,packageName:string)=>{
-            const names=_names.split(',').map(v=>v.trim());
-            for(let i=0;i<names.length;i++){
-                const importName=names[i] as string;
-                const replacement=importReplacer(packageName,importName);
-                if(replacement!==null && replacement!==undefined){
-                    importReplacements.push({
-                        importName,
-                        packageName,
-                        content:replacement
-                    })
-                    names.splice(i,1);
-                    i--;
-                    replaced.push(replacement);
+        let replaceError:any;
+        code=code.replace(/(^|\n)\s*import\s*\{([^}]*)\}[^'"]*['"]([^'"]+)['"]\s*;?/g,(fullMatch,_,_names:string,packageName:string)=>{
+            try{
+                const names=_names.split(',').map(v=>v.trim()).filter(v=>v);
+                for(let i=0;i<names.length;i++){
+                    const importName=names[i] as string;
+                    const replacement=importReplacer(packageName,importName);
+                    if(replacement!==null && replacement!==undefined){
+                        importReplacements.push({
+                            importName,
+                            packageName,
+                            content:replacement
+                        })
+                        names.splice(i,1);
+                        i--;
+                        replaced.push(replacement);
+                    }
                 }
-            }
-            if(names.length){
-                return `import { ${names.join(', ')} } from "${packageName}";`
-            }else{
-                return '';
+                if(names.length){
+                    return `import { ${names.join(', ')} } from "${packageName}";`
+                }else{
+                    return '';
+                }
+            }catch(ex){
+                replaceError=ex;
+                console.error(`import replacement failed for: ${fullMatch}`,ex);
+                return fullMatch;
             }
         });
+        if(replaceError){
+            throw replaceError;
+        }
         if(replaced.length && !discardReplaced){
             code=code+'\n'+replaced.join('\n');
         }
@@ -86,9 +96,7 @@ export const compileMdxUiAsync=async (code:string,{
             }
         })
     }
-    console.log('hio 👋 👋 👋 compile',code);
     const file=await compile(code,cOptions);
-    console.log('hio 👋 👋 👋 DONE',file);
 
     if(typeof file.value !== 'string'){
         throw new Error('compile value is not a string')
