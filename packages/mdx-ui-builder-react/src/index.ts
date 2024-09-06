@@ -1,2 +1,3 @@
-export * from './lib/pkg';
+export * from './lib/MdxUiBuilderErrorView';
+export * from './lib/MdxUiBuilderView';
 
