@@ -47,8 +47,7 @@ export async function migrateDb(
             try{
                 await client.execAsync(sql`CREATE DATABASE ${{name:database}}`,undefined,undefined,{database:null});
             }catch(ex){
-                console.log('hio 👋 👋 👋 db may already exist',database,ex);
-                //
+                console.info('DB may already exist',database,ex);
             }
             await applyDbMigrationAsync(client,migrations,targetMigration);
         }
