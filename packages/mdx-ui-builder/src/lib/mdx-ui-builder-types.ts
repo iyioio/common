@@ -87,10 +87,20 @@ export interface MdxUiSourceMapOptions
      * at runtime
      */
     lookupClassNamePrefix?:string;
+
+    /**
+     * If true child nodes of text editable nodes will be mapped.
+     */
+    includeTextEditableChildren?:boolean;
 }
 
 export interface MdxUiSourceMap
 {
+    /**
+     * The original source code used to compile
+     */
+    sourceCode:string;
+
     /**
      * The syntax tree of the compiled code
      */
@@ -101,6 +111,17 @@ export interface MdxUiSourceMap
      * reference element.
      */
     lookup:Record<string,MdxUiNode>;
+
+    /**
+     * Additional data for a node
+     */
+    metadata:Record<string,MdxUiNodeMetadata>;
+
+    /**
+     * Ordered list of node ids as they appear in the source code. Parent nodes appear before their
+     * children.
+     */
+    nodesIds:string[];
 
     /**
      * The class name prefixed used to mark elements at run time
@@ -141,6 +162,14 @@ export interface MdxUiCodeInjections
 {
     prefix?:string;
     suffix?:string;
+}
+
+export interface MdxUiNodeMetadata
+{
+    /**
+     * The node should be allowed to be edited as text
+     */
+    textEditable?:boolean;
 }
 
 /**
@@ -204,3 +233,31 @@ export interface MdxUiReactImports
     jsx:any;
     jsxs:any;
 }
+
+export interface MdxUiSelectionEvt
+{
+    mouseEvent?:MouseEvent;
+    selection:MdxUiSelection|null;
+}
+
+export interface MdxUiSelectionItem
+{
+    /**
+     * The selected DOM element.
+     */
+    target:Element;
+
+    /**
+     * The selection id will include a lookupClassNamePrefix followed by a unique number. The id
+     * will also be one of the targets class names
+     */
+    id:string;
+}
+
+export interface MdxUiSelection
+{
+    item:MdxUiSelectionItem;
+    all:MdxUiSelectionItem[];
+}
+
+export type MdxUiSelectionDirection=number|'forwards'|'backwards';

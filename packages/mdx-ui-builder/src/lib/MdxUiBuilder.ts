@@ -1,7 +1,9 @@
-import { DisposeContainer, ReadonlySubject, delayAsync, getErrorMessage } from "@iyio/common";
-import { BehaviorSubject } from "rxjs";
+import { DisposeContainer, InternalOptions, ReadonlySubject, delayAsync, getErrorMessage } from "@iyio/common";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
-import { MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiReactImports } from "./mdx-ui-builder-types";
+import { MdxUiTextEditor } from "./MdxUiTextEditor";
+import { areMdxUiSelectionEqual, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
+import { MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
 import { compileMdxUiAsync } from "./mdx-ui-compiler";
 
 export interface MdxUiBuilderOptions
@@ -28,6 +30,8 @@ export interface MdxUiBuilderOptions
     reactImports?:MdxUiReactImports;
 
     liveComponentGenerator?:MdxUiLiveComponentGenerator;
+
+    setCodeOnSubmit?:boolean;
 }
 
 type OptionalProps='reactImports'|'liveComponentGenerator'|'compilerOptions';
@@ -38,10 +42,7 @@ export class MdxUiBuilder
 
     public readonly highlighter:MdxUiHighlighter;
 
-    private readonly options:(
-        Required<Omit<MdxUiBuilderOptions,OmitProps|OptionalProps>> &
-        Partial<Pick<MdxUiBuilderOptions,OptionalProps>>
-    );
+    private readonly options:InternalOptions<MdxUiBuilderOptions,OptionalProps,OmitProps>;
 
     private readonly _code:BehaviorSubject<string|null>=new BehaviorSubject<string|null>(null);
     public get codeSubject():ReadonlySubject<string|null>{return this._code}
@@ -53,6 +54,9 @@ export class MdxUiBuilder
         this._code.next(value);
         this.compileAsync();
     }
+
+    private readonly _onCodeChangeSubmission=new Subject<string>();
+    public get onCodeChangeSubmission():Observable<string>{return this._onCodeChangeSubmission}
 
     private readonly _lastCompileResult:BehaviorSubject<MdxUiCompileResult|null>=new BehaviorSubject<MdxUiCompileResult|null>(null);
     public get lastCompileResultSubject():ReadonlySubject<MdxUiCompileResult|null>{return this._lastCompileResult}
@@ -117,25 +121,39 @@ export class MdxUiBuilder
     public get stateSubject():ReadonlySubject<MdxUiBuilderState>{return this._state}
     public get state(){return this._state.value}
 
+    private readonly _selection:BehaviorSubject<MdxUiSelection|null>=new BehaviorSubject<MdxUiSelection|null>(null);
+    public get selectionSubject():ReadonlySubject<MdxUiSelection|null>{return this._selection}
+    public get selection(){return this._selection.value}
+    public set selection(value:MdxUiSelection|null){
+        if(value==this._selection.value){
+            return;
+        }
+        this._selection.next(value);
+    }
+
 
 
     public constructor({
         highlighter={},
         compileDelayMs=1000,
         enableLiveComponents=false,
-        reactImports,
+        reactImports=undefined,
         liveComponentGenerator,
         compilerOptions,
+        setCodeOnSubmit=false,
     }:MdxUiBuilderOptions={}){
-        this.highlighter=new MdxUiHighlighter(highlighter);
-        this.disposables.add(this.highlighter);
         this.options={
             compileDelayMs,
             enableLiveComponents,
             reactImports,
             liveComponentGenerator,
-            compilerOptions
+            compilerOptions,
+            setCodeOnSubmit,
         }
+        this.highlighter=new MdxUiHighlighter(highlighter);
+        this.disposables.add(this.highlighter);
+        this.disposables.addSub(this.highlighter.onSelection.subscribe(this.onSelection));
+        this.disposables.addSub(this.selectionSubject.subscribe(this.onSelectionChange));
     }
 
     private readonly disposables=new DisposeContainer();
@@ -149,7 +167,147 @@ export class MdxUiBuilder
         this._isDisposed=true;
         this.compileId++;
         this.disposables.dispose();
+        this.selectionCleanup?.dispose();
         this._state.next({status:'disposed',compileId:this.compileId});
+    }
+
+    public getLastCompiledSourceCode(){
+        return this._lastCompileResult.value?.sourceMap?.sourceCode;
+    }
+
+    private readonly onSelection=(evt:MdxUiSelectionEvt)=>{
+
+        if(areMdxUiSelectionEqual(evt.selection,this.selection)){
+            return;
+        }
+
+        evt.mouseEvent?.preventDefault();
+
+        let selection=evt.selection;
+        if(selection){
+            if(this.selection && (evt.mouseEvent?.shiftKey || evt.mouseEvent?.metaKey)){
+                selection=mergeMdxUiSelection(this.selection,selection);
+            }
+            this._selection.next(selection);
+        }else{
+            this._selection.next(null);
+        }
+    }
+
+    private selectionCleanup?:DisposeContainer;
+    private readonly onSelectionChange=(selection:MdxUiSelection|null)=>{
+
+        this.selectionCleanup?.dispose();
+        const cleanup=new DisposeContainer();
+        this.selectionCleanup=cleanup;
+
+        const lc=this.lastCompileResult;
+
+        this.highlighter.highlighIds=selection?.all.length?selection.all.map(i=>i.id):null;
+
+        if(!selection || !lc){
+            return;
+        }
+
+        if(selection.all.length===1 && lc.sourceMap){
+            const node=lc.sourceMap?.lookup[selection.item.id];
+            if(node && isMdxUiNodeTextEditableById(selection.item.id,lc.sourceMap)){
+                cleanup.add(new MdxUiTextEditor({
+                    item:selection.item,
+                    node,
+                    lookupClassNamePrefix:lc.sourceMap.lookupClassNamePrefix,
+                    onSubmit:this.onSubmitTextEdit,
+                    onMove:(direction,relativeTo)=>this.moveSelection(direction,relativeTo),
+                }));
+            }
+        }
+    }
+
+    private readonly onSubmitTextEdit=(code:string,node:MdxUiNode)=>{
+        const pos=node.position;
+        if(!pos){
+            return false;
+        }
+
+        const lastCode=this.getLastCompiledSourceCode();
+        let codeUpdate=lastCode;
+        if(codeUpdate===undefined){
+            return false;
+        }
+
+        codeUpdate=codeUpdate.substring(0,pos.start.offset??0)+code+codeUpdate.substring(pos.end.offset??0);
+        if(codeUpdate===lastCode){
+            return false;
+        }
+
+
+        if(this.options.setCodeOnSubmit){
+            this.code=codeUpdate;
+        }
+        this._onCodeChangeSubmission.next(codeUpdate);
+
+        return true;
+    }
+
+    public moveSelection(direction:MdxUiSelectionDirection,relativeToId?:string):boolean{
+
+        const map=this.lastCompileResult?.sourceMap;
+        if(!map){
+            return false;
+        }
+
+        if(!relativeToId){
+            relativeToId=this.selection?.item.id;
+            if(!relativeToId){
+                return false;
+            }
+        }
+
+        let index=map.nodesIds.indexOf(relativeToId);
+        if(index===-1){
+            return false;
+        }
+        let id:string|undefined;
+
+        if(typeof direction === 'number'){
+            id=map.nodesIds[index+direction];
+        }else{
+            while(true){
+                index+=(direction==='forwards'?1:-1);
+                const nid=map.nodesIds[index];
+                if(nid===undefined){
+                    break;
+                }
+                if(globalThis.document?.getElementsByClassName(nid).item(0)){
+                    id=nid;
+                    break;
+                }
+            }
+        }
+        if(id===undefined){
+            return false;
+        }
+
+        return this.selectById(id);
+    }
+
+    public selectById(id:string):boolean{
+        const target=globalThis.document?.getElementsByClassName(id).item(0);
+        if(!target){
+            return false;
+        }
+
+        const item:MdxUiSelectionItem={
+            id:id,
+            target,
+        }
+
+        this._selection.next({
+            item,
+            all:[item],
+        });
+
+        return true;
     }
 
     private compileId=0;
@@ -228,7 +386,6 @@ export class MdxUiBuilder
             this._lastCompileResult.next(compiled);
             this._lastLiveComponent.next(liveRef??null);
         }catch(ex){
-            console.log('hio 👋 👋 👋 ERRRO',ex);
             if(compileId!==this.compileId){
                 return;
             }

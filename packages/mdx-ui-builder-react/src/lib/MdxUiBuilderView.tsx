@@ -5,7 +5,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, getErrorMessage } from "@iyio/common";
 import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
 import { ErrorBoundary, Text, View, useSubject } from "@iyio/react-common";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView";
 
 
@@ -35,9 +35,16 @@ export function MdxUiBuilderView({
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
-    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer});
+    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer,onChange});
+    refs.current.onChange=onChange;
+
+    const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
 
     const builder=useMemo(()=>{
+
+        if(!rootElem){
+            return null;
+        }
 
         const compilerOptions={...refs.current.builderOptions?.compilerOptions}
         if(refs.current.importReplacer){
@@ -50,11 +57,17 @@ export function MdxUiBuilderView({
             enableLiveComponents:true,
             reactImports:{Fragment,jsx,jsxs},
             compilerOptions,
+            highlighter:{
+                root:rootElem,
+            }
         });
 
-    },[]);
+    },[rootElem]);
 
     useEffect(()=>{
+        if(!builder){
+            return;
+        }
         builder.highlighter.mode='hover';
         return ()=>{
             builder.dispose();
@@ -62,21 +75,42 @@ export function MdxUiBuilderView({
     },[builder]);
 
     useEffect(()=>{
+        if(!builder){
+            return;
+        }
         builder.liveImports=imports??null;
     },[imports,builder]);
 
     useEffect(()=>{
+        if(!builder){
+            return;
+        }
         builder.liveComponents=components??null;
     },[components,builder]);
 
     useEffect(()=>{
+        if(!builder){
+            return;
+        }
         builder.code=code??null;
     },[code,builder]);
 
-    const state=useSubject(builder.stateSubject);
-    const error=state.error;
+    useEffect(()=>{
+        if(!builder){
+            return;
+        }
+        const sub=builder.onCodeChangeSubmission.subscribe(v=>{
+            refs.current.onChange?.(v);
+        })
+        return ()=>{
+            sub.unsubscribe();
+        }
+    },[builder]);
 
-    const compRef=useSubject(builder.lastLiveComponentSubject);
+    const state=useSubject(builder?.stateSubject);
+    const error=state?.error;
+
+    const compRef=useSubject(builder?.lastLiveComponentSubject);
     const Comp=compRef?.Comp;
 
     useEffect(()=>{
@@ -84,20 +118,22 @@ export function MdxUiBuilderView({
     },[onError,error]);
 
     return (
-        <div className={style.root(null,null,props)} key={compRef?.compileId}>
+        <div className={style.root(null,null,props)} ref={setRootElem}>
+            <div className={style.container()} key={compRef?.compileId}>
 
-            <ErrorBoundary fallbackWithError={(err)=>(
-                <View col>
-                    <Text text="Runtime Error"/>
-                    <Text sm colorMuted text="Your component compiled but may fail at runtime when a user is using it." mb1 mt050/>
-                    {getErrorMessage(err)}
-                </View>
-            )}>
-                {Comp && <Comp isPreview/>}
-            </ErrorBoundary>
+                <ErrorBoundary fallbackWithError={(err)=>(
+                    <View col>
+                        <Text text="Runtime Error"/>
+                        <Text sm colorMuted text="Your component compiled but may fail at runtime when a user is using it." mb1 mt050/>
+                        {getErrorMessage(err)}
+                    </View>
+                )}>
+                    {Comp && <Comp isPreview/>}
+                </ErrorBoundary>
 
-            {error && !hideError && <MdxUiBuilderErrorView absBottomCenter m1 error={error} />}
+                {error && !hideError && <MdxUiBuilderErrorView absBottomCenter m1 error={error} />}
 
+            </div>
         </div>
     )
 
@@ -105,6 +141,11 @@ export function MdxUiBuilderView({
 
 const style=atDotCss({name:'MdxUiBuilderView',css:`
     @.root{
+        display:flex;
+        flex-direction:column;
+        flex:1;
+    }
+    @.container{
         display:flex;
         flex-direction:column;
         flex:1;
