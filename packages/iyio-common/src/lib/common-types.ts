@@ -183,3 +183,16 @@ export type RecursiveOptionalMap<T,PropType>=T extends object?{
     [K in keyof T]?:RecursiveOptionalMap<Required<T>[K],PropType>
 }:T
 
+
+export type InternalOptions<
+    T,
+    TOptionalProps extends (keyof T)|''='',
+    TOmittedProps extends (keyof T)|''='',
+>=Omit<{
+    [K in keyof Required<T>]:K extends TOptionalProps?
+        Required<T>[K]|undefined
+    :K extends TOmittedProps?
+        never
+    :
+        Required<T>[K]
+},TOmittedProps>
