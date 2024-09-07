@@ -1,3 +1,4 @@
+import { atDotCss } from "@iyio/at-dot-css";
 import { DisposeContainer, InternalOptions, snakeCaseToCamelCase } from "@iyio/common";
 import TurndownService from 'turndown';
 import { removeMdxUiPrefixClassName } from "./mdx-ui-builder-lib";
@@ -66,6 +67,8 @@ export class MdxUiTextEditor
         item.target.addEventListener('keydown',this.onKey as any);
         this.disposables.addCb(()=>item.target.removeEventListener('keydown',this.onKey as any));
 
+        item.target.classList.add(style.editing());
+
         if(item.target instanceof HTMLElement){
             item.target.focus();
             const sel=globalThis.window?.getSelection();
@@ -85,6 +88,8 @@ export class MdxUiTextEditor
         }
         this._isDisposed=true;
         this.disposables.dispose();
+
+        this.options.item.target.classList.remove(style.editing());
     }
 
     private readonly onBlur=(evt:Event)=>{
@@ -121,6 +126,7 @@ export class MdxUiTextEditor
         if(this.options.lookupClassNamePrefix){
             removeMdxUiPrefixClassName(clone,this.options.lookupClassNamePrefix);
         }
+        clone.classList.remove(style.editing());
         if(!clone.className){
             clone.removeAttribute('class');
         }
@@ -171,3 +177,10 @@ const replaceStyle=(html:string):string=>{
         }
     })
 }
+
+const style=atDotCss({name:'MdxUiTextEditor',css:`
+    @.editing{
+        outline:none !important;
+    }
+
+`});
