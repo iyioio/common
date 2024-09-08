@@ -34,8 +34,8 @@ export interface ButtonBaseInternalProps extends ButtonBaseProps
 
 export function ButtonBase({
     baseClassName,
-    disabled,
     actionItem,
+    disabled=actionItem?.disabled,
     onClick: onClickProp,
     onClickEvt,
     onKeyPress: onKeyPressProp,
