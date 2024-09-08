@@ -9,6 +9,9 @@ interface Args
     debug?:boolean|string;
     disableLazyLoading:boolean;
     breakOnDebug?:boolean;
+    infoOutPath?:string;
+    exportName?:string;
+    infoExportName?:string;
 }
 
 const args=parseCliArgsT<Args>({
@@ -20,7 +23,9 @@ const args=parseCliArgsT<Args>({
         debug:args=>args[0]?.length===0?true:args[0],
         disableLazyLoading:args=>args.length?true:false,
         breakOnDebug:args=>args.length?true:false,
-
+        infoOutPath:args=>args[0],
+        exportName:args=>args[0],
+        infoExportName:args=>args[0],
     }
 }).parsed as Args
 
@@ -29,10 +34,23 @@ const main=async ({
     outDir,
     debug,
     disableLazyLoading,
-    breakOnDebug
+    breakOnDebug,
+    infoOutPath,
+    exportName,
+    infoExportName,
 }:Args)=>{
 
-    const watcher=new AnyCompWatcher({watchDirs:dir,log:console.log,outDir,debug,disableLazyLoading,breakOnDebug});
+    const watcher=new AnyCompWatcher({
+        watchDirs:dir,
+        log:console.log,
+        outDir,
+        debug,
+        disableLazyLoading,
+        breakOnDebug,
+        infoOutPath,
+        exportName,
+        infoExportName,
+    });
 
     let shouldExit=false;
     function kill(){

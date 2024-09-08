@@ -2,7 +2,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { ErrorBoundary, ScrollView, SlimButton, Text, View } from "@iyio/react-common";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnyComp } from "./AnyComp";
-import { AnyCompPropInput } from "./AnyCompPropInput";
+import { AnyCompPropsView } from "./AnyCompPropsView";
 import { AcComp, AcProp } from "./any-comp-types";
 
 
@@ -191,23 +191,16 @@ export function AnyCompContainer({
 
                     <Text lg text="Props" />
 
-                    {comp?.props.map(p=>(
-                        <AnyCompPropInput
-                            key={p.name}
-                            comp={comp}
-                            prop={p}
-                            setProps={setProps}
-                            props={props}
-                            bindings={bindings}
-                            setBindings={setBindings}
-                        />
-                    ))}
-
-                    <View col>
-                        <Text text="Extra props" />
-                        <textarea value={extra} onChange={e=>setExtra(e.target.value)} className={style.input()}/>
-                        <SlimButton onClick={applyExtraProps}>apply</SlimButton>
-                    </View>
+                    <AnyCompPropsView
+                        comp={comp}
+                        props={props}
+                        setProps={setProps}
+                        bindings={bindings}
+                        setBindings={setBindings}
+                        extra={extra}
+                        setExtra={setExtra}
+                        applyExtraProps={applyExtraProps}
+                    />
 
                 </View>
 

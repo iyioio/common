@@ -6,7 +6,7 @@ export interface AcComp
     path:string;
     propType:string;
     props:AcProp[];
-    comp?:string|((props:Record<string,any>,placeholder?:any)=>any);
+    comp?:string|((props:Record<string,any>,placeholder?:any)=>any)|null;
     isDefaultExport?:boolean;
     comment?:string;
     tags?:Record<string,string>;
