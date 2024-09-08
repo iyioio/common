@@ -1,4 +1,4 @@
-import { base64EncodeUint32Array, defaultBase64Chars } from "./base64";
+import { base64EncodeUint32Array, defaultBase64Chars, fsBase64Chars } from "./base64";
 
 export const strHash=(str:string):number=>{
     if(!str){
@@ -42,5 +42,8 @@ export const strHashBase64=(str:string,length=8,keyStr:string=defaultBase64Chars
         len--;
     }
     return base64EncodeUint32Array(fillAry,keyStr,len);
+}
 
+export const strHashBase64Fs=(str:string,length=8,keyStr:string=fsBase64Chars):string=>{
+    return strHashBase64(str,length,keyStr);
 }
