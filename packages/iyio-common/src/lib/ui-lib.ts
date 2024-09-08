@@ -31,6 +31,8 @@ export interface UiActionItem<
     primary?:boolean;
     secondary?:boolean;
     order?:number;
+    active?:boolean;
+    disabled?:boolean;
 }
 
 export interface UiActionSubItem<
