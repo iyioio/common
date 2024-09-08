@@ -123,12 +123,16 @@ export function MdxUiBuilderView({
     const Comp=compRef?.Comp;
 
     useEffect(()=>{
+        builder?.highlighter.update();
+    },[builder,Comp]);
+
+    useEffect(()=>{
         onError?.(error??null);
     },[onError,error]);
 
     return (
         <div className={style.root(null,null,props)} ref={setRootElem}>
-            <div className={style.container()} key={compRef?.compileId}>
+            <div className={style.container()} key={error?1:0}>
 
                 <ErrorBoundary fallbackWithError={(err)=>(
                     <View col>

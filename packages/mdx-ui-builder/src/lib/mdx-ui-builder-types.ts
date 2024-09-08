@@ -89,6 +89,11 @@ export interface MdxUiSourceMapOptions
     lookupClassNamePrefix?:string;
 
     /**
+     * A prefixed added to all node ids
+     */
+    idPrefix?:string;
+
+    /**
      * If true child nodes of text editable nodes will be mapped.
      */
     includeTextEditableChildren?:boolean;

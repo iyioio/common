@@ -20,7 +20,8 @@ export const compileMdxUiAsync=async (code:string,{
     let sourceCode=sourceMap?code:'';
 
     const {
-        lookupClassNamePrefix=defaultMdxUiClassNamePrefix
+        lookupClassNamePrefix=defaultMdxUiClassNamePrefix,
+        idPrefix='',
     }=(sourceMapOptions??{});
 
     const cOptions=mdxJsOptions?{...mdxJsOptions}:{};
@@ -103,7 +104,7 @@ export const compileMdxUiAsync=async (code:string,{
                     metadata,
                     nodesIds,
                     sourceMapOptions.includeTextEditableChildren??false,
-                    lookupClassNamePrefix
+                    lookupClassNamePrefix+idPrefix
                 );
                 //console.info('TREE',_tree);
                 tree=_tree
@@ -161,13 +162,11 @@ const addAttClass=(att:MdxUiAtt,className:string):void=>{
     }
 }
 
-let domId=0;
+let noPosId=0;
 const navTree=(
     node:MdxUiNode,
-    lookup:Record<string,
-    MdxUiNode>,
-    metadata:Record<string,
-    MdxUiNodeMetadata>,
+    lookup:Record<string,MdxUiNode>,
+    metadata:Record<string,MdxUiNodeMetadata>,
     nodesIds:string[],
     includeTextEditableChildren:boolean,
     prefix:string
@@ -185,8 +184,12 @@ const navTree=(
         node.attributes.push(cat);
     }
 
-
-    const id=prefix+(++domId);
+    let instId=0;
+    const hash=node.name||(++noPosId).toString();
+    let id=prefix+instId+'-'+hash;
+    while(lookup[id]){
+        id=prefix+(++instId)+'-'+hash;
+    }
     addAttClass(cat,id);
 
     if(!node.properties){

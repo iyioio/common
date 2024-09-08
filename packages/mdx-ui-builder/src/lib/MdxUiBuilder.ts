@@ -6,6 +6,8 @@ import { areMdxUiSelectionEqual, isMdxUiNodeTextEditableById, mergeMdxUiSelectio
 import { MdxUiAtt, MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
 import { compileMdxUiAsync } from "./mdx-ui-compiler";
 
+let instId=0;
+
 export interface MdxUiBuilderOptions
 {
 
@@ -43,6 +45,8 @@ export class MdxUiBuilder
     public readonly highlighter:MdxUiHighlighter;
 
     private readonly options:InternalOptions<MdxUiBuilderOptions,OptionalProps,OmitProps>;
+
+    private readonly instId:number;
 
     private readonly _code:BehaviorSubject<string|null>=new BehaviorSubject<string|null>(null);
     public get codeSubject():ReadonlySubject<string|null>{return this._code}
@@ -135,13 +139,14 @@ export class MdxUiBuilder
 
     public constructor({
         highlighter={},
-        compileDelayMs=1000,
+        compileDelayMs=16,
         enableLiveComponents=false,
         reactImports=undefined,
         liveComponentGenerator,
         compilerOptions,
         setCodeOnSubmit=false,
     }:MdxUiBuilderOptions={}){
+        this.instId=++instId;
         this.options={
             compileDelayMs,
             enableLiveComponents,
@@ -380,6 +385,8 @@ export class MdxUiBuilder
         this._state.next({status:'compiling',compileId});
 
         try{
+            const sourceMap=this.options.compilerOptions?.sourceMap===true?{}:(this.options.compilerOptions?.sourceMap??{});
+            sourceMap.idPrefix=this.instId+'-';
             const compiled=await compileMdxUiAsync(
                 ((injections?.prefix || injections?.suffix)?
                     (injections.prefix??'')+code+(injections.suffix??'')
@@ -388,7 +395,7 @@ export class MdxUiBuilder
                 ),
                 {
                     ...this.options.compilerOptions,
-                    sourceMap:this.options.compilerOptions?.sourceMap||true,
+                    sourceMap,
                     discardReplaced:this.options.enableLiveComponents,
                     mdxJsOptions:this.options.enableLiveComponents?{
                         ...this.options.compilerOptions?.mdxJsOptions,
@@ -449,9 +456,23 @@ export class MdxUiBuilder
         }
         const items:MdxUiSelectionItem[]=[];
         for(const item of selection.all){
+
+            const idMatch=map.lookup[item.id];
+            if( idMatch &&
+                idMatch.type===item.node.type &&
+                idMatch.name===item.node.name
+            ){
+                const s=this.createSelectionItem(item.id);
+                if(s){
+                    items.push(s);
+                    continue;
+                }
+            }
+
             if(!item.node.position){
                 continue;
             }
+
             for(const id in map.lookup){
                 const node=map.lookup[id];
                 if(!node?.position){
