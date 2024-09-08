@@ -31,6 +31,7 @@ export const compileMdxUiAsync=async (code:string,{
         let replaceError:any;
         code=code.replace(/(^|\n)\s*import\s*\{([^}]*)\}[^'"]*['"]([^'"]+)['"]\s*;?/g,(fullMatch,_,_names:string,packageName:string)=>{
             try{
+                let hasReplacements=false;
                 const names=_names.split(',').map(v=>v.trim()).filter(v=>v);
                 for(let i=0;i<names.length;i++){
                     const importName=names[i] as string;
@@ -44,11 +45,17 @@ export const compileMdxUiAsync=async (code:string,{
                         names.splice(i,1);
                         i--;
                         replaced.push(replacement);
+                        hasReplacements=true;
+
                     }
+                }
+                if(!hasReplacements){
+                    return fullMatch;
                 }
                 const replaceWith=names.length?`import { ${names.join(', ')} } from "${packageName}";`:''
 
-                return replaceWith+' '.repeat(fullMatch.length-replaceWith.length);
+                const diff=fullMatch.length-replaceWith.length;
+                return replaceWith+(diff>0?' '.repeat(diff):'');
             }catch(ex){
                 replaceError=ex;
                 console.error(`import replacement failed for: ${fullMatch}`,ex);
@@ -146,6 +153,7 @@ const addClass=(src:string|null|undefined,className:string):string=>{
 }
 const addAttClass=(att:MdxUiAtt,className:string):void=>{
 
+    att.sourceValue=att.value;
     if(att.value?.data?.estree){
         wrapClassName(att,className)
     }else{
@@ -172,10 +180,6 @@ const navTree=(
         cat={
             name:'className',
             type:"mdxJsxAttribute",
-            position:{
-                start:{line:1,column:1,offset:1},
-                end:{line:1,column:1,offset:1},
-            },
             value:''
         }
         node.attributes.push(cat);

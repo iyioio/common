@@ -146,6 +146,7 @@ export interface MdxUiAtt
     position?:MdxUiSrcStartEnd;
     type?:string;
     value?:any;
+    sourceValue?:any;
 }
 export interface MdxUiNode
 {
@@ -245,13 +246,21 @@ export interface MdxUiSelectionItem
     /**
      * The selected DOM element.
      */
-    target:Element;
+    getTarget:()=>Element|undefined;
 
     /**
      * The selection id will include a lookupClassNamePrefix followed by a unique number. The id
      * will also be one of the targets class names
      */
     id:string;
+
+    node:MdxUiNode;
+
+    metadata?:MdxUiNodeMetadata;
+
+    textEditable:boolean;
+
+    componentType?:string;
 }
 
 export interface MdxUiSelection

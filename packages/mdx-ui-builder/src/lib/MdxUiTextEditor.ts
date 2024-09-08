@@ -29,7 +29,7 @@ export interface MdxUiTextEditorOptions
     item:MdxUiSelectionItem;
     node:MdxUiNode;
     lookupClassNamePrefix?:string;
-    onSubmit?:(code:string,node:MdxUiNode)=>void;
+    onSubmit?:(nodeId:string,code:string)=>void;
     onMove?:(direction:MdxUiSelectionDirection,relativeToId:string)=>void;
 }
 
@@ -58,22 +58,24 @@ export class MdxUiTextEditor
 
         this.startingCode=this.getCode();
 
-        item.target.setAttribute('contenteditable','true');
-        this.disposables.addCb(()=>this.options.item.target.removeAttribute('contenteditable'));
+        const target=item.getTarget();
 
-        item.target.addEventListener('blur',this.onBlur);
-        this.disposables.addCb(()=>item.target.removeEventListener('blur',this.onBlur));
+        target?.setAttribute('contenteditable','true');
+        this.disposables.addCb(()=>target?.removeAttribute('contenteditable'));
 
-        item.target.addEventListener('keydown',this.onKey as any);
-        this.disposables.addCb(()=>item.target.removeEventListener('keydown',this.onKey as any));
+        target?.addEventListener('blur',this.onBlur);
+        this.disposables.addCb(()=>target?.removeEventListener('blur',this.onBlur));
 
-        item.target.classList.add(style.editing());
+        target?.addEventListener('keydown',this.onKey as any);
+        this.disposables.addCb(()=>target?.removeEventListener('keydown',this.onKey as any));
 
-        if(item.target instanceof HTMLElement){
-            item.target.focus();
+        target?.classList.add(style.editing());
+
+        if(target instanceof HTMLElement){
+            target.focus();
             const sel=globalThis.window?.getSelection();
             if(sel){
-                sel.selectAllChildren(item.target);
+                sel.selectAllChildren(target);
             }
         }
     }
@@ -89,7 +91,7 @@ export class MdxUiTextEditor
         this._isDisposed=true;
         this.disposables.dispose();
 
-        this.options.item.target.classList.remove(style.editing());
+        this.options.item.getTarget()?.classList.remove(style.editing());
     }
 
     private readonly onBlur=(evt:Event)=>{
@@ -112,7 +114,7 @@ export class MdxUiTextEditor
     private submit(){
         const code=this.getCode();
         if(code!==this.startingCode){
-            this.options.onSubmit?.(code,this.options.node);
+            this.options.onSubmit?.(this.options.item.id,code);
         }
         this.dispose();
     }
@@ -122,7 +124,10 @@ export class MdxUiTextEditor
     }
 
     public getCode():string{
-        const clone=this.options.item.target.cloneNode(true) as Element;
+        const clone=this.options.item.getTarget()?.cloneNode(true) as Element|undefined;
+        if(!clone){
+            return '';
+        }
         if(this.options.lookupClassNamePrefix){
             removeMdxUiPrefixClassName(clone,this.options.lookupClassNamePrefix);
         }

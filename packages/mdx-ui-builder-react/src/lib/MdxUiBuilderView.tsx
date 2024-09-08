@@ -20,6 +20,7 @@ export interface MdxUiBuilderViewProps
     importReplacer?:MdxUiImportReplacer;
     onError?:(error:MdxUiBuilderError|null)=>void;
     hideError?:boolean;
+    onBuilderChange?:(builder:MdxUiBuilder)=>void;
 }
 
 export function MdxUiBuilderView({
@@ -32,11 +33,13 @@ export function MdxUiBuilderView({
     importReplacer,
     onError,
     hideError,
+    onBuilderChange,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
-    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer,onChange});
+    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer,onChange,onBuilderChange});
     refs.current.onChange=onChange;
+    refs.current.onBuilderChange=onBuilderChange;
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
 
@@ -104,6 +107,12 @@ export function MdxUiBuilderView({
         })
         return ()=>{
             sub.unsubscribe();
+        }
+    },[builder]);
+
+    useEffect(()=>{
+        if(builder){
+            refs.current.onBuilderChange?.(builder);
         }
     },[builder]);
 

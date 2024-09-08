@@ -1,4 +1,5 @@
 import { Statement } from 'estree-jsx';
+import { parse as parseJson } from 'json5';
 import { MdxUiAtt, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
@@ -221,4 +222,36 @@ export const removeMdxUiPrefixClassName=(elem:Element,prefix:string):boolean=>{
         }
     }
     return removed;
+}
+
+export const mdxUiDynamicAttributeValue=Symbol('mdxUiDynamicAttributeValue');
+
+export const mdxUiAttsToObject=(atts:MdxUiAtt[],skipDynamic=false):Record<string,any>=>{
+    const obj:Record<string,any>={};
+
+    for(const att of atts){
+        const value=att.sourceValue??att.value;
+        if(value?.data?.estree){
+            const statement:Statement=value.data.estree.body[0];
+            if(statement?.type==="ExpressionStatement" && statement.expression.type==="Literal"){
+                try{
+                    obj[att.name]=parseJson(value.value);
+                }catch{
+                    if(!skipDynamic){
+                        obj[att.name]=mdxUiDynamicAttributeValue;
+                    }
+                }
+            }else{
+                if(!skipDynamic){
+                    obj[att.name]=mdxUiDynamicAttributeValue;
+                }
+            }
+        }else if(value===null || value===undefined){
+            obj[att.name]=true;
+        }else{
+            obj[att.name]=value;
+        }
+    }
+
+    return obj;
 }

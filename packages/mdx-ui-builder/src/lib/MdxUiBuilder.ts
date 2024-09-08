@@ -1,9 +1,9 @@
-import { DisposeContainer, InternalOptions, ReadonlySubject, delayAsync, getErrorMessage } from "@iyio/common";
+import { DisposeContainer, InternalOptions, ReadonlySubject, delayAsync, escapeHtml, getErrorMessage } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
 import { MdxUiTextEditor } from "./MdxUiTextEditor";
 import { areMdxUiSelectionEqual, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
-import { MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
 import { compileMdxUiAsync } from "./mdx-ui-compiler";
 
 export interface MdxUiBuilderOptions
@@ -150,7 +150,7 @@ export class MdxUiBuilder
             compilerOptions,
             setCodeOnSubmit,
         }
-        this.highlighter=new MdxUiHighlighter(highlighter);
+        this.highlighter=new MdxUiHighlighter(highlighter,this);
         this.disposables.add(this.highlighter);
         this.disposables.addSub(this.highlighter.onSelection.subscribe(this.onSelection));
         this.disposables.addSub(this.selectionSubject.subscribe(this.onSelectionChange));
@@ -216,14 +216,18 @@ export class MdxUiBuilder
                     item:selection.item,
                     node,
                     lookupClassNamePrefix:lc.sourceMap.lookupClassNamePrefix,
-                    onSubmit:this.onSubmitTextEdit,
+                    onSubmit:(nodeId:string,code:string)=>this.replaceNodeCode(nodeId,code),
                     onMove:(direction,relativeTo)=>this.moveSelection(direction,relativeTo),
                 }));
             }
         }
     }
 
-    private readonly onSubmitTextEdit=(code:string,node:MdxUiNode)=>{
+    public replaceNodeCode(nodeId:string,code:string){
+        const node=this.getNode(nodeId);
+        if(!node){
+            return false;
+        }
         const pos=node.position;
         if(!pos){
             return false;
@@ -291,15 +295,44 @@ export class MdxUiBuilder
         return this.selectById(id);
     }
 
-    public selectById(id:string):boolean{
-        const target=globalThis.document?.getElementsByClassName(id).item(0);
-        if(!target){
-            return false;
+    public getNode(id:string):MdxUiNode|undefined{
+        return this.lastCompileResult?.sourceMap?.lookup[id];
+    }
+
+    public getNodeMetadata(id:string):MdxUiNodeMetadata|undefined{
+        return this.lastCompileResult?.sourceMap?.metadata[id];
+    }
+
+    public createSelectionItem(id:string):MdxUiSelectionItem|undefined{
+
+        const node=this.getNode(id);
+        if(!node){
+            return undefined;
         }
+
+        const metadata=this.getNodeMetadata(id);
+        const isComp=(
+            node.type==="mdxJsxFlowElement" &&
+            node.name.substring(0,1)===node.name.substring(0,1).toUpperCase()
+        );
 
         const item:MdxUiSelectionItem={
             id:id,
-            target,
+            getTarget:()=>globalThis.document?.getElementsByClassName(id).item(0)??undefined,
+            node,
+            metadata,
+            textEditable:metadata?.textEditable?true:false,
+            componentType:isComp?node.name:undefined
+        }
+
+        return item;
+    }
+
+    public selectById(id:string):boolean{
+
+        const item=this.createSelectionItem(id);
+        if(!item){
+            return false;
         }
 
         this._selection.next({
@@ -377,6 +410,7 @@ export class MdxUiBuilder
             }
 
             const liveRef:MdxUiComponentFnRef|undefined=live?{Comp:live,compileId}:undefined;
+            const selection=this.selection;
             this._state.next({
                 status:'complied',
                 compiled,
@@ -385,6 +419,9 @@ export class MdxUiBuilder
             });
             this._lastCompileResult.next(compiled);
             this._lastLiveComponent.next(liveRef??null);
+            if(selection){
+                this.reselect(selection);
+            }
         }catch(ex){
             if(compileId!==this.compileId){
                 return;
@@ -401,10 +438,53 @@ export class MdxUiBuilder
         }
     }
 
+    /**
+     * Attempts to reselect a selection that has been lost due to a re-compile
+     */
+    public reselect(selection:MdxUiSelection):boolean{
+        const map=this.lastCompileResult?.sourceMap;
+        if(!map){
+            this.selection=null;
+            return false;
+        }
+        const items:MdxUiSelectionItem[]=[];
+        for(const item of selection.all){
+            if(!item.node.position){
+                continue;
+            }
+            for(const id in map.lookup){
+                const node=map.lookup[id];
+                if(!node?.position){
+                    continue;
+                }
+                if( node.position.start.offset===item.node.position.start.offset &&
+                    node.type===item.node.type &&
+                    node.name===item.node.name
+                ){
+                    const s=this.createSelectionItem(id);
+                    if(s){
+                        items.push(s);
+                    }
+                }
+            }
+        }
+
+        if(items.length){
+            this.selection={
+                item:items[0] as MdxUiSelectionItem,
+                all:items,
+            }
+            return true;
+        }else{
+            this.selection=null;
+            return false;
+        }
+    }
+
     private async createLiveComponentAsync(
         compiled:MdxUiCompileResult,
         reactImports:MdxUiReactImports
-):Promise<MdxUiComponentFn>{
+    ):Promise<MdxUiComponentFn>{
 
         const imports={...this.liveImports};
         const components={...this.liveComponents};
@@ -437,6 +517,119 @@ export class MdxUiBuilder
         }
     }
 
+    public setElementProps(nodeId:string,props:Record<string,any>,dropProps?:boolean):boolean{
 
+        const node=this.getNode(nodeId);
+        if(!node){
+            return false;
+        }
+
+        const code=this.getLastCompiledSourceCode();
+        const pos=node.position;
+
+        if(!code || !pos || node.type!=="mdxJsxFlowElement"){
+            return false;
+        }
+
+        const attPosMap:Record<string,number>={};
+
+        const out:string[]=[];
+
+        if(node.attributes?.length){
+            const first=node.attributes[0];
+            if(first?.position){
+                const startCode=code.substring(pos.start.offset,first.position.start.offset);
+                if(startCode.length>1 && startCode[startCode.length-1]===' '){
+                    out.push(startCode.substring(0,startCode.length-1));
+                    out.push(' ');
+                }else{
+                    out.push(startCode);
+                }
+            }
+            let prev:MdxUiAtt|undefined;
+            for(const att of node.attributes){
+                if(!att.position){
+                    continue;
+                }
+
+                if(prev?.position){
+                    out.push(code.substring(prev.position.end.offset,att.position.start.offset));
+                }
+
+                attPosMap[att.name]=out.length;
+                out.push(code.substring(att.position.start.offset,att.position.end.offset));
+
+
+                prev=att;
+            }
+            if(!prev?.position){
+                return false;
+            }
+            out.push(code.substring(prev.position.end.offset,pos.end.offset));
+        }else{
+            const close=code.indexOf('>',pos.start.offset);
+            if(close===-1){
+                return false;
+            }
+            out.push(code.substring(pos.start.offset,close));
+            out.push(code.substring(close,pos.end.offset));
+        }
+
+        const updated:string[]=[];
+
+        for(const name in props){
+            const v=props[name];
+            if(v===undefined || (name==='className' && v==='')){
+                continue;
+            }
+
+            if(typeof v === 'symbol'){
+                updated.push(name);
+                continue;
+            }
+
+            const insertIndex=attPosMap[name];
+
+            if(v===false){
+                // todo - check if prop allows undefined
+                continue;
+            }
+
+            const attValue=(typeof v === 'string'?
+                `${name}="${escapeHtml(v)}"`
+            :v===true?
+                name
+            :
+                `${name}={${JSON.parse(v)}}`
+            )
+
+            if(insertIndex===undefined){
+                out.splice(out.length-1,0,' '+attValue);
+            }else{
+                out[insertIndex]=attValue;
+            }
+
+            updated.push(name);
+        }
+
+        if(dropProps){
+            for(const name in attPosMap){
+                if(updated.includes(name)){
+                    continue;
+                }
+                const index=attPosMap[name];
+                if(index===undefined){
+                    continue;
+                }
+                out[index]='';
+                if(out[index-1]?.trim()===''){
+                    out[index-1]='';
+                }
+            }
+        }
+
+        return this.replaceNodeCode(nodeId,out.join(''));
+
+    }
 
 }

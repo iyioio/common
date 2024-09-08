@@ -1,8 +1,9 @@
 import { atDotCss } from '@iyio/at-dot-css';
 import { DisposeCallback, DisposeContainer, InternalOptions, Point, ReadonlySubject, Rect, aryRemoveItem } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { MdxUiBuilder } from './MdxUiBuilder';
 import { defaultMdxUiClassNamePrefix, getMdxUiPrefixClassName } from './mdx-ui-builder-lib';
-import { MdxUiSelectionEvt, MdxUiSelectionItem } from './mdx-ui-builder-types';
+import { MdxUiSelectionEvt } from './mdx-ui-builder-types';
 
 export interface MdxUiHighlighterOptions
 {
@@ -51,13 +52,15 @@ export class MdxUiHighlighter
     private readonly _onSelection=new Subject<MdxUiSelectionEvt>();
     public get onSelection():Observable<MdxUiSelectionEvt>{return this._onSelection}
 
+    private readonly builder?:MdxUiBuilder;
+
     public constructor({
         root=globalThis.document.body,
         overlayContainer,
         overlayClassName,
         overlayBorderSize=2,
-        classPrefix=defaultMdxUiClassNamePrefix
-    }:MdxUiHighlighterOptions){
+        classPrefix=defaultMdxUiClassNamePrefix,
+    }:MdxUiHighlighterOptions,builder?:MdxUiBuilder){
         if(overlayContainer){
             this.removeOverlayContainer=false;
         }else{
@@ -66,6 +69,7 @@ export class MdxUiHighlighter
             globalThis.document.body.append(overlayContainer);
             this.removeOverlayContainer=true;
         }
+        this.builder=builder;
         this.options={
             root,
             overlayContainer,
@@ -106,10 +110,12 @@ export class MdxUiHighlighter
             }
             hit=true;
             if(!this._highlighIds.value?.includes(area.id)){
-                const item:MdxUiSelectionItem={
-                    target:area.target,
-                    id:area.id,
+
+                const item=this.builder?.createSelectionItem(area.id);
+                if(!item){
+                    return;
                 }
+
                 this._onSelection.next({
                     mouseEvent:evt,
                     selection:{
