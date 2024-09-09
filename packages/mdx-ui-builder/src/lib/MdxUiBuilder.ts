@@ -1,9 +1,9 @@
-import { DisposeContainer, InternalOptions, ReadonlySubject, delayAsync, escapeHtml, getErrorMessage } from "@iyio/common";
+import { DisposeContainer, InternalOptions, ReadonlySubject, asArray, delayAsync, escapeHtml, getErrorMessage, removeEmptyLinesAtIndex, setIndentation } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
 import { MdxUiTextEditor } from "./MdxUiTextEditor";
 import { areMdxUiSelectionEqual, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
-import { MdxUiAtt, MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiDragDropSource, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
 import { compileMdxUiAsync } from "./mdx-ui-compiler";
 
 let instId=0;
@@ -135,6 +135,16 @@ export class MdxUiBuilder
         this._selection.next(value);
     }
 
+    private readonly _dragDropSource:BehaviorSubject<MdxUiDragDropSource|null>=new BehaviorSubject<MdxUiDragDropSource|null>(null);
+    public get dragDropSourceSubject():ReadonlySubject<MdxUiDragDropSource|null>{return this._dragDropSource}
+    public get dragDropSource(){return this._dragDropSource.value}
+    public set dragDropSource(value:MdxUiDragDropSource|null){
+        if(value==this._dragDropSource.value){
+            return;
+        }
+        this._dragDropSource.next(value);
+    }
+
 
 
     public constructor({
@@ -249,11 +259,22 @@ export class MdxUiBuilder
             return false;
         }
 
+        this.submitCodeChange(codeUpdate,true);
+
+        return true;
+    }
+
+    public submitCodeChange(code:string,skipCompare=false):boolean
+    {
+
+        if(!skipCompare && code===this.getLastCompiledSourceCode()){
+            return false;
+        }
 
         if(this.options.setCodeOnSubmit){
-            this.code=codeUpdate;
+            this.code=code;
         }
-        this._onCodeChangeSubmission.next(codeUpdate);
+        this._onCodeChangeSubmission.next(code);
 
         return true;
     }
@@ -651,6 +672,152 @@ export class MdxUiBuilder
 
         return this.replaceNodeCode(nodeId,out.join(''));
 
+    }
+
+    public insertDragDropSource(
+        src:MdxUiDragDropSource,
+        targetId:string
+    ):boolean{
+
+        if(!targetId){
+            return false;
+        }
+
+        const target=this.createSelectionItem(targetId);
+        const pos=target?.node.position;
+
+        if(!pos){
+            return false;
+        }
+
+        const code=src.getSourceCode?.(target)??src.sourceCode;
+        if(!code){
+            return false;
+        }
+
+        const srcCode=this.getLastCompiledSourceCode();
+        if(srcCode===undefined){
+            return false;
+        }
+
+        const nl=srcCode.lastIndexOf('\n',pos.start.offset);
+        const before=srcCode.substring(nl+1,pos.start.offset);
+        const sp=/^[ \t]+$/.test(before)?before:'';
+
+        const codeUpdate=(
+            srcCode?.substring(0,pos.start.offset)+
+            (sp?setIndentation(sp.length,code).trim():code)+
+            '\n\n'+
+            sp+
+            srcCode?.substring(pos.start.offset)
+        );
+
+        this.submitCodeChange(codeUpdate,true);
+
+        return true;
+
+    }
+
+    public deleteItem(itemOrId:MdxUiSelectionItem|string|null|undefined):boolean
+    {
+        return this.deleteById((typeof itemOrId === 'string')?itemOrId:itemOrId?.id);
+    }
+
+    public deleteSelection(selection:MdxUiSelection|null|undefined):boolean{
+        return this.deleteById(selection?.all.map(i=>i.id));
+    }
+
+    public deleteById(id:string|string[]|null|undefined):boolean{
+        if(!id){
+            return false;
+        }
+
+        const removeFromSelection:string[]=[];
+
+        const map=this.lastCompileResult?.sourceMap;
+        if(!map){
+            return false;
+        }
+
+        const nodes:MdxUiNode[]=[];
+
+        id=asArray(id);
+
+        for(const i of id){
+            const node=map.lookup[i];
+            if(node){
+                nodes.push(node);
+            }
+            if(this.selection?.all.some(s=>s.id===i)){
+                removeFromSelection.push(i);
+            }
+        }
+
+        if(!nodes.length){
+            return false;
+        }
+
+        // Remove nodes contained within other nodes
+        nodes:for(let i=0;i<nodes.length;i++){
+            const node=nodes[i] as MdxUiNode;
+            if(!node?.position){
+                continue;
+            }
+
+            for(let x=0;x<nodes.length;x++){
+                if(i===x){
+                    continue;
+                }
+                const outer=nodes[x] as MdxUiNode
+                if(!outer?.position){
+                    continue;
+                }
+
+                if( node.position.start.offset>=outer.position.start.offset &&
+                    node.position.end.offset<=outer.position.end.offset
+                ){
+                    nodes.splice(i,1);
+                    i--;
+                    continue nodes;
+                }
+            }
+        }
+
+        nodes.sort((a,b)=>(b.position?.start.offset??0)-(a.position?.start.offset??0));
+
+        let code=this.getLastCompiledSourceCode()??'';
+        if(!code){
+            return false;
+        }
+
+        for(const node of nodes){
+            if(!node.position){
+                continue;
+            }
+            code=code.substring(0,node.position.start.offset)+code.substring(node.position.end.offset);
+            code=removeEmptyLinesAtIndex(code,node.position.start.offset);
+        }
+
+        if(removeFromSelection.length && this.selection){
+            if(removeFromSelection.length===this.selection.all.length){
+                this.selection=null;
+            }else{
+                const all=this.selection.all.filter(item=>!removeFromSelection.includes(item.id));
+                const first=all[0];
+                if(all.length===0 || !first){
+                    this.selection=null;
+                }else{
+                    this.selection={
+                        item:first,
+                        all,
+                    }
+                }
+            }
+        }
+
+        this.submitCodeChange(code,true);
+
+        return true;
     }
 
 }

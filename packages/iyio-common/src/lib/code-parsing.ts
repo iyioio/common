@@ -121,3 +121,54 @@ export const setIndentation=(indent:number,code:string,{
 }
 
 const spReg=/^\s*$/;
+
+const emptyReg=/^[ \r\t]*$/;
+/**
+ * Removes all empty lines start from the given index until a non empty line is found
+ * @param code The code to remove empty lines from
+ * @param index The position in the code to remove empty lines from
+ * @param autoMoveBackLine If true and the character at index is an newline character index will
+ *                         be moved back one character. Is true by default
+ * @returns The code with empty lines removed
+ */
+export const removeEmptyLinesAtIndex=(code:string,index:number,autoMoveBackLine=true):string=>{
+
+    if(code[index]==='\n' && autoMoveBackLine){
+        if(index===0){
+            return code;
+        }
+        index--;
+    }
+
+    index=code.lastIndexOf('\n',index);
+    let end=code.indexOf('\n',index);
+    if(end===-1){
+        end=code.length;
+    }
+
+    if(!emptyReg.test(code.substring(index,end))){
+        return code;
+    }
+
+    //remove starting newline and keep ending
+    code=(index===-1?'':code.substring(0,index))+code.substring(end);
+
+    index++;
+    while(index<code.length-1){
+        end=code.indexOf('\n',index);
+        if(end===-1){
+            end=code.length;
+        }
+        if(!emptyReg.test(code.substring(index,end))){
+            break;
+        }
+        const len=code.length;
+        code=code.substring(0,index)+code.substring(end+1);
+
+        if(len===code.length){
+            break;
+        }
+    }
+
+    return code;
+}

@@ -82,7 +82,7 @@ export function MdxUiComponentMenuViewInternal({
 
 }
 
-const style=atDotCss({name:'MdxUiComponentMenuView',css:`
+const style=atDotCss({name:'MdxUiComponentMenuViewInternal',css:`
     @.root{
         display:flex;
         flex-direction:column;

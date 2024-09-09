@@ -246,6 +246,9 @@ export interface MdxUiSelectionEvt
     selection:MdxUiSelection|null;
 }
 
+/**
+ * Represents a selection of source code and rendered ui.
+ */
 export interface MdxUiSelectionItem
 {
     /**
@@ -275,3 +278,9 @@ export interface MdxUiSelection
 }
 
 export type MdxUiSelectionDirection=number|'forwards'|'backwards';
+
+export interface MdxUiDragDropSource
+{
+    getSourceCode?:(target:MdxUiSelectionItem)=>string|null|undefined;
+    sourceCode?:string;
+}

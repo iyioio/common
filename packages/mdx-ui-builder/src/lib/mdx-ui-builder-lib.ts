@@ -4,6 +4,8 @@ import { MdxUiAtt, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceMap
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
 
+export const mdxUiDragDropIdAtt='data-mdx-ui-drop-id';
+
 export const areMdxUiSelectionEqual=(a:MdxUiSelection|null|undefined,b:MdxUiSelection|null|undefined):boolean=>{
     if(!a || !b){
         return !a && !b;

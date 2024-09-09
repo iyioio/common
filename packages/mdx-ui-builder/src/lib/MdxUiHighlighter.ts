@@ -82,12 +82,39 @@ export class MdxUiHighlighter
         globalThis.window?.addEventListener('keyup',updateCallback);
         globalThis.window?.addEventListener('scroll',updateCallback);
         globalThis.window?.addEventListener('scrollend',updateCallback);
+        root.addEventListener('dragover',this.onRootDragOver);
+        root.addEventListener('drop',this.onRootDrop);
         this.disposables.addCb(()=>{
             globalThis.window?.removeEventListener('mousedown',this.onWindowMouseDown);
             globalThis.window?.removeEventListener('keyup',updateCallback);
             globalThis.window?.removeEventListener('scroll',updateCallback);
             globalThis.window?.removeEventListener('scrollend',updateCallback);
+            root.removeEventListener('dragover',this.onRootDragOver);
+            root.removeEventListener('drop',this.onRootDrop);
         })
+    }
+
+    private readonly onRootDragOver=(evt:DragEvent)=>{
+        if(!this.builder?.dragDropSource){
+            return;
+        }
+        evt.preventDefault();
+        if(this.mode==='hover'){
+            this.update({x:evt.clientX,y:evt.clientY});
+        }
+    }
+
+    private readonly onRootDrop=(evt:Event)=>{
+        const src=this.builder?.dragDropSource;
+        if(!src){
+            return;
+        }
+        evt.preventDefault();
+        const id=this.areas.find(a=>!this.highlighIds?.includes(a.id))?.id??this.areas[0]?.id;
+        if(id===undefined){
+            return;
+        }
+        this.builder.insertDragDropSource(src,id);
     }
 
     private stopTrackMouse?:DisposeCallback;
