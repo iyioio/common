@@ -1,4 +1,5 @@
 import { DisposeContainer, InternalOptions, ReadonlySubject, asArray, delayAsync, escapeHtml, getErrorMessage, removeEmptyLinesAtIndex, setIndentation } from "@iyio/common";
+import { parse as parseJson5 } from 'json5';
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
 import { MdxUiTextEditor } from "./MdxUiTextEditor";
@@ -836,7 +837,7 @@ export class MdxUiBuilder
 
 const tryParse=(value:any):string=>{
     try{
-        return JSON.parse(value);
+        return parseJson5(value);
     }catch(ex){
         console.error('Failed to parse builder value',value,ex);
         return 'null'
