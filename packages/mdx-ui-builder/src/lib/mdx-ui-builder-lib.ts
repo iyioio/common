@@ -1,6 +1,6 @@
 import { Statement } from 'estree-jsx';
 import { parse as parseJson } from 'json5';
-import { MdxUiAtt, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
 
@@ -256,4 +256,14 @@ export const mdxUiAttsToObject=(atts:MdxUiAtt[],skipDynamic=false):Record<string
     }
 
     return obj;
+}
+
+export const isMdxUiNodeOpen=(node:MdxUiNode,src:MdxUiSourceCodeRef):boolean=>{
+    if(node.type!=="mdxJsxFlowElement" || !node.position){
+        return false;
+    }
+
+    const chunk=src.src.substring(node.position.start.offset,node.position.end.offset)
+    return /^\s*<\w+/.test(chunk) && /<\/\w+>\s*$/.test(chunk);
+
 }

@@ -1,7 +1,7 @@
 import { deepClone } from "@iyio/common";
 import { compile } from "@mdx-js/mdx";
-import { defaultMdxUiClassNamePrefix, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
-import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata } from "./mdx-ui-builder-types";
+import { defaultMdxUiClassNamePrefix, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
+import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types";
 import { getWrapper, wrapClassName } from "./parsing-util";
 
 
@@ -17,7 +17,7 @@ export const compileMdxUiAsync=async (code:string,{
         sourceMap={}
     }
     const sourceMapOptions=sourceMap;
-    let sourceCode=sourceMap?code:'';
+    const srcRef:MdxUiSourceCodeRef={src:code};
 
     const {
         lookupClassNamePrefix=defaultMdxUiClassNamePrefix,
@@ -99,6 +99,7 @@ export const compileMdxUiAsync=async (code:string,{
 
                 }
                 navTree(
+                    srcRef,
                     _tree,
                     lookup,
                     metadata,
@@ -131,7 +132,7 @@ export const compileMdxUiAsync=async (code:string,{
         }
 
         result.sourceMap={
-            sourceCode,
+            sourceCode:srcRef.src,
             tree:deepClone(tree,200),
             lookup,
             metadata,
@@ -164,6 +165,7 @@ const addAttClass=(att:MdxUiAtt,className:string):void=>{
 
 let noPosId=0;
 const navTree=(
+    src:MdxUiSourceCodeRef,
     node:MdxUiNode,
     lookup:Record<string,MdxUiNode>,
     metadata:Record<string,MdxUiNodeMetadata>,
@@ -201,16 +203,18 @@ const navTree=(
     nodesIds.push(id);
 
     const textEditable=isMdxUiNodeTextEditable(node);
+    const open=isMdxUiNodeOpen(node,src);
 
-    if(textEditable){
+    if(textEditable || open){
         metadata[id]={
             textEditable,
+            open
         }
     }
 
     if(node.children && !(textEditable && !includeTextEditableChildren)){
         for(const child of node.children){
-            navTree(child,lookup,metadata,nodesIds,includeTextEditableChildren,prefix);
+            navTree(src,child,lookup,metadata,nodesIds,includeTextEditableChildren,prefix);
         }
     }
 }

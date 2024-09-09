@@ -700,16 +700,29 @@ export class MdxUiBuilder
             return false;
         }
 
-        const nl=srcCode.lastIndexOf('\n',pos.start.offset);
-        const before=srcCode.substring(nl+1,pos.start.offset);
+        let index=pos.start.offset;
+        let indent=false;
+        if(target.metadata?.open){
+            indent=true;
+            index=pos.end.offset;
+            index=srcCode.lastIndexOf('</',index);
+            if(index===-1){
+                return false;
+            }
+
+        }
+
+        const nl=srcCode.lastIndexOf('\n',index);
+        const before=srcCode.substring(nl+1,index);
         const sp=/^[ \t]+$/.test(before)?before:'';
 
         const codeUpdate=(
-            srcCode?.substring(0,pos.start.offset)+
-            (sp?setIndentation(sp.length,code).trim():code)+
+            srcCode?.substring(0,index)+
+            (indent?'    ':'')+
+            ((sp || indent)?setIndentation(sp.length+(indent?4:0),code).trim():code)+
             '\n\n'+
             sp+
-            srcCode?.substring(pos.start.offset)
+            srcCode?.substring(index)
         );
 
         this.submitCodeChange(codeUpdate,true);

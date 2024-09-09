@@ -176,6 +176,11 @@ export interface MdxUiNodeMetadata
      * The node should be allowed to be edited as text
      */
     textEditable?:boolean;
+
+    /**
+     * If true the node is not self closing
+     */
+    open?:boolean;
 }
 
 /**
@@ -283,4 +288,9 @@ export interface MdxUiDragDropSource
 {
     getSourceCode?:(target:MdxUiSelectionItem)=>string|null|undefined;
     sourceCode?:string;
+}
+
+export interface MdxUiSourceCodeRef
+{
+    src:string;
 }
