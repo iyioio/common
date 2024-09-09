@@ -624,8 +624,8 @@ export class MdxUiBuilder
             if(v===undefined || (name==='className' && v==='')){
                 continue;
             }
-
-            if(typeof v === 'symbol'){
+            const type=typeof v;
+            if(type==='symbol' || type==='function'){
                 updated.push(name);
                 continue;
             }
@@ -636,13 +636,12 @@ export class MdxUiBuilder
                 // todo - check if prop allows undefined
                 continue;
             }
-
             const attValue=(typeof v === 'string'?
                 `${name}="${escapeHtml(v)}"`
             :v===true?
                 name
             :
-                `${name}={${JSON.parse(v)}}`
+                `${name}={${tryParse(v)}}`
             )
 
             if(insertIndex===undefined){
@@ -833,4 +832,13 @@ export class MdxUiBuilder
         return true;
     }
 
+}
+
+const tryParse=(value:any):string=>{
+    try{
+        return JSON.parse(value);
+    }catch(ex){
+        console.error('Failed to parse builder value',value,ex);
+        return 'null'
+    }
 }
