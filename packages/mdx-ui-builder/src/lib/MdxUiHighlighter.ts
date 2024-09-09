@@ -80,6 +80,7 @@ export class MdxUiHighlighter
         const updateCallback=()=>this.update();
         globalThis.window?.addEventListener('mousedown',this.onWindowMouseDown);
         globalThis.window?.addEventListener('keyup',updateCallback);
+        globalThis.window?.addEventListener('resize',updateCallback);
         globalThis.window?.addEventListener('scroll',updateCallback);
         globalThis.window?.addEventListener('scrollend',updateCallback);
         root.addEventListener('dragover',this.onRootDragOver);
@@ -87,6 +88,7 @@ export class MdxUiHighlighter
         this.disposables.addCb(()=>{
             globalThis.window?.removeEventListener('mousedown',this.onWindowMouseDown);
             globalThis.window?.removeEventListener('keyup',updateCallback);
+            globalThis.window?.removeEventListener('resize',updateCallback);
             globalThis.window?.removeEventListener('scroll',updateCallback);
             globalThis.window?.removeEventListener('scrollend',updateCallback);
             root.removeEventListener('dragover',this.onRootDragOver);
