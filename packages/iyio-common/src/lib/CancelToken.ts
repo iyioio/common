@@ -9,7 +9,10 @@ export class CancelToken
 
     private listeners:DisposeCallback[]|null=[];
 
-
+    public dispose()
+    {
+        this.cancelNow();
+    }
 
     /**
      * The same as onCancel except an unsubscribe callback is returned that can be used to remove

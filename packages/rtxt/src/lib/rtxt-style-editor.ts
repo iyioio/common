@@ -136,7 +136,7 @@ export const insertRTxtEditorStyleSheet=(prefix=defaultRTxtClassNamePrefix,{
     pointer-events:none !important;
 }
 
-    `??'';
+    `;
 
     globalThis.document?.head.appendChild(style);
 }

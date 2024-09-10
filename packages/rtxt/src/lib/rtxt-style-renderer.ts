@@ -103,7 +103,7 @@ ${!disableFontFamilyCss && fontFamilies?fontFamilies.map(f=>f.className && f.fam
 .${prefix}${f.className}{font-family:'${f.family}'}
 `:'').join(''):''}
 
-    `??''
+    `
 
     globalThis.document?.head.appendChild(style);
 }

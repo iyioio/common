@@ -41,9 +41,9 @@ export const cn=(...classNames:ClassNameValue[]):string=>{
 /**
  * Used for syntax highlighting
  */
-export const css=(strings:TemplateStringsArray,...values:any[])=>{
+export const css=(strings:TemplateStringsArray,...values:any[]):string=>{
     if(strings.length===1){
-        return strings[0];
+        return strings[0]??'';
     }
 
     const strAry:string[]=[strings[0] as string];
