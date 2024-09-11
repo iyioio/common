@@ -1,5 +1,5 @@
-import { parseCliArgsT } from "@iyio/common";
-import { AnyCompWatcher } from "../lib/AnyCompWatcher";
+import { parseCliArgsT, starStringToRegex } from "@iyio/common";
+import { AnyCompWatcher, defaultAcCompIgnore } from "../lib/AnyCompWatcher";
 
 
 interface Args
@@ -13,6 +13,9 @@ interface Args
     exportName?:string;
     infoExportName?:string;
     exit?:boolean;
+    match?:string[];
+    ignore?:string[];
+    noDefaultIgnore?:boolean;
 }
 
 const args=parseCliArgsT<Args>({
@@ -27,7 +30,10 @@ const args=parseCliArgsT<Args>({
         infoOutPath:args=>args[0],
         exportName:args=>args[0],
         infoExportName:args=>args[0],
-        exit:args=>args[0]?.length?true:false,
+        match:args=>args,
+        ignore:args=>args,
+        exit:args=>args.length?true:false,
+        noDefaultIgnore:args=>args.length?true:false,
     }
 }).parsed as Args
 
@@ -41,6 +47,9 @@ const main=async ({
     exportName,
     infoExportName,
     exit,
+    match,
+    ignore,
+    noDefaultIgnore,
 }:Args)=>{
 
     let workingDir=process.cwd();
@@ -59,7 +68,12 @@ const main=async ({
         exportName,
         infoExportName,
         exit,
-        workingDir
+        workingDir,
+        match:match?.length?match.map(m=>m.includes('*')?starStringToRegex(m):m):undefined,
+        ignore:ignore?.length?[
+            ...(noDefaultIgnore?[]:defaultAcCompIgnore),
+            ...ignore.map(m=>m.includes('*')?starStringToRegex(m):m)
+        ]:undefined,
     });
 
     let shouldExit=false;

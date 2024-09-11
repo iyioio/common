@@ -1,4 +1,4 @@
-import { AcComp, AcPropContainer, AcTypeContainer, acContainerKey, acIndexKey } from '@iyio/any-comp';
+import { AcComp, AcPropContainer, AcTagContainer, AcTypeContainer, acContainerKey, acIndexKey } from '@iyio/any-comp';
 import { DisposeContainer, delayAsync, getDirectoryName, getFileExt, sortStringsCallback, strFirstToUpper } from '@iyio/common';
 import { triggerNodeBreakpoint } from '@iyio/node-common';
 import { access, mkdir, readFile, readdir, stat, watch, writeFile } from 'fs/promises';
@@ -35,6 +35,8 @@ export interface AnyCompWatcherOptions
      */
     workingDir?:string;
 }
+
+export const defaultAcCompIgnore:(string|RegExp)[]=['node_modules','__pycache__','venv',/^\..*/];
 
 export class AnyCompWatcher
 {
@@ -86,8 +88,6 @@ export class AnyCompWatcher
         if(!outDir.trim()){
             throw new Error('outDir required');
         }
-
-        console.log('hio 👋 👋 👋 working dir',workingDir);
 
         this.debug=debug;
         this.breakOnDebug=breakOnDebug;
@@ -244,6 +244,8 @@ export class AnyCompWatcher
 
     public typeReg:Record<string,AcTypeContainer>={};
 
+    public tagReg:Record<string,AcTagContainer>={};
+
     private nextOutputId=1;
 
     private async clearPathAsync(path:string){
@@ -317,7 +319,7 @@ export class AnyCompWatcher
                 const param=fn.parameters[0];
                 const propTypeNode=getTypeReference(param?.type)
                 const propType=(propTypeNode?.typeName as Identifier)?.escapedText;
-                const props=await getAcPropsAsync(name,path,this.propReg,this.typeReg,this.workingDir);
+                const props=await getAcPropsAsync(name,path,this.propReg,this.typeReg,this.tagReg,this.workingDir);
 
                 const onChangeProp=props.find(p=>p.name==='onChange' && p.type.type==='function');
                 const valueProp=props.find(p=>p.name==='value' && p.type.type!=='function');
@@ -437,7 +439,19 @@ export class AnyCompWatcher
             reg.index=t++;
             reg.type[acIndexKey]=reg.index;
             lines.push(`// ${reg.key}`)
-            lines.push(`const _t${reg.index}=${JSON.stringify(reg.type)}`);
+            lines.push(`const t${reg.index}=${JSON.stringify(reg.type)}`);
+        }
+
+        t=0;
+        regKeys=Object.keys(this.tagReg);
+        regKeys.sort();
+        for(const e of regKeys){
+            const reg=this.tagReg[e];
+            if(!reg){
+                continue;
+            }
+            reg.index=t++;
+            lines.push(`const g${reg.index}=${JSON.stringify(reg.tags)};`)
         }
 
         t=0;
@@ -450,7 +464,7 @@ export class AnyCompWatcher
             }
             reg.index=t++;
             lines.push(`// ${reg.key}`)
-            lines.push(`const _${reg.index}=[`);
+            lines.push(`const p${reg.index}=[`);
             for(let i=0;i<reg.props.length;i++){
                 const prop=reg.props[i];
                 if(!prop){
@@ -459,19 +473,26 @@ export class AnyCompWatcher
                 prop[acIndexKey]=i;
 
                 const index=prop.type[acIndexKey];
+                const tags=prop.tags;
+                delete prop.tags;
+                const tagsStr=tags?`,tags:g${(tags as any)[acContainerKey].index}`:'';
                 if(index===undefined){
-                    lines.push(`    ${JSON.stringify(prop)},`);
+                    const propStr=JSON.stringify(prop);
+                    lines.push(`    ${propStr.substring(0,propStr.length-1)}${tagsStr}},`);
                 }else{
                     const pt=prop.type;
                     delete (prop as any).type;
                     const propStr=JSON.stringify(prop);
-                    lines.push(`    ${propStr.substring(0,propStr.length-1)},type:_t${index}},`);
+                    lines.push(`    ${propStr.substring(0,propStr.length-1)},type:t${index}${tagsStr}},`);
                     prop.type=pt;
+                }
+                if(tags){
+                    prop.tags=tags;
                 }
             }
             lines.push('] as const;');
-
         }
+
         const insertOffset=lines.length;
         lines.push(`export const ${exportName}={`);
         lines.push('    comps:[');
@@ -496,7 +517,7 @@ export class AnyCompWatcher
                 for(const prop of props){
                     const container=prop[acContainerKey];
                     if(container && prop[acIndexKey]!==undefined){
-                        propsStrAry.push(`_${container.index}[${prop[acIndexKey]}]`);
+                        propsStrAry.push(`p${container.index}[${prop[acIndexKey]}]`);
                     }else{
                         propsStrAry.push(JSON.stringify(prop));
                     }

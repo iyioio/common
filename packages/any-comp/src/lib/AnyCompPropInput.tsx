@@ -116,7 +116,7 @@ export function AnyCompPropInput({
     return (
         <div className={style.root()}>
 
-            <Text text={`${prop.name}${prop.optional?'?':''}: ${prop.sig}`}/>
+            <Text text={`${prop.name}${prop.o?'?':''}: ${prop.sig}`}/>
             <AnyCompComment comment={prop.comment} />
 
             {!!error && <Text sm colorDanger text={`⛔️ ${error}`} />}

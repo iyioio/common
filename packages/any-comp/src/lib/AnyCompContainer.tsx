@@ -41,7 +41,7 @@ export function AnyCompContainer({
     const requiredProps:AcProp[]=[];
     if(comp){
         for(const p of comp.props){
-            if(!p.optional && props[p.name]===undefined){
+            if(!p.o && props[p.name]===undefined){
                 requiredProps.push(p)
             }
         }

@@ -18,7 +18,11 @@ export const acIndexKey=Symbol('acIndexKey');
 export type AcType="string"|"number"|"bigint"|"boolean"|"symbol"|"undefined"|"null"|"object"|"function"|"union";
 export interface AcProp{
     name:string;
-    optional:boolean;
+
+    /**
+     * Optional
+     */
+    o?:boolean;
     type:AcTypeDef;
 
     sig:string;
@@ -44,6 +48,13 @@ export interface AcTypeContainer
     key:string;
     index:number;
     type:AcTypeDef;
+}
+
+export interface AcTagContainer
+{
+    key:string;
+    index:number;
+    tags:Record<string,string>;
 }
 
 

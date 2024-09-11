@@ -1,7 +1,7 @@
-import { AcProp, AcPropContainer, AcType, AcTypeContainer, AcTypeDef, AcUnionValue, acContainerKey } from "@iyio/any-comp";
+import { AcProp, AcPropContainer, AcTagContainer, AcType, AcTypeContainer, AcTypeDef, AcUnionValue, acContainerKey } from "@iyio/any-comp";
 import { getDirectoryName, joinPaths } from "@iyio/common";
 import { pathExistsAsync } from "@iyio/node-common";
-import { FalseLiteral, Node, NullLiteral, NumericLiteral, ObjectBindingPattern, Project, StringLiteral, SyntaxKind, TrueLiteral, Type } from "ts-morph";
+import { FalseLiteral, JSDocTagInfo, Node, NullLiteral, NumericLiteral, ObjectBindingPattern, Project, StringLiteral, SyntaxKind, TrueLiteral, Type } from "ts-morph";
 import { JSDoc, JSDocComment, NodeArray } from "typescript";
 
 
@@ -20,6 +20,7 @@ export const getAcPropsAsync=async (
     path:string,
     propReg:Record<string,AcPropContainer>,
     typeReg:Record<string,AcTypeContainer>,
+    tagReg:Record<string,AcTagContainer>,
     dir:string
 ):Promise<AcProp[]>=>{
 
@@ -97,32 +98,18 @@ export const getAcPropsAsync=async (
         const optional=p.isOptional();
         const acType=getPropType(type,optional,typeReg);
         const comment=getFullComment(p.compilerSymbol.declarations?.[0] as any);
-        const tags=p.getJsDocTags()
+
+        const ancestors=p.getDeclarations()[0]?.getAncestors()??[];
+
         const propTags:Record<string,string>={};
+        let tagCount=parseTags(p.getJsDocTags(),propTags);
 
-        for(const tag of tags){
-            propTags[tag.getName()]=tag.getText().map(t=>t.text).join('\n');
-        }
-
-
-        let prop:AcProp={
-            name:propName,
-            optional,
-            type:acType,
-            sig:formatSig(type.getText()),
-            comment,
-            defaultValue:propDefaults[propName]?.value,
-            defaultValueText:propDefaults[propName]?.text,
-            tags:propTags,
-            bind:propTags['acBind']
-        }
-
-
-
-        const key=p.getDeclarations()[0]?.getAncestors().map(a=>{
+        const keyAry:string[]=[];
+        for(const a of ancestors){
             let name=a.getSymbol()?.getName();
             if(!name){
-                return '';
+                keyAry.push('');
+                continue;
             }
             if(a.getKind()===SyntaxKind.SourceFile){
                 if(name.startsWith('"') || name.startsWith("'")){
@@ -134,11 +121,37 @@ export const getAcPropsAsync=async (
                 if(name.toLowerCase().startsWith(dir)){
                     name=name.substring(dir.length);
                 }
-                return name;
-            }else{
-                return name;
             }
-        }).join('*');
+            tagCount+=parseTags(a.getSymbol()?.getJsDocTags(),propTags);
+            keyAry.push(name);
+        }
+
+        const key=keyAry.length?keyAry.join('*'):undefined;
+
+        if(tagCount){
+            const k=getTagsKey(propTags);
+            const tagContainer=tagReg[k]??(tagReg[k]={
+                key:k,
+                index:0,
+                tags:propTags
+            });
+            (propTags as any)[acContainerKey]=tagContainer;
+            tagContainer.tags=propTags;
+        }
+
+        let prop:AcProp={
+            name:propName,
+            o:optional||undefined,
+            type:acType,
+            sig:formatSig(type.getText()),
+            comment,
+            defaultValue:propDefaults[propName]?.value,
+            defaultValueText:propDefaults[propName]?.text,
+            tags:tagCount?propTags:undefined,
+            bind:propTags['acBind']
+        }
+
+
 
         if(key){
             const container=propReg[key]??(propReg[key]={
@@ -154,6 +167,9 @@ export const getAcPropsAsync=async (
             }else{
                 const existing=container.props[i];
                 if(existing){
+                    for(const e in existing){
+                        delete (existing as any)[e];
+                    }
                     for(const e in prop){
                         (existing as any)[e]=(prop as any)[e];
                     }
@@ -163,14 +179,23 @@ export const getAcPropsAsync=async (
                     container.props.push(prop);
                 }
             }
-
-
         }
 
         return prop;
     })??[];
 }
 
+const parseTags=(tags:JSDocTagInfo[]|undefined|null,propTags:Record<string,string>)=>{
+    if(!tags){
+        return 0;
+    }
+    let count=0;
+    for(const tag of tags){
+        count++;
+        propTags[tag.getName()]=tag.getText().map(t=>t.text).join('\n');
+    }
+    return count;
+}
 
 const getProjectAsync=async (path:string):Promise<Project|undefined>=>
 {
@@ -245,20 +270,45 @@ const _getPropType=(type:Type,optional:boolean):AcTypeDef=>{
         if(!unionTypes){
             unionTypes=type.getUnionTypes();
         }
-        return {
+        const typeDef:AcTypeDef={
             type:'union',
             unionValues:unionTypes.map<AcUnionValue>(t=>{
+                const text=t.getText();
                 const def:AcUnionValue={
                     type:typeToAcType(t),
-                    label:formatSig(t.getText()),
+                    label:formatSig(text),
                 }
                 if(t.isLiteral()){
                     def.isLiteral=true;
                     def.literalValue=t.getLiteralValue();
+                    if(def.literalValue===undefined){
+                        if(text==='true'){
+                            def.literalValue=true;
+                        }else if(text==='false'){
+                            def.literalValue=false;
+                        }
+                    }
                 }
                 return def;
             })
         }
+
+        const uv=typeDef.unionValues;
+        if( uv?.length===2 &&
+            uv[0]?.type==='boolean' &&
+            uv[1]?.type==='boolean'
+        ){
+            const v=uv[0].literalValue;
+            if((v===true || v===false) && v===!uv[1].literalValue){
+                return {
+                    type:'boolean'
+                }
+            }
+        }
+
+
+        return typeDef;
+
     }else{
         const def:AcTypeDef={
             type:typeToAcType(type)
@@ -392,5 +442,26 @@ const getTypeKey=(type:AcTypeDef):string=>{
 }
 
 const formatSig=(sig:string):string=>{
-    return sig.replace(/\s*import\([^)]*\)\s*\.?\s*/g,'')
+    return (
+        sig
+        .replace(/\s*import\([^)]*\)\s*\.?\s*/g,'')
+        .replace(/\s*\|\s*undefined\s*$/g,'')
+        .trim()
+    )
+}
+
+const getTagsKey=(tags:Record<string,string>):string=>{
+    const keys=Object.keys(tags);
+    keys.sort();
+    let key='';
+    for(let i=0;i<keys.length;i++){
+        const k=keys[i];
+        if(!k){continue}
+        const v=tags[k];
+        if(v===undefined){
+            continue;
+        }
+        key+=k+JSON.stringify(v)+',';
+    }
+    return key;
 }
