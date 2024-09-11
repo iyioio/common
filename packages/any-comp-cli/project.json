@@ -54,7 +54,8 @@
                     "ci": true,
                     "codeCoverage": true
                 }
-            }
+            },
+            "dependsOn": ["build-test"]
         },
         "watch": {
             "executor": "nx:run-commands",
@@ -66,6 +67,12 @@
             "executor": "nx:run-commands",
             "options": {
                 "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/components/src/lib --dir packages/web-app/components --outDir packages/web-app/any --disableLazyLoading"
+            }
+        },
+        "build-test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "npx ts-node -r tsconfig-paths/register --project packages/any-comp-cli/tsconfig.lib.json packages/any-comp-cli/src/bin/watch-comp-dirs --dir packages/any-comp-test/src/lib --outDir packages/any-comp-test/test-out --exit"
             }
         }
     },

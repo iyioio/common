@@ -1,9 +1,10 @@
-import { AcComp, AcProp, AcType, AcTypeDef } from '@iyio/any-comp';
-import { DisposeContainer, delayAsync, getDirectoryName, sortStringsCallback, strFirstToUpper } from '@iyio/common';
+import { AcComp, AcPropContainer, AcTypeContainer, acContainerKey, acIndexKey } from '@iyio/any-comp';
+import { DisposeContainer, delayAsync, getDirectoryName, getFileExt, sortStringsCallback, strFirstToUpper } from '@iyio/common';
 import { triggerNodeBreakpoint } from '@iyio/node-common';
 import { access, mkdir, readFile, readdir, stat, watch, writeFile } from 'fs/promises';
 import { basename, join } from 'path';
-import { FunctionLikeDeclaration, Identifier, InterfaceDeclaration, JSDoc, JSDocComment, Node, NodeArray, PropertySignature, ScriptKind, ScriptTarget, SyntaxKind, TypeNode, TypeReferenceNode, createSourceFile, isFunctionDeclaration, isIdentifier, isIntersectionTypeNode, isNumericLiteral, isObjectBindingPattern, isStringLiteralLike, isTypeReferenceNode, isUnionTypeNode } from 'typescript';
+import { Identifier, JSDoc, JSDocComment, Node, NodeArray, ScriptKind, ScriptTarget, SyntaxKind, TypeReferenceNode, createSourceFile, isFunctionDeclaration, isIntersectionTypeNode, isNumericLiteral, isStringLiteralLike, isTypeReferenceNode, isUnionTypeNode } from 'typescript';
+import { getAcPropsAsync } from './reflection-lib';
 
 const compBodyPlaceholder='______COMP_BODY________';
 
@@ -23,6 +24,16 @@ export interface AnyCompWatcherOptions
     infoOutPath?:string;
     exportName?:string;
     infoExportName?:string;
+
+    /**
+     * If true the watcher will exit after its initial scan.
+     */
+    exit?:boolean;
+
+    /**
+     * Full path to the current working dir
+     */
+    workingDir?:string;
 }
 
 export class AnyCompWatcher
@@ -46,9 +57,14 @@ export class AnyCompWatcher
 
     private readonly infoExportName:string;
 
+    private readonly exit:boolean;
+
+    public readonly workingDir:string;
+
     public debug:boolean|string;
 
     public breakOnDebug:boolean;
+
 
     public constructor({
         watchDirs,
@@ -62,12 +78,16 @@ export class AnyCompWatcher
         breakOnDebug=false,
         exportName='anyCompReg',
         infoExportName='anyCompRegInfo',
+        exit=false,
+        workingDir='/'
     }:AnyCompWatcherOptions)
     {
 
         if(!outDir.trim()){
             throw new Error('outDir required');
         }
+
+        console.log('hio 👋 👋 👋 working dir',workingDir);
 
         this.debug=debug;
         this.breakOnDebug=breakOnDebug;
@@ -80,12 +100,19 @@ export class AnyCompWatcher
         this.infoOutPath=infoOutPath;
         this.exportName=exportName;
         this.infoExportName=infoExportName;
+        this.exit=exit;
+        this.workingDir=workingDir.toLowerCase();
     }
 
     public async watchAsync()
     {
-        this.updateReg();
+        if(!this.exit){
+            this.updateReg();
+        }
         await Promise.all(this.watchDirs.map(d=>this.watchDirAsync(d)));
+        if(this.exit){
+            await this.updateReg();
+        }
     }
 
     private readonly disposables=new DisposeContainer();
@@ -116,7 +143,7 @@ export class AnyCompWatcher
         this.disposables.addCb(()=>ac.abort());
 
         await this.scanAsync(dir);
-        if(this.isDisposed){
+        if(this.isDisposed || this.exit){
             return;
         }
 
@@ -190,7 +217,10 @@ export class AnyCompWatcher
             if(info.isFile() || info.isSymbolicLink()){
 
                 if(this.isMatch(path)){
-                    this.handleFileAsync(path);
+                    const p=this.handleFileAsync(path);
+                    if(this.exit){
+                        await p;
+                    }
                 }
 
             }else if(info.isDirectory()){
@@ -208,7 +238,11 @@ export class AnyCompWatcher
         }
     }
 
-    private outputs:Record<string,AcOutput>={}
+    private outputs:Record<string,AcOutput>={};
+
+    public propReg:Record<string,AcPropContainer>={};
+
+    public typeReg:Record<string,AcTypeContainer>={};
 
     private nextOutputId=1;
 
@@ -240,7 +274,19 @@ export class AnyCompWatcher
             return;
         }
 
-        const kind=ScriptKind.TSX;
+        const ext=getFileExt(path,false,true);
+
+        const kind=(
+            ext==='tsx'?
+                ScriptKind.TSX
+            :ext==='ts'?
+                ScriptKind.TS
+            :ext==='jsx'?
+                ScriptKind.JSX
+            :
+                ScriptKind.JS
+        );
+
         const sourceFile=createSourceFile(
             path,
             content,
@@ -266,101 +312,27 @@ export class AnyCompWatcher
                     continue;
                 }
 
+
+
                 const param=fn.parameters[0];
                 const propTypeNode=getTypeReference(param?.type)
                 const propType=(propTypeNode?.typeName as Identifier)?.escapedText;
-                const props:AcProp[]=[];
+                const props=await getAcPropsAsync(name,path,this.propReg,this.typeReg,this.workingDir);
 
-                if(fn.parameters.length===1 &&  param?.type && propType){
-
-                    const propDefaults:Record<string,{
-                        value:any;
-                        text:string;
-                    }>={}
-
-                    const dName=fn.parameters[0]?.name;
-                    if(dName && isObjectBindingPattern(dName)){
-                        for(const e of dName.elements){
-                            const name=e.name;
-                            if(!e.initializer || !isIdentifier(name)){
-                                continue;
-                            }
-
-                            propDefaults[name.escapedText as string]={
-                                text:e.initializer.getText(),
-                                value:nodeToPrimitiveValue(e.initializer)
-                            }
-                        }
-                    }
-
-                    const propInterface=sourceFile.statements.find(s=>
-                        s.kind===SyntaxKind.InterfaceDeclaration &&
-                        (s as InterfaceDeclaration)?.name?.escapedText===propType
-                    ) as InterfaceDeclaration|undefined;
-
-                    if(!propInterface){
-                        continue;
-                    }
-
-
-                    for(const _prop of propInterface.members){
-
-                        const prop=_prop as PropertySignature;
-                        const propName=(prop.name as Identifier)?.escapedText;
-                        const propTags=getJDocTags(prop);
-
-                        if(!propName || strToBool(propTags['acIgnore'])){
-                            continue;
-                        }
-
-                        const optional=prop.questionToken?true:false;
-                        const types:AcTypeDef[]=[];
-                        getPropType(prop.type,types,true);
-                        if(!types.length){
-                            continue;
-                        }
-
-                        const propObj:AcProp={
-                            name:propName,
-                            optional,
-                            types,
-                            defaultType:types[0]??{type:'object'},
-                            sig:content.substring(prop.pos,prop.end).trim(),
-                            comment:getFullComment(prop),
-                            defaultValue:propDefaults[propName]?.value,
-                            defaultValueText:propDefaults[propName]?.text,
-                            tags:propTags,
-                            bind:propTags['acBind']
-                        };
-
-                        if(propObj.sig.endsWith(';')){
-                            propObj.sig=propObj.sig.substring(0,propObj.sig.length-1);
-                        }
-
-                        const sigI=propObj.sig.indexOf(':');
-                        if(sigI!==-1){
-                            propObj.sig=propObj.sig.substring(sigI+1);
-                        }
-
-
-                        props.push(propObj);
-                    }
-                }
-
-                const onChangeProp=props.find(p=>p.name==='onChange' && p.defaultType.type==='function');
-                const valueProp=props.find(p=>p.name==='value' && p.defaultType.type!=='function');
+                const onChangeProp=props.find(p=>p.name==='onChange' && p.type.type==='function');
+                const valueProp=props.find(p=>p.name==='value' && p.type.type!=='function');
                 if(onChangeProp && valueProp && !onChangeProp.bind){
                     onChangeProp.bind='value';
                 }
 
                 for(const prop of props){
 
-                    if(prop.defaultType.type==='function'){
+                    if(prop.type.type==='function'){
                         continue;
                     }
 
                     const changeName=`on${strFirstToUpper(prop.name)}Change`;
-                    const changeProp=props.find(p=>p.name===changeName && p.defaultType.type==='function');
+                    const changeProp=props.find(p=>p.name===changeName && p.type.type==='function');
                     if(changeProp && !changeProp.bind){
                         changeProp.bind=prop.name;
                     }
@@ -397,7 +369,9 @@ export class AnyCompWatcher
 
 
         this.outputs[path]=output;
-        this.updateReg();
+        if(!this.exit){
+            this.updateReg();
+        }
     }
 
     private updateRequested=false;
@@ -441,12 +415,58 @@ export class AnyCompWatcher
     }
 
     public getRegFile(exportName:string,includeImports=true):string[]{
+
+
         const lines:string[]=[];
 
         lines.push('/* This file was generated by @iyio/any-comp-cli */');
         lines.push('/* eslint-disable @nrwl/nx/enforce-module-boundaries */');
         if(!this.disableLazyLoading && includeImports){
             lines.push('import { Suspense, lazy } from "react";');
+        }
+
+        let t=0;
+        for(const e in this.typeReg){
+            const reg=this.typeReg[e];
+            if(!reg){
+                continue;
+            }
+            reg.index=t++;
+            reg.type[acIndexKey]=reg.index;
+            lines.push(`// ${reg.key}`)
+            lines.push(`const _t${reg.index}=${JSON.stringify(reg.type)}`);
+
+        }
+
+        t=0;
+        for(const e in this.propReg){
+            const reg=this.propReg[e];
+            if(!reg){
+                continue;
+            }
+            reg.index=t++;
+            lines.push(`// ${reg.key}`)
+            lines.push(`const _${reg.index}=[`);
+            for(let i=0;i<reg.props.length;i++){
+                const prop=reg.props[i];
+                if(!prop){
+                    continue;
+                }
+                prop[acIndexKey]=i;
+
+                const index=prop.type[acIndexKey];
+                if(index===undefined){
+                    lines.push(`    ${JSON.stringify(prop)},`);
+                }else{
+                    const pt=prop.type;
+                    delete (prop as any).type;
+                    const propStr=JSON.stringify(prop);
+                    lines.push(`    ${propStr.substring(0,propStr.length-1)},type:_t${index}},`);
+                    prop.type=pt;
+                }
+            }
+            lines.push('] as const;');
+
         }
         const insertOffset=lines.length;
         lines.push(`export const ${exportName}={`);
@@ -465,15 +485,29 @@ export class AnyCompWatcher
             }
 
             for(const comp of output.comps){
+                const props=comp.props;
+                delete (comp as any).props;
+
+                const propsStrAry:string[]=[];
+                for(const prop of props){
+                    const container=prop[acContainerKey];
+                    if(container && prop[acIndexKey]!==undefined){
+                        propsStrAry.push(`_${container.index}[${prop[acIndexKey]}]`);
+                    }else{
+                        propsStrAry.push(JSON.stringify(prop));
+                    }
+                }
+
                 if(this.disableLazyLoading || !includeImports){
                     if(includeImports){
                         lines.splice(index+insertOffset,0,`import ${comp.isDefaultExport?`Comp${index}`:`{ ${comp.name} as Comp${index} }`} from '${comp.path.replace(/\.\w+$/,'')}';`);
                     }
-                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,includeImports?`(props:any)=><Comp${index} {...props}/>`:'null')},`)
+                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,(includeImports?`(props:any)=><Comp${index} {...props}/>`:'null')+`,props:[${propsStrAry.join(',')}]`)},`)
                 }else{
                     lines.splice(index+insertOffset,0,`const Comp${index}=lazy(()=>import('${comp.path.replace(/\.\w+$/,'')}').then(c=>({default:c.${comp.isDefaultExport?'default':comp.name} as any})));`);
-                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,`(props:Record<string,any>,placeholder:any=<h1>Loading ${comp.name}</h1>)=><Suspense fallback={placeholder}><Comp${index} {...props}/></Suspense>`)},`)
+                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,`(props:Record<string,any>,placeholder:any=<h1>Loading ${comp.name}</h1>)=><Suspense fallback={placeholder}><Comp${index} {...props}/></Suspense>,props:[${propsStrAry.join(',')}]`)},`)
                 }
+                comp.props=props;
                 index++;
             }
 
@@ -484,61 +518,6 @@ export class AnyCompWatcher
 
 
         return lines;
-    }
-}
-
-const getPropType=(node:TypeNode|null|undefined,types:AcTypeDef[],unique:boolean)=>{
-    let subTypes:AcTypeDef[]|undefined=undefined;
-    const type:AcType=node?.kind?syntaxKindToAcType(node?.kind):'undefined';
-    if(type==='function'){
-        const params=(node as any as FunctionLikeDeclaration)?.parameters;
-        if(params){
-            subTypes=[];
-            for(const t of params){
-                getPropType(t.type,subTypes,false);
-            }
-        }
-    }
-
-    if(type && (!unique || !types.some(t=>t.type===type))){
-        types.push({
-            type,
-            subTypes,
-        });
-    }
-}
-
-const syntaxKindToAcType=(kind:SyntaxKind):AcType=>{
-    switch(kind){
-
-        case SyntaxKind.StringKeyword:
-            return 'string';
-
-        case SyntaxKind.NumberKeyword:
-            return 'number';
-
-        case SyntaxKind.BigIntKeyword:
-            return 'bigint';
-
-        case SyntaxKind.BooleanKeyword:
-            return 'boolean';
-
-        case SyntaxKind.SymbolKeyword:
-            return 'symbol';
-
-        case SyntaxKind.UndefinedKeyword:
-            return 'undefined';
-
-        case SyntaxKind.MethodDeclaration:
-        case SyntaxKind.MethodSignature:
-        case SyntaxKind.FunctionKeyword:
-        case SyntaxKind.FunctionType:
-        case SyntaxKind.FunctionExpression:
-        case SyntaxKind.FunctionDeclaration:
-            return 'function';
-
-        default:
-            return 'object';
     }
 }
 

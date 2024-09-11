@@ -28,8 +28,7 @@ export function AnyCompPropInput({
 }:AnyCompPropInputProps){
 
     const value=props[prop.name];
-
-    const type=prop.defaultType.type;
+    const type=prop.type.type;
     const normalType=isNormalInputType(type)?type:undefined;
 
     const [error,setError]=useState('');
@@ -81,7 +80,7 @@ export function AnyCompPropInput({
     const [lastCallArgs,setLastCallArgs]=useState('');
 
     useEffect(()=>{
-        if(prop.defaultType.type!=='function'){
+        if(prop.type.type!=='function'){
             return;
         }
         const cb=(...args:any[])=>{
@@ -154,7 +153,7 @@ export function AnyCompPropInput({
                         defaultValue={bindTo??prop.bind}
                     >
                         <option value="">(none)</option>
-                        {comp.props.map(p=>(p.name===prop.name || p.defaultType.type==='function')?null:(
+                        {comp.props.map(p=>(p.name===prop.name || p.type.type==='function')?null:(
                             <option key={p.name} value={p.name}>{p.name}</option>
                         ))}
                     </select>

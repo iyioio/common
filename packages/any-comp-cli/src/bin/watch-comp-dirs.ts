@@ -12,6 +12,7 @@ interface Args
     infoOutPath?:string;
     exportName?:string;
     infoExportName?:string;
+    exit?:boolean;
 }
 
 const args=parseCliArgsT<Args>({
@@ -26,6 +27,7 @@ const args=parseCliArgsT<Args>({
         infoOutPath:args=>args[0],
         exportName:args=>args[0],
         infoExportName:args=>args[0],
+        exit:args=>args[0]?.length?true:false,
     }
 }).parsed as Args
 
@@ -38,7 +40,13 @@ const main=async ({
     infoOutPath,
     exportName,
     infoExportName,
+    exit,
 }:Args)=>{
+
+    let workingDir=process.cwd();
+    if(!workingDir.endsWith('/')){
+        workingDir+='/';
+    }
 
     const watcher=new AnyCompWatcher({
         watchDirs:dir,
@@ -50,6 +58,8 @@ const main=async ({
         infoOutPath,
         exportName,
         infoExportName,
+        exit,
+        workingDir
     });
 
     let shouldExit=false;

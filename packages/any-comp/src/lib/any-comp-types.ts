@@ -12,24 +12,58 @@ export interface AcComp
     tags?:Record<string,string>;
 }
 
-export type AcType="string"|"number"|"bigint"|"boolean"|"symbol"|"undefined"|"object"|"function";
+export const acContainerKey=Symbol('acContainerKey');
+export const acIndexKey=Symbol('acIndexKey');
+
+export type AcType="string"|"number"|"bigint"|"boolean"|"symbol"|"undefined"|"null"|"object"|"function"|"union";
 export interface AcProp{
     name:string;
     optional:boolean;
-    defaultType:AcTypeDef;
-    types:AcTypeDef[];
+    type:AcTypeDef;
+
     sig:string;
     defaultValueText?:string;
     defaultValue?:any;
     comment?:string;
     bind?:string;
     tags?:Record<string,string>;
+
+    [acIndexKey]?:number;
+    [acContainerKey]?:AcPropContainer;
 }
+
+export interface AcPropContainer
+{
+    key:string;
+    index:number;
+    props:AcProp[];
+}
+
+export interface AcTypeContainer
+{
+    key:string;
+    index:number;
+    type:AcTypeDef;
+}
+
 
 export interface AcTypeDef
 {
     type:AcType;
-    subTypes?:AcTypeDef[];
+    isLiteral?:boolean;
+    literalValue?:any;
+    unionValues?:AcUnionValue[];
+
+    [acIndexKey]?:number;
+    [acContainerKey]?:AcTypeContainer;
+}
+
+export interface AcUnionValue
+{
+    type:AcType;
+    label:string;
+    isLiteral?:boolean;
+    literalValue?:any;
 }
 
 export interface AcCompRegistry
