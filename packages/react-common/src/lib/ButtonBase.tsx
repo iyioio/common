@@ -1,5 +1,5 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, UiActionItem, uiRouterService } from "@iyio/common";
-import React, { CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import { createElement, CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { getReactChildString } from "./react-util";
 
 export interface ButtonBaseProps extends BaseLayoutOuterProps
@@ -110,7 +110,7 @@ export function ButtonBase({
         </>
     }
 
-    return React.createElement(elem,{
+    return createElement(elem,{
         type:type,
         disabled:disabled,
         className: cn(baseClassName, { disabled }, baseLayoutCn(props)),

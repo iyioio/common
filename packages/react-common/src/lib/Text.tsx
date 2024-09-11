@@ -1,5 +1,5 @@
 import { baseLayoutCn, BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps } from "@iyio/common";
-import React, { CSSProperties } from "react";
+import { createElement, CSSProperties } from "react";
 
 
 export interface TextProps extends BaseLayoutProps, BaseLayoutFontProps, BaseLayoutColorProps
@@ -46,6 +46,6 @@ export function Text({
 
     const c=baseLayoutCn(props);
 
-    return React.createElement(elem,{ref:elemRef,style,title,className:c?'Text '+c:'Text'},children??text);
+    return createElement(elem,{ref:elemRef,style,title,className:c?'Text '+c:'Text'},children??text);
 
 }

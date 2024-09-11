@@ -1,5 +1,5 @@
 import { baseLayoutCn } from "@iyio/common";
-import React from "react";
+import { createElement } from "react";
 import { ViewProps } from "./View";
 
 const cancelEventKeepDefault=(e:Partial<Event>)=>{
@@ -215,6 +215,6 @@ export function EventCaptureContainer({
     cProps.id=id;
     cProps.className=baseLayoutCn(props);
 
-    return React.createElement(elem,cProps,children);
+    return createElement(elem,cProps,children);
 
 }

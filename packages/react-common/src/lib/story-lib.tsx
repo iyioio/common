@@ -1,5 +1,5 @@
 import { allBaseLayoutFlagProps, FirstArg } from '@iyio/common';
-import React from 'react';
+import { createElement } from 'react';
 import { BaseAppContainer } from './BaseAppContainer';
 
 export interface CreateStoryOptions
@@ -28,7 +28,7 @@ export const createStory=<TComp extends ((props:any)=>any)>(
     const Template=(args:any)=>{
         return (
             <BaseAppContainer>
-                {React.createElement(comp,args)}
+                {createElement(comp,args)}
             </BaseAppContainer>
         )
     }

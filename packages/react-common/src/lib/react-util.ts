@@ -1,11 +1,11 @@
-import React from "react";
+import { Children } from "react";
 
 export const getReactChildStrings=(children:any):string[]=>{
     if(typeof children === 'string'){
         return [children];
     }
     const strings:string[]=[];
-    React.Children.forEach(children,c=>{
+    Children.forEach(children,c=>{
         if(typeof c === 'string'){
             strings.push(c);
         }

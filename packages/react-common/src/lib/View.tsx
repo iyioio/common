@@ -1,5 +1,5 @@
 import { baseLayoutCn, BaseLayoutProps } from '@iyio/common';
-import React, { CSSProperties } from 'react';
+import { createElement, CSSProperties } from 'react';
 
 export interface ViewProps extends BaseLayoutProps
 {
@@ -22,6 +22,6 @@ export function View({
     ...props
 }:ViewProps & {elem?:string}){
 
-    return React.createElement(elem,{ref:elemRef,role,style,id,className:baseLayoutCn(props)},children);
+    return createElement(elem,{ref:elemRef,role,style,id,className:baseLayoutCn(props)},children);
 
 }
