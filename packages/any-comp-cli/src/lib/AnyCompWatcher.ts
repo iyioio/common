@@ -426,7 +426,10 @@ export class AnyCompWatcher
         }
 
         let t=0;
-        for(const e in this.typeReg){
+        let regKeys=Object.keys(this.typeReg);
+        regKeys.sort();
+        regKeys.sort((a,b)=>a.length-b.length);
+        for(const e of regKeys){
             const reg=this.typeReg[e];
             if(!reg){
                 continue;
@@ -435,11 +438,12 @@ export class AnyCompWatcher
             reg.type[acIndexKey]=reg.index;
             lines.push(`// ${reg.key}`)
             lines.push(`const _t${reg.index}=${JSON.stringify(reg.type)}`);
-
         }
 
         t=0;
-        for(const e in this.propReg){
+        regKeys=Object.keys(this.propReg);
+        regKeys.sort();
+        for(const e of regKeys){
             const reg=this.propReg[e];
             if(!reg){
                 continue;
