@@ -179,16 +179,17 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
     /**
      * Wakes update the database by running a select query
      * @param timeoutMs If null wakeDatabaseAsync will wait indefinitely.
-     * @param delayMs Number of milliseconds to wait between wait attempts. default = 5 minutes
+     * @param delayMs Number of milliseconds to wait between wait attempts. default = 10 seconds
      */
-    public async wakeDatabaseAsync(timeoutMs:number|null=minuteMs*5,delayMs=100):Promise<void>{
+    public async wakeDatabaseAsync(timeoutMs:number|null=minuteMs*5,delayMs=10000):Promise<void>{
         const start=Date.now();
         // eslint-disable-next-line no-constant-condition
         while(true){
             try{
                 await this.execAsync(sql`select ${'wake-up'} as ${{name:'action'}}`,true);
                 return;
-            }catch{
+            }catch(ex){
+                console.error('Wake action failed',ex)
                 await delayAsync(delayMs);
             }
             if(timeoutMs!==null && (Date.now()-start)>timeoutMs){
