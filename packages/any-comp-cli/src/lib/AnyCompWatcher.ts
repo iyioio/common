@@ -1,4 +1,4 @@
-import { AcComp, AcPropContainer, AcTagContainer, AcTypeContainer, acContainerKey, acIndexKey } from '@iyio/any-comp';
+import { AcComp, AcPropContainer, AcTagContainer, AcTypeContainer, acContainerKey, acIndexKey, acTags } from '@iyio/any-comp';
 import { DisposeContainer, delayAsync, getDirectoryName, getFileExt, sortStringsCallback, strFirstToUpper } from '@iyio/common';
 import { triggerNodeBreakpoint } from '@iyio/node-common';
 import { access, mkdir, readFile, readdir, stat, watch, writeFile } from 'fs/promises';
@@ -309,7 +309,7 @@ export class AnyCompWatcher
                     name.startsWith('use') ||
                     !fn.modifiers?.some(m=>m.kind===SyntaxKind.ExportKeyword) ||
                     (fn.parameters.length!==0 && fn.parameters.length!==1) ||
-                    strToBool(tags['acIgnore'])
+                    strToBool(tags[acTags.acIgnore])
                 ){
                     continue;
                 }

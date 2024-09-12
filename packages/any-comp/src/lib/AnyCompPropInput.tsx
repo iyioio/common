@@ -1,78 +1,40 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { SlimButton, Text } from "@iyio/react-common";
+import { Text, useSubject } from "@iyio/react-common";
 import { useEffect, useRef, useState } from "react";
 import { AnyCompComment } from "./AnyCompComment";
-import { AcComp, AcProp } from "./any-comp-types";
+import { AnyCompJsonInput } from "./AnyCompJsonInput";
+import { AnyCompUnionInput } from "./AnyCompUnionInput";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
+import { useUpdateOnAnyCompPropChange } from "./any-comp-react-lib";
+import { acStyle } from "./any-comp-style";
+import { AcProp } from "./any-comp-types";
 
-const allNormalInputTypes=['string','number','boolean'] as const;
-type NormalInputType=(typeof allNormalInputTypes)[number];
-const isNormalInputType=(value:any):value is NormalInputType=>allNormalInputTypes.includes(value);
 
 export interface AnyCompPropInputProps
 {
-    comp:AcComp;
+    ctrl:AnyCompViewCtrl;
     prop:AcProp;
-    setProps:(props:Record<string,any>|((currentProps:Record<string,any>)=>Record<string,any>))=>void;
-    props:Record<string,any>;
-    setBindings:(bindings:Record<string,string>|((currentBindings:Record<string,string>)=>Record<string,string>))=>void;
-    bindings:Record<string,string>;
 }
 
 export function AnyCompPropInput({
-    comp,
+    ctrl,
     prop,
-    setProps,
-    props,
-    bindings,
-    setBindings,
 }:AnyCompPropInputProps){
 
-    const value=props[prop.name];
+    console.log('hio 👋 👋 👋 changed',prop.name);
+
+    const comp=ctrl.comp;
+
+    useUpdateOnAnyCompPropChange(ctrl,prop.name);
+
+    const value=ctrl.props[prop.name];
     const type=prop.type.type;
-    const normalType=isNormalInputType(type)?type:undefined;
 
     const [error,setError]=useState('');
 
-    const [jsonValue,setJsonValue]=useState(()=>{
-        if(normalType){
-            return '';
-        }
-        try{
-            return JSON.stringify(value,null,4);
-        }catch{
-            return '';
-        }
-    });
 
-    const setValue=(v:any)=>{
-        const newProps={...props};
-        newProps[prop.name]=v;
-        setProps(newProps);
-    }
 
-    const applyJsonValue=()=>{
-        try{
-            const v=jsonValue.trim();
-            if(v){
-                const value=JSON.parse(v);
-                setValue(value);
-            }else{
-                setValue(undefined);
-            }
-        }catch(ex){
-            setError((ex as any)?.message??'error');
-        }
-    }
-
-    useEffect(()=>{
-        setError('');
-        try{
-            setJsonValue(JSON.stringify(value,null,4))
-        }catch{
-            //
-        }
-    },[value]);
-
+    const bindings=useSubject(ctrl.bindingsSubject);
     const bindTo=bindings[prop.name]??prop.bind;
     const refs=useRef({bindTo});
     refs.current.bindTo=bindTo;
@@ -96,19 +58,15 @@ export function AnyCompPropInput({
             }
             const b=refs.current.bindTo;
             if(b){
-                setProps(v=>({...v,[b]:args[0]}))
+                ctrl.setProp(b,args[0])
             }
         }
 
-        setProps(v=>({...v,[prop.name]:cb}));
+        ctrl.setProp(prop.name,cb);
         return ()=>{
-            setProps(v=>{
-                v={...v};
-                delete v[prop.name];
-                return v;
-            });
+            ctrl.setProp(prop.name,undefined);
         }
-    },[prop,comp,setProps]);
+    },[prop,comp,ctrl]);
 
     const placeholder=prop.defaultValueText===undefined?undefined:`default = ${prop.defaultValueText}`;
 
@@ -121,27 +79,27 @@ export function AnyCompPropInput({
 
             {!!error && <Text sm colorDanger text={`⛔️ ${error}`} />}
 
-            {normalType==='string'?
+            {type==='string'?
                 <input
                     className={style.input()}
                     value={value?.toString()??''}
-                    onChange={e=>setValue(e.target.value)}
+                    onChange={e=>ctrl.setProp(prop.name,e.target.value)}
                     placeholder={placeholder}
                 />
-            :normalType==='number'?
+            :type==='number'?
                 <input
                     className={style.input()}
                     type="number"
                     value={value?.toString()??''}
-                    onChange={e=>setValue(Number(e.target.value))}
+                    onChange={e=>ctrl.setProp(prop.name,Number(e.target.value))}
                     placeholder={placeholder}
                 />
-            :normalType==='boolean'?
+            :type==='boolean'?
                 <input
                     className={style.checkbox()}
                     type="checkbox"
                     checked={value??false}
-                    onChange={e=>setValue(e.target.checked)}
+                    onChange={e=>ctrl.setProp(prop.name,e.target.checked)}
                     placeholder={placeholder}
                 />
             :type==='function'?
@@ -149,7 +107,7 @@ export function AnyCompPropInput({
                     <Text text={"bind to"+(prop.bind?`. default = ${prop.bind}`:'')}opacity050 sm />
                     <select
                         className={style.select()}
-                        onChange={(e)=>setBindings(v=>({...v,[prop.name]:e.target.value}))}
+                        onChange={(e)=>ctrl.bindings={...ctrl.bindings,[prop.name]:e.target.value}}
                         defaultValue={bindTo??prop.bind}
                     >
                         <option value="">(none)</option>
@@ -161,23 +119,10 @@ export function AnyCompPropInput({
                     <Text text={lastCallArgs} sm/>
 
                 </>
+            :type==='union'?
+                <AnyCompUnionInput ctrl={ctrl} prop={prop} />
             :
-                <>
-                    <textarea
-                        className={style.input()}
-                        placeholder={placeholder??'undefined'}
-                        value={jsonValue}
-                        onBlur={applyJsonValue}
-                        onChange={v=>setJsonValue(v.target.value)}
-                        onKeyDown={e=>{
-                            if((e.shiftKey || e.ctrlKey || e.metaKey) && e.key==='Enter'){
-                                applyJsonValue();
-                                e.preventDefault();
-                            }
-                        }}
-                    />
-                    <SlimButton onClick={applyJsonValue}>apply</SlimButton>
-                </>
+                <AnyCompJsonInput ctrl={ctrl} prop={prop} placeholder={placeholder} setError={setError} />
             }
 
         </div>
@@ -193,7 +138,7 @@ const style=atDotCss({name:'AnyCompPropInput',css:`
     }
     @.input{
         all:unset;
-        background:var(--any-comp-input-bg);
+        background:${acStyle.var('inputBg')};
         border-radius:4px;
         padding:0.5rem;
     }
@@ -212,6 +157,6 @@ const style=atDotCss({name:'AnyCompPropInput',css:`
         overflow:hidden;
         width:100%;
         box-sizing:border-box;
-        border:1px solid var(--any-comp-border-color);
+        border:1px solid ${acStyle.var('borderColor')};
     }
 `});

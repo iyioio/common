@@ -633,10 +633,6 @@ export class MdxUiBuilder
 
             const insertIndex=attPosMap[name];
 
-            if(v===false){
-                // todo - check if prop allows undefined
-                continue;
-            }
             const attValue=(typeof v === 'string'?
                 `${name}="${escapeHtml(v)}"`
             :v===true?

@@ -2,6 +2,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { getDirectoryName } from "@iyio/common";
 import { ScrollView, SlimButton, Text } from "@iyio/react-common";
 import { Fragment, useState } from "react";
+import { acStyle } from "./any-comp-style";
 import { AcCompRegistry } from "./any-comp-types";
 
 export interface AnyCompTreeSelectorProps
@@ -79,7 +80,7 @@ const style=atDotCss({name:'AnyCompTreeSelector',css:`
         font-size:12px;
         margin-top:0.2rem;
         position:relative;
-        color:var(--any-comp-foreground-color);
+        color:${acStyle.var('foregroundColor')};
     }
     @.item.selected{
         text-decoration:underline;
@@ -95,7 +96,7 @@ const style=atDotCss({name:'AnyCompTreeSelector',css:`
     }
     @.input{
         all:unset;
-        background:var(--any-comp-input-bg);
+        background:${acStyle.var('inputBg')};
         border-radius:4px;
         padding:0.5rem;
         margin:0.5rem;

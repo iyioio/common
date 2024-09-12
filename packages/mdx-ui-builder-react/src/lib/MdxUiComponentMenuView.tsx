@@ -1,4 +1,4 @@
-import { AcCompRegistry } from "@iyio/any-comp";
+import { AcCompRegistry, AcStyleVars } from "@iyio/any-comp";
 import { atDotCss } from "@iyio/at-dot-css";
 import { MdxUiBuilder, MdxUiSelectionItem } from "@iyio/mdx-ui-builder";
 import { Text, useSubject } from "@iyio/react-common";
@@ -10,7 +10,7 @@ export interface MdxUiComponentMenuViewProps
     item?:MdxUiSelectionItem;
     builder:MdxUiBuilder;
     useSelectedItem?:boolean;
-    foregroundColor?:string;
+    styleVars?:Partial<AcStyleVars>;
     children?:any;
 }
 
@@ -19,7 +19,7 @@ export function MdxUiComponentMenuView({
     item:itemProp,
     builder,
     useSelectedItem,
-    foregroundColor,
+    styleVars,
     children
 }:MdxUiComponentMenuViewProps){
 
@@ -50,7 +50,7 @@ export function MdxUiComponentMenuView({
                 comp={comp}
                 builder={builder}
                 item={item}
-                foregroundColor={foregroundColor}
+                styleVars={styleVars}
             />}
 
             {children}

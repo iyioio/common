@@ -1,38 +1,23 @@
-import { AcComp, AcCompRegistry } from "./any-comp-types";
+import { useSubject } from "@iyio/react-common";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
 
 
 export interface AnyCompProps
 {
-    comp?:AcComp;
-    compProps?:Record<string,any>;
-    compId?:string;
-    compPath?:string;
-    compName?:string;
-    reg?:AcCompRegistry;
+    ctrl?:AnyCompViewCtrl;
     placeholder?:any;
 }
 
 export function AnyComp({
-    compId,
-    compPath,
-    compName,
-    reg,
-    comp=(
-        !reg?
-            undefined
-        :compId?
-            reg.comps.find(c=>c.id===compId)
-        :compPath?
-            reg.comps.find(c=>c.path===compPath)
-        :compName?
-            reg.comps.find(c=>c.name===compName)
-        :
-            undefined
-    ),
-    compProps={},
+    ctrl,
     placeholder
 }:AnyCompProps){
+
+    const comp=ctrl?.comp;
+
+    const props=useSubject(ctrl?.computedPropsSubject);
+
     return (
-        (typeof comp?.comp === 'function')?comp.comp(compProps,placeholder):null
+        ((typeof comp?.comp === 'function') && props)?comp.comp(props,placeholder):null
     )
 }

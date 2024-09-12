@@ -81,3 +81,41 @@ export interface AcCompRegistry
 {
     comps:AcComp[];
 }
+export type AcTaggedPropRendererCallback=(comp:AcComp,tag:string,props:AcProp[])=>any;
+
+export interface AcTaggedPropRenderer
+{
+    /**
+     * Name of the tag to match the renderer to
+     */
+    tag:string;
+
+    /**
+     * If defined the tag value must also match for the renderer to be matched
+     */
+    tagValue?:string;
+
+    /**
+     * Renders matched props
+     */
+    render:AcTaggedPropRendererCallback;
+
+    /**
+     * Controls the order that the renderers or rendered in. Negative values will be rendered before
+     * default inputs.
+     */
+    order?:number;
+}
+
+export interface AnyCompSaveState
+{
+    props?:Record<string,any>;
+    extra?:string
+    bindings?:Record<string,string>;
+}
+
+export interface AnyCompBoolLabels
+{
+    trueLabel:string;
+    falseLabel:string;
+}

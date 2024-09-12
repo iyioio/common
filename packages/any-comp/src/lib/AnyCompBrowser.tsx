@@ -1,11 +1,12 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { BaseLayoutOuterProps } from "@iyio/common";
+import { BaseLayoutOuterProps, deleteUndefined } from "@iyio/common";
 import { Text, View } from "@iyio/react-common";
 import { useEffect, useState } from "react";
 import { AnyCompComment } from "./AnyCompComment";
 import { AnyCompContainer } from "./AnyCompContainer";
 import { AnyCompTreeSelector } from "./AnyCompTreeSelector";
-import { AcCompRegistry } from "./any-comp-types";
+import { AcStyleVars, acStyle, defaultAcStyle } from "./any-comp-style";
+import { AcCompRegistry, AcTaggedPropRenderer } from "./any-comp-types";
 
 
 export interface AnyCompBrowserProps
@@ -15,8 +16,9 @@ export interface AnyCompBrowserProps
     reg:AcCompRegistry;
     placeholder?:any;
     treeClassName?:string;
-    foregroundColor?:string;
     rememberCompId?:boolean;
+    renderers?:AcTaggedPropRenderer[];
+    styleVars?:Partial<AcStyleVars>;
 }
 
 export function AnyCompBrowser({
@@ -24,8 +26,9 @@ export function AnyCompBrowser({
     onCompIdChange,
     reg,
     placeholder,
-    foregroundColor='#000000',
     rememberCompId,
+    renderers,
+    styleVars,
     ...props
 }:AnyCompBrowserProps & BaseLayoutOuterProps){
 
@@ -57,11 +60,10 @@ export function AnyCompBrowser({
     const [canvasSize,setCanvasSize]=useState<'min'|'split'|'max'>('split');
 
     return (
-        <div className={style.root(null,null,props)} style={style.vars({
-            foregroundColor,
-            inputBg:foregroundColor+'33',
-            borderColor:foregroundColor+'33',
-        })}>
+        <div
+            className={style.root(null,null,props)}
+            style={acStyle.vars(styleVars?{...defaultAcStyle,...deleteUndefined(styleVars)}:defaultAcStyle)}
+        >
 
             <View row flex1>
 
@@ -94,9 +96,9 @@ export function AnyCompBrowser({
                         key={comp?.id??''}
                         comp={comp}
                         placeholder={placeholder}
-                        foregroundColor={foregroundColor}
                         canvasSize={canvasSize}
                         onCanvasSizeChange={setCanvasSize}
+                        renderers={renderers}
                     />
                 </View>
 
@@ -113,13 +115,10 @@ const style=atDotCss({name:'AnyCompBrowser',css:`
         flex-direction:column;
         flex:1;
         color:@@foregroundColor;
-        --any-comp-foreground-color:@@foregroundColor;
-        --any-comp-input-bg:@@inputBg;
-        --any-comp-border-color:@@borderColor;
     }
     @.select{
         all:unset;
-        border:1px solid var(--any-comp-border-color);
+        border:1px solid ${acStyle.var('borderColor')};
         padding:0.5rem;
         border-radius:8px;
         cursor:pointer;

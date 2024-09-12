@@ -12,6 +12,9 @@ export const baseLayoutAnimationSpeeds=[
 Object.freeze(baseLayoutAnimationSpeeds);
 export type BaseLayoutAnimationSpeed=typeof baseLayoutAnimationSpeeds[number];
 
+/**
+ * @acGroup animation
+ */
 export const baseLayoutAnimationProps={
     transAll:'ioTransAll',
     transTransform:'ioTransTransform',
@@ -24,7 +27,9 @@ Object.freeze(baseLayoutAnimationProps);
 export type BaseLayoutAnimationProps = {
     -readonly [prop in keyof typeof baseLayoutAnimationProps]?:boolean|BaseLayoutAnimationSpeed;
 }
-
+/**
+ * @acGroup column
+ */
 export const baseLayoutColumnProps={
     colXs:'ioColXs',
     colSm:'ioColSm',
@@ -47,6 +52,9 @@ export type BaseLayoutColumnProps = {
     -readonly [prop in keyof typeof baseLayoutColumnProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup text
+ */
 export const baseLayoutFontProps={
     faceDefault:'ioFaceDefault',
     face0:'ioFace0',
@@ -106,7 +114,9 @@ Object.freeze(baseLayoutFontProps);
 export type BaseLayoutFontProps = {
     -readonly [prop in keyof typeof baseLayoutFontProps]?:BaseLayoutFlagValue;
 }
-
+/**
+ * @acGroup colors
+ */
 export const baseLayoutColorBaseProps={
     color1:'ioColor1',
     color2:'ioColor2',
@@ -143,6 +153,9 @@ export const baseLayoutColorBaseProps={
 } as const;
 Object.freeze(baseLayoutColorBaseProps);
 
+/**
+ * @acGroup colorMap
+ */
 export const baseLayoutColorMappedProps={
     colorPrimary:'ioColorPrimary',//mapped color1
     colorSecondary:'ioColorSecondary',//mapped color2
@@ -171,6 +184,9 @@ export type BaseLayoutColorProps = {
     -readonly [prop in keyof typeof baseLayoutColorProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup gap
+ */
 export const baseLayoutGapProps={
     g0:'ioG0',
     g025:'ioG025',
@@ -192,6 +208,9 @@ export type BaseLayoutGapProps = {
     -readonly [prop in keyof typeof baseLayoutGapProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup padding
+ */
 export const baseLayoutPaddingProps={
     p025:'ioP025',
     p050:'ioP050',
@@ -299,6 +318,9 @@ export type BaseLayoutPaddingProps = {
     -readonly [prop in keyof typeof baseLayoutPaddingProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup margin
+ */
 export const baseLayoutMarginProps={
     m0:'ioM0',
     m025:'ioM025',
@@ -406,6 +428,9 @@ export type BaseLayoutMarginProps = {
     -readonly [prop in keyof typeof baseLayoutMarginProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup flexLayout
+ */
 export const baseLayoutInnerFlexProps={
     displayFlex:'ioDisplayFlex',
     flexWrap:'ioFlexWrap',
@@ -429,6 +454,9 @@ export type BaseLayoutInnerFlexProps = {
     -readonly [prop in keyof typeof baseLayoutInnerFlexProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup flex
+ */
 export const baseLayoutFlexProps={
     flex1:'ioFlex1',
     flex2:'ioFlex2',
@@ -446,6 +474,9 @@ export type BaseLayoutFlexProps = {
     -readonly [prop in keyof typeof baseLayoutFlexProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup selfAlignment
+ */
 export const baseLayoutSelfFlexProps={
     selfAlignCenter:'ioSelfAlignCenter',
     selfAlignStart:'ioSelfAlignStart',
@@ -457,6 +488,9 @@ export type BaseLayoutSelfFlexProps = {
     -readonly [prop in keyof typeof baseLayoutSelfFlexProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup grid
+ */
 export const baseLayoutInnerGridProps={
     displayGrid:'ioDisplayGrid',
     displayInlineGrid:'ioDisplayInlineGrid',
@@ -519,6 +553,9 @@ export type BaseLayoutBreakpointProps = {
     -readonly [prop in keyof typeof baseLayoutBreakpointProps]?:boolean;
 }
 
+/**
+ * @acGroup util
+ */
 export const baseLayoutUtilProps={
     offScreen:'ioOffScreen',
     posAbs:'ioPosAbs',

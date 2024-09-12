@@ -1,118 +1,58 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { ErrorBoundary, ScrollView, SlimButton, Text, View } from "@iyio/react-common";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ErrorBoundary, ScrollView, SlimButton, Text, View, useSubject } from "@iyio/react-common";
+import { useEffect, useState } from "react";
 import { AnyComp } from "./AnyComp";
 import { AnyCompPropsView } from "./AnyCompPropsView";
-import { AcComp, AcProp } from "./any-comp-types";
+import { useCreateAnyCompViewCtrl } from "./any-comp-react-lib";
+import { acStyle } from "./any-comp-style";
+import { AcComp, AcTaggedPropRenderer } from "./any-comp-types";
+import { defaultAcPropRenderers } from "./default-prop-renderers";
 
 
 export interface AnyCompContainerProps
 {
     comp?:AcComp;
     placeholder?:any;
-    foregroundColor?:string;
     canvasSize?:'min'|'split'|'max';
     onCanvasSizeChange?:(value:'min'|'split'|'max')=>void;
+    renderers?:AcTaggedPropRenderer[];
 }
 
 export function AnyCompContainer({
     comp,
     placeholder,
-    foregroundColor='#000000',
     canvasSize='split',
-    onCanvasSizeChange
+    onCanvasSizeChange,
+    renderers,
 }:AnyCompContainerProps){
 
-    const [props,setProps]=useState<Record<string,any>>({});
-    const [bindings,setBindings]=useState<Record<string,string>>({});
+    const ctrl=useCreateAnyCompViewCtrl(comp);
 
-    const [extra,setExtra]=useState('{\n\n}');
-    const [extraProps,setExtraProps]=useState<Record<string,any>>({});
-    const compProps=useMemo(()=>({...props,...extraProps}),[props,extraProps]);
-
-    const applyExtraProps=()=>{
-        try{
-            setExtraProps(JSON.parse(extra))
-        }catch(ex){
-            console.error('Unable to set extra props',ex);
-        }
-    }
-
-    const requiredProps:AcProp[]=[];
-    if(comp){
-        for(const p of comp.props){
-            if(!p.o && props[p.name]===undefined){
-                requiredProps.push(p)
-            }
-        }
-    }
-
-    const [inputKey,setInputKey]=useState(0);
-
-    const save=()=>{
-        if(!comp){
-            return;
-        }
-        globalThis.localStorage?.setItem(`any-comp-${comp.id}`,JSON.stringify({props,extra,bindings}));
-        setSaved(true);
-    }
-
-    const clearSave=()=>{
-        if(!comp){
-            return;
-        }
-        globalThis.localStorage?.removeItem(`any-comp-${comp.id}`);
-        setSaved(false);
-    }
-
-    const reset=()=>{
-        setProps({});
-        setExtra('{\n\n}');
-        setExtraProps({});
-        setInputKey(v=>v+1);
-        setBindings({});
-    }
-
-    const [saved,setSaved]=useState(false);
-
-    const loadSave=useCallback(()=>{
-        if(!comp){
-            return;
-        }
-        const json=globalThis.localStorage?.getItem(`any-comp-${comp.id}`);
-        if(!json){
-            return;
-        }
-        try{
-            const {props,extra,bindings}=JSON.parse(json)
-            setInputKey(v=>v+1);
-            setProps(props);
-            setSaved(true);
-            setExtra(extra);
-            setBindings(bindings??{})
-            try{
-                setExtraProps(JSON.parse(extra));
-            }catch{
-                //
-            }
-        }catch(error){
-            console.error('unable to load comp state',{comp,json,error});
-        }
-    },[comp]);
+    const requiredProps=useSubject(ctrl?.requiredPropsSubject);
+    const resetKey=useSubject(ctrl?.resetKeySubject);
+    const saved=useSubject(ctrl?.savedSubject);
 
     useEffect(()=>{
-        loadSave();
-    },[loadSave]);
+        ctrl?.load();
+    },[ctrl]);
+
+    useEffect(()=>{
+        if(!ctrl){
+            return;
+        }
+        ctrl.renderers=renderers??defaultAcPropRenderers;
+    },[ctrl,renderers]);
 
     const [display,setDisplay]=useState<(typeof displays)[number]>('flexColumn');
     const [justify,setJustify]=useState<(typeof justifyTypes)[number]|undefined>(undefined);
     const [align,setAlign]=useState<(typeof alignTypes)[number]|undefined>(undefined);
 
+    console.log('hio 👋 👋 👋 render container',);
 
     return (
-        <div className={style.root()} style={style.vars({foregroundColor})}>
+        <div className={style.root()}>
 
-            {requiredProps.length?
+            {requiredProps?.length?
                 requiredProps.map(p=>(
                     <Text weightBold lg key={p.name} text={`${p.name} - required before rendering`}/>
                 ))
@@ -131,9 +71,8 @@ export function AnyCompContainer({
                             alignItems:align
                         }}>
                             <AnyComp
-                                key={inputKey}
-                                comp={comp}
-                                compProps={compProps}
+                                key={resetKey}
+                                ctrl={ctrl??undefined}
                                 placeholder={placeholder}
                             />
                         </div>
@@ -178,29 +117,20 @@ export function AnyCompContainer({
                     </View>
                 </View>
                 <View row className={style.bottomButtons()}>
-                    <SlimButton onClick={save}>(Save)</SlimButton>
+                    <SlimButton onClick={()=>ctrl?.save()}>(Save)</SlimButton>
                     {saved && <>
-                        <SlimButton onClick={clearSave}>(Delete)</SlimButton>
-                        <SlimButton onClick={loadSave}>(Load)</SlimButton>
+                        <SlimButton onClick={()=>ctrl?.clearSaved()}>(Delete)</SlimButton>
+                        <SlimButton onClick={()=>ctrl?.load()}>(Load)</SlimButton>
                     </>}
-                    <SlimButton onClick={reset}>(Reset)</SlimButton>
+                    <SlimButton onClick={()=>ctrl?.reset()}>(Reset)</SlimButton>
                 </View>
             </View>
             <ScrollView flex1 className={style.scroll({hide:canvasSize==='max'})} containerClassName={style.scrollContainer()}>
-                <View col className={style.inputContainer()} key={inputKey}>
+                <View col className={style.inputContainer()} key={resetKey}>
 
                     <Text lg text="Props" />
 
-                    <AnyCompPropsView
-                        comp={comp}
-                        props={props}
-                        setProps={setProps}
-                        bindings={bindings}
-                        setBindings={setBindings}
-                        extra={extra}
-                        setExtra={setExtra}
-                        applyExtraProps={applyExtraProps}
-                    />
+                    <AnyCompPropsView ctrl={ctrl??undefined}/>
 
                 </View>
 
@@ -221,11 +151,10 @@ const style=atDotCss({name:'AnyCompContainer',css:`
         flex-direction:column;
         flex:1;
         gap:1rem;
-        color:@@foregroundColor;
-        --any-comp-foreground-color:@@foregroundColor;
+        color:${acStyle.var('foregroundColor')};
     }
     @.mainScroll{
-        border:var(--any-comp-border-color) 1px solid;
+        border:${acStyle.var('borderColor')} 1px solid;
         border-radius:4px;
         margin-top:1rem;
     }
@@ -238,7 +167,7 @@ const style=atDotCss({name:'AnyCompContainer',css:`
     @.inputContainer{
         padding:1rem;
         gap:2rem;
-        border-top:1px solid var(--any-comp-border-color);
+        border-top:1px solid ${acStyle.var('borderColor')};
     }
     @.inputContainer:first-child{
         border-top:none;
@@ -252,7 +181,7 @@ const style=atDotCss({name:'AnyCompContainer',css:`
     }
     @.input{
         all:unset;
-        background:var(--any-comp-input-bg);
+        background:${acStyle.var('inputBg')};
         border-radius:4px;
         padding:0.5rem;
         height:80px;
@@ -267,7 +196,7 @@ const style=atDotCss({name:'AnyCompContainer',css:`
         gap:1rem;
     }
     @.scroll{
-        border:var(--any-comp-border-color) 1px solid;
+        border:${acStyle.var('borderColor')} 1px solid;
         border-radius:4px;
         margin-bottom:1rem;
     }
