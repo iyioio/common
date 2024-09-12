@@ -102,6 +102,21 @@ function varsDef(
     }
 }
 
+function varDef(
+    this:PropRef,
+    name:string,
+    fallbackValue?:string
+){
+    return fallbackValue===undefined?`var(--${this.name}-${name})`:`var(--${this.name}-${name}, ${fallbackValue})`;
+}
+
+function varNameDef(
+    this:PropRef,
+    name:string
+){
+    return `--${this.name}-${name}`;
+}
+
 /**
  * Creates a new at-dot-css flavored CSS style sheet. The returned style object will contain
  * function properties corresponding to each of the at-dot selectors defined in the style sheet.
@@ -191,7 +206,9 @@ export const atDotCss=<S extends string>(
         [ctrlKey]:ctrl,
         root,
         toString:root,
-        vars:varsDef.bind(rootRef)
+        vars:varsDef.bind(rootRef),
+        var:varDef.bind(rootRef),
+        varName:varNameDef.bind(rootRef),
     };
 
 

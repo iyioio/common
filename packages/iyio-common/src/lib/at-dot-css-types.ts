@@ -101,6 +101,15 @@ export interface AtDotVars<T=any>
 {
     vars(vars:Partial<T>,elem:HTMLElement):void;
     vars(vars?:Partial<T>,style?:Partial<CSSStyleDeclaration>|HTMLElement):Record<string,any>|undefined;
+    /**
+     * Returns the css variable expression for the variable, `var(--Example-name)`.
+     */
+    var(name:keyof T,fallbackValue?:string):string;
+
+    /**
+     * Returns the css variable name for the variable, `--Example-name`.
+     */
+    varName(name:keyof T):string;
 }
 
 export type ParseAtDotStyle<
