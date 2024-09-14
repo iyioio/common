@@ -1,8 +1,10 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { css, RouteInfo } from "@iyio/common";
+import { cn, css, RouteInfo } from "@iyio/common";
 import { useInsertionEffect } from "react";
+import { disablePageClipSubject } from "./page-lib";
 import { PageTransition } from "./PageTransition";
 import { PageTransitionOptions } from "./PageTransitionOptions";
+import { useSubject } from "./rxjs-hooks";
 
 export const defaultAnimatedPageTransitionKeyframes=css`
     @keyframes PageTransitionEnter
@@ -75,6 +77,13 @@ export function AnimatedPageTransition({
                 position:relative;
             }
 
+            .AnimatedPageTransition.noClip,
+            .AnimatedPageTransition.noClip .PageTransition,
+            .AnimatedPageTransition.noClip .PageTransition-container,
+            .AnimatedPageTransition.noClip .PageTransition-item {
+                overflow:visible;
+            }
+
             ${keyframes}
 
             .AnimatedPageTransition .PageTransition-item{
@@ -115,8 +124,10 @@ export function AnimatedPageTransition({
         exitContentName,
     ]);
 
+    const disableClip=useSubject(disablePageClipSubject);
+
     return (
-        <div className="AnimatedPageTransition">
+        <div className={cn("AnimatedPageTransition",disableClip && "noClip")}>
 
             <PageTransition duration={transSpeed+200} routeInfo={routeInfo}>
                 {children}

@@ -67,9 +67,9 @@ export function useFunctionSubject<T>(subject:ReadonlySubject<T>|Observable<T>|u
     return value;
 }
 
-export const useIncrementSubject=(subject:BehaviorSubject<number>,active=true)=>{
+export const useIncrementSubject=(subject:BehaviorSubject<number>|null|undefined,active=true)=>{
     useEffect(()=>{
-        if(!active){
+        if(!active || !subject){
             return;
         }
         subject.next(subject.value+1);

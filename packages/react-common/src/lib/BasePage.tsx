@@ -1,7 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, bcn, cn, isServerSide, uiReadyDelayedSubject, uiReadySubject } from "@iyio/common";
 import { CSSProperties, useEffect, useInsertionEffect, useMemo, useRef, useState } from "react";
-import { PageContext, PageCtx, commonPagePropsSubject, pageScrollPositionSubject } from "./page-lib";
+import { BehaviorSubject } from "rxjs";
+import { PageContext, PageCtx, commonPagePropsSubject, disablePageClipSubject, pageScrollPositionSubject } from "./page-lib";
+import { useSubject } from "./rxjs-hooks";
 
 export interface BasePageProps<T=any> extends BaseLayoutProps
 {
@@ -26,7 +28,7 @@ export function BasePage({
     unstyled,
     columnWidth,
     fullWidthColumn,
-    disableScroll,
+    disableScroll:disableScrollProp,
     style,
     ready=true,
     readyDelay=500,
@@ -38,8 +40,14 @@ export function BasePage({
     }
 
     const ctx=useMemo<PageCtx>(()=>({
-        common
+        disablePageScrollSubject:new BehaviorSubject(0),
+        common,
     }),[common]);
+
+    const disableClip=useSubject(disablePageClipSubject);
+    const disableScrollSubjectValue=useSubject(ctx.disablePageScrollSubject);
+    const disableScroll=(disableScrollSubjectValue || disableScrollProp || disableClip)?true:false;
+
 
     const [elem,setElem]=useState<HTMLElement|null>(null);
     useEffect(()=>{
@@ -125,7 +133,7 @@ export function BasePage({
 
     return (
         <PageContext.Provider value={ctx}>
-            <div ref={setElem} className={cn("BasePage",{disableScroll})} style={style}>
+            <div ref={setElem} className={cn("BasePage",{disableScroll,disableClip})} style={style}>
                 <main className={bcn(props,"BasePage-content",{fullWidthColumn},{
                     'BasePage-content-column':columnWidth
                 })} style={{
@@ -156,6 +164,11 @@ const cStyle=atDotCss({name:'BasePage',order:'frameworkHigh',css:`
     .BasePage.disableScroll{
         overflow-y:hidden;
         overflow-y:clip;
+    }
+    .BasePage.disableClip{
+        overflow-y:visible;
+        overflow-y:visible;
+        overflow-x:visible;
     }
     .BasePage-content{
         display:flex;
