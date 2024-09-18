@@ -41,6 +41,12 @@
                     "codeCoverage": true
                 }
             }
+        },
+        "install-resources":{
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "packages/pdf-viewer/install-resources.sh $@"
+            }
         }
     },
     "tags": []

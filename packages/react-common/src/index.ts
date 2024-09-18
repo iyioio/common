@@ -23,6 +23,7 @@ export * from "./lib/LoadingOverlay";
 export * from "./lib/LockScreenRenderer";
 export * from "./lib/LockScreenView";
 export * from "./lib/ModalBase";
+export * from "./lib/PageArrows";
 export * from "./lib/PageTransition";
 export * from "./lib/PageTransitionOptions";
 export * from "./lib/PanZoomControls";
