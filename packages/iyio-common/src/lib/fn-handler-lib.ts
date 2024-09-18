@@ -1,8 +1,10 @@
 import { ZodBoolean, ZodNumber, ZodObject, ZodSchema, ZodString } from 'zod';
-import { BaseError } from './errors';
+import { getErrorMessage } from './error-lib';
+import { BadRequestError, BaseError } from './errors';
 import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
 import { FnEventTransformers } from './fn-handler.deps';
 import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse, createHttpStringResponse } from './http-server-lib';
+import { HttpResponseOptions } from './http-server-types';
 import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
@@ -11,208 +13,214 @@ import { isZodArray, zodCoerceObject } from './zod-helpers';
 
 export const fnHandler=async (options:FnHandlerOptions)=>{
 
-    const {
-        evt,
-        context,
-        handler,
-        logRequest,
-        returnsHttpResponse,
-        inputScheme,
-        outputScheme,
-        httpLike,
-        defaultHttpMethod=httpLike?'POST':undefined,
-        defaultHttpPath=httpLike?'/':undefined,
-        defaultQueryString,
-        inputProp,
-        inputParseProp=httpLike?'body':undefined,
-        allowParallelInvoke,
-    }=options;
-
-    let {
-        inputOverride
-    }=options;
-
-    if(logRequest){
-        console.info('serverlessHandler',evt);
-    }
-
-    const eventRecords:any[]|undefined=(
-        evt.Records &&
-        Array.isArray(evt.Records) &&
-        (inputProp?evt[inputProp]===undefined:true) &&
-        (inputParseProp?evt[inputParseProp]===undefined:true)?
-        evt.Records:undefined
-    );
-
-
-    if(eventRecords){
-
-        if(inputScheme && !isZodArray(inputScheme)){
-            if(allowParallelInvoke){
-                await Promise.all(eventRecords.map(e=>fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'})))
-            }else{
-                for(const e of eventRecords){
-                    await fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'});
-                }
-            }
-            return undefined;
-        }
-
-        if(inputOverride===undefined){
-            inputOverride=eventRecords.map(v=>{
-                let input=inputProp?v[inputProp]:undefined;
-                if(input!==undefined){
-                    return input;
-                }
-
-                input=inputParseProp?v[inputParseProp]:undefined;
-                if(input!==undefined){
-                    return (typeof input === 'string')?
-                        JSON.parse(input):
-                        input;
-                }
-
-                input=v.body??v.Body;
-                if(typeof input === 'string'){
-                    try{
-                        return JSON.parse(input)
-                    }catch{
-                        return input;
-                    }
-                }
-                return input;
-            });
-        }
-    }
-
-    const fnInvokeEvent=isFnInvokeEvent(evt)?evt:undefined;
-
-    const requestContextHttpPath=evt?.requestContext?.http?.path;
-    const requestContextHttpMethod=evt?.requestContext?.http?.method;
-    const requestContextPath=evt?.requestContext?.path??evt?.path??defaultHttpPath;
-    const requestContextMethod=evt?.requestContext?.httpMethod??evt?.httpMethod??defaultHttpMethod;
-
-    const query=getQuery(evt,defaultQueryString);
-
-    let path=(
-        (requestContextHttpPath)??
-        (requestContextPath)??
-        '/'
-    )
-    const method=(
-        requestContextHttpMethod??
-        requestContextMethod??
-        'POST'
-    )?.toUpperCase() as HttpMethod;
-
-    if(!path.startsWith('/')){
-        path='/'+path;
-    }
-
-    const isHttp=(
-        (requestContextHttpPath!==undefined && requestContextHttpMethod!==undefined) ||
-        (requestContextPath!==undefined && requestContextMethod!==undefined)
-    )
-    const isApiGateway=!!requestContextMethod;
-    //const isLambdaUrl=!!requestContextHttpMethod;
-    const cors=isApiGateway;
-    const responseDefaults={cors};
-
-    let input=(
-        inputOverride!==undefined?
-            inputOverride
-        :inputProp?
-            evt[inputProp]
-        :inputParseProp?
-            (typeof evt[inputParseProp]==='string')?JSON.parse(evt[inputParseProp]):undefined
-        :fnInvokeEvent?
-            fnInvokeEvent.input
-        :isHttp?
-            (evt.body?
-                (typeof evt.body === 'string')?
-                    JSON.parse(evt.body)
-                :
-                    evt.body
-            :((method==='GET' || getObjKeyCount(query)) && inputScheme)?
-                parseQuery(inputScheme,query)
-            :
-                undefined
-            )
-        :
-            evt
-    );
-
-    if(inputScheme){
-        const parsed=inputScheme.safeParse(input);
-        if(parsed.success){
-            input=parsed.data;
-        }else if(parsed.success===false){
-            if(logRequest){
-                console.error('serverlessHandler - Invalid input',input);
-            }
-            if(isHttp){
-                return createHttpBadRequestResponse(parsed.error.message);
-            }else{
-                return createFnError(400,parsed.error.message,parsed.error);
-            }
-        }
-    }
-
-    const routePath=`${method}:${path}`;
-
-    let sub:string|undefined=undefined;
-    let claims:Record<string,any>={};
-
-    if(fnInvokeEvent?.jwt){
-        if(!validateJwt(fnInvokeEvent.jwt)){
-            console.error('RouteHandler received an invalid JWT or the the JWT was unable to be validated.');
-            if(isHttp){
-                return createHttpBadRequestResponse('Invalid JWT',responseDefaults);
-            }else{
-                return createFnError(400,'Invalid JWT');
-            }
-        }
-        claims=parseJwt(fnInvokeEvent.jwt)??{};
-        sub=claims['sub'];
-    }
-
-    const headers:Record<string,string>=evt.headers??{};
-    const remoteAddress:string|undefined=headers['x-forwarded-for'];
-
-    const fnEvent:FnEvent={
-        sourceEvent:evt,
-        context,
-        path,
-        method,
-        routePath,
-        query,
-        headers,
-        claims,
-        sub,
-    }
-
-    if(fnInvokeEvent?.apiKey){
-        fnEvent.apiKey=fnInvokeEvent.apiKey;
-    }
-
-    if(typeof remoteAddress === 'string'){
-        fnEvent.remoteAddress=remoteAddress;
-    }
-
-    if(typeof evt.requestContext?.connectionId === 'string'){
-        fnEvent.connectionId=evt.requestContext.connectionId;
-    }
-
-    if(typeof evt.requestContext?.eventType === 'string'){
-        fnEvent.eventType=evt.requestContext.eventType;
-    }
-
-    const transformers=FnEventTransformers.all();
-    for(const t of transformers){
-        await t(fnEvent);
-    }
+    let routePath='/';
+    let responseDefaults:HttpResponseOptions|undefined;
+    let isHttp=true;
 
     try{
+
+        const {
+            evt,
+            context,
+            handler,
+            logRequest,
+            returnsHttpResponse,
+            inputScheme,
+            outputScheme,
+            httpLike,
+            defaultHttpMethod=httpLike?'POST':undefined,
+            defaultHttpPath=httpLike?'/':undefined,
+            defaultQueryString,
+            inputProp,
+            inputParseProp=httpLike?'body':undefined,
+            allowParallelInvoke,
+        }=options;
+
+        let {
+            inputOverride
+        }=options;
+
+        if(logRequest){
+            console.info('serverlessHandler',evt);
+        }
+
+        const eventRecords:any[]|undefined=(
+            evt.Records &&
+            Array.isArray(evt.Records) &&
+            (inputProp?evt[inputProp]===undefined:true) &&
+            (inputParseProp?evt[inputParseProp]===undefined:true)?
+            evt.Records:undefined
+        );
+
+
+        if(eventRecords){
+
+            if(inputScheme && !isZodArray(inputScheme)){
+                if(allowParallelInvoke){
+                    await Promise.all(eventRecords.map(e=>fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'})))
+                }else{
+                    for(const e of eventRecords){
+                        await fnHandler({...options,evt:e,inputParseProp:inputParseProp??'body'});
+                    }
+                }
+                return undefined;
+            }
+
+            if(inputOverride===undefined){
+                inputOverride=eventRecords.map(v=>{
+                    let input=inputProp?v[inputProp]:undefined;
+                    if(input!==undefined){
+                        return input;
+                    }
+
+                    input=inputParseProp?v[inputParseProp]:undefined;
+                    if(input!==undefined){
+                        return (typeof input === 'string')?
+                            parseJson(input):
+                            input;
+                    }
+
+                    input=v.body??v.Body;
+                    if(typeof input === 'string'){
+                        try{
+                            return parseJson(input)
+                        }catch{
+                            return input;
+                        }
+                    }
+                    return input;
+                });
+            }
+        }
+
+        const fnInvokeEvent=isFnInvokeEvent(evt)?evt:undefined;
+
+        const requestContextHttpPath=evt?.requestContext?.http?.path;
+        const requestContextHttpMethod=evt?.requestContext?.http?.method;
+        const requestContextPath=evt?.requestContext?.path??evt?.path??defaultHttpPath;
+        const requestContextMethod=evt?.requestContext?.httpMethod??evt?.httpMethod??defaultHttpMethod;
+
+        const query=getQuery(evt,defaultQueryString);
+
+        let path=(
+            (requestContextHttpPath)??
+            (requestContextPath)??
+            '/'
+        )
+        const method=(
+            requestContextHttpMethod??
+            requestContextMethod??
+            'POST'
+        )?.toUpperCase() as HttpMethod;
+
+        if(!path.startsWith('/')){
+            path='/'+path;
+        }
+
+        isHttp=(
+            (requestContextHttpPath!==undefined && requestContextHttpMethod!==undefined) ||
+            (requestContextPath!==undefined && requestContextMethod!==undefined)
+        )
+        const isApiGateway=!!requestContextMethod;
+        //const isLambdaUrl=!!requestContextHttpMethod;
+        const cors=isApiGateway;
+        responseDefaults={cors};
+
+        let input=(
+            inputOverride!==undefined?
+                inputOverride
+            :inputProp?
+                evt[inputProp]
+            :inputParseProp?
+                (typeof evt[inputParseProp]==='string')?parseJson(evt[inputParseProp]):undefined
+            :fnInvokeEvent?
+                fnInvokeEvent.input
+            :isHttp?
+                (evt.body?
+                    (typeof evt.body === 'string')?
+                        parseJson(evt.body)
+                    :
+                        evt.body
+                :((method==='GET' || getObjKeyCount(query)) && inputScheme)?
+                    parseQuery(inputScheme,query)
+                :
+                    undefined
+                )
+            :
+                evt
+        );
+
+        if(inputScheme){
+            const parsed=inputScheme.safeParse(input);
+            if(parsed.success){
+                input=parsed.data;
+            }else if(parsed.success===false){
+                if(logRequest){
+                    console.error('serverlessHandler - Invalid input',input);
+                }
+                if(isHttp){
+                    return createHttpBadRequestResponse(parsed.error.message);
+                }else{
+                    return createFnError(400,parsed.error.message,parsed.error);
+                }
+            }
+        }
+
+        routePath=`${method}:${path}`;
+
+        let sub:string|undefined=undefined;
+        let claims:Record<string,any>={};
+
+        if(fnInvokeEvent?.jwt){
+            if(!validateJwt(fnInvokeEvent.jwt)){
+                console.error('RouteHandler received an invalid JWT or the the JWT was unable to be validated.');
+                if(isHttp){
+                    return createHttpBadRequestResponse('Invalid JWT',responseDefaults);
+                }else{
+                    return createFnError(400,'Invalid JWT');
+                }
+            }
+            claims=parseJwt(fnInvokeEvent.jwt)??{};
+            sub=claims['sub'];
+        }
+
+        const headers:Record<string,string>=evt.headers??{};
+        const remoteAddress:string|undefined=headers['x-forwarded-for'];
+
+        const fnEvent:FnEvent={
+            sourceEvent:evt,
+            context,
+            path,
+            method,
+            routePath,
+            query,
+            headers,
+            claims,
+            sub,
+        }
+
+        if(fnInvokeEvent?.apiKey){
+            fnEvent.apiKey=fnInvokeEvent.apiKey;
+        }
+
+        if(typeof remoteAddress === 'string'){
+            fnEvent.remoteAddress=remoteAddress;
+        }
+
+        if(typeof evt.requestContext?.connectionId === 'string'){
+            fnEvent.connectionId=evt.requestContext.connectionId;
+        }
+
+        if(typeof evt.requestContext?.eventType === 'string'){
+            fnEvent.eventType=evt.requestContext.eventType;
+        }
+
+        const transformers=FnEventTransformers.all();
+        for(const t of transformers){
+            await t(fnEvent);
+        }
+
+
         if(method==='OPTIONS'){
             if(isHttp){
                 return createHttpNoContentResponse(responseDefaults);
@@ -268,6 +276,14 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
         }else{
             return createFnError(code,message);
         }
+    }
+}
+
+const parseJson=<T=any>(value:string):T=>{
+    try{
+        return JSON.parse(value);
+    }catch(ex){
+        throw new BadRequestError('Invalid JSON body - '+getErrorMessage(ex));
     }
 }
 
