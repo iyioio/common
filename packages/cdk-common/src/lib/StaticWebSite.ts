@@ -11,7 +11,7 @@ import { Construct, IConstruct, Node } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { ParamOutput } from "./ParamOutput";
 import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
-import { BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types";
+import { ApiRoute, BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types";
 import { getRegexRedirectMapAsString } from "./getRedirectMap";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
@@ -34,6 +34,7 @@ export interface StaticWebSiteProps
     bucketSources?:BucketSiteContentSource[],
     redirectHandler?:NamedFn;
     ignorePaths?:string[];
+    routes?:ApiRoute[];
 }
 
 export class StaticWebSite extends Construct {
@@ -58,6 +59,7 @@ export class StaticWebSite extends Construct {
         createOutputs,
         additionalSources=[],
         bucketSources=[],
+        routes=[],
         redirectHandler,
         ignorePaths,
     }:StaticWebSiteProps,managed:ManagedProps=getDefaultManagedProps()){
@@ -262,6 +264,37 @@ export class StaticWebSite extends Construct {
                             }]:undefined
                         }],
                     },
+                    ...routes.map(r=>{
+                        let target=r.target;
+                        let fn:NamedFn|undefined;
+                        if(!target && r.targetName){
+                            fn=managed.fns.find(f=>f.name===r.targetName);
+                            if(!fn){
+                                throw new Error(`No target function found by name ${r.targetName}`)
+                            }
+                        }
+
+                        if(!fn?.domain){
+                            throw new Error('Unable to determine domain for target. Does the target function have a public URL?')
+                        }
+
+                        const source:cf.SourceConfiguration={
+                            customOriginSource:{
+                                domainName:fn.domain,
+                                originProtocolPolicy:cf.OriginProtocolPolicy.HTTPS_ONLY,
+                            },
+                            behaviors:[{
+                                isDefaultBehavior:false,
+                                viewerProtocolPolicy:cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                compress:true,
+                                allowedMethods:cf.CloudFrontAllowedMethods.ALL,
+                                pathPattern:r.path.includes('*')?
+                                    r.path:r.path+(r.path.endsWith('/')?'*':'/*'),
+                            }],
+                        }
+
+                        return source;
+                    }),
                     ...additionalSources.map(s=>s.source),
                     ...bucketSources.map(bucketSource=>{
 

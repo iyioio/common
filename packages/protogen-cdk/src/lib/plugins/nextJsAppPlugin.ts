@@ -1,4 +1,4 @@
-import { BucketSiteContentSource, SiteInfo } from "@iyio/cdk-common";
+import { ApiRoute, BucketSiteContentSource, SiteInfo } from "@iyio/cdk-common";
 import { joinPaths, strFirstToUpper } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoGetChildrenByName, protoMergeJson } from "@iyio/protogen";
 import { z } from "zod";
@@ -103,10 +103,25 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                         const domains=protoGetChildrenByName(node,'domain',false);
                         const bucketSources=protoGetChildrenByName(node,'bucketSource',false);
                         const ignorePaths=protoGetChildrenByName(node,'ignorePath',false);
+                        const routes:ApiRoute[]=[];
+                        const routeNodes=protoGetChildrenByName(node,'route',false);
+                        for(const child of routeNodes){
+                            const path=child.children?.['path']?.value;
+                            const target=child.children?.['target']?.value;
+                            if(!path || !target){
+                                continue;
+                            }
+                            const route:ApiRoute={
+                                path,
+                                targetName:target
+                            }
+                            routes.push(route);
+                        }
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
                             redirectHandler,
                             staticSite:{
+                                routes:routes.length?routes:undefined,
                                 ignorePaths:ignorePaths.length?ignorePaths.map(p=>p.value??'').filter(v=>v):undefined,
                                 nxExportedPackage:name,
                                 cdn:true,
