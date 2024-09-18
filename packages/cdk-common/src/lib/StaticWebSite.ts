@@ -286,8 +286,16 @@ export class StaticWebSite extends Construct {
                             behaviors:[{
                                 isDefaultBehavior:false,
                                 viewerProtocolPolicy:cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                                compress:true,
                                 allowedMethods:cf.CloudFrontAllowedMethods.ALL,
+                                maxTtl:cdk.Duration.millis(0),
+                                defaultTtl:cdk.Duration.millis(0),
+                                forwardedValues:{
+                                    headers:['Authorization','authorization'],
+                                    queryString:true,
+                                    cookies:{
+                                        forward:'all'
+                                    }
+                                },
                                 pathPattern:r.path.includes('*')?
                                     r.path:r.path+(r.path.endsWith('/')?'*':'/*'),
                             }],
