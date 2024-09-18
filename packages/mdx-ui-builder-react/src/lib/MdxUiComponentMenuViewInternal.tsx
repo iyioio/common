@@ -1,8 +1,8 @@
-import { AcComp, AcStyleVars, AnyCompPropsView, acStyle, defaultAcStyle, useCreateAnyCompViewCtrl } from "@iyio/any-comp";
+import { AcComp, AcStyleVars, AnyCompPropsView, AnyCompViewCtrl, acStyle, defaultAcStyle, useCreateAnyCompViewCtrl } from "@iyio/any-comp";
 import { atDotCss } from "@iyio/at-dot-css";
 import { deleteUndefined } from "@iyio/common";
 import { MdxUiBuilder, MdxUiSelectionItem, mdxUiAttsToObject } from "@iyio/mdx-ui-builder";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface MdxUiComponentMenuViewInternalProps
 {
@@ -10,6 +10,7 @@ export interface MdxUiComponentMenuViewInternalProps
     item:MdxUiSelectionItem;
     builder:MdxUiBuilder;
     styleVars?:Partial<AcStyleVars>;
+    onCtrlReady?:(ctrl:AnyCompViewCtrl)=>void;
 }
 
 export function MdxUiComponentMenuViewInternal({
@@ -17,15 +18,18 @@ export function MdxUiComponentMenuViewInternal({
     item,
     builder,
     styleVars,
+    onCtrlReady,
 }:MdxUiComponentMenuViewInternalProps){
 
     const ctrl=useCreateAnyCompViewCtrl(comp);
+    const [loaded,setLoaded]=useState(false);
 
     useEffect(()=>{
         if(!ctrl){
             return;
         }
         ctrl.load({props:mdxUiAttsToObject(item.node.attributes??[])});
+        setLoaded(true);
 
         let iv:any;
         // subscribe to changes after loading init state
@@ -33,13 +37,24 @@ export function MdxUiComponentMenuViewInternal({
             clearTimeout(iv);
             iv=setTimeout(()=>{
                 builder.setElementProps(item.id,ctrl.computedProps,true);
-            },500);
+            },16);
         });
         return ()=>{
             sub.unsubscribe();
         }
     },[ctrl,item]);
 
+    const refs=useRef({onCtrlReady});
+    refs.current.onCtrlReady=onCtrlReady;
+    useEffect(()=>{
+        if(loaded && ctrl){
+            refs.current.onCtrlReady?.(ctrl);
+        }
+    },[ctrl,loaded]);
+
+    if(!loaded){
+        return null;
+    }
 
     return (
         <div

@@ -443,6 +443,7 @@ export const baseLayoutInnerFlexProps={
     justifyStart:'ioJustifyStart',
     justifyEnd:'ioJustifyEnd',
     justifyAround:'ioJustifyAround',
+    justifyEvenly:'ioJustifyEvenly',
     justifyBetween:'ioJustifyBetween',
     alignCenter:'ioAlignCenter',
     alignStart:'ioAlignStart',
@@ -524,6 +525,9 @@ export type BaseLayoutInnerGridProps = {
     -readonly [prop in keyof typeof baseLayoutInnerGridProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup layout
+ */
 export const baseLayoutParentLayoutProps={
     stackingRow:'ioStackingRow',
     flexGrid:'ioFlexGrid',
@@ -533,6 +537,9 @@ export type BaseLayoutParentLayoutProps = {
     -readonly [prop in keyof typeof baseLayoutParentLayoutProps]?:BaseLayoutFlagValue;
 }
 
+/**
+ * @acGroup breakpoint
+ */
 export const baseLayoutBreakpointProps={
     bpMobileSmUp:'ioBpMobileSmUp',
     bpMobileUp:'ioBpMobileUp',
@@ -655,6 +662,9 @@ for(const e in baseLayoutFlagProps){
 }
 Object.freeze(allBaseLayoutFlagProps);
 
+/**
+ * @acGroup className
+ */
 export interface BaseLayoutClassNameProps
 {
     className?:string;

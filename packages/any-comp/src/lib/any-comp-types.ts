@@ -1,3 +1,4 @@
+import type { AnyCompViewCtrl } from "./AnyCompViewCtrl";
 
 export interface AcComp
 {
@@ -81,7 +82,7 @@ export interface AcCompRegistry
 {
     comps:AcComp[];
 }
-export type AcTaggedPropRendererCallback=(comp:AcComp,tag:string,props:AcProp[])=>any;
+export type AcTaggedPropRendererCallback=(ctrl:AnyCompViewCtrl,tag:string,props:AcProp[],groups:Record<string,AcProp[]>)=>any;
 
 export interface AcTaggedPropRenderer
 {
@@ -93,7 +94,13 @@ export interface AcTaggedPropRenderer
     /**
      * If defined the tag value must also match for the renderer to be matched
      */
-    tagValue?:string;
+    tagValue?:string|string[];
+
+    /**
+     * If true and the renderer matches multiple tag group the renderer will be rendered foreach
+     * matched group instead of just the first.
+     */
+    multiInstance?:boolean;
 
     /**
      * Renders matched props
@@ -105,6 +112,8 @@ export interface AcTaggedPropRenderer
      * default inputs.
      */
     order?:number;
+
+
 }
 
 export interface AnyCompSaveState

@@ -33,7 +33,7 @@ export function AnyCompExtraPropsInput({
 
 }
 
-const style=atDotCss({name:'AnyCompExtraPropsInput',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompExtraPropsInput',css:`
     @.root{
         display:flex;
         flex-direction:column;

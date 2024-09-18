@@ -494,7 +494,7 @@ export class AnyCompWatcher
         }
 
         const insertOffset=lines.length;
-        lines.push(`export const ${exportName}={`);
+        lines.push(`export const ${exportName}:any={`);
         lines.push('    comps:[');
 
         let index=0;

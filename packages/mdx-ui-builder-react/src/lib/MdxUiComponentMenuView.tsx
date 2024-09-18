@@ -1,4 +1,4 @@
-import { AcCompRegistry, AcStyleVars } from "@iyio/any-comp";
+import { AcCompRegistry, AcStyleVars, AnyCompViewCtrl } from "@iyio/any-comp";
 import { atDotCss } from "@iyio/at-dot-css";
 import { MdxUiBuilder, MdxUiSelectionItem } from "@iyio/mdx-ui-builder";
 import { Text, useSubject } from "@iyio/react-common";
@@ -11,6 +11,7 @@ export interface MdxUiComponentMenuViewProps
     builder:MdxUiBuilder;
     useSelectedItem?:boolean;
     styleVars?:Partial<AcStyleVars>;
+    onCtrlReady?:(ctrl:AnyCompViewCtrl)=>void;
     children?:any;
 }
 
@@ -20,6 +21,7 @@ export function MdxUiComponentMenuView({
     builder,
     useSelectedItem,
     styleVars,
+    onCtrlReady,
     children
 }:MdxUiComponentMenuViewProps){
 
@@ -51,6 +53,7 @@ export function MdxUiComponentMenuView({
                 builder={builder}
                 item={item}
                 styleVars={styleVars}
+                onCtrlReady={onCtrlReady}
             />}
 
             {children}

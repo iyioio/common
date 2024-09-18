@@ -32,6 +32,8 @@ export * from "./lib/PortalRenderer";
 export * from "./lib/RichTextView";
 export * from "./lib/RouteLoadingIndicator";
 export * from "./lib/ScrollView";
+export * from "./lib/SelectBase";
+export * from "./lib/SelectWrapper";
 export * from "./lib/SlimButton";
 export * from "./lib/Text";
 export * from "./lib/Theme";

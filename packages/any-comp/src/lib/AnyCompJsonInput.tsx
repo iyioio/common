@@ -91,7 +91,7 @@ export function AnyCompJsonInput({
 
 }
 
-const style=atDotCss({name:'AnyCompJsonInput',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompJsonInput',css:`
     @.root{
         display:flex;
         flex-direction:column;

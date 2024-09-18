@@ -1,7 +1,7 @@
 import { ReadonlySubject } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { AcComp, AcProp, AcTaggedPropRenderer, AnyCompSaveState } from "./any-comp-types";
-import { defaultAcPropRenderers } from "./default-prop-renderers";
+import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers";
 
 export class AnyCompViewCtrl
 {
@@ -94,6 +94,9 @@ export class AnyCompViewCtrl
     }
 
     public setProp(name:string,value:any){
+        if(this.props[name]===value){
+            return;
+        }
         if(value===undefined){
             delete this.props[name];
         }else{

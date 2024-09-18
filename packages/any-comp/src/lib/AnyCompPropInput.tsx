@@ -21,8 +21,6 @@ export function AnyCompPropInput({
     prop,
 }:AnyCompPropInputProps){
 
-    console.log('hio 👋 👋 👋 changed',prop.name);
-
     const comp=ctrl.comp;
 
     useUpdateOnAnyCompPropChange(ctrl,prop.name);
@@ -130,7 +128,7 @@ export function AnyCompPropInput({
 
 }
 
-const style=atDotCss({name:'AnyCompPropInput',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompPropInput',css:`
     @.root{
         display:flex;
         flex-direction:column;

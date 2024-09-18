@@ -132,7 +132,7 @@ export function AnyCompUnionInput({
 
 }
 
-const style=atDotCss({name:'AnyCompUnionInput',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompUnionInput',css:`
     @.input{
         flex:1;
         background:transparent;

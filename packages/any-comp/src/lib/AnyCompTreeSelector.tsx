@@ -64,7 +64,7 @@ export function AnyCompTreeSelector({
 
 }
 
-const style=atDotCss({name:'AnyCompTreeSelector',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompTreeSelector',css:`
     @.root{
         display:flex;
         flex-direction:column;

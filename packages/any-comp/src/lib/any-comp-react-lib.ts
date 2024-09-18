@@ -11,14 +11,19 @@ export const useCreateAnyCompViewCtrl=(comp:AcComp|null|undefined):AnyCompViewCt
  * Returns an integer that increments each time a matching property change occurs. If no property
  * name is given the integer increments with every property change.
  */
-export const useUpdateOnAnyCompPropChange=(ctrl:AnyCompViewCtrl|null|undefined,propName?:string)=>{
+export const useUpdateOnAnyCompPropChange=(ctrl:AnyCompViewCtrl|null|undefined,propName?:string|string[]|Record<string,string>|null)=>{
     const [render,setRender]=useState(0);
     useEffect(()=>{
-        if(!ctrl){
+        if(!ctrl || propName===null){
             return;
         }
-        const sub=ctrl.onPropChange.subscribe(v=>{
-            if(!propName || v===propName || !v){
+        const isAry=Array.isArray(propName);
+        const isStr=(typeof propName)==='string';
+        const sub=ctrl.onPropChange.subscribe(changed=>{
+            if( !propName ||
+                !changed ||
+                (isAry?propName.includes(changed):isStr?changed===propName:propName?.[changed])
+            ){
                 setRender(v=>v+1);
             }
         });

@@ -30,7 +30,7 @@ export function AnyCompComment({
 
 }
 
-const style=atDotCss({name:'AnyCompComment',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompComment',css:`
     @.root{
         white-space:pre-wrap;
         display:flex;

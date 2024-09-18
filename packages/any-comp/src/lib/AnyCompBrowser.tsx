@@ -109,7 +109,7 @@ export function AnyCompBrowser({
 
 }
 
-const style=atDotCss({name:'AnyCompBrowser',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompBrowser',css:`
     @.root{
         display:flex;
         flex-direction:column;

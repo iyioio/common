@@ -72,6 +72,24 @@ export const aryDuplicateRemoveItem=<T>(ary:T[],item:T):T[]=>
 
 
 
+export const asArrayOrEmpty=<T>(value:T[]|T|undefined,emptyValue?:T|T[]):T[] =>
+{
+    if(!value){
+        if(emptyValue===undefined){
+            return [];
+        }else if(Array.isArray(emptyValue)){
+            return emptyValue;
+        }else{
+            return [emptyValue];
+        }
+    }
+    if(Array.isArray(value)){
+        return value as any;
+    }else{
+        return [value] as any;
+    }
+}
+
 export const asArray=<T>(value:T[]|T): T extends undefined ? undefined : T[] =>
 {
     if(!value){

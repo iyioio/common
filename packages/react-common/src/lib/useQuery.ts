@@ -10,18 +10,21 @@ export interface UseQueryOptions
 {
     refresh?:number;
     cache?:boolean|'location';
+    disable?:boolean;
 }
 
 export const useQuery=<T>(query:Query|null|undefined,refreshOrOptions?:number|UseQueryOptions):T[]|undefined=>{
 
     let refresh:number|undefined;
     let cache:boolean|'location'=false;
+    let disable=false;
 
     if(typeof refreshOrOptions==='number'){
         refresh=refreshOrOptions;
     }else if(refreshOrOptions){
         refresh=refreshOrOptions.refresh;
         cache=refreshOrOptions.cache??false;
+        disable=refreshOrOptions.disable??false;
     }
 
     const q=useDeepCompareItem(query);
@@ -31,7 +34,7 @@ export const useQuery=<T>(query:Query|null|undefined,refreshOrOptions?:number|Us
 
     useEffect(()=>{
 
-        if(!q){
+        if(!q || disable){
             setValue(undefined);
             return;
         }
@@ -69,7 +72,7 @@ export const useQuery=<T>(query:Query|null|undefined,refreshOrOptions?:number|Us
             m=false;
         }
 
-    },[q,refresh,cache]);
+    },[q,refresh,cache,disable]);
 
     return value;
 }

@@ -22,7 +22,7 @@ export function AnyCompInputShell({
 
 }
 
-const style=atDotCss({name:'AnyCompInputShell',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompInputShell',css:`
     @.root{
         display:flex;
         border:${acStyle.var('borderDefault')};

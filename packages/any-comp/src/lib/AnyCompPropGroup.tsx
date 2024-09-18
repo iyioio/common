@@ -22,7 +22,7 @@ export function AnyCompPropGroup({
 
 }
 
-const style=atDotCss({name:'AnyCompPropGroup',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompPropGroup',css:`
     @.root{
         display:flex;
         flex-direction:column;

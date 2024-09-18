@@ -10,6 +10,7 @@ export const acStyle=atDotCss({name:'AnyCompStyle',css:`
         @@inputBg
         @@borderColor
         @@inputPadding
+        @@activeColor
     }
 `});
 
@@ -21,6 +22,7 @@ export const defaultAcStyle:AcStyleVars={
     borderWidth:'1px',
     borderDefault:`solid 1px ${foregroundColor}33`,
     inputPadding:'0.5rem',
+    activeColor:'#0000ff',
     foregroundColor,
     inputBg:foregroundColor+'33',
     borderColor:foregroundColor+'33',

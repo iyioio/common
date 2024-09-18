@@ -1,9 +1,11 @@
 import { atDotCss } from "@iyio/at-dot-css";
+import { asArrayOrEmpty } from "@iyio/common";
 import { useSubject } from "@iyio/react-common";
 import { Fragment, useMemo } from "react";
 import { AnyCompExtraPropsInput } from "./AnyCompExtraPropsInput";
 import { AnyCompPropInput } from "./AnyCompPropInput";
 import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
+import { acTags } from "./any-comp-lib";
 import { acStyle } from "./any-comp-style";
 import { AcProp, AcTaggedPropRenderer } from "./any-comp-types";
 
@@ -27,9 +29,12 @@ export function AnyCompPropsView({
 
         if(renderers){
             for(const r of renderers){
-                const key=r.tagValue?`${r.tag}:${r.tagValue??''}`:r.tag+'.';
-                const ary=lookup[key]??(lookup[key]=[]);
-                ary.push(r);
+                const tagValueAry=asArrayOrEmpty(r.tagValue,'');
+                for(const tagValue of tagValueAry){
+                    const key=r.tagValue?`${r.tag}:${tagValue??''}`:r.tag+'.';
+                    const ary=lookup[key]??(lookup[key]=[]);
+                    ary.push(r);
+                }
 
             }
         }
@@ -38,7 +43,7 @@ export function AnyCompPropsView({
     },[renderers]);
 
     const groups:{order:number,key:string,comp:any}[]=[];
-
+    const tagGroups:Record<string,AcProp[]>={};
     if(comp){
         const propGroups:Record<string,AcProp[]>={};
         for(const prop of comp.props){
@@ -50,7 +55,15 @@ export function AnyCompPropsView({
             let tagged=false;
 
             if(prop.tags){
+
+                const groupName=prop.tags[acTags.acGroup];
+                if(groupName){
+                    const mapAry=tagGroups[groupName]??(tagGroups[groupName]=[]);
+                    mapAry.push(prop);
+                }
+
                 for(const name in prop.tags){
+
                     const v:string|undefined=prop.tags[name];
 
                     let key=name+'.';
@@ -83,6 +96,7 @@ export function AnyCompPropsView({
 
         }
 
+        const rendered:AcTaggedPropRenderer[]=[];
         for(const key in propGroups){
             const props=propGroups[key];
             if(!props){
@@ -94,12 +108,16 @@ export function AnyCompPropsView({
             }
             for(let i=0;i<renderList.length;i++){
                 const renderer=renderList[i];
-                if(!renderer){continue}
+                if(!renderer || (!renderer.multiInstance && rendered.includes(renderer))){
+                    continue;
+                }
+
+                rendered.push(renderer);
 
                 groups.push({
                     key:key+':::::::://///'+i,
                     order:renderer.order??1,
-                    comp:renderer.render(comp,renderer.tag,props),
+                    comp:renderer.render(ctrl,renderer.tag,props,tagGroups),
                 })
 
             }
@@ -126,7 +144,7 @@ export function AnyCompPropsView({
 
 }
 
-const style=atDotCss({name:'AnyCompPropsView',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompPropsView',css:`
     @.root{
         display:flex;
         flex-direction:column;

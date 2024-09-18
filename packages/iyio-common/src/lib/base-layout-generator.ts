@@ -566,6 +566,7 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('justifyStart','display:flex;justify-content:flex-start')
     add('justifyEnd','display:flex;justify-content:flex-end')
     add('justifyAround','display:flex;justify-content:space-around')
+    add('justifyEvenly','display:flex;justify-content:space-evenly')
     add('justifyBetween','display:flex;justify-content:space-between')
     add('alignCenter','display:flex;align-items:center')
     add('alignStart','display:flex;align-items:flex-start')

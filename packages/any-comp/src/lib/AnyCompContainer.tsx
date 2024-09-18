@@ -6,7 +6,7 @@ import { AnyCompPropsView } from "./AnyCompPropsView";
 import { useCreateAnyCompViewCtrl } from "./any-comp-react-lib";
 import { acStyle } from "./any-comp-style";
 import { AcComp, AcTaggedPropRenderer } from "./any-comp-types";
-import { defaultAcPropRenderers } from "./default-prop-renderers";
+import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers";
 
 
 export interface AnyCompContainerProps
@@ -46,8 +46,6 @@ export function AnyCompContainer({
     const [display,setDisplay]=useState<(typeof displays)[number]>('flexColumn');
     const [justify,setJustify]=useState<(typeof justifyTypes)[number]|undefined>(undefined);
     const [align,setAlign]=useState<(typeof alignTypes)[number]|undefined>(undefined);
-
-    console.log('hio 👋 👋 👋 render container',);
 
     return (
         <div className={style.root()}>
@@ -145,7 +143,7 @@ const displays=['flexColumn','flexRow','block'] as const;
 const justifyTypes=['flex-start','center','flex-end'] as const;
 const alignTypes=['flex-start','center','flex-end','stretch'] as const;
 
-const style=atDotCss({name:'AnyCompContainer',css:`
+const style=atDotCss({namespace:'AnyComp',name:'AnyCompContainer',css:`
     @.root{
         display:flex;
         flex-direction:column;
