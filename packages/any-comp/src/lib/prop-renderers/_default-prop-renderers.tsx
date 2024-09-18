@@ -67,7 +67,7 @@ export const defaultAcPropRendererMap:Record<string,AcTaggedPropRenderer>={
     gap:{
         tag:'acGroup',
         tagValue:'gap',
-        order:-1,
+        order:-4,
         render:(ctrl,tag,props)=>{
             return <AcPrGap ctrl={ctrl} props={props}/>
         }
