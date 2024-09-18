@@ -53,6 +53,7 @@
                 "packages/svg-charts-react/src/index.ts"
             ],
             "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"],
+            "@iyio/pdf-viewer": ["packages/pdf-viewer/src/index.ts"],
             "@iyio/syn-taxi": ["packages/syn-taxi/src/index.ts"],
             "@iyio/ai-complete": ["packages/ai-complete/src/index.ts"],
             "@iyio/ai-complete-openai": ["packages/ai-complete-openai/src/index.ts"],
