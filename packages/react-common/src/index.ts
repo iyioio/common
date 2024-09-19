@@ -70,6 +70,7 @@ export * from './lib/useIntersectionObserver';
 export * from "./lib/useInvoke";
 export * from "./lib/useLazyRender";
 export * from "./lib/useLock";
+export * from "./lib/useProxy";
 export * from "./lib/useQuery";
 export * from "./lib/useQueryItem";
 export * from "./lib/useRoute";

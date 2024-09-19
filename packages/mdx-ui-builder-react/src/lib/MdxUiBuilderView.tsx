@@ -3,7 +3,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, getErrorMessage } from "@iyio/common";
-import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
+import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiDeconstructProp, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
 import { ErrorBoundary, HookCtrl, HookCtrlReactContext, Text, View, useSubject } from "@iyio/react-common";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView";
@@ -24,6 +24,7 @@ export interface MdxUiBuilderViewProps
     compProps?:Record<string,any>;
     hookCtrl?:HookCtrl;
     enableJsInitBlocks?:boolean;
+    deconstructProps?:(string|MdxUiDeconstructProp)[];
 }
 
 export function MdxUiBuilderView({
@@ -40,6 +41,7 @@ export function MdxUiBuilderView({
     compProps,
     hookCtrl:hookCtrlProp,
     enableJsInitBlocks,
+    deconstructProps,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
@@ -62,6 +64,9 @@ export function MdxUiBuilderView({
         if(enableJsInitBlocks){
             compilerOptions.enableJsInitBlocks=true;
         }
+        if(deconstructProps){
+            compilerOptions.deconstructProps=[...deconstructProps,...(compilerOptions.deconstructProps??[])];
+        }
 
         return new MdxUiBuilder({
             ...refs.current.builderOptions,
@@ -74,7 +79,7 @@ export function MdxUiBuilderView({
             }
         });
 
-    },[rootElem,enableJsInitBlocks]);
+    },[rootElem,enableJsInitBlocks,deconstructProps]);
 
     useEffect(()=>{
         if(!builder){

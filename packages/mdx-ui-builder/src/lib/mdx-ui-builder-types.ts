@@ -53,6 +53,7 @@ export interface MdxUiDeconstructProp
     name:string;
     asName?:string;
     default?:string;
+    proxy?:boolean;
 }
 
 export type MdxUiImportReplacer=(packageName:string,importName:string)=>string|null|undefined;

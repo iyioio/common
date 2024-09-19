@@ -141,9 +141,14 @@ export const compileMdxUiAsync=async (code:string,{
                 if(typeof p === 'string'){
                     return p;
                 }else{
-                    return `${p.name}${p.asName?':'+p.asName:''}${p.default?'='+p.default:''}`
+                    return `${p.proxy?`${p.name}:_proxy_${p.name}`:p.name}${p.asName?':'+p.asName:''}${p.default?'='+p.default:''}`
                 }
-            }).join(',')}}=props;`
+            }).join(',')}}=props;${deconstructProps.map(p=>{
+                if((typeof p === 'string') || !p.proxy){
+                    return '';
+                }
+                return `const ${p.name}=useProxy(_proxy_${p.name});`;
+            }).join('')}`
         )
     }
 
