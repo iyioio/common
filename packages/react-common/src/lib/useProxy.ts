@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Returns a proxy of the given value if the value is an object. Any changes made to the returned
@@ -9,7 +9,7 @@ export const useProxy=<T>(obj:T):T=>{
 
     const proxy=useMemo(()=>{
         if(!obj || (typeof obj !=='object')){
-            return obj;
+            return {proxy:obj,revoke:null};
         }
         let iv:any;
         const queueChange=()=>{
@@ -18,7 +18,7 @@ export const useProxy=<T>(obj:T):T=>{
                 setRender(v=>v+1);
             },1);
         }
-        const proxy=new Proxy(obj,{
+        const proxy=Proxy.revocable(obj,{
             set:(target,prop,newValue,receiver)=>{
                 if((obj as any)[prop]!==newValue){
                     queueChange();
@@ -35,5 +35,14 @@ export const useProxy=<T>(obj:T):T=>{
         return proxy;
     },[obj]);
 
-    return proxy as any;
+    useEffect(()=>{
+        if(!proxy.revoke){
+            return;
+        }
+        return ()=>{
+            proxy.revoke?.();
+        }
+    },[proxy])
+
+    return proxy.proxy as any;
 }

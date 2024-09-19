@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { useSubject } from "../rxjs-hooks";
-import { HookCtrl } from "./HookCtrl";
-import { useHookCtrl } from "./hook-lib";
+import { useEffect, useRef } from "react";
+import { useCreateHookCtrl, useHookCtrl } from "./hook-lib";
 import { HookCallback, HookCallbackWithCleanup } from "./hook-types";
 
 export interface HookProps
@@ -45,7 +43,7 @@ export function Hook({
     refs.current.timeout=timeout;
 
     const _ctrl=useHookCtrl();
-    const ctrl=useMemo(()=>_ctrl??new HookCtrl(),[_ctrl]);
+    const ctrl=useCreateHookCtrl(_ctrl);
 
     if(typeof deps === 'string'){
         const names=deps.split(',');
@@ -63,8 +61,6 @@ export function Hook({
             deps.push(ctrl.state[prop]);
         }
     }
-
-    useSubject(ctrl.onStateChange);
 
     useEffect(()=>{
         if(refs.current.initState){

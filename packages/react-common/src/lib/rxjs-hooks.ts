@@ -6,7 +6,7 @@ export function useSubject(subject:undefined):undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>):T
 export function useSubject(subject:undefined):undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>|undefined):T|undefined;
-export function useSubject<T>(subject:Observable<T>):T|undefined;
+export function useSubject<T>(subject:Observable<T>|undefined):T|undefined;
 export function useSubject<T>(subject:ReadonlySubject<T>|Observable<T>|undefined):T|undefined
 {
     const [value,setValue]=useState<T|undefined>(()=>(subject as any)?.value);

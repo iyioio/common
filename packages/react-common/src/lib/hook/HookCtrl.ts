@@ -1,3 +1,4 @@
+import { DisposeCallback } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { hookStateCtrlKey } from "./hook-lib";
 
@@ -16,11 +17,13 @@ export class HookCtrl{
      */
     public get onStateChange():Observable<(string|symbol)[]|null>{return this._onStateChange}
 
+    private readonly proxy:{revoke:DisposeCallback};
+
     public constructor()
     {
         const state:Record<string|symbol,any>={};
         state[hookStateCtrlKey]=this;
-        const proxy=new Proxy(state,{
+        const proxy=Proxy.revocable(state,{
             set:(target,prop,newValue,receiver)=>{
                 if(state[prop]!==newValue){
                     this.queueChange(prop);
@@ -34,8 +37,19 @@ export class HookCtrl{
                 return Reflect.deleteProperty(target,prop);
             },
         })
-        this.state=proxy;
+        this.state=proxy.proxy;
+        this.proxy=proxy;
+    }
 
+    private _isDisposed=false;
+    public get isDisposed(){return this._isDisposed}
+    public dispose()
+    {
+        if(this._isDisposed){
+            return;
+        }
+        this._isDisposed=true;
+        this.proxy.revoke();
     }
 
     private queueIv:any;

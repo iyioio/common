@@ -4,7 +4,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, getErrorMessage } from "@iyio/common";
 import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiDeconstructProp, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
-import { ErrorBoundary, HookCtrl, HookCtrlReactContext, Text, View, useSubject } from "@iyio/react-common";
+import { ErrorBoundary, HookCtrl, HookCtrlReactContext, Text, View, useCreateHookCtrl, useSubject } from "@iyio/react-common";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView";
 
@@ -144,8 +144,8 @@ export function MdxUiBuilderView({
         onError?.(error??null);
     },[onError,error]);
 
-    const hookCtrl=useMemo(()=>hookCtrlProp??new HookCtrl(),[hookCtrlProp]);
-    useSubject(hookCtrl.onStateChange);
+    const hookCtrl=useCreateHookCtrl(hookCtrlProp);
+
 
     return (
         <HookCtrlReactContext.Provider value={hookCtrl}>
