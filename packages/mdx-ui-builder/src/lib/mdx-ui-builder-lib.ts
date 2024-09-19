@@ -1,10 +1,18 @@
 import { Statement } from 'estree-jsx';
 import { parse as parseJson } from 'json5';
-import { MdxUiAtt, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiDeconstructProp, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
 
 export const mdxUiDragDropIdAtt='data-mdx-ui-drop-id';
+
+export const defaultMdxUidDeconstructProps:(string|MdxUiDeconstructProp)[]=[
+    {
+        name:'state',
+        default:'{}',
+    },
+    'hookCtrl'
+]
 
 export const areMdxUiSelectionEqual=(a:MdxUiSelection|null|undefined,b:MdxUiSelection|null|undefined):boolean=>{
     if(!a || !b){

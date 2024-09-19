@@ -4,7 +4,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, getErrorMessage } from "@iyio/common";
 import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
-import { ErrorBoundary, Text, View, useSubject } from "@iyio/react-common";
+import { ErrorBoundary, HookCtrl, HookCtrlReactContext, Text, View, useSubject } from "@iyio/react-common";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView";
 
@@ -21,6 +21,9 @@ export interface MdxUiBuilderViewProps
     onError?:(error:MdxUiBuilderError|null)=>void;
     hideError?:boolean;
     onBuilderChange?:(builder:MdxUiBuilder)=>void;
+    compProps?:Record<string,any>;
+    hookCtrl?:HookCtrl;
+    enableJsInitBlocks?:boolean;
 }
 
 export function MdxUiBuilderView({
@@ -34,6 +37,9 @@ export function MdxUiBuilderView({
     onError,
     hideError,
     onBuilderChange,
+    compProps,
+    hookCtrl:hookCtrlProp,
+    enableJsInitBlocks,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
@@ -53,6 +59,9 @@ export function MdxUiBuilderView({
         if(refs.current.importReplacer){
             compilerOptions.importReplacer=refs.current.importReplacer;
         }
+        if(enableJsInitBlocks){
+            compilerOptions.enableJsInitBlocks=true;
+        }
 
         return new MdxUiBuilder({
             ...refs.current.builderOptions,
@@ -65,7 +74,7 @@ export function MdxUiBuilderView({
             }
         });
 
-    },[rootElem]);
+    },[rootElem,enableJsInitBlocks]);
 
     useEffect(()=>{
         if(!builder){
@@ -130,24 +139,34 @@ export function MdxUiBuilderView({
         onError?.(error??null);
     },[onError,error]);
 
+    const hookCtrl=useMemo(()=>hookCtrlProp??new HookCtrl(),[hookCtrlProp]);
+    useSubject(hookCtrl.onStateChange);
+
     return (
-        <div className={style.root(null,null,props)} ref={setRootElem}>
-            <div className={style.container()} key={error?1:0}>
+        <HookCtrlReactContext.Provider value={hookCtrl}>
+            <div className={style.root(null,null,props)} ref={setRootElem}>
+                <div className={style.container()} key={error?1:0}>
 
-                <ErrorBoundary fallbackWithError={(err)=>(
-                    <View col>
-                        <Text text="Runtime Error"/>
-                        <Text sm colorMuted text="Your component compiled but may fail at runtime when a user is using it." mb1 mt050/>
-                        {getErrorMessage(err)}
-                    </View>
-                )}>
-                    {Comp && <Comp isPreview/>}
-                </ErrorBoundary>
+                    <ErrorBoundary fallbackWithError={(err)=>(
+                        <View col>
+                            <Text text="Runtime Error"/>
+                            <Text sm colorMuted text="Your component compiled but may fail at runtime when a user is using it." mb1 mt050/>
+                            {getErrorMessage(err)}
+                        </View>
+                    )}>
+                        {Comp && <Comp
+                            hookCtrl={hookCtrl}
+                            state={hookCtrl.state}
+                            isPreview
+                            {...compProps}
+                        />}
+                    </ErrorBoundary>
 
-                {error && !hideError && <MdxUiBuilderErrorView absBottomCenter m1 error={error} />}
+                    {error && !hideError && <MdxUiBuilderErrorView absBottomCenter m1 error={error} />}
 
+                </div>
             </div>
-        </div>
+        </HookCtrlReactContext.Provider>
     )
 
 }

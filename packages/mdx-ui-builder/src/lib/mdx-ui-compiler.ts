@@ -1,6 +1,6 @@
 import { deepClone } from "@iyio/common";
 import { compile } from "@mdx-js/mdx";
-import { defaultMdxUiClassNamePrefix, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
+import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
 import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types";
 import { getWrapper, wrapClassName } from "./parsing-util";
 
@@ -10,7 +10,9 @@ export const compileMdxUiAsync=async (code:string,{
     sourceMap,
     importReplacer,
     discardReplaced,
-    wrapElem='div'
+    wrapElem='div',
+    deconstructProps=defaultMdxUidDeconstructProps,
+    enableJsInitBlocks
 }:MdxUiCompileOptions={}):Promise<MdxUiCompileResult>=>{
 
     if(sourceMap===true){
@@ -114,6 +116,13 @@ export const compileMdxUiAsync=async (code:string,{
             }
         })
     }
+    if(enableJsInitBlocks){
+        const hookOpen='<Hook i={()=>{'
+        code=code.replace(/(```\s*js\s+__init__)((.|\n|\r)*?)```/g,(_,open:string,code:string)=>(
+            // the added spaces keep the source positioning synced
+            `${hookOpen}${' '.repeat((open.length-hookOpen.length-1))}${code}}}/>`
+        ));
+    }
     const file=await compile(code,cOptions);
 
     if(typeof file.value !== 'string'){
@@ -123,6 +132,19 @@ export const compileMdxUiAsync=async (code:string,{
     const result:MdxUiCompileResult={
         code:file.value,
         importReplacements
+    }
+
+    if(deconstructProps){
+        result.code=result.code.replace(
+            /function\s+_createMdxContent\(\s*props\s*\)\s*\{/,
+            `function _createMdxContent(props) {const {${deconstructProps.map(p=>{
+                if(typeof p === 'string'){
+                    return p;
+                }else{
+                    return `${p.name}${p.asName?':'+p.asName:''}${p.default?'='+p.default:''}`
+                }
+            }).join(',')}}=props;`
+        )
     }
 
     if(sourceMapOptions){

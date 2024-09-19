@@ -28,6 +28,31 @@ export interface MdxUiCompileOptions
      * @default "div"
      */
     wrapElem?:string|null;
+
+    /**
+     * An array of props that should be deconstructed into the variable scope of the compiled component
+     */
+    deconstructProps?:(string|MdxUiDeconstructProp)[];
+
+    /**
+     * If true js code blocks with a `__init__` suffix will be converted into a Hook component
+     * with the content of the code block as the init function of the Hook component.
+     *
+     * @example
+     * \``` js __init__
+     *
+     * console.log('hi')
+     *
+     * ```
+     */
+    enableJsInitBlocks?:boolean;
+}
+
+export interface MdxUiDeconstructProp
+{
+    name:string;
+    asName?:string;
+    default?:string;
 }
 
 export type MdxUiImportReplacer=(packageName:string,importName:string)=>string|null|undefined;
