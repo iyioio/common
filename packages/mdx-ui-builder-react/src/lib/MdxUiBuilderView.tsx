@@ -25,6 +25,7 @@ export interface MdxUiBuilderViewProps
     hookCtrl?:HookCtrl;
     enableJsInitBlocks?:boolean;
     deconstructProps?:(string|MdxUiDeconstructProp)[];
+    styleName?:string;
 }
 
 export function MdxUiBuilderView({
@@ -42,12 +43,14 @@ export function MdxUiBuilderView({
     hookCtrl:hookCtrlProp,
     enableJsInitBlocks,
     deconstructProps,
+    styleName,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
-    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer,onChange,onBuilderChange});
+    const refs=useRef({builderOptions,liveComponentGenerator,importReplacer,onChange,onBuilderChange,styleName});
     refs.current.onChange=onChange;
     refs.current.onBuilderChange=onBuilderChange;
+    refs.current.styleName=styleName;
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
 
@@ -66,6 +69,9 @@ export function MdxUiBuilderView({
         }
         if(deconstructProps){
             compilerOptions.deconstructProps=[...deconstructProps,...(compilerOptions.deconstructProps??[])];
+        }
+        if(refs.current.styleName){
+            compilerOptions.styleName=styleName;
         }
 
         return new MdxUiBuilder({

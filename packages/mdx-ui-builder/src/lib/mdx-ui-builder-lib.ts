@@ -275,3 +275,17 @@ export const isMdxUiNodeOpen=(node:MdxUiNode,src:MdxUiSourceCodeRef):boolean=>{
     return /^\s*<\w+/.test(chunk) && /<\/\w+>\s*$/.test(chunk);
 
 }
+
+export const getMdxUiNodeText=(node:MdxUiNode):string=>{
+    let text='';
+    if(!node.children){
+        return text;
+    }
+
+    for(const c of node.children){
+        if(c.type==='text' && (typeof c.value === 'string')){
+            text+=(text?'\n\n':'')+c.value;
+        }
+    }
+    return text;
+}

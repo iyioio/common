@@ -46,6 +46,11 @@ export interface MdxUiCompileOptions
      * ```
      */
     enableJsInitBlocks?:boolean;
+
+    /**
+     * Name given to generated at-dot-css styles
+     */
+    styleName?:string;
 }
 
 export interface MdxUiDeconstructProp
@@ -183,11 +188,13 @@ export interface MdxUiNode
 {
     type:string;
     name:string;
+    tagName?:string;
     children?:MdxUiNode[];
     position?:MdxUiSrcStartEnd;
     attributes?:MdxUiAtt[];
     data?:Record<string,any>;
     properties?:Record<string,any>;
+    value?:any;
 }
 
 export interface MdxUiCodeInjections

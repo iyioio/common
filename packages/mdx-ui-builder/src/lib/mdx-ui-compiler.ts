@@ -1,6 +1,6 @@
-import { deepClone } from "@iyio/common";
+import { aryRemoveItem, deepClone, strHashBase64Fs } from "@iyio/common";
 import { compile } from "@mdx-js/mdx";
-import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
+import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, getMdxUiNodeText, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
 import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types";
 import { getWrapper, wrapClassName } from "./parsing-util";
 
@@ -12,7 +12,8 @@ export const compileMdxUiAsync=async (code:string,{
     discardReplaced,
     wrapElem='div',
     deconstructProps=defaultMdxUidDeconstructProps,
-    enableJsInitBlocks
+    enableJsInitBlocks,
+    styleName,
 }:MdxUiCompileOptions={}):Promise<MdxUiCompileResult>=>{
 
     if(sourceMap===true){
@@ -116,6 +117,17 @@ export const compileMdxUiAsync=async (code:string,{
             }
         })
     }
+    const styleSource:MdxUiSourceCodeRef={src:''}
+    cOptions.rehypePlugins.push(()=>{
+        return (_tree:MdxUiNode,file,next)=>{
+            navStyle(
+                styleSource,
+                _tree
+            )
+            next()
+
+        }
+    })
     if(enableJsInitBlocks){
         const hookOpen='<Hook i={()=>{'
         code=code.replace(/(```\s*js\s+__init__)((.|\n|\r)*?)```/g,(_,open:string,code:string)=>(
@@ -123,6 +135,7 @@ export const compileMdxUiAsync=async (code:string,{
             `${hookOpen}${' '.repeat((open.length-hookOpen.length-1))}${code}}}/>`
         ));
     }
+
     const file=await compile(code,cOptions);
 
     if(typeof file.value !== 'string'){
@@ -149,6 +162,13 @@ export const compileMdxUiAsync=async (code:string,{
                 }
                 return `const ${p.name}=useProxy(_proxy_${p.name});`;
             }).join('')}`
+        )
+    }
+
+    if(styleSource.src){
+        result.code=result.code.replace(
+            /function\s+_createMdxContent\(\s*props\s*\)\s*\{/,
+            `\n\nconst style=atDotCss({name:'${styleName??'_'+strHashBase64Fs(code)}',css:\`\n${styleSource.src}\n\`});\n\nfunction _createMdxContent(props) {`
         )
     }
 
@@ -246,3 +266,27 @@ const navTree=(
     }
 }
 
+const navStyle=(
+    styleSource:MdxUiSourceCodeRef,
+    node:MdxUiNode,
+    parent?:MdxUiNode,
+    grandParent?:MdxUiNode,
+)=>{
+
+    if(node.tagName==='code' && parent && grandParent?.children){
+        const className=node.properties?.['className'];
+        if(className==='language-style' || (Array.isArray(className) && className.includes('language-style'))){
+            const src=getMdxUiNodeText(node);
+            if(src){
+                styleSource.src+=(styleSource.src?'\n\n':'')+src;
+            }
+            aryRemoveItem(grandParent.children,parent);
+        }
+    }
+
+    if(node.children){
+        for(const child of node.children){
+            navStyle(styleSource,child,node,parent);
+        }
+    }
+}
