@@ -82,6 +82,32 @@ export const usePdfViewerLib=():PdfViewerLib|null=>{
     return lib;
 }
 
+export const usePdfReader=(source:string|File|VfsItem|null|undefined)=>{
+    source=getPdfSource(source);
+    const src=source;
+    const [reader,setReader]=useState<PdfReader|null>(null);
+    useEffect(()=>{
+
+        setReader(null);
+
+        if(!src){
+            return;
+        }
+        const reader=pdfReaderPool().getReader(src);
+        if(!reader){
+            return;
+        }
+
+        setReader(reader);
+
+        return ()=>{
+            pdfReaderPool().returnReader(reader);
+        }
+
+    },[src]);
+    return reader;
+}
+
 export const usePdfPage=(
     source:string|File|VfsItem|null|undefined,
     pageIndex:number|null|undefined,

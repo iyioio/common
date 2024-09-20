@@ -131,6 +131,7 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         if(!r){
             throw new Error('Item not returned');
         }
+        this.setItemUrl(r);
         return r;
     }
 
@@ -140,6 +141,7 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         if(!r){
             throw new Error('Item not returned');
         }
+        this.setItemUrl(r);
         return r;
     }
 
@@ -162,7 +164,9 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         if(!r){
             throw new Error('No http response returned')
         }
-        return await r.json();
+        const item=await r.json();
+        this.setItemUrl(item);
+        return item;
     }
 
     // protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>=>

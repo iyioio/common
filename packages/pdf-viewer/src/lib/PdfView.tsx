@@ -36,7 +36,9 @@ export interface PdfViewProps
     hideLoadingIndicator?:boolean;
     controlsOffset?:{x?:string,y?:string};
     disableScroll?:boolean;
+    disableZoom?:boolean;
     enableArrowKeys?:boolean;
+    fitToSize?:boolean;
 }
 
 export function PdfView({
@@ -56,7 +58,9 @@ export function PdfView({
     disabled,
     controlsOffset,
     disableScroll,
+    disableZoom,
     enableArrowKeys,
+    fitToSize,
     ...props
 }:PdfViewProps & BaseLayoutOuterProps){
 
@@ -68,20 +72,28 @@ export function PdfView({
 
     const {doc,page,reader}=usePdfPage(source,pageIndex,container);
 
-    useEffect(()=>{
-        onDocChange?.(doc);
-    },[doc,onDocChange]);
+    const width=page?(page.view[2]??0)-(page.view[0]??0):0;
+    const height=page?(page.view[3]??0)-(page.view[1]??0):0;
 
-    useEffect(()=>{
-        onPageChange?.(page);
-    },[page,onPageChange]);
-
-    useEffect(()=>{
-        onReaderChange?.(reader);
-    },[reader,onReaderChange]);
-
-    const refs=useRef({onSelectionChange});
+    const refs=useRef({onSelectionChange,onDocChange,onPageChange,onReaderChange,onLoadedChange});
     refs.current.onSelectionChange=onSelectionChange;
+    refs.current.onDocChange=onDocChange;
+    refs.current.onPageChange=onPageChange;
+    refs.current.onReaderChange=onReaderChange;
+    refs.current.onLoadedChange=onLoadedChange;
+
+    useEffect(()=>{
+        refs.current.onDocChange?.(doc);
+    },[doc]);
+
+    useEffect(()=>{
+        refs.current.onPageChange?.(page);
+    },[page]);
+
+    useEffect(()=>{
+        refs.current.onReaderChange?.(reader);
+    },[reader]);
+
     useEffect(()=>{
         if(!selection){
             return;
@@ -98,8 +110,8 @@ export function PdfView({
     const isLoadingDelayedLong=useDelayedValue(isLoading,(pageIndex??0)===0?3000:0,true,isLoading);
 
     useEffect(()=>{
-        onLoadedChange?.(!isLoadingDelayed);
-    },[isLoadingDelayed,onLoadedChange]);
+        refs.current.onLoadedChange?.(!isLoadingDelayed);
+    },[isLoadingDelayed]);
 
     const onClick=useCallback((e:MouseEvent)=>{
         if((e.target instanceof HTMLAnchorElement) && e.target.href){
@@ -113,7 +125,10 @@ export function PdfView({
     return (
         <div
             className={style.root({isLoading:isLoadingDelayed},null,props)}
-            style={style.vars({cx:controlsOffset?.x??'0px',cy:controlsOffset?.y??'0px'})}
+            style={{
+                ...style.vars({cx:controlsOffset?.x??'0px',cy:controlsOffset?.y??'0px'}),
+                aspectRatio:fitToSize?width/height:undefined
+            }}
         >
 
             {isLoadingDelayedLong && !hideLoadingIndicator && <View absFill centerBoth>
@@ -130,7 +145,7 @@ export function PdfView({
                     maxScale={5}
                     listenToKeys
                     disabled={disabled}
-                    controls={ctrl=>(
+                    controls={disableZoom?undefined:ctrl=>(
                         <PanZoomControls
                             radius="100px"
                             className={cn("PdfView-zoom",{lower:controls})}

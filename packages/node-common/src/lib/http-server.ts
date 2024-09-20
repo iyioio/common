@@ -40,7 +40,7 @@ export const createHttpServer=({
 }:HttpServerOptions):Server=>{
     const server=createServer(async (req,res)=>{
         const method=req.method??'GET';
-        let path=(req.url??'/');
+        let path=req.url??'/';
         if(!path.startsWith('/')){
             path='/'+path;
         }
@@ -88,7 +88,7 @@ export const createHttpServer=({
                     if(match){
                         for(let i=1;i<match.length;i++){
                             const value=match[i];
-                            query[i.toString()]=value??'';
+                            query[i.toString()]=decodeURIComponent(value??'');
 
                         }
                     }

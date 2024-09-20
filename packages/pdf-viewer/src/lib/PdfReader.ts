@@ -89,7 +89,7 @@ export class PdfReader
         return {page,doc};
     }
 
-    public async pageToImageAsync(pageIndex:number):Promise<Blob|null>{
+    public async pageToImageAsync(pageIndex:number,format='image/jpeg',quality=0.7):Promise<Blob|null>{
 
         if(!globalThis.document){
             return null;
@@ -120,7 +120,7 @@ export class PdfReader
         return await new Promise((r)=>{
             canvas.toBlob(blob=>{
                 r(blob);
-            },'image/jpeg',0.7);
+            },format,quality);
         });
     }
 
