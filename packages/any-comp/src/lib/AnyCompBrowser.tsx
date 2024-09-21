@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AnyCompComment } from "./AnyCompComment";
 import { AnyCompContainer } from "./AnyCompContainer";
 import { AnyCompTreeSelector } from "./AnyCompTreeSelector";
-import { AcStyleVars, acStyle, defaultAcStyle } from "./any-comp-style";
+import { AcStyleVars, acStyle, defaultAcStyle, defaultAcStyleDarkMode } from "./any-comp-style";
 import { AcCompRegistry, AcTaggedPropRenderer } from "./any-comp-types";
 
 
@@ -18,7 +18,7 @@ export interface AnyCompBrowserProps
     treeClassName?:string;
     rememberCompId?:boolean;
     renderers?:AcTaggedPropRenderer[];
-    styleVars?:Partial<AcStyleVars>;
+    styleVars?:Partial<AcStyleVars>|'dark'|'light';
 }
 
 export function AnyCompBrowser({
@@ -31,6 +31,12 @@ export function AnyCompBrowser({
     styleVars,
     ...props
 }:AnyCompBrowserProps & BaseLayoutOuterProps){
+
+    if(styleVars==='dark'){
+        styleVars=defaultAcStyleDarkMode;
+    }else if(styleVars==='light' || (typeof styleVars === 'string')){
+        styleVars=defaultAcStyle
+    }
 
     const [compId,setCompId]=useState(_compId);
 
