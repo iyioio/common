@@ -59,6 +59,7 @@ export * from './lib/cdk-common-const';
 export * from './lib/cdk-common-types';
 export * from './lib/cli-parser';
 export * from './lib/client-download';
+export * from './lib/client-file-browser';
 export * from './lib/clipboard';
 export * from './lib/code-parsing';
 export * from './lib/code-parsing-types';
