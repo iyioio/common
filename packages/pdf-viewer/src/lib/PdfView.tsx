@@ -127,7 +127,7 @@ export function PdfView({
             className={style.root({isLoading:isLoadingDelayed},null,props)}
             style={{
                 ...style.vars({cx:controlsOffset?.x??'0px',cy:controlsOffset?.y??'0px'}),
-                aspectRatio:fitToSize?width/height:undefined
+                aspectRatio:fitToSize?width/(height||1):undefined
             }}
         >
 
