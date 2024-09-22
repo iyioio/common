@@ -202,10 +202,40 @@ export const queryConditionNotMap:Record<string,string>={
     'like':'not like',
     'is':'is not',
     'in':'not in',
+    'in-ary':'!= ANY'
 }
 Object.freeze(queryConditionNotMap);
 
-export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','is','in'] as const;
+export const allQueryConditionOps=['=','!=','>','<','>=','<=','like','is','in','in-ary'] as const;
+
+
+export interface QueryConditionOpInfo
+{
+    op:QueryConditionOp;
+    not?:boolean;
+    sqlOp:string;
+    leftPrefix?:string;
+    leftSuffix?:string;
+    rightPrefix?:string;
+    rightSuffix?:string;
+}
+
+export const queryConditionOpInfos:QueryConditionOpInfo[]=[
+    {
+        op:'in-ary',
+        sqlOp:'=',
+        rightPrefix:' ANY(',
+        rightSuffix:')',
+    },
+    {
+        op:'in-ary',
+        not:true,
+        sqlOp:'!=',
+        rightPrefix:' ANY(',
+        rightSuffix:')',
+    },
+]
+
 /**
  * Operators allowed to be used in query conditions
  */

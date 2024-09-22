@@ -1,7 +1,7 @@
 import { asArray } from "./array";
 import { asType } from "./common-lib";
 import { applyQueryShorthands } from "./query-lib";
-import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, QueryConditionOrGroup, queryExpressionOperators, queryFunctions, QueryGroupCondition, QueryValue } from "./query-types";
+import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, queryConditionOpInfos, QueryConditionOrGroup, queryExpressionOperators, queryFunctions, QueryGroupCondition, QueryValue } from "./query-types";
 import { escapeSqlName, escapeSqlValue } from "./sql-lib";
 
 /**
@@ -146,17 +146,33 @@ const appendCondition=(ctx:QueryBuildCtx,cond:QueryConditionOrGroup,depth:number
         }
         ctx.sql.pop();
     }else if(isQueryCondition(cond)){
+        const info=queryConditionOpInfos.find(o=>o.op===cond.op && (o.not??false)===(cond.not??false));
+
+        if(info?.leftPrefix){
+            ctx.sql.push(info.leftPrefix);
+        }
         appendValue(ctx,cond.left.value!==null,cond.left,depth);
+        if(info?.leftSuffix){
+            ctx.sql.push(info.leftSuffix);
+        }
+
         if(cond.not){
             const notOp=queryConditionNotMap[cond.op];
             if(!notOp){
                 throw new Error(`The (${cond.op}) does not support the not modifier`);
             }
-            ctx.sql.push(notOp);
+            ctx.sql.push(info?.sqlOp??notOp);
         }else{
-            ctx.sql.push(cond.op);
+            ctx.sql.push(info?.sqlOp??cond.op);
+        }
+
+        if(info?.rightPrefix){
+            ctx.sql.push(info.rightPrefix);
         }
         appendValue(ctx,cond.right.value!==null,cond.right,depth);
+        if(info?.rightSuffix){
+            ctx.sql.push(info.rightSuffix);
+        }
     }
     ctx.sql.push(')');
 }
