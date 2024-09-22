@@ -55,7 +55,7 @@
             "!{projectRoot}/.storybook/**/*",
             "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
         ],
-        "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
+        "sharedGlobals": []
     },
     "workspaceLayout": {
         "appsDir": "packages",
@@ -65,8 +65,7 @@
         "@nrwl/react": {
             "application": {
                 "style": "css",
-                "linter": "eslint",
-                "babel": true
+                "linter": "eslint"
             },
             "component": {
                 "style": "css"
