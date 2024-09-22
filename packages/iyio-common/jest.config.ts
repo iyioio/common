@@ -11,6 +11,5 @@ export default {
     transform: {
         '^.+\\.[tj]s$': 'ts-jest',
     },
-    moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageDirectory: '../../coverage/packages/common',
+    moduleFileExtensions: ['ts', 'js', 'html']
 };

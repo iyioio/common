@@ -35,7 +35,6 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/iyio-common"],
             "options": {
                 "jestConfig": "packages/iyio-common/jest.config.ts",
                 "passWithNoTests": true

@@ -31,6 +31,9 @@
                 "default",
                 "^production",
                 "{workspaceRoot}/jest.preset.js"
+            ],
+            "outputs": [
+                "{workspaceRoot}/coverage/{projectName}"
             ]
         },
         "e2e": {
