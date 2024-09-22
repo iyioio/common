@@ -170,10 +170,18 @@ export class QueryCtrl<T=any>
                 data=query.table;
                 total=data.length;
 
-                if(this.staticOperators?.length){
+                if(this.staticOperators?.length || query.limit || query.offset){
                     data=[...data];
-                    for(const op of this.staticOperators){
-                        op.op(data,query);
+                    if(this.staticOperators?.length){
+                        for(const op of this.staticOperators){
+                            op.op(data,query);
+                        }
+                    }
+                    if(query.offset){
+                        data=data.slice(query.offset);
+                    }
+                    if(query.limit && data.length>query.limit){
+                        data=data.slice(0,query.limit);
                     }
                 }
             }
