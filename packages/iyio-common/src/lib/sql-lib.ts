@@ -72,11 +72,11 @@ export interface SqlEscapeValueOptions
     inConditionValue?:boolean;
 }
 const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTableColInfo,options?:SqlEscapeValueOptions,altString=false):string=>{
-    if(depth>20){
+    if(depth>50){
         throw new Error('Max escapeSqlValue depth reached');
     }
     if(colInfo?.sqlType==='json'){
-        return escapeSqlString(JSON.stringify(value).replace(/'/g,"''"));
+        return escapeSqlString(JSON.stringify(value));
     }
     switch(typeof value){
 
