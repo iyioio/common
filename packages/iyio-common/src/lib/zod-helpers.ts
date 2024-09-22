@@ -3,7 +3,7 @@ import { JsonScheme } from "./json-scheme";
 import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
 
 export const getZodErrorMessage=(zodError:ZodError):string=>{
-    return zodError.message;
+    return zodError.issues[0]?.message??zodError.message;
 }
 
 export const zodTypeToPrimitiveType=(type:ZodTypeAny):TsPrimitiveType|undefined=>{
@@ -142,6 +142,25 @@ export const zodCoerceObject=<T>(scheme:ZodSchema<T>,obj:Record<string,any>):{re
         return {error:parsedResult.error}
     }else{
         return {}
+    }
+}
+
+export const zodCoercePrimitiveType=(type:ZodType,value:any)=>{
+    switch(zodTypeToPrimitiveType(type)){
+
+        case "boolean":
+            return Boolean(value);
+
+        case "number":{
+            const v=Number(value);
+            return isFinite(v)?v:0;
+        }
+
+        case "string":
+            return value?.toString()??'';
+
+        case "null":
+            return null;
     }
 }
 
