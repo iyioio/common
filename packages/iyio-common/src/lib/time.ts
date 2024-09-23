@@ -217,3 +217,21 @@ export const addTimeIntervalToDate=(interval:TimeInterval,date:Date|number):Date
 
     return date;
 }
+
+export const getTimestampString=():string=>{
+    const d=new Date();
+
+    return `${
+        d.getFullYear()
+    }-${
+        d.getMonth().toString().padStart(2,'0')
+    }-${
+        d.getDate().toString().padStart(2,'0')
+    }T${
+        d.getHours().toString().padStart(2,'0')
+    }-${
+        d.getMinutes().toString().padStart(2,'0')
+    }-${
+        d.getSeconds().toString().padStart(2,'0')
+    }`;
+}
