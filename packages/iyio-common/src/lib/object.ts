@@ -621,3 +621,14 @@ export const objFind=<T,V=Exclude<T,undefined|null>[keyof Exclude<T,undefined|nu
     }
     return undefined;
 }
+
+export const getObjKeyIntersection=(sourceObj:Record<string,any>,objWithKeys:Record<string,any>):Record<string,any>=>{
+    const intersection:Record<string,any>={};
+    for(const e in objWithKeys){
+        const v=sourceObj[e];
+        if(v!==undefined){
+            intersection[e]=v;
+        }
+    }
+    return intersection;
+}
