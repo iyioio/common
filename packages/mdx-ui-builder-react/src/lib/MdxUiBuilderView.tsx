@@ -26,6 +26,7 @@ export interface MdxUiBuilderViewProps
     enableJsInitBlocks?:boolean;
     deconstructProps?:(string|MdxUiDeconstructProp)[];
     styleName?:string;
+    disableHighlighting?:boolean;
 }
 
 export function MdxUiBuilderView({
@@ -44,6 +45,7 @@ export function MdxUiBuilderView({
     enableJsInitBlocks,
     deconstructProps,
     styleName,
+    disableHighlighting,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
@@ -91,11 +93,17 @@ export function MdxUiBuilderView({
         if(!builder){
             return;
         }
-        builder.highlighter.mode='hover';
         return ()=>{
             builder.dispose();
         }
     },[builder]);
+
+    useEffect(()=>{
+        if(!builder){
+            return;
+        }
+        builder.highlighter.mode=disableHighlighting?'none':'hover';
+    },[builder,disableHighlighting]);
 
     useEffect(()=>{
         if(!builder){
