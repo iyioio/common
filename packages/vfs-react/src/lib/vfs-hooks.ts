@@ -28,19 +28,21 @@ export const useVfsItem=(path:string|null|undefined,options?:VfsItemGetOptions):
 
 }
 
-export const useVfsObject=<T=any>(path:string|null|undefined):T|null|undefined=>{
+export const useVfsObject=<T=any>(pathOrItem:string|VfsItem|null|undefined):T|null|undefined=>{
 
-    const [item,setItem]=useState<T|null|undefined>(null);
+    const path=(typeof pathOrItem==='string')?pathOrItem:pathOrItem?.path;
+
+    const [value,setValue]=useState<T|null|undefined>(null);
 
     useEffect(()=>{
-        setItem(null);
+        setValue(null);
         if(!path){
             return;
         }
         let m=true;
         vfs().readObjectAsync(path).then(v=>{
             if(m){
-                setItem(v);
+                setValue(v);
             }
         })
         return ()=>{
@@ -48,6 +50,32 @@ export const useVfsObject=<T=any>(path:string|null|undefined):T|null|undefined=>
         }
     },[path]);
 
-    return item;
+    return value;
+
+}
+
+export const useVfsString=(pathOrItem:string|VfsItem|null|undefined):string|null|undefined=>{
+
+    const path=(typeof pathOrItem==='string')?pathOrItem:pathOrItem?.path;
+
+    const [value,setValue]=useState<string|null|undefined>(null);
+
+    useEffect(()=>{
+        setValue(null);
+        if(!path){
+            return;
+        }
+        let m=true;
+        vfs().readStringAsync(path).then(v=>{
+            if(m){
+                setValue(v);
+            }
+        })
+        return ()=>{
+            m=false;
+        }
+    },[path]);
+
+    return value;
 
 }
