@@ -1,48 +1,48 @@
-import { useEffect, useMemo, useState } from "react";
+import { ProxyChangeDetector } from "@iyio/common";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Returns a proxy of the given value if the value is an object. Any changes made to the returned
  * proxy will cause a re-render.
  */
-export const useProxy=<T>(obj:T):T=>{
+export const useProxy=<T>(obj:T,useInitValue=false,maxDepth=1):T=>{
+    const initRef=useRef(obj);
     const [,setRender]=useState(0);
 
+    const _obj=useInitValue?null:obj;
+
     const proxy=useMemo(()=>{
-        if(!obj || (typeof obj !=='object')){
-            return {proxy:obj,revoke:null};
+
+        const obj=useInitValue?initRef.current:_obj;
+
+        if(!obj || (typeof obj!=='object')){
+            return null;
         }
+
         let iv:any;
-        const queueChange=()=>{
+        const listener=()=>{
             clearTimeout(iv);
             iv=setTimeout(()=>{
                 setRender(v=>v+1);
             },1);
         }
-        const proxy=Proxy.revocable(obj,{
-            set:(target,prop,newValue,receiver)=>{
-                if((obj as any)[prop]!==newValue){
-                    queueChange();
-                }
-                return Reflect.set(target,prop,newValue,receiver);
-            },
-            deleteProperty:(target,prop)=>{
-                if((obj as any)[prop]!==undefined){
-                    queueChange();
-                }
-                return Reflect.deleteProperty(target,prop);
-            },
+
+        return new ProxyChangeDetector({
+            target:obj,
+            maxDepth,
+            listener,
         })
-        return proxy;
-    },[obj]);
+
+    },[_obj,maxDepth,useInitValue]);
 
     useEffect(()=>{
-        if(!proxy.revoke){
+        if(!proxy){
             return;
         }
         return ()=>{
-            proxy.revoke?.();
+            proxy.dispose();
         }
     },[proxy])
 
-    return proxy.proxy as any;
+    return proxy?.proxy??_obj;
 }
