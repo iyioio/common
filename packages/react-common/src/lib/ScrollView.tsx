@@ -225,7 +225,7 @@ export function ScrollView({
 export const scrollViewContainerMinWidthCssVar='--scroll-view-container-min-width';
 export const scrollViewContainerMinHeightCssVar='--scroll-view-container-min-height';
 
-const style=atDotCss({name:'ScrollView',css:`
+const style=atDotCss({name:'ScrollView',order:'framework',css:`
     @.root{
         position:relative;
         max-width:100%;

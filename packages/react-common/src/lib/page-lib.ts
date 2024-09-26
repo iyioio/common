@@ -15,6 +15,7 @@ export const disablePageClipSubject=new BehaviorSubject<number>(0);
 export interface PageCtx<T=any>
 {
     disablePageScrollSubject:BehaviorSubject<number>;
+    fullWidthSubject:BehaviorSubject<number>;
     common?:T;
 }
 
@@ -43,5 +44,10 @@ export const useDisablePageScroll=(enabled=true)=>{
 
 export const useDisablePageClip=(enabled=true)=>{
     useIncrementSubject(disablePageClipSubject,enabled);
+}
+
+export const useFullWidthPage=(enabled=true)=>{
+    const ctx=useOptionalPageCtx();
+    useIncrementSubject(ctx?.fullWidthSubject,enabled);
 
 }

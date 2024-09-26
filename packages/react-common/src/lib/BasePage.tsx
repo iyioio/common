@@ -35,18 +35,20 @@ export function BasePage({
     ...props
 }:BasePageProps){
 
-    if(fullWidthColumn){
-        columnWidth=undefined;
-    }
-
     const ctx=useMemo<PageCtx>(()=>({
         disablePageScrollSubject:new BehaviorSubject(0),
+        fullWidthSubject:new BehaviorSubject(0),
         common,
     }),[common]);
 
     const disableClip=useSubject(disablePageClipSubject);
     const disableScrollSubjectValue=useSubject(ctx.disablePageScrollSubject);
+    const fullWidth=useSubject(ctx.fullWidthSubject);
     const disableScroll=(disableScrollSubjectValue || disableScrollProp || disableClip)?true:false;
+
+    if(fullWidthColumn || fullWidth){
+        columnWidth=undefined;
+    }
 
 
     const [elem,setElem]=useState<HTMLElement|null>(null);
