@@ -1,4 +1,4 @@
-import { HttpClient, httpClient, joinPaths } from "@iyio/common";
+import { HttpClient, getObjKeyCount, httpClient, joinPaths, objectToQueryParamsJson } from "@iyio/common";
 import { VfsCtrl } from "./VfsCtrl";
 import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
 import { vfsMntTypes } from "./vfs-lib";
@@ -46,14 +46,14 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         return this._httpClient??httpClient();
     }
 
-    private getUrl(sourceUrl:string|undefined,action:string){
+    private getUrl(sourceUrl:string|undefined,action:string,query?:Record<string,any>){
         if(sourceUrl===undefined){
             throw new Error('sourceUrl required');
         }
         if(sourceUrl.startsWith('/')){
             sourceUrl=sourceUrl.substring(1);
         }
-        return `${this.baseUrl}/${action}/${sourceUrl}`;
+        return `${this.baseUrl}/${action}/${sourceUrl}${(query && getObjKeyCount(query))?'?'+objectToQueryParamsJson(query):''}`;
     }
 
     private setItemUrl(item:VfsItem|null|undefined){
@@ -85,7 +85,9 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
 
     protected override _readDirAsync=async (fs:VfsCtrl,mnt:VfsMntPt,options:VfsDirReadOptions,sourceUrl:string|undefined):Promise<VfsDirReadResult>=>
     {
-        const r=await this.getHttpClient().getAsync<VfsDirReadResult>(this.getUrl(sourceUrl,'dir'));
+        const oq:any={...options}
+        delete oq.path;
+        const r=await this.getHttpClient().getAsync<VfsDirReadResult>(this.getUrl(sourceUrl,'dir',oq));
         if(!r){
             throw new Error('vfs api did not return a result');
         }

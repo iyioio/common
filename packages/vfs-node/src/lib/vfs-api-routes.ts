@@ -1,4 +1,4 @@
-import { BadRequestError, asArray, escapeRegex, getContentType, safeParseNumberOrUndefined } from "@iyio/common";
+import { BadRequestError, asArray, escapeRegex, getContentType, parseObjectQueryJsonValue, safeParseNumberOrUndefined } from "@iyio/common";
 import { HttpRoute, createHttpHandlerResult } from "@iyio/node-common";
 import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt, vfs } from "@iyio/vfs";
 
@@ -103,6 +103,7 @@ export const createVfsApiRoutes=({
 
                 const path=getPath(query);
 
+                const filter=parseObjectQueryJsonValue(query['filter']);
                 const equals=query['equals'];
                 const contains=query['contains'];
                 const startsWith=query['startsWith'];
@@ -113,13 +114,17 @@ export const createVfsApiRoutes=({
                     path:path,
                     offset:safeParseNumberOrUndefined(query['offset']),
                     limit:safeParseNumberOrUndefined(query['limit']),
-                    filter:(startsWith || endsWith || match || equals || contains)?{
-                        startsWith,
-                        endsWith,
-                        equals,
-                        contains,
-                        match:match?new RegExp(match):undefined,
-                    }:undefined
+                    filter:(
+                        (typeof filter ==='object')?
+                            filter
+                        :(startsWith || endsWith || match || equals || contains)?{
+                            startsWith,
+                            endsWith,
+                            equals,
+                            contains,
+                            match,
+                        }:undefined
+                    )
                 }
 
                 return await getFs().readDirAsync(options)

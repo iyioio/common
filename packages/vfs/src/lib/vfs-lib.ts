@@ -1,6 +1,6 @@
 // Convo FS is a virtual filesystem
 
-import { EvtTrigger, ValueCondition, currentBaseUser, getFileName, joinPaths, starStringTest } from "@iyio/common";
+import { EvtTrigger, ValueCondition, currentBaseUser, getFileName, joinPaths, starStringTestCached } from "@iyio/common";
 import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
 
 
@@ -130,7 +130,7 @@ const _testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boolean=>
     }
     if(filter.match){
         if(typeof filter.match === 'string'){
-            if(!starStringTest(filter.match,filename)){
+            if(!starStringTestCached(filter,filter.match,filename,'i')){
                 return false;
             }
         }else{
@@ -156,8 +156,10 @@ export const normalizeVfsPath=(path:string):string=>{
     if(!path.startsWith('/')){
         path='/'+path;
     }
+    path=path.replace(bsReg,'/')
     return path;
 }
+const bsReg=/\\/g;
 
 export const vfsSourcePathToVirtualPath=(sourcePath:string,mnt:VfsMntPt):string|undefined=>{
     if(!mnt.sourceUrl){

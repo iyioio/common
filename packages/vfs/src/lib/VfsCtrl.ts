@@ -330,7 +330,21 @@ export class VfsCtrl
 
     public async readDirAsync(options:VfsDirReadOptions):Promise<VfsDirReadResult>
     {
-
+        if(options.path.includes('*') && !options.filter?.match){
+            let path=normalizeVfsPath(options.path);
+            const div=path.lastIndexOf('/');
+            const s=path.lastIndexOf('*');
+            if(s>div){
+                options={
+                    ...options,
+                    path:path.substring(0,div),
+                    filter:{
+                        ...options.filter,
+                        match:path.substring(div+1),
+                    }
+                }
+            }
+        }
         const mnt=this.getMntPt(options.path);
         if(!mnt){
             return createNotFoundVfsDirReadResult(options);

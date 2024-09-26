@@ -140,6 +140,9 @@ export interface VfsFilter
     contains?:string;
     startsWith?:string;
     endsWith?:string;
+    /**
+     * A regular expression or a star string
+     */
     match?:RegExp|string;
 }
 
