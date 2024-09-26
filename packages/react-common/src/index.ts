@@ -5,6 +5,7 @@ export * from "./lib/BaseLayoutStyleSheet";
 export * from "./lib/BasePage";
 export * from "./lib/ButtonBase";
 export * from "./lib/Carousel";
+export * from "./lib/CompObjView";
 export * from "./lib/DomPortal";
 export * from "./lib/DomPortalRenderer";
 export * from "./lib/ErrorBoundary";

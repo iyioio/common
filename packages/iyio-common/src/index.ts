@@ -68,6 +68,8 @@ export * from './lib/code-parsing-types';
 export * from './lib/common-lib';
 export * from './lib/common-params';
 export * from './lib/common-types';
+export * from './lib/comp-obj-lib';
+export * from './lib/comp-obj-types';
 export * from './lib/console';
 export * from './lib/content-type-lib';
 export * from './lib/crypto-bytes';
