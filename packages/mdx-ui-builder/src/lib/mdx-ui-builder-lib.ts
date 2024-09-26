@@ -10,8 +10,6 @@ export const defaultMdxUidDeconstructProps:(string|MdxUiDeconstructProp)[]=[
     {
         name:'comp',
         default:'{}',
-        proxy:true,
-        useInitProxyValue:true,
     },
     'hookCtrl'
 ]

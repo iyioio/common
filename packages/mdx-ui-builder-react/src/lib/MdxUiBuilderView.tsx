@@ -175,7 +175,7 @@ export function MdxUiBuilderView({
                     )}>
                         {Comp && <Comp
                             hookCtrl={hookCtrl}
-                            state={hookCtrl.state}
+                            comp={hookCtrl.state}
                             isPreview
                             {...compProps}
                         />}

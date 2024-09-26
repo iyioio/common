@@ -22,7 +22,7 @@ export const useCreateHookCtrl=(existingCtrl?:HookCtrl|null,listenToChanges=true
         }
     },[ctrl,dispose]);
 
-    useSubject(listenToChanges?ctrl.onStateChange:undefined);
+    useSubject(listenToChanges?ctrl.changeDetector.onChange:undefined);
 
     return ctrl;
 }
