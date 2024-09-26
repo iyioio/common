@@ -513,16 +513,63 @@ export const objGetFirstValue=(obj:HashMap):any=>{
     return undefined;
 }
 
-export const objectToQueryParams=(obj:HashMap):string=>{
+const jsonParaPrefix='{{{[json]!';
+const jsonParaSuffix='![/json]}}}';
+export const objectQueryValueToJsonString=(value:any):string=>{
+    if(value===undefined){
+        return 'undefined';
+    }else if(value===null){
+        return 'null'
+    }
+    if(!(typeof value === 'object')){
+        return value.toString();
+    }
+    try{
+        return jsonParaPrefix+JSON.stringify(value)+jsonParaSuffix;
+    }catch{
+        return '';
+    }
+}
+export const parseObjectQueryJsonValue=(value:string|undefined|null):any=>{
+    if(!value || value==='undefined'){
+        return undefined;
+    }
+    try{
+        return JSON.parse(value.substring(jsonParaPrefix.length,value.length-jsonParaSuffix.length))
+    }catch{
+        return undefined;
+    }
+}
+export const objectToQueryParamsJson=(obj:Record<string,any>):string=>{
     const values:string[]=[];
     for(const e in obj){
-        const v=obj[e]
+        const v=obj[e];
+        values.push(encodeURIComponent(e)+'='+encodeURIComponent(objectQueryValueToJsonString(v)))
+    }
+    return values.join('&');
+}
+export const objectToQueryParams=(obj:Record<string,any>):string=>{
+    const values:string[]=[];
+    for(const e in obj){
+        const v=obj[e];
         values.push(encodeURIComponent(e)+'='+encodeURIComponent((Array.isArray(v)?v.join(','):v?.toString())??'true'))
     }
     return values.join('&');
 }
 
-export const queryParamsToObject=(query:string):HashMap<string>=>
+export const queryParamsToObjectJson=(query:string):Record<string,any>=>
+{
+    const obj=queryParamsToObject(query);
+    for(const e in obj){
+        const v=obj[e];
+        if(v?.startsWith(jsonParaPrefix)){
+            obj[e]=parseObjectQueryJsonValue(v);
+        }
+    }
+    return obj;
+}
+
+export const queryParamsToObject=(query:string):Record<string,string>=>
 {
     if(!query){
         return {}
@@ -531,7 +578,7 @@ export const queryParamsToObject=(query:string):HashMap<string>=>
         query=query.substring(1);
     }
 
-    const obj:HashMap<string>={};
+    const obj:Record<string,string>={};
 
     const parts=query.split('&');
     for(const p of parts){
@@ -628,6 +675,32 @@ export const getObjKeyIntersection=(sourceObj:Record<string,any>,objWithKeys:Rec
         const v=sourceObj[e];
         if(v!==undefined){
             intersection[e]=v;
+        }
+    }
+    return intersection;
+}
+
+export const takeObjKeyIntersection=(sourceObj:Record<string,any>,objWithKeys:Record<string,any>):Record<string,any>=>{
+    const intersection:Record<string,any>={};
+    for(const e in objWithKeys){
+        const v=sourceObj[e];
+        if(v!==undefined){
+            intersection[e]=v;
+            delete sourceObj[e];
+        }
+    }
+    return intersection;
+}
+
+export const takeObjKeyIntersectionMulti=(sourceObj:Record<string,any>,objWithKeysAry:Record<string,any>[]):Record<string,any>=>{
+    const intersection:Record<string,any>={};
+    for(const objWithKeys of objWithKeysAry){
+        for(const e in objWithKeys){
+            const v=sourceObj[e];
+            if(v!==undefined){
+                intersection[e]=v;
+                delete sourceObj[e];
+            }
         }
     }
     return intersection;
