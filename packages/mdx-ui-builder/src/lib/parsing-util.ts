@@ -33,13 +33,17 @@ const getTemplate=(template:string)=>{
 }
 
 
-export const getWrapper=(elem:string,className:string)=>{
+export const getWrapper=(elem:string,className:string,rootStyle=false,style?:any)=>{
     const wrapper=deepClone(getTemplate(
-        `<div className={(props.className||'')+"CLASS_NAME"}></div>`
+        `<div className={${
+            rootStyle?'style.root(null,':'('
+        }props.className||'')+"CLASS_NAME"}${
+            style?` style={${JSON.stringify(style)}}`:''
+        }></div>`
     ),200);
     wrapper.name=elem;
     const right=(wrapper as any).attributes[0].value.data.estree.body[0].expression.right;
-    const nameJson=JSON.stringify(className);
+    const nameJson=JSON.stringify(className?' '+className:'');
     right.raw=nameJson
     right.value=className;
     (wrapper as any).attributes[0].value.value=`(props.className||'')+${nameJson}`;

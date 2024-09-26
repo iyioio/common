@@ -14,8 +14,12 @@ export const compileMdxUiAsync=async (code:string,{
     deconstructProps=defaultMdxUidDeconstructProps,
     enableJsInitBlocks,
     styleName,
+    wrapperClassName,
+    wrapperStyle,
+    maxProxyDepth=30,
 }:MdxUiCompileOptions={}):Promise<MdxUiCompileResult>=>{
 
+    const hasStyle=/[^\n]\s*```\s*style\W/.test(code);
     if(sourceMap===true){
         sourceMap={}
     }
@@ -86,7 +90,7 @@ export const compileMdxUiAsync=async (code:string,{
     if(wrapElem){
         cOptions.rehypePlugins.push(()=>{
             return (_tree:MdxUiNode,file,next)=>{
-                const wrapper=getWrapper('div','');
+                const wrapper=getWrapper('div',wrapperClassName??'',hasStyle,wrapperStyle);
                 wrapper.children=_tree.children;
                 _tree.children=[wrapper];
                 next()
@@ -98,9 +102,6 @@ export const compileMdxUiAsync=async (code:string,{
     if(sourceMapOptions){
         cOptions.rehypePlugins.push(()=>{
             return (_tree:MdxUiNode,file,next)=>{
-                if(wrapElem){
-
-                }
                 navTree(
                     srcRef,
                     _tree,
@@ -118,16 +119,18 @@ export const compileMdxUiAsync=async (code:string,{
         })
     }
     const styleSource:MdxUiSourceCodeRef={src:''}
-    cOptions.rehypePlugins.push(()=>{
-        return (_tree:MdxUiNode,file,next)=>{
-            navStyle(
-                styleSource,
-                _tree
-            )
-            next()
+    if(hasStyle){
+        cOptions.rehypePlugins.push(()=>{
+            return (_tree:MdxUiNode,file,next)=>{
+                navStyle(
+                    styleSource,
+                    _tree
+                )
+                next()
 
-        }
-    })
+            }
+        })
+    }
     if(enableJsInitBlocks){
         const hookOpen='<Hook i={()=>{'
         code=code.replace(/(```\s*js\s+__init__)((.|\n|\r)*?)```/g,(_,open:string,code:string)=>(
@@ -160,7 +163,7 @@ export const compileMdxUiAsync=async (code:string,{
                 if((typeof p === 'string') || !p.proxy){
                     return '';
                 }
-                return `const ${p.name}=useProxy(_proxy_${p.name});`;
+                return `const ${p.name}=useProxy(_proxy_${p.name},${p.useInitProxyValue??false},${p.maxProxyDepth??maxProxyDepth});`;
             }).join('')}`
         )
     }

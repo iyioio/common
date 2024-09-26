@@ -8,8 +8,10 @@ export const mdxUiDragDropIdAtt='data-mdx-ui-drop-id';
 
 export const defaultMdxUidDeconstructProps:(string|MdxUiDeconstructProp)[]=[
     {
-        name:'state',
+        name:'comp',
         default:'{}',
+        proxy:true,
+        useInitProxyValue:true,
     },
     'hookCtrl'
 ]

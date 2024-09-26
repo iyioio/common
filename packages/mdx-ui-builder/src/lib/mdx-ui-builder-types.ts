@@ -30,6 +30,16 @@ export interface MdxUiCompileOptions
     wrapElem?:string|null;
 
     /**
+     * class name given to the wrapper element
+     */
+    wrapperClassName?:string;
+
+    /**
+     * Style applied to wrapper element.
+     */
+    wrapperStyle?:Record<string,any>;
+
+    /**
      * An array of props that should be deconstructed into the variable scope of the compiled component
      */
     deconstructProps?:(string|MdxUiDeconstructProp)[];
@@ -51,6 +61,12 @@ export interface MdxUiCompileOptions
      * Name given to generated at-dot-css styles
      */
     styleName?:string;
+
+    /**
+     * Default maxDepth passed to useProxy for proxy-ed deconstructor props.
+     * @default 30
+     */
+    maxProxyDepth?:number;
 }
 
 export interface MdxUiDeconstructProp
@@ -59,6 +75,8 @@ export interface MdxUiDeconstructProp
     asName?:string;
     default?:string;
     proxy?:boolean;
+    maxProxyDepth?:number;
+    useInitProxyValue?:boolean;
 }
 
 export type MdxUiImportReplacer=(packageName:string,importName:string)=>string|null|undefined;
