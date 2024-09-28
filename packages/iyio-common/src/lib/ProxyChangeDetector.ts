@@ -1,5 +1,6 @@
 import { Observable, Subject, Subscription } from "rxjs";
 import { DisposeCallback } from "./common-types";
+import { isNonClassInstanceObject } from "./object";
 
 export type ProxyObjectChangeType='set'|'delete';
 
@@ -79,7 +80,7 @@ export class ProxyChangeDetector
                     return Reflect.get(target,prop,receiver);
                 }
                 const value=target[prop];
-                if(value && (typeof value === 'object')){
+                if(value && (typeof value === 'object') && isNonClassInstanceObject(value)){
                     return this.wrap(value,depth+1);
                 }else{
                     return value;
