@@ -98,9 +98,9 @@ export function getContentType(
     if(i!==-1){
         path=path.substring(i+1);
     }
-    return (extMappings as any)[path]||defaultType
+    return (extMappings as any)[path.toLowerCase()]||defaultType
 }
 
 export const getContentTypeWithTextFallback=(path:string|null|undefined):string=>{
-    return getContentType(path,'text/'+(getFileExt(path)||'plain'))
+    return getContentType(path,'text/'+(getFileExt(path,false,true)||'plain'))
 }
