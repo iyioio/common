@@ -452,6 +452,15 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.readBufferAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
+    public writeBase64Async(path:string,base64OrDataUri:string):Promise<VfsItem>
+    {
+        const i=base64OrDataUri.lastIndexOf(',');
+        if(i!==-1){
+            base64OrDataUri=decodeURIComponent(base64OrDataUri.substring(i+1));
+        }
+        const buffer=Buffer.from(base64OrDataUri,'base64');
+        return this.writeBufferAsync(path,buffer);
+    }
     public async writeBufferAsync(path:string,buffer:Uint8Array|Blob|Blob[]|string):Promise<VfsItem>
     {
         path=normalizeVfsPath(path);
