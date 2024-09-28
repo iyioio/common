@@ -12,6 +12,9 @@ export const allAutoLayoutTypes=[
     'triTop',
     'triBottom',
     'quad',
+    '2x3',
+    '3x2',
+    '3x3'
 ] as const;
 
 export type AutoLayoutType=typeof allAutoLayoutTypes[number];

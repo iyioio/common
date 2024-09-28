@@ -11,6 +11,9 @@ export interface AutoLayoutProps
     type?:AutoLayoutType;
 }
 
+/**
+ * AutoLayout lays its children out based on its type prop.
+ */
 export function AutoLayout({
     children,
     col,

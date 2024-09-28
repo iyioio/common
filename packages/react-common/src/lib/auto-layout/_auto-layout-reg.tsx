@@ -1,4 +1,7 @@
 import { AutoLayoutType, BaseLayoutProps } from "@iyio/common";
+import { Alo2x3, Alo2x3Style } from "./Alo2x3";
+import { Alo3x2, Alo3x2Style } from "./Alo3x2";
+import { Alo3x3, Alo3x3Style } from "./Alo3x3";
 import { AloQuad, AloQuadStyle } from "./AloQuad";
 import { AloSideBy, AloSideByStyle } from "./AloSideBy";
 import { AloSideBySideScrollLeft, AloSideBySideScrollLeftStyle } from "./AloSideBySideScrollLeft";
@@ -64,6 +67,21 @@ export const getAutoLayoutTypeComp=(
         case 'quad': return {
             comp:<AloQuad childAry={childAry} count={count} layoutProps={layoutProps} ctrl={ctrl}/>,
             className:AloQuadStyle.root(),
+        }
+
+        case '2x3': return {
+            comp:<Alo2x3 childAry={childAry} count={count} layoutProps={layoutProps} ctrl={ctrl}/>,
+            className:Alo2x3Style.root(),
+        }
+
+        case '3x2': return {
+            comp:<Alo3x2 childAry={childAry} count={count} layoutProps={layoutProps} ctrl={ctrl}/>,
+            className:Alo3x2Style.root(),
+        }
+
+        case '3x3': return {
+            comp:<Alo3x3 childAry={childAry} count={count} layoutProps={layoutProps} ctrl={ctrl}/>,
+            className:Alo3x3Style.root(),
         }
 
         default:
