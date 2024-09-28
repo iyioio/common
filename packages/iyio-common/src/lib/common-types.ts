@@ -140,6 +140,8 @@ export type AnyAsyncFunction=(...args:any[])=>Promise<any>;
 
 export type Side='left'|'right'|'top'|'bottom';
 
+export type Direction='up'|'down'|'left'|'right';
+
 export interface AliasRecord<T=any>
 {
     default:T;
