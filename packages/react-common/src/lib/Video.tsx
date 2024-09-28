@@ -2,7 +2,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps } from "@iyio/common";
 import { CSSProperties, useEffect, useState } from "react";
 import { useLazyRender } from "./useLazyRender";
-console.log('hio 👋 👋 👋 include VIDEO',);
+
 export interface VideoProps
 {
     alt?:string;
