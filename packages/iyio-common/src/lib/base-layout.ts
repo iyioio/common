@@ -5,6 +5,7 @@ import { DirectionalBreakpoint, DirectionalBreakpointAlias, allDirectionalBreakp
 
 
 export type BaseLayoutFlagValue=boolean|DirectionalBreakpoint|DirectionalBreakpointAlias;
+export type BaseLayoutSpeedFlagValue=boolean|BaseLayoutAnimationSpeed;
 
 export const baseLayoutAnimationSpeeds=[
     'fast','quick','slow','extraSlow'
@@ -25,7 +26,7 @@ export const baseLayoutAnimationProps={
 } as const;
 Object.freeze(baseLayoutAnimationProps);
 export type BaseLayoutAnimationProps = {
-    -readonly [prop in keyof typeof baseLayoutAnimationProps]?:boolean|BaseLayoutAnimationSpeed;
+    -readonly [prop in keyof typeof baseLayoutAnimationProps]?:BaseLayoutSpeedFlagValue;
 }
 /**
  * @acGroup column
@@ -557,8 +558,10 @@ export const baseLayoutBreakpointProps={
 } as const;
 Object.freeze(baseLayoutBreakpointProps);
 export type BaseLayoutBreakpointProps = {
-    -readonly [prop in keyof typeof baseLayoutBreakpointProps]?:boolean;
+    -readonly [prop in keyof typeof baseLayoutBreakpointProps]?:BaseLayoutBreakpointFlagValue;
 }
+
+export type BaseLayoutBreakpointFlagValue=boolean;
 
 /**
  * @acGroup util
