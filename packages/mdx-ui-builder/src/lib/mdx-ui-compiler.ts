@@ -12,7 +12,7 @@ export const compileMdxUiAsync=async (code:string,{
     discardReplaced,
     wrapElem='div',
     deconstructProps=defaultMdxUidDeconstructProps,
-    enableJsInitBlocks,
+    enableJsBlocks,
     styleName,
     wrapperClassName,
     wrapperStyle,
@@ -25,6 +25,8 @@ export const compileMdxUiAsync=async (code:string,{
     }
     const sourceMapOptions=sourceMap;
     const srcRef:MdxUiSourceCodeRef={src:code};
+    const bodyBlocks:string[]=[];
+    const moduleBlocks:string[]=[];
 
     const {
         lookupClassNamePrefix=defaultMdxUiClassNamePrefix,
@@ -131,12 +133,20 @@ export const compileMdxUiAsync=async (code:string,{
             }
         })
     }
-    if(enableJsInitBlocks){
+    if(enableJsBlocks){
         const hookOpen='<Hook i={()=>{'
-        code=code.replace(/(```\s*js\s+__init__)((.|\n|\r)*?)```/g,(_,open:string,code:string)=>(
+        code=code.replace(/(```\s*js\s+(__init__|__module__|__body__))((.|\n|\r)*?)```/g,(_,open:string,type:string,code:string)=>{
             // the added spaces keep the source positioning synced
-            `${hookOpen}${' '.repeat((open.length-hookOpen.length-1))}${code}}}/>`
-        ));
+            if(type==='__body__'){
+                bodyBlocks.push(code);
+                return ' '.repeat(_.length);
+            }else if(type==='__module__'){
+                moduleBlocks.push(code);
+                return ' '.repeat(_.length);
+            }else{
+                return `${hookOpen}${' '.repeat((open.length-hookOpen.length-1))}${code}}}/>`;
+            }
+        });
     }
 
     const file=await compile(code,cOptions);
@@ -150,21 +160,27 @@ export const compileMdxUiAsync=async (code:string,{
         importReplacements
     }
 
-    if(deconstructProps){
+    if(deconstructProps || bodyBlocks.length || moduleBlocks.length){
         result.code=result.code.replace(
             /function\s+_createMdxContent\(\s*props\s*\)\s*\{/,
-            `function _createMdxContent(props) {const {${deconstructProps.map(p=>{
-                if(typeof p === 'string'){
-                    return p;
-                }else{
-                    return `${p.proxy?`${p.name}:_proxy_${p.name}`:p.name}${p.asName?':'+p.asName:''}${p.default?'='+p.default:''}`
-                }
-            }).join(',')}}=props;${deconstructProps.map(p=>{
-                if((typeof p === 'string') || !p.proxy){
-                    return '';
-                }
-                return `const ${p.name}=useProxy(_proxy_${p.name},${p.useInitProxyValue??false},${p.maxProxyDepth??maxProxyDepth});`;
-            }).join('')}`
+            `${
+                moduleBlocks.length?moduleBlocks.join('\n\n')+'\n':''
+            }function _createMdxContent(props) {${
+                deconstructProps.length?(`const {${deconstructProps.map(p=>{
+                    if(typeof p === 'string'){
+                        return p;
+                    }else{
+                        return `${p.proxy?`${p.name}:_proxy_${p.name}`:p.name}${p.asName?':'+p.asName:''}${p.default?'='+p.default:''}`
+                    }
+                }).join(',')}}=props;${deconstructProps.map(p=>{
+                    if((typeof p === 'string') || !p.proxy){
+                        return '';
+                    }
+                    return `const ${p.name}=useProxy(_proxy_${p.name},${p.useInitProxyValue??false},${p.maxProxyDepth??maxProxyDepth});`;
+                }).join('')}`):''
+            }${
+                bodyBlocks.length?'\n'+bodyBlocks.join('\n\n')+'\n':''
+            }`
         )
     }
 

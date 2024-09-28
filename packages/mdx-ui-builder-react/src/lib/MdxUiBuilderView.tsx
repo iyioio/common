@@ -23,10 +23,11 @@ export interface MdxUiBuilderViewProps
     onBuilderChange?:(builder:MdxUiBuilder)=>void;
     compProps?:Record<string,any>;
     hookCtrl?:HookCtrl;
-    enableJsInitBlocks?:boolean;
+    enableJsBlocks?:boolean;
     deconstructProps?:(string|MdxUiDeconstructProp)[];
     styleName?:string;
     disableHighlighting?:boolean;
+    isPreview?:boolean;
 }
 
 export function MdxUiBuilderView({
@@ -42,10 +43,11 @@ export function MdxUiBuilderView({
     onBuilderChange,
     compProps,
     hookCtrl:hookCtrlProp,
-    enableJsInitBlocks,
+    enableJsBlocks,
     deconstructProps,
     styleName,
     disableHighlighting,
+    isPreview,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
@@ -66,8 +68,8 @@ export function MdxUiBuilderView({
         if(refs.current.importReplacer){
             compilerOptions.importReplacer=refs.current.importReplacer;
         }
-        if(enableJsInitBlocks){
-            compilerOptions.enableJsInitBlocks=true;
+        if(enableJsBlocks){
+            compilerOptions.enableJsBlocks=true;
         }
         if(deconstructProps){
             compilerOptions.deconstructProps=[...deconstructProps,...(compilerOptions.deconstructProps??[])];
@@ -87,7 +89,7 @@ export function MdxUiBuilderView({
             }
         });
 
-    },[rootElem,enableJsInitBlocks,deconstructProps]);
+    },[rootElem,enableJsBlocks,deconstructProps]);
 
     useEffect(()=>{
         if(!builder){
@@ -176,7 +178,7 @@ export function MdxUiBuilderView({
                         {Comp && <Comp
                             hookCtrl={hookCtrl}
                             comp={hookCtrl.state}
-                            isPreview
+                            isPreview={isPreview}
                             {...compProps}
                         />}
                     </ErrorBoundary>

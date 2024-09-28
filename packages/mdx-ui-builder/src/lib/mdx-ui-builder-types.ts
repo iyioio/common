@@ -45,8 +45,14 @@ export interface MdxUiCompileOptions
     deconstructProps?:(string|MdxUiDeconstructProp)[];
 
     /**
-     * If true js code blocks with a `__init__` suffix will be converted into a Hook component
-     * with the content of the code block as the init function of the Hook component.
+     * If true js code blocks with a `__init__`, `__body` or `__module__` converted into component
+     * code.
+     *
+     * - `__init__` - Code gets converted into a Hook component with the code of the block inserted into the init callback.
+     *
+     * - `__module__` - Code is inserted out side of the component body
+     *
+     * - `__body__` - Code is inserted into the body of the component.
      *
      * @example
      * \``` js __init__
@@ -55,7 +61,7 @@ export interface MdxUiCompileOptions
      *
      * ```
      */
-    enableJsInitBlocks?:boolean;
+    enableJsBlocks?:boolean;
 
     /**
      * Name given to generated at-dot-css styles
