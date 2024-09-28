@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { BaseLayoutProps } from "@iyio/common";
+import { BaseLayoutProps, baseLayoutFlexProps, takeObjKeyIntersection } from "@iyio/common";
 
 export const defaultPageColumnWidth=800;
 
@@ -21,8 +21,10 @@ export function PageColumn({
         columnWidth='100%';
     }
 
+    const flexProps=takeObjKeyIntersection(props,baseLayoutFlexProps)
+
     return (
-        <div className={style.root()} style={style.vars({width:(typeof columnWidth==='number')?columnWidth+'px':columnWidth})}>
+        <div className={style.root(null,null,flexProps)} style={style.vars({width:(typeof columnWidth==='number')?columnWidth+'px':columnWidth})}>
 
             <div className={style.column(null,null,props)}>
                 {children}

@@ -25,7 +25,7 @@ export function useLazyRender(elem:HTMLElement|null,{
     holdHeight=holdSize,
     holdWidth=holdSize,
     intersectionOptions,
-}:UseLazyRenderOptions):LazyRenderState{
+}:UseLazyRenderOptions={}):LazyRenderState{
 
     const [lastSize,setLastSize]=useState<Size|null>(null);
 

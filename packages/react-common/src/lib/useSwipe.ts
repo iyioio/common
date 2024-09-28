@@ -1,18 +1,22 @@
-import { Point } from "@iyio/common";
+import { Direction, Point } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
+import { DirectionInputCtrl } from "./direction-input/DirectionInputCtrl";
+import { useDirectionInputCtrl } from "./direction-input/direction-input-lib";
 
-export type SwipeDirection='up'|'down'|'left'|'right';
+export type SwipeDirection=Direction;
 
 export type SwipeListener=(direction:SwipeDirection)=>void;
 
-export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):((listenTo:HTMLElement|null)=>void)=>
+export const useSwipe=(listener?:SwipeListener|DirectionInputCtrl,swipeTimeout=2000,swipeDist=30):((listenTo:HTMLElement|null)=>void)=>
 {
     const [listenTo,setListenTo]=useState<HTMLElement|null>(null);
+    const dirCtrl=useDirectionInputCtrl();
 
-    const stateRef=useRef({listener,swipeTimeout,swipeDist});
+    const stateRef=useRef({listener,swipeTimeout,swipeDist,dirCtrl});
     stateRef.current.listener=listener;
     stateRef.current.swipeTimeout=swipeTimeout;
     stateRef.current.swipeDist=swipeDist;
+    stateRef.current.dirCtrl=dirCtrl;
 
     useEffect(()=>{
 
@@ -57,7 +61,8 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
             const {
                 listener,
                 swipeTimeout,
-                swipeDist
+                swipeDist,
+                dirCtrl
             }=stateRef.current;
 
             if(Date.now()-time>swipeTimeout){
@@ -77,12 +82,20 @@ export const useSwipe=(listener?:SwipeListener,swipeTimeout=2000,swipeDist=30):(
 
             e.preventDefault();
 
-            listener?.(
-                xDiffAbs>yDiffAbs?
+            const dir:Direction=(
+                 xDiffAbs>yDiffAbs?
                     xDiff>0?'right':'left'
                 :
                     yDiff>0?'down':'up'
             )
+
+            dirCtrl?.triggerInput(dir);
+
+            if(typeof listener==='function'){
+                listener?.(dir);
+            }else{
+                listener?.triggerInput(dir);
+            }
 
         }
 

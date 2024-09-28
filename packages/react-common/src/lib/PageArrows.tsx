@@ -3,29 +3,55 @@ import { BaseLayoutOuterProps, domListener } from "@iyio/common";
 import { useEffect, useRef } from "react";
 import { SlimButton } from "./SlimButton";
 import { Text } from "./Text";
+import { useDirectionCount, useDirectionIndex, useDirectionInputCtrl } from "./direction-input/direction-input-lib";
 import { BasicIcon } from "./icon/BasicIcon";
 import { useSwipe } from "./useSwipe";
 
 export interface PageArrowsProps
 {
-    count:number;
-    index:number;
+    count?:number;
+    index?:number;
     onChange?:(index:number)=>void;
     listenToKeys?:boolean;
     enableSwipe?:boolean|HTMLElement;
     disabled?:boolean;
+    disableDirectionCtrlInput?:boolean;
 }
 
 export function PageArrows({
     count,
     index,
-    onChange,
+    onChange:onChangeProp,
     listenToKeys,
     enableSwipe,
     disabled,
+    disableDirectionCtrlInput,
     ...props
 }:PageArrowsProps & BaseLayoutOuterProps){
 
+    const ctrlIndex=useDirectionIndex();
+    const ctrlCount=useDirectionCount();
+
+    if(count===undefined){
+        count=ctrlCount;
+    }
+
+    if(index===undefined){
+        index=ctrlIndex;
+    }
+
+    const dirCtrl=useDirectionInputCtrl();
+    const onChange=(i:number)=>{
+        if(i===index){
+            return;
+        }
+
+        if(dirCtrl && !disableDirectionCtrlInput){
+            dirCtrl.triggerInput(i>(index??0)?'left':'right');
+        }
+
+        onChangeProp?.(i);
+    }
     const refs=useRef({count,onChange,index,disabled});
     refs.current.count=count;
     refs.current.onChange=onChange;
@@ -104,11 +130,11 @@ export function PageArrows({
 
             {index>0 && !disabled && <SlimButton
                 className={style.left()}
-                onClick={index>0?()=>onChange?.(index-1):undefined}
+                onClick={index>0?()=>onChange?.((index??0)-1):undefined}
             />}
             {index<count-1 && !disabled && <SlimButton
                 className={style.right()}
-                onClick={index<count-1?()=>onChange?.(index+1):undefined}
+                onClick={index<count-1?()=>onChange?.((index??0)+1):undefined}
             />}
         </div>
     )
