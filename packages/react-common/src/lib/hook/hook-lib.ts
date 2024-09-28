@@ -1,5 +1,4 @@
-import { createContext, useContext, useEffect, useMemo } from "react";
-import { useSubject } from "../rxjs-hooks";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { HookCtrl } from "./HookCtrl";
 
 export const HookCtrlReactContext=createContext<HookCtrl|null>(null);
@@ -7,8 +6,6 @@ export const HookCtrlReactContext=createContext<HookCtrl|null>(null);
 export const useHookCtrl=()=>{
     return useContext(HookCtrlReactContext);
 }
-
-export const hookStateCtrlKey=Symbol('hookStateCtrlKey');
 
 export const useCreateHookCtrl=(existingCtrl?:HookCtrl|null,listenToChanges=true):HookCtrl=>{
     const ctrl=useMemo(()=>existingCtrl??new HookCtrl(),[existingCtrl]);
@@ -22,7 +19,24 @@ export const useCreateHookCtrl=(existingCtrl?:HookCtrl|null,listenToChanges=true
         }
     },[ctrl,dispose]);
 
-    useSubject(listenToChanges?ctrl.changeDetector.onChange:undefined);
+    const [,setRender]=useState(0);
+    useEffect(()=>{
+        if(!listenToChanges){
+            return;
+        }
+        let iv:any;
+        const sub=ctrl.changeDetector.onChange.subscribe(()=>{
+            clearTimeout(iv);
+            iv=setTimeout(()=>{
+                setRender(v=>v+1);
+            },1);
+        })
+        return ()=>{
+            clearTimeout(iv);
+            sub.unsubscribe();
+        }
+    },[listenToChanges,ctrl]);
 
     return ctrl;
 }
+

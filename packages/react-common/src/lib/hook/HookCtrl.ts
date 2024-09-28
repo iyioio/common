@@ -1,5 +1,4 @@
 import { ProxyChangeDetector } from "@iyio/common";
-import { hookStateCtrlKey } from "./hook-lib";
 
 let nextId=0;
 
@@ -14,7 +13,6 @@ export class HookCtrl{
     public constructor()
     {
         const state:Record<string|symbol,any>={};
-        state[hookStateCtrlKey]=this;
         const changeDetector=new ProxyChangeDetector({
             target:state,
             maxDepth:30
