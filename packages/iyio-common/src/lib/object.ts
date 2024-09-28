@@ -636,7 +636,7 @@ export const setOrDeleteWhen=<T,K extends keyof T>(obj:T,prop:K, value:T[K], del
 }
 
 /**
- * Returns true if the value is an object that is an instance of a class
+ * Returns true if the value is an object that is not an instance of a class
  */
 export const isNonClassInstanceObject=(value:any)=>{
     return (
