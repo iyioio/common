@@ -51,6 +51,7 @@ export * from './lib/authModule';
 export * from './lib/auto-layout-common-lib';
 export * from './lib/base-layout';
 export * from './lib/base-layout-defaults';
+export * from './lib/base-layout-docs';
 export * from './lib/base-layout-generator';
 export * from './lib/base-layout-generator-types';
 export * from './lib/base-layout-init';
