@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getPortalCtrl, PortalCtrl, PortalItem } from "./portal-lib";
+import { PortalCtrl, PortalItem, getPortalCtrl } from "./portal-lib";
 import { useSubject } from "./rxjs-hooks";
 
 interface PortalRendererProps
@@ -8,6 +8,9 @@ interface PortalRendererProps
     getCtrl?:(ctrl:PortalCtrl)=>void;
 }
 
+/**
+ * @acIgnore
+ */
 export function PortalRenderer({
     id='default',
     getCtrl,

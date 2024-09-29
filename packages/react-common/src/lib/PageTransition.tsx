@@ -19,6 +19,9 @@ interface PageTransitionProps
     children:any;
 }
 
+/**
+ * @acIgnore
+ */
 export function PageTransition({
     routeInfo,
     duration=1500,

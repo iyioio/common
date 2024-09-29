@@ -35,6 +35,9 @@ export interface BaseAppContainerProps
     loadingPlaceholder?:any;
 }
 
+/**
+ * @acIgnore
+ */
 export function BaseAppContainer({
     children,
     style={},

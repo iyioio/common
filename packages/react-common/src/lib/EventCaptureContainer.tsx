@@ -194,6 +194,9 @@ export interface EventCaptureContainerProps extends EventCaptureOptions
     elem?:string;
 }
 
+/**
+ * @acIgnore
+ */
 export function EventCaptureContainer({
     children,
     elem='div',

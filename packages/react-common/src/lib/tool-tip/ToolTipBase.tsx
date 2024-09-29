@@ -13,6 +13,9 @@ export interface ToolTipBaseProps extends ViewProps
     keepOnScreen?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function ToolTipBase({
     children,
     toolTip,

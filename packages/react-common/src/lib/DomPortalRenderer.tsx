@@ -13,6 +13,9 @@ export interface DomPortalRendererProps extends PersistencePortalNodeOptions
     persist?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function DomPortalRenderer({
     id,
     style: styleProp,

@@ -7,6 +7,9 @@ export interface AutoLayoutSlotProps
     index:number;
 }
 
+/**
+ * @acIgnore
+ */
 export function AutoLayoutSlot({
     children,
     ...props

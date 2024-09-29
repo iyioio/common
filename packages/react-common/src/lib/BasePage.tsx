@@ -20,6 +20,9 @@ export interface BasePageProps<T=any> extends BaseLayoutProps
     readyDelay?:number;
 }
 
+/**
+ * @acIgnore
+ */
 export function BasePage({
     common,
     children,

@@ -50,6 +50,9 @@ export interface ModalBaseProps extends ModalOpenCloseProps, PortalProps, BaseLa
     disableDomPortalEventCapture?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function ModalBase({
     rendererId,
     open,

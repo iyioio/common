@@ -12,6 +12,9 @@ export interface BaseLayoutStyleSheetProps extends Omit<BaseLayoutCssOptions,'li
     directInsert?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function BaseLayoutStyleSheet({
     optimizeForHybridRendering,
     debugOptimizations,

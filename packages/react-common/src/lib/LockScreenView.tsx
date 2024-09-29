@@ -17,6 +17,9 @@ interface LockScreenViewProps
     active:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function LockScreenView({
     lock,
     active,

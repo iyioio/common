@@ -22,6 +22,9 @@ export interface SelectBaseInternalProps<T>
     setOption?:(option:NamedValue<T>|undefined)=>void;
 }
 
+/**
+ * @acIgnore
+ */
 export function SelectBase<T,D=T>({
     value,
     onChange,

@@ -53,6 +53,9 @@ export interface AnimatedPageTransitionProps extends PageTransitionOptions
     children:any;
 }
 
+/**
+ * @acIgnore
+ */
 export function AnimatedPageTransition({
     routeInfo,
     children,

@@ -8,6 +8,9 @@ export interface ToolTipContainerProps
     children:any;
 }
 
+/**
+ * @acIgnore
+ */
 export function ToolTipContainer({
     state,
     children,

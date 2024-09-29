@@ -32,6 +32,9 @@ export interface ButtonBaseInternalProps extends ButtonBaseProps
     baseClassName?:string;
 }
 
+/**
+ * @acIgnore
+ */
 export function ButtonBase({
     baseClassName,
     actionItem,

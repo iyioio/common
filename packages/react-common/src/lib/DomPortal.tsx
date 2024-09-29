@@ -39,6 +39,9 @@ export interface DomPortalProps
     parentContainer?:Element;
 }
 
+/**
+ * @acIgnore
+ */
 export function DomPortal({
     children,
     targetSelector,

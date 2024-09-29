@@ -28,6 +28,9 @@ interface LoadingOverlayProps
     noBlur?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function LoadingOverlay({
     disabled:_disabled=false,
     message,

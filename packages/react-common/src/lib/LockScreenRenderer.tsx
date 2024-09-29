@@ -7,6 +7,9 @@ interface LockScreenRendererProps
     container?:UiLockContainer
 }
 
+/**
+ * @acIgnore
+ */
 export function LockScreenRenderer({
     container=uiLockContainerService()
 }:LockScreenRendererProps){

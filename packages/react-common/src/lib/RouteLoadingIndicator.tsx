@@ -18,6 +18,9 @@ export interface RouteLoadingIndicatorProps
     zIndex?:number;
 }
 
+/**
+ * @acIgnore
+ */
 export function RouteLoadingIndicator({
     children,
     color='#00ff00',
