@@ -19,6 +19,10 @@ export interface VideoProps
     loop?:boolean;
     muted?:boolean;
     autoPlay?:boolean;
+    sq?:boolean;
+    landscape?:boolean;
+    portrait?:boolean;
+    aspectRatio?:string|number;
 }
 
 export function Video({
@@ -36,6 +40,10 @@ export function Video({
     loop,
     muted,
     autoPlay,
+    sq,
+    landscape,
+    portrait,
+    aspectRatio=landscape?'16/9':portrait?'9/16':sq?1:undefined,
     ...props
 }:VideoProps & BaseLayoutProps){
 
@@ -54,7 +62,7 @@ export function Video({
             role="img"
             aria-label={alt}
             className={style.root(null,null,props)}
-            style={styleProp}
+            style={{aspectRatio,...styleProp}}
         >
             {(!lazy || show) && <>
                 <video

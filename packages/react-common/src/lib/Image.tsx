@@ -17,6 +17,9 @@ export interface ImageProps extends BaseLayoutProps
     bgSrc?:string|null;
     elemRef?:(elem:HTMLElement|null)=>void;
     unstyled?:boolean;
+    sq?:boolean;
+    landscape?:boolean;
+    portrait?:boolean;
     aspectRatio?:string|number;
     imgFixed?:boolean;
 }
@@ -36,7 +39,10 @@ export function Image({
     width=size,
     tile,
     unstyled,
-    aspectRatio,
+    sq,
+    landscape,
+    portrait,
+    aspectRatio=landscape?'16/9':portrait?'9/16':sq?1:undefined,
     imgFixed,
     ...props
 }:ImageProps){
