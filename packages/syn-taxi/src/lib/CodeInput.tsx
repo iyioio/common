@@ -4,7 +4,7 @@ import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { dt } from '../lib/lib-design-tokens';
 import { LineNumbers } from './LineNumbers';
-import { useShiki } from './shiki';
+import { loadMdCodeBlocks, supportsMdCodeBlocks, useShiki } from './shiki';
 
 export const defaultCodeLineStartReg=/^(\s*)/;
 export const markdownCodeLineStartReg=/^(\s*-?\s*)/;
@@ -128,6 +128,9 @@ export function CodeInput<P=any>({
         }
         let iv:any=undefined;
         let highlighted:string;
+        if(supportsMdCodeBlocks(language)){
+            loadMdCodeBlocks(language,fullValue);
+        }
         try{
             highlighted=sh.codeToHtml(fullValue,{
                 lang:sh.getLoadedLanguages().includes(language)?language:'text',

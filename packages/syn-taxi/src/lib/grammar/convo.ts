@@ -2,6 +2,10 @@ export const convoGrammar={
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name":"convo",
     "scopeName": "source.convo",
+    "autoLoadMdCodeBlocks":true,
+    "embeddedLangsLazy": [
+        "json","xml","javascript","python"
+    ],
     "uuid": "B7A8C571-820A-4958-A997-76DFD822B0FE",
     "fileTypes": ["convo"],
     "patterns": [

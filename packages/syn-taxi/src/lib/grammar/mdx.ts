@@ -3705,7 +3705,12 @@ export const mdxGrammar = {
         },
     },
     scopeName: 'source.mdx',
-    embeddedLangs: [],
+    autoLoadMdCodeBlocks:true,
+    embeddedLangs: [
+        'tsx',
+        'typescript',
+        'markdown',
+    ],
     embeddedLangsLazy: [
         'tsx',
         'atdot',

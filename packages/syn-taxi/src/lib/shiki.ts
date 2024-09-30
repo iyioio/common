@@ -9,10 +9,21 @@ import { mdxGrammar } from './grammar/mdx';
 
 let defaultHighlighter:Promise<Highlighter>|null;
 
-const loadLangMap:Record<string,Promise<void>>={};
+const autoLoadMdCodeBlocksKey='autoLoadMdCodeBlocks';
+const autoLoadMdCodeBlocksList=[
+    'markdown',
+]
+interface LangInfo
+{
+    embeddedLangsLazy?:string[];
+    [autoLoadMdCodeBlocksKey]?:boolean;
+}
+
+const loadedLangInfo:Record<string,LangInfo>={};
+
+const loadLangMap:Record<string,Promise<boolean>>={};
 
 const onLangLoad=new Subject<string>();
-let done=false;
 
 export const loadShikiLangAsync=(name:string)=>{
     return loadLangMap[name]??(loadLangMap[name]=_loadShikiLangAsync(0,name));
@@ -20,22 +31,23 @@ export const loadShikiLangAsync=(name:string)=>{
 
 const langDeps:Record<string,string[]>={
     //mdx:['tsx'],
-    convo:['json','xml','javascript','python'],
+    //convo:['json','xml','javascript','python'],
 }
+
 
 const _loadShikiLangAsync=async (
     depth:number,
     name:string,
-)=>{
+):Promise<boolean>=>{
 
     if(depth>10 || name==='elm' || name==='erlang'){
-        return;
+        return false;
     }
 
     const sh=await getShikiAsync();
 
     if(sh.getLoadedLanguages().includes(name as Lang)){
-        return;
+        return false;
     }
 
     const custom:any=(name==='convo'?
@@ -66,19 +78,60 @@ const _loadShikiLangAsync=async (
 
     if(bundled){
         for(const b of bundled){
+
+            loadedLangInfo[b.name]={
+                embeddedLangsLazy:b.embeddedLangsLazy,
+                [autoLoadMdCodeBlocksKey]:b[autoLoadMdCodeBlocksKey] || autoLoadMdCodeBlocksList.includes(b.name),
+            }
+
             if(b.embeddedLangs){
                 for(const e of b.embeddedLangs){
                     await _loadShikiLangAsync(depth+1,e);
                 }
             }
-            if(b.embeddedLangsLazy){
-                for(const e of b.embeddedLangsLazy){
-                    await _loadShikiLangAsync(depth+1,e);
-                }
-            }
         }
     }
+    return true;
 }
+
+export const supportsMdCodeBlocks=(lang:string)=>{
+    return loadedLangInfo[lang]?.[autoLoadMdCodeBlocksKey]??false;
+}
+
+const codeBlockMap:Record<string,string>={
+    js:'javascript',
+    ts:'typescript',
+    style:'atdot',
+    yml:'yaml',
+    sh:'shellscript',
+    shell:'shellscript',
+    bash:'shellscript',
+    py:'python',
+};
+export const loadMdCodeBlocks=(lang:string,code:string):boolean=>{
+    const info=loadedLangInfo[lang];
+    if(!info?.[autoLoadMdCodeBlocksKey] || !info?.embeddedLangsLazy){
+        return false;
+    }
+
+    let loadStarted=false;
+    codeBlockReg.lastIndex=0;
+    let match:RegExpMatchArray|null;
+    while(match=codeBlockReg.exec(code)){
+        const bl=match[2]?.toLowerCase();
+        const blockLang=codeBlockMap[bl??'']??bl
+        if(!blockLang || loadLangMap[blockLang] || !info.embeddedLangsLazy.includes(blockLang)){
+            continue;
+        }
+
+        loadShikiLangAsync(blockLang);
+        loadStarted=true;
+    }
+
+    return loadStarted;
+}
+
+const codeBlockReg=/(^|\n)```\s*([\w\-]+)/g;
 
 export const getShikiAsync=():Promise<Highlighter>=>{
     if(!defaultHighlighter){
