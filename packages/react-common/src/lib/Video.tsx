@@ -73,6 +73,8 @@ export function Video({
                     loop={loop}
                     muted={muted}
                     autoPlay={autoPlay}
+                    disablePictureInPicture
+                    playsInline
                 />
                 {children}
             </>}
