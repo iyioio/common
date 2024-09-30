@@ -5,9 +5,13 @@ import { SelectBase, SelectBaseProps } from "./SelectBase";
 
 const defaultItemRenderer=(option:NamedValue<any>|undefined,placeholder:string)=>option?.name??placeholder;
 
-export interface SelectWrapperProps<T,D=T> extends SelectBaseProps<T,D>
+export interface SelectWrapperBaseProps<T,D=T> extends SelectBaseProps<T,D>
 {
     placeholder?:string;
+}
+
+export interface SelectWrapperProps<T,D=T> extends SelectWrapperBaseProps<T,D>
+{
     renderItem?:(option:NamedValue<T>|undefined,placeholder:string)=>any;
     children?:any;
 }
@@ -63,6 +67,7 @@ export function SelectWrapper<T,D=T>({
 const style=atDotCss({name:'SelectWrapper',namespace:'iyio',order:'frameworkHigh',css:`
     @.root{
         display:flex;
+        position:relative;
     }
     @.root select{
         position:absolute;

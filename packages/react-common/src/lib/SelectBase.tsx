@@ -1,18 +1,20 @@
 import { BaseLayoutProps, NamedValue, bcn } from "@iyio/common";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface SelectBaseProps<T,D=T>
 {
     value?:T;
     onChange?:(value:T|D)=>void;
     options?:NamedValue<T>[];
-    displayKey?:keyof T;
+    displayKey?:keyof Exclude<T,null|undefined>;
     values?:T[];
+    name?:string;
     tabIndex?:number;
     defaultOption?:NamedValue<D>;
     defaultName?:string;
     passDefaultOption?:boolean;
     disabled?:boolean;
+    matchKey?:keyof Exclude<T,null|undefined>;
 }
 
 export interface SelectBaseInternalProps<T>
@@ -26,11 +28,12 @@ export interface SelectBaseInternalProps<T>
  * @acIgnore
  */
 export function SelectBase<T,D=T>({
-    value,
-    onChange,
+    value:valueProp,
+    onChange:onChangeProp,
     options,
     displayKey,
     values,
+    name,
     unstyled,
     tabIndex,
     elemRef,
@@ -39,12 +42,17 @@ export function SelectBase<T,D=T>({
     defaultName,
     passDefaultOption,
     disabled,
+    matchKey,
     ...props
 }:SelectBaseProps<T,D> & BaseLayoutProps & SelectBaseInternalProps<T>){
 
+    const [_value,_setValue]=useState<T|undefined>(undefined);
+    const value=valueProp===undefined?_value:valueProp;
+    const onChange=valueProp===undefined?_setValue:onChangeProp;
+
     if(!options && values){
         options=values.map<NamedValue<T>>((v,i)=>({
-            name:(displayKey?v?.[displayKey]?.toString?.():null)??v?.toString?.()??i.toString(),
+            name:(displayKey?(v as any)?.[displayKey]?.toString?.():null)??v?.toString?.()??i.toString(),
             value:v,
         }))
     }
@@ -53,7 +61,11 @@ export function SelectBase<T,D=T>({
     if(options){
         for(let i=0;i<options.length;i++){
             const item=options[i];
-            if(item?.value===value){
+            if(matchKey?(
+                item && value && (item.value as any)?.[matchKey]===(value as any)[matchKey]
+            ):(
+                item?.value===value
+            )){
                 index=i;
                 break;
             }
@@ -78,6 +90,7 @@ export function SelectBase<T,D=T>({
     return (
         <select
             ref={elemRef}
+            name={name}
             disabled={disabled}
             tabIndex={tabIndex}
             className={unstyled?undefined:bcn(props)}
