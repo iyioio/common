@@ -19,7 +19,7 @@ export const compileMdxUiAsync=async (code:string,{
     maxProxyDepth=30,
 }:MdxUiCompileOptions={}):Promise<MdxUiCompileResult>=>{
 
-    const hasStyle=/[^\n]\s*```\s*style\W/.test(code);
+    const hasStyle=/(^|\n)\s*```\s*style\W/.test(code);
     if(sourceMap===true){
         sourceMap={}
     }
