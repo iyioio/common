@@ -9,6 +9,7 @@ export interface LoadingDotsProps
     size?:string|number;
     inset?:number;
     className?:string;
+    fill?:boolean;
 }
 
 export function LoadingDots({
@@ -16,10 +17,11 @@ export function LoadingDots({
     size='0.625rem',
     inset=0,
     className,
+    fill,
     ...props
 }:LoadingDotsProps & BaseLayoutProps){
 
-    return (
+    const content=(
         <svg
             className={style.root({disabled},className,props)}
             style={style.vars({size:(typeof size === 'number')?size+'px':size})}
@@ -31,6 +33,16 @@ export function LoadingDots({
             <circle style={style.vars({order:2})} cx="35.7637" cy="5" r="5"/>
         </svg>
     )
+
+    if(fill){
+        return (
+            <div className={style.fill()}>
+                {content}
+            </div>
+        )
+    }else{
+        return content;
+    }
 
 }
 
@@ -56,5 +68,13 @@ const style=atDotCss({name:'LoadingDots',namespace:'iyio',order:'framework',css:
 
     @.root.disabled circle{
         animation-play-state:paused;
+    }
+
+    @.fill{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        flex:1;
+        padding:0.5rem;
     }
 `});
