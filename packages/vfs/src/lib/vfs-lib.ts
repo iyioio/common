@@ -1,7 +1,7 @@
 // Convo FS is a virtual filesystem
 
 import { EvtTrigger, ValueCondition, currentBaseUser, getFileName, joinPaths, starStringTestCached } from "@iyio/common";
-import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
+import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsItem, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
 
 
 export const vfsMntTypes={
@@ -225,4 +225,25 @@ export const autoFormatVfsTrigger=(trigger:EvtTrigger)=>{
 
 export const isVfsFilePath=(path:string)=>{
     return path.startsWith('/') || path.startsWith('~/') || path.startsWith('./');
+}
+
+export const getVfsItemUrl=(urlOrItem:VfsItem|string|null|undefined,itemPathPrefix?:string,prefixUrl?:boolean):string|undefined=>{
+    if(!urlOrItem){
+        return undefined;
+    }
+    if(typeof urlOrItem === 'string'){
+        return (prefixUrl && itemPathPrefix)?joinPaths(itemPathPrefix,urlOrItem):urlOrItem;
+    }
+
+    if(urlOrItem.url){
+        return urlOrItem.url;
+    }
+
+    const path=normalizeVfsPath(urlOrItem.path);
+    return itemPathPrefix?joinPaths(itemPathPrefix,path):path;
+
+}
+
+export const isVfsItem=(value:string|VfsItem|null|undefined):value is VfsItem=>{
+    return (value && (typeof value ==='object'))?true:false;
 }
