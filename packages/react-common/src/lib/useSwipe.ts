@@ -83,6 +83,7 @@ export const useSwipe=(
         }
 
         const up=(pt:Point,e:Event)=>{
+            moveCleanup?.();
             const {
                 listener,
                 swipeTimeout,
@@ -91,8 +92,10 @@ export const useSwipe=(
             }=stateRef.current;
 
             if(Date.now()-time>swipeTimeout){
+                time=0;
                 return;
             }
+            time=0;
 
             const posUp={...pt}
 
@@ -105,9 +108,7 @@ export const useSwipe=(
                 return;
             }
 
-            time=0;
             e.preventDefault();
-            moveCleanup?.();
 
             const dir:Direction=(
                  xDiffAbs>yDiffAbs?
