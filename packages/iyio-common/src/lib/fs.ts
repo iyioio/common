@@ -172,3 +172,21 @@ export const requireUnrootPath=(path:string|null|undefined):string=>{
     }
     return newPath;
 }
+
+/**
+ * Adds a dot to the filename of the path and optionally appends a value
+ * @param path
+ */
+export const getPathDotName=(path:string,append?:string):string=>{
+    const dir=getDirectoryName(path);
+    const fileName=getFileName(path);
+    path=joinPaths(dir,fileName.startsWith('.')?fileName:'.'+fileName);
+    if(append){
+        if(append.startsWith('/') && path.endsWith('/')){
+            append=append.substring(1);
+        }
+        return path+append;
+    }else{
+        return path;
+    }
+}
