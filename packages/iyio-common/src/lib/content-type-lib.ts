@@ -1,6 +1,10 @@
-export const isContentTypeMatch=(pattern:string,contentType:string):boolean=>{
+export const isContentTypeMatch=(pattern:string|string[],contentType:string):boolean=>{
     if(!pattern || !contentType){
         return false;
+    }
+
+    if(Array.isArray(pattern)){
+        return aryAnyContentTypeMatches(pattern,contentType);
     }
 
     if(pattern==='*' || pattern==='*/*'){
