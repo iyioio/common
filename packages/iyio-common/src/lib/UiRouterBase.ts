@@ -1,6 +1,7 @@
 import { Subscription } from "rxjs";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { DisposeCallback } from "./common-types";
+import { joinPaths } from "./fs";
 import { deepClone, deepCompare } from "./object";
 import { ReadonlySubject } from "./rxjs-types";
 import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem, getWindowLocationRouteInfo } from "./ui-lib";
@@ -169,6 +170,14 @@ export class UiRouterBase implements IUiRouter
         }
         const route=this.disableAutoChangeChecking?null:this.autoCheck();
         this.checkForChange(false,route?.key);
+    }
+
+    public replace(path:string,query?:RouteQuery):void|Promise<void>
+    {
+        if(!path.startsWith('/') && globalThis.location){
+            path=joinPaths(globalThis.location.pathname,path);
+        }
+        globalThis.history?.replaceState(null,'',addQueryToPath(path,query))
     }
 
     public push(path:string,query?:RouteQuery){

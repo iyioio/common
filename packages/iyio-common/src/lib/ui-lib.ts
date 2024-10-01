@@ -145,6 +145,8 @@ export interface IUiRouter
 
     push(path:string,query?:RouteQuery):void|Promise<void>;
 
+    replace(path:string,query?:RouteQuery):void|Promise<void>;
+
     pop():void|Promise<void>;
 
     open(uri:string,options?:UiRouterOpenOptions):void|Promise<void>;

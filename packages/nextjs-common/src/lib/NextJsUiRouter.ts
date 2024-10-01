@@ -1,4 +1,4 @@
-import { addQueryToPath, RouteInfo, RouteQuery, shouldUseNativeNavigation, UiRouterBase, UiRouterBaseOptions } from "@iyio/common";
+import { addQueryToPath, joinPaths, RouteInfo, RouteQuery, shouldUseNativeNavigation, UiRouterBase, UiRouterBaseOptions } from "@iyio/common";
 import Router from 'next/router';
 import { getRouteInfo } from "./next-route-helper";
 
@@ -16,8 +16,10 @@ export class NextJsUiRouter extends UiRouterBase
     public override async push(path:string,query?:RouteQuery){
 
         this.loadingCount++;
-
         try{
+            if(!path.startsWith('/') && globalThis.location){
+                path=joinPaths(globalThis.location.pathname,path);
+            }
             const evt=await this.handlePushEvtAsync(path,query);
             if(evt?.cancel){
                 return;
@@ -30,7 +32,7 @@ export class NextJsUiRouter extends UiRouterBase
             if(shouldUseNativeNavigation(path)){
                 globalThis.location.assign(addQueryToPath(path,query));
             }else{
-                    await Router.push(addQueryToPath(path,query));
+                await Router.push(addQueryToPath(path,query));
             }
 
         }finally{
