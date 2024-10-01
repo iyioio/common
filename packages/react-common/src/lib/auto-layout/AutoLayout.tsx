@@ -4,8 +4,9 @@ import { Children, useMemo } from "react";
 import { AutoLayoutCtrl } from "./AutoLayoutCtrl";
 import { AutoLayoutSlot } from "./AutoLayoutSlot";
 import { getAutoLayoutTypeComp } from "./_auto-layout-reg";
+import { AutoLayoutSlotOptions } from "./auto-layout-lib";
 
-export interface AutoLayoutProps
+export interface AutoLayoutProps extends AutoLayoutSlotOptions
 {
     children?:any;
     type?:AutoLayoutType;
@@ -32,6 +33,9 @@ export function AutoLayout({
         :
             'col'
     ),
+    stackingMinHeight,
+    stackingAspectRatio,
+    primarySize,
     ...props
 }:AutoLayoutProps & BaseLayoutProps){
 
@@ -39,7 +43,18 @@ export function AutoLayout({
     const childAry=Children.toArray(children);
     const count=childAry.length;
 
-    const info=getAutoLayoutTypeComp(type,childAry,count,ctrl,props);
+    const info=getAutoLayoutTypeComp(
+        type,
+        childAry,
+        count,
+        ctrl,
+        props,
+        {
+            stackingMinHeight,
+            stackingAspectRatio,
+            primarySize
+        }
+    );
 
 
     return (

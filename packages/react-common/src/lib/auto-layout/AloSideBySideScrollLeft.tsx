@@ -8,12 +8,13 @@ import { AutoLayoutTypeProps } from "./auto-layout-lib";
 export function AloSideBySideScrollLeft({
     childAry,
     layoutProps,
+    slotOptions,
 }:AutoLayoutTypeProps){
 
     return (
         <Fragment>
 
-            <AutoLayoutSlot flex1 index={0}>
+            <AutoLayoutSlot flex1 index={0} style={{minWidth:slotOptions.primarySize}}>
                 {childAry[0]}
             </AutoLayoutSlot>
 
@@ -22,7 +23,7 @@ export function AloSideBySideScrollLeft({
                 ...getObjKeyIntersection(layoutProps,baseLayoutGapProps)
             }}>
                 {childAry.map((c,i)=>i===0?null:(
-                    <AutoLayoutSlot flex1 index={i} key={i}>
+                    <AutoLayoutSlot flex1 index={i} key={i} style={{minHeight:slotOptions.stackingMinHeight,aspectRatio:slotOptions.stackingAspectRatio}}>
                         {c}
                     </AutoLayoutSlot>
                 ))}
