@@ -11,6 +11,9 @@ interface CodeViewProps
     noBg?:boolean;
 }
 
+/**
+ * @acIgnore
+ */
 export function CodeView({
     value,
     wrap,

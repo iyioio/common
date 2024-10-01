@@ -19,6 +19,9 @@ export interface LineNumbersProps
     pad?:any;
 }
 
+/**
+ * @acIgnore
+ */
 export function LineNumbers({
     count=1,
     errors,

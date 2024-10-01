@@ -46,6 +46,9 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
     highlightSuffix?:string;
 }
 
+/**
+ * @acIgnore
+ */
 export function CodeInput<P=any>({
     tab='    ',
     language:_language='auto',
