@@ -78,3 +78,33 @@ export const getElementOrDescendantByClassName=(node:Node|null|undefined,classNa
     }
     return null;
 }
+
+export const isElementVisible=(elem:Element|null|undefined):boolean=>{
+    if(!elem){
+        return false;
+    }
+    if(typeof elem.checkVisibility === 'function'){
+        return elem.checkVisibility({
+            contentVisibilityAuto:true,
+            contentVisibilityCss:true,
+            opacityProperty:true,
+            visibilityProperty:true
+        } as any)
+    }else{
+        const map=elem.computedStyleMap();
+        if( map.get('opacity')?.toString()==='0' ||
+            map.get('visibility')?.toString()==='hidden'
+        ){
+            return false;
+        }
+        const rect=elem.getBoundingClientRect();
+        return (
+            rect.width &&
+            rect.height &&
+            rect.left<(globalThis.window?.innerWidth??0) &&
+            rect.right>=0 &&
+            rect.top<(globalThis.window?.innerHeight??0) &&
+            rect.bottom>=0
+        )?true:false
+    }
+}
