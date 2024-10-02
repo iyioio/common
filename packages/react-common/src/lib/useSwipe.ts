@@ -11,11 +11,18 @@ export type SwipeListener=(direction:SwipeDirection)=>void;
 export const useSwipe=(
     listener?:SwipeListener|DirectionInputCtrl,
     swipeTimeout=2000,
-    swipeDist=30
+    swipeDist=30,
+    listenToElem?:HTMLElement|null
 ):((listenTo:HTMLElement|null)=>void)=>{
 
-    const [listenTo,setListenTo]=useState<HTMLElement|null>(null);
+    const [listenTo,setListenTo]=useState<HTMLElement|null>(listenToElem??null);
     const dirCtrl=useDirectionInputCtrl();
+
+    useEffect(()=>{
+        if(listenToElem!==undefined){
+            setListenTo(listenToElem);
+        }
+    },[listenToElem]);
 
     const stateRef=useRef({listener,swipeTimeout,swipeDist,dirCtrl});
     stateRef.current.listener=listener;
