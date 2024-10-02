@@ -65,6 +65,7 @@ export * from "./lib/page-lib";
 export * from "./lib/portal-lib";
 export * from "./lib/react-util";
 export * from "./lib/rxjs-hooks";
+export * from "./lib/scene-react-lib";
 export * from "./lib/scope-hooks";
 export * from "./lib/store-hooks";
 export * from "./lib/story-lib";
