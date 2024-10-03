@@ -20,6 +20,7 @@ export interface HttpHandlerResult
     size?:number;
     redirect?:string;
     statusCode?:number;
+    buffer?:Buffer|Uint8Array|string;
 }
 
 export interface HttpRequestContext extends HttpRequestContextBase

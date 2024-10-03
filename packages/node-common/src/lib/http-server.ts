@@ -63,6 +63,7 @@ export const createHttpServer=({
         let json:any;
         let outPath:string|undefined;
         let stream:Readable|undefined;
+        let buffer:Buffer|Uint8Array|string|undefined;
         let keepStreamOpen:boolean|undefined;
         let outSize:number=0;
         let contentType:string|undefined;
@@ -127,6 +128,7 @@ export const createHttpServer=({
                     json=result.json;
                     html=result.html;
                     markdown=result.markdown;
+                    buffer=result.buffer;
                     text=result.text;
                     outPath=result.filePath;
                     stream=result.stream;
@@ -189,6 +191,10 @@ export const createHttpServer=({
                 text=JSON.stringify(getErrorMessage(ex));
             }
             res.end(text);
+        }else if(buffer){
+            res.statusCode=statusCode??200;
+            res.setHeader('Content-type',contentType??'text/plain');
+            res.end(buffer);
         }else if(stream){
             res.statusCode=statusCode??200;
             res.setHeader('Content-type',contentType??'text/plain');
