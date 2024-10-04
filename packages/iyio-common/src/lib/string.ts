@@ -223,3 +223,6 @@ export const strCaseInsensitiveCompare=(a:string|null|undefined,b:string|null|un
     return a.localeCompare(b,undefined,{sensitivity:'accent'})===0;
 }
 
+export const getStringWithMaxLength=(str:string,maxLength:number,cap:string='…')=>{
+    return str.length>maxLength?str.substring(0,maxLength-1)+cap:str;
+}
