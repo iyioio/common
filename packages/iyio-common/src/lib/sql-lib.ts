@@ -173,3 +173,11 @@ export const splitSqlStatements=(statements:string):string[]=>{
     }
     return split;
 }
+
+export const escapeSqlLikeValue=(value:string)=>{
+    return value.replace(/[%_\\]/g,v=>'\\'+v);
+}
+
+export const starStringToSqlLikeValue=(value:string)=>{
+    return value.replace(/[*%_\\]/g,v=>v==='*'?'%':'\\'+v);
+}
