@@ -1,5 +1,5 @@
 import { areShallowEqual, CancelToken, uiRouterService } from "@iyio/common";
-import { DependencyList, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { DependencyList, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 export function useAlphaId(){
     return useId().replace(/\W/g,'_');
@@ -15,7 +15,7 @@ export function useAsync<T,D>(
     const [value,setValue]=useState<T|D>(defaultValue);
     const cb=useCallback(asyncCallback,deps);// eslint-disable-line
     const cancel=useMemo(()=>new CancelToken(),[]);
-    useLayoutEffect(()=>{
+    useEffect(()=>{
         return cancel.cancelNow;
     },[cancel]);
 
