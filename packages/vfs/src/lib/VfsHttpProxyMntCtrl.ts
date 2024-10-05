@@ -1,4 +1,4 @@
-import { HttpClient, getObjKeyCount, httpClient, joinPaths, objectToQueryParamsJson } from "@iyio/common";
+import { HttpClient, NotFoundError, getObjKeyCount, httpClient, joinPaths, objectToQueryParamsJson } from "@iyio/common";
 import { VfsCtrl } from "./VfsCtrl";
 import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
 import { vfsMntTypes } from "./vfs-lib";
@@ -80,7 +80,7 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
     {
         const item=await this.getHttpClient().getAsync<VfsItem>(this.getUrl(sourceUrl,'item'));
         this.setItemUrl(item);
-        return item;
+        return item??undefined;
     }
 
     protected override _readDirAsync=async (fs:VfsCtrl,mnt:VfsMntPt,options:VfsDirReadOptions,sourceUrl:string|undefined):Promise<VfsDirReadResult>=>
@@ -123,6 +123,9 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
         const r=await this.getHttpClient().getAsync<string>(this.getUrl(sourceUrl,'string'));
         if(r===undefined){
             throw new Error('vfs api did not return a result');
+        }
+        if(r===null){
+            throw new NotFoundError();
         }
         return r;
     }

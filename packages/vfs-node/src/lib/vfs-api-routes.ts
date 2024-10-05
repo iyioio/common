@@ -1,4 +1,4 @@
-import { BadRequestError, asArray, escapeRegex, getContentType, parseObjectQueryJsonValue, safeParseNumberOrUndefined } from "@iyio/common";
+import { BadRequestError, NotFoundError, asArray, escapeRegex, getContentType, parseObjectQueryJsonValue, safeParseNumberOrUndefined } from "@iyio/common";
 import { HttpRoute, createHttpHandlerResult } from "@iyio/node-common";
 import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt, vfs } from "@iyio/vfs";
 
@@ -71,7 +71,7 @@ export const createVfsApiRoutes=({
 
                 return await getFs().getItemAsync(path,{
                     includeSize:query['includeSize']==='true'
-                })
+                })??null;
 
             }
         },
@@ -169,7 +169,14 @@ export const createVfsApiRoutes=({
 
                 const path=getPath(query);
 
-                return await getFs().readStringAsync(path);
+                try{
+                    return await getFs().readStringAsync(path);
+                }catch(ex){
+                    if(ex instanceof NotFoundError){
+                        return null;
+                    }
+                    throw ex;
+                }
 
             }
         },
