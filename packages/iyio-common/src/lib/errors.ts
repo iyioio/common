@@ -186,3 +186,11 @@ export class InternalServerError extends BaseError
         super(ErrorType.internalServerError,message);
     }
 }
+
+export class PaymentRequiredError extends BaseError
+{
+    public constructor(message?:string)
+    {
+        super(ErrorType.paymentRequired,message);
+    }
+}
