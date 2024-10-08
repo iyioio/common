@@ -14,7 +14,8 @@ export const allAutoLayoutTypes=[
     'quad',
     '2x3',
     '3x2',
-    '3x3'
+    '3x3',
+    'autoGrid',
 ] as const;
 
 export type AutoLayoutType=typeof allAutoLayoutTypes[number];

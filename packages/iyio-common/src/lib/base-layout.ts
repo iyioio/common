@@ -22,6 +22,7 @@ export const baseLayoutAnimationProps={
     transOpacity:'ioTransOpacity',
     transColor:'ioTransColor',
     transBackgroundColor:'ioTransBackgroundColor',
+    transVisibility:'ioTransVisibility',
     transCommon:'ioTransCommon'
 } as const;
 Object.freeze(baseLayoutAnimationProps);
@@ -625,7 +626,11 @@ export const baseLayoutUtilProps={
     opacity050:'ioOpacity050',
     opacity075:'ioOpacity075',
     opacity1:'ioOpacity1',
+    opacityHidden:'ioOpacityHidden',
     semiTransparent:'ioSemiTransparent',
+    visHidden:'ioVisHidden',
+    visCollapsed:'ioVisCollapsed',
+    visVisible:'ioVisVisible',
     unsetAll:'ioUnsetAll',
 
 } as const;

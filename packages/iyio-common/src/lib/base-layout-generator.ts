@@ -660,6 +660,11 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('opacity050','opacity:0.5')
     add('opacity075','opacity:0.75')
     add('opacity1','opacity:1')
+    add('opacityHidden','visibility:hidden !important;opacity:0 !important')
+    add('visHidden','visibility:hidden !important')
+    add('visCollapsed','visibility:collapse !important')
+    add('visVisible','visibility:visible !important')
+    add('opacity1','opacity:1')
     add('semiTransparent',`opacity:${semiTransparency}`)
 
     if(includeAnimations){
@@ -668,7 +673,8 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
         forAnimation('transOpacity','opacity _ ease-in-out');
         forAnimation('transColor','color _ ease-in-out, fill _ ease-in-out');
         forAnimation('transBackgroundColor','background-color _ ease-in-out');
-        forAnimation('transCommon','transform _ ease-in-out, opacity _ ease-in-out, color _ ease-in-out, fill _ ease-in-out, background-color _ ease-in-out');
+        forAnimation('transVisibility','background-color _ ease-in-out');
+        forAnimation('transCommon','transform _ ease-in-out, opacity _ ease-in-out, color _ ease-in-out, fill _ ease-in-out, background-color _ ease-in-out, visibility _ ease-in-out');
     }
 
     if(appendCss){
