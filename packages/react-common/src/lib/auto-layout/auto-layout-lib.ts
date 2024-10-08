@@ -1,4 +1,5 @@
 import { BaseLayoutProps } from "@iyio/common";
+import { CSSProperties } from "react";
 import { AutoLayoutCtrl } from "./AutoLayoutCtrl";
 
 export interface AutoLayoutSlotOptions
@@ -6,6 +7,8 @@ export interface AutoLayoutSlotOptions
     stackingMinHeight?:string;
     stackingAspectRatio?:string;
     primarySize?:string;
+    minSize?:string;
+    maxSize?:string;
 }
 
 export interface AutoLayoutTypeProps
@@ -21,4 +24,5 @@ export interface AutoLayoutCompInfo
 {
     comp:any;
     className?:string;
+    style?:CSSProperties;
 }

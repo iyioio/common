@@ -36,6 +36,8 @@ export function AutoLayout({
     stackingMinHeight,
     stackingAspectRatio,
     primarySize,
+    minSize,
+    maxSize,
     ...props
 }:AutoLayoutProps & BaseLayoutProps){
 
@@ -52,13 +54,17 @@ export function AutoLayout({
         {
             stackingMinHeight,
             stackingAspectRatio,
-            primarySize
+            primarySize,
+            minSize,
+            maxSize,
         }
     );
 
 
     return (
-        <div className={style.root({[type]:true},info?.className,props)}>
+        <div className={style.root({[type]:true},info?.className,props)} style={{...style.vars({
+            minSize,maxSize,
+        }),...info?.style}}>
 
             {info?.comp??childAry.map((c,i)=>(
                 <AutoLayoutSlot key={i} index={i}>{c}</AutoLayoutSlot>
@@ -84,5 +90,9 @@ const style=atDotCss({name:'AutoLayout',namespace:'iyio',order:'framework',css:`
     }
     @.root.colReverse{
         flex-direction:column-reverse;
+    }
+    @._{
+        a:@@minSize;
+        b:@@maxSize;
     }
 `});
