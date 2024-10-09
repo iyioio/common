@@ -15,6 +15,7 @@ import { buildQuery } from "./sql-query-builder";
 import { IStore } from "./store-types";
 import { storeRoot } from "./store.deps";
 
+const cloneMaxDepth=100;
 
 export interface QueryCtrlError
 {
@@ -214,7 +215,7 @@ export class QueryCtrl<T=any>
         if(!state){
             return;
         }
-        const q=deepClone(state.query);
+        const q=deepClone(state.query,cloneMaxDepth);
         if(update(q,state)===false){
             return;
         }
@@ -226,7 +227,7 @@ export class QueryCtrl<T=any>
         const totalQuery:Query={
             table:query.table,
             tableAs:query.tableAs,
-            condition:deepClone(query.condition),
+            condition:deepClone(query.condition,cloneMaxDepth),
             columns:[{func:'count',name:'count'}]
         }
         if(prev?.query && prev?.total!==undefined && deepCompare(totalQuery,prev?.totalQuery)){
