@@ -112,6 +112,7 @@ export * from './lib/http-types';
 export * from './lib/http.deps';
 export * from './lib/httpParamsModule';
 export * from './lib/json';
+export * from './lib/json-code-parse';
 export * from './lib/json-scheme';
 export * from './lib/jwt';
 export * from './lib/jwt-lib';
