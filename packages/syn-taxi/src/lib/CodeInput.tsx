@@ -190,7 +190,7 @@ export function CodeInput<P=any>({
                         }]}).replace(
                             /class="[^"]*CodeInput-errorLine[^"]*"[^>]*>/g,
                             v=>`${v}<div class="CodeInput-error">${
-                                escapeHtml(r.error?.message??'')
+                                escapeHtml(r.error?.message?.replace(/\n/g,'\\n').replace(/\r/g,'\\r')??'')
                             }</div><div class="CodeInput-errorCol">${
                                 '&nbsp;'.repeat((r.error?.col??0)-1)+'_'
                             }</div>`
