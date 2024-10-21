@@ -494,6 +494,9 @@ export class AnyCompWatcher
         }
 
         const insertOffset=lines.length;
+        if(!(this.disableLazyLoading || !includeImports)){
+            lines.push('const L=(props:any)=><span className="any-comp-loading-placeholder">{props?.children}</span>');
+        }
         lines.push(`export const ${exportName}:any={`);
         lines.push('    comps:[');
 
@@ -530,7 +533,7 @@ export class AnyCompWatcher
                     lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,(includeImports?`(props:any)=><Comp${index} {...props}/>`:'null')+`,props:[${propsStrAry.join(',')}]`)},`)
                 }else{
                     lines.splice(index+insertOffset,0,`const Comp${index}=lazy(()=>import('${comp.path.replace(/\.\w+$/,'')}').then(c=>({default:c.${comp.isDefaultExport?'default':comp.name} as any})));`);
-                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,`(props:Record<string,any>,placeholder:any=<h1>Loading ${comp.name}</h1>)=><Suspense fallback={placeholder}><Comp${index} {...props}/></Suspense>,props:[${propsStrAry.join(',')}]`)},`)
+                    lines.push(`        ${JSON.stringify(comp).replace(`"${compBodyPlaceholder}"`,`(props:Record<string,any>,placeholder:any=<L>${comp.name}</L>)=><Suspense fallback={placeholder}><Comp${index} {...props}/></Suspense>,props:[${propsStrAry.join(',')}]`)},`)
                 }
                 comp.props=props;
                 index++;
