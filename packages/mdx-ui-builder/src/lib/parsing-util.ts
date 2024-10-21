@@ -1,5 +1,5 @@
 import { deepClone } from "@iyio/common";
-import { compile } from "@mdx-js/mdx";
+import { compileSync } from "./_compile";
 import { MdxUiAtt, MdxUiNode } from "./mdx-ui-builder-types";
 
 const cache:Record<string,MdxUiNode>={};
@@ -13,7 +13,7 @@ const getTemplate=(template:string)=>{
 
     let div:MdxUiNode|undefined;
 
-    compile(template,{
+    compileSync(template,{
         rehypePlugins:[()=>{
 
             return (tree:MdxUiNode,file,next)=>{

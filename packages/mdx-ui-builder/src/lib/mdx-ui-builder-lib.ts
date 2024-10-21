@@ -1,6 +1,6 @@
 import { Statement } from 'estree-jsx';
 import { parse as parseJson } from 'json5';
-import { MdxUiAtt, MdxUiDeconstructProp, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiCachedComponent, MdxUiDeconstructProp, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
 
@@ -288,4 +288,14 @@ export const getMdxUiNodeText=(node:MdxUiNode):string=>{
         }
     }
     return text;
+}
+
+export const isMdxUiCachedComponentExpired=(comp:MdxUiCachedComponent|null|undefined):boolean=>{
+    if(!comp){
+        return true;
+    }
+    if(comp.ttl===undefined){
+        return false;
+    }
+    return comp.ttl>Date.now();
 }

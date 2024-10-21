@@ -3,8 +3,8 @@ import { parse as parseJson5 } from 'json5';
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
 import { MdxUiTextEditor } from "./MdxUiTextEditor";
-import { areMdxUiSelectionEqual, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
-import { MdxUiAtt, MdxUiBuilderState, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiDragDropSource, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
+import { areMdxUiSelectionEqual, isMdxUiCachedComponentExpired, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
+import { MdxUiAtt, MdxUiBuilderState, MdxUiCachedComponent, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentCache, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiDragDropSource, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
 import { compileMdxUiAsync } from "./mdx-ui-compiler";
 
 let instId=0;
@@ -35,9 +35,17 @@ export interface MdxUiBuilderOptions
     liveComponentGenerator?:MdxUiLiveComponentGenerator;
 
     setCodeOnSubmit?:boolean;
+
+    cache?:MdxUiComponentCache;
+
+    cacheKey?:string;
+
+    cacheTtl?:number;
+
+    disableCacheWrite?:boolean;
 }
 
-type OptionalProps='reactImports'|'liveComponentGenerator'|'compilerOptions';
+type OptionalProps='reactImports'|'liveComponentGenerator'|'compilerOptions'|'cache'|'cacheKey'|'cacheTtl';
 type OmitProps='highlighter';
 
 export class MdxUiBuilder
@@ -146,8 +154,6 @@ export class MdxUiBuilder
         this._dragDropSource.next(value);
     }
 
-
-
     public constructor({
         highlighter={},
         compileDelayMs=16,
@@ -155,7 +161,11 @@ export class MdxUiBuilder
         reactImports=undefined,
         liveComponentGenerator,
         compilerOptions,
+        cache,
+        cacheKey,
+        cacheTtl,
         setCodeOnSubmit=false,
+        disableCacheWrite=false,
     }:MdxUiBuilderOptions={}){
         this.instId=++instId;
         this.options={
@@ -165,6 +175,10 @@ export class MdxUiBuilder
             liveComponentGenerator,
             compilerOptions,
             setCodeOnSubmit,
+            cache,
+            cacheKey,
+            cacheTtl,
+            disableCacheWrite,
         }
         this.highlighter=new MdxUiHighlighter(highlighter,this);
         this.disposables.add(this.highlighter);
@@ -386,10 +400,21 @@ export class MdxUiBuilder
             return;
         }
 
-        const code=this.code;
+        let cached:MdxUiCachedComponent|undefined;
+        if(this.options.cacheKey && this.options.cache){
+            cached=this.options.cache.getCompSync(this.options.cacheKey,this.options.cacheTtl);
+            if(!cached){
+                cached=await this.options.cache.getCompAsync(this.options.cacheKey,this.options.cacheTtl);
+            }
+            if(isMdxUiCachedComponentExpired(cached)){
+                cached=undefined;
+            }
+        }
+
+        const code=cached?.compileResult?.code??this.code;
         const injections=this.injections;
 
-        if(code==null){
+        if(code==null || code===undefined){
             this._state.next({status:'ready',compileId});
             return;
         }
@@ -407,9 +432,18 @@ export class MdxUiBuilder
         this._state.next({status:'compiling',compileId});
 
         try{
-            const sourceMap=this.options.compilerOptions?.sourceMap===true?{}:(this.options.compilerOptions?.sourceMap??{});
-            sourceMap.idPrefix=this.instId+'-';
-            const compiled=await compileMdxUiAsync(
+            const sourceMap=(
+                this.options.compilerOptions?.sourceMap===false?
+                    undefined
+                :this.options.compilerOptions?.sourceMap===true?
+                    {}
+                :
+                    (this.options.compilerOptions?.sourceMap??{})
+            );
+            if(sourceMap){
+                sourceMap.idPrefix=this.instId+'-';
+            }
+            const compiled=cached?.compileResult??await compileMdxUiAsync(
                 ((injections?.prefix || injections?.suffix)?
                     (injections.prefix??'')+code+(injections.suffix??'')
                 :
@@ -432,10 +466,22 @@ export class MdxUiBuilder
 
             let live:MdxUiComponentFn|undefined;
             if(this.options.enableLiveComponents && this.options.reactImports){
-                live=await this.createLiveComponentAsync(compiled,this.options.reactImports);
+                live=cached?.Comp??await this.createLiveComponentAsync(compiled,this.options.reactImports);
                 if(compileId!==this.compileId){
                     return;
                 }
+                if(cached && !cached.Comp){
+                    cached.Comp=live;
+                }
+            }
+
+            let putCachedPromise:Promise<any>|undefined;
+            if(this.options.cache && this.options.cacheKey && !cached?.compileResult && !this.options.disableCacheWrite){
+                putCachedPromise=this.options.cache.putCompAsync(
+                    this.options.cacheKey,
+                    compiled,
+                    this.options.cacheTtl
+                );
             }
 
             const liveRef:MdxUiComponentFnRef|undefined=live?{Comp:live,compileId}:undefined;
@@ -451,6 +497,7 @@ export class MdxUiBuilder
             if(selection){
                 this.reselect(selection);
             }
+            await putCachedPromise;
         }catch(ex){
             if(compileId!==this.compileId){
                 return;

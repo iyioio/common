@@ -1,5 +1,5 @@
 import { aryRemoveItem, deepClone, strHashBase64Fs } from "@iyio/common";
-import { compile } from "@mdx-js/mdx";
+import { compileAsync, loadMdxJsAsync } from "./_compile";
 import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, getMdxUiNodeText, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
 import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types";
 import { getWrapper, wrapClassName } from "./parsing-util";
@@ -19,6 +19,8 @@ export const compileMdxUiAsync=async (code:string,{
     maxProxyDepth=30,
 }:MdxUiCompileOptions={}):Promise<MdxUiCompileResult>=>{
 
+    await loadMdxJsAsync();
+
     const hasStyle=/(^|\n)\s*```\s*style\W/.test(code);
     if(sourceMap===true){
         sourceMap={}
@@ -31,7 +33,7 @@ export const compileMdxUiAsync=async (code:string,{
     const {
         lookupClassNamePrefix=defaultMdxUiClassNamePrefix,
         idPrefix='',
-    }=(sourceMapOptions??{});
+    }=(sourceMapOptions||{});
 
     const cOptions=mdxJsOptions?{...mdxJsOptions}:{};
 
@@ -149,7 +151,7 @@ export const compileMdxUiAsync=async (code:string,{
         });
     }
 
-    const file=await compile(code,cOptions);
+    const file=await compileAsync(code,cOptions);
 
     if(typeof file.value !== 'string'){
         throw new Error('compile value is not a string')

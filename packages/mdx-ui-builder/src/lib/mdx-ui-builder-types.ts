@@ -1,4 +1,5 @@
-import { CompileOptions } from "@mdx-js/mdx";
+import type { CompileOptions } from "@mdx-js/mdx";
+import { Observable } from "rxjs";
 
 export interface MdxUiCompileOptions
 {
@@ -10,7 +11,7 @@ export interface MdxUiCompileOptions
     /**
      * Source map options
      */
-    sourceMap?:MdxUiSourceMapOptions|true;
+    sourceMap?:MdxUiSourceMapOptions|boolean;
 
     /**
      * Replaces import statements with code.
@@ -97,6 +98,29 @@ export type MdxUiLiveComponentGenerator=(importReplacement:MdxUiImportReplacemen
 export interface MdxUiComponentFnRef{
     Comp:MdxUiComponentFn;
     compileId:number;
+}
+
+/**
+ * A reference to a cached compiled component
+ */
+export interface MdxUiCachedComponent{
+    compileResult?:MdxUiCompileResult;
+    Comp?:MdxUiComponentFn;
+    ttl?:number;
+}
+
+export interface MdxUiComponentCacheMissEvt
+{
+    key:string;
+    type:'sync'|'async';
+}
+
+export interface MdxUiComponentCache
+{
+    onEventCacheMiss:Observable<MdxUiComponentCacheMissEvt>;
+    getCompSync:(key:string,ttl?:number)=>MdxUiCachedComponent|undefined;
+    getCompAsync:(key:string,ttl?:number)=>Promise<MdxUiCachedComponent|undefined>;
+    putCompAsync:(key:string,compileResult:MdxUiCompileResult,ttl?:number)=>Promise<void>;
 }
 
 export interface MdxUiCompileResult

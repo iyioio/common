@@ -28,6 +28,7 @@ export interface MdxUiBuilderViewProps
     styleName?:string;
     disableHighlighting?:boolean;
     isPreview?:boolean;
+    fallback?:any;
 }
 
 export function MdxUiBuilderView({
@@ -48,6 +49,7 @@ export function MdxUiBuilderView({
     styleName,
     disableHighlighting,
     isPreview,
+    fallback,
     ...props
 }:MdxUiBuilderViewProps & BaseLayoutProps){
 
@@ -175,12 +177,12 @@ export function MdxUiBuilderView({
                             {getErrorMessage(err)}
                         </View>
                     )}>
-                        {Comp && <Comp
+                        {Comp?<Comp
                             hookCtrl={hookCtrl}
                             comp={hookCtrl.state}
                             isPreview={isPreview}
                             {...compProps}
-                        />}
+                        />:fallback}
                     </ErrorBoundary>
 
                     {error && !hideError && <MdxUiBuilderErrorView absBottomCenter m1 error={error} />}
