@@ -3,7 +3,8 @@ import { MdxUiCachedComponent, MdxUiCompileResult, MdxUiComponentCache, MdxUiCom
 import { vfs } from '@iyio/vfs';
 import { Subject } from "rxjs";
 
-const ext='.compiled.json';
+export const mdxUiVfsCachedCompExt='.compiled.json';
+
 
 export const createVfsMdxUiComponentCache=(baseDir='/component-cache'):MdxUiComponentCache=>{
 
@@ -31,7 +32,7 @@ export const createVfsMdxUiComponentCache=(baseDir='/component-cache'):MdxUiComp
             }
             p=(async ()=>{
 
-                const loaded=await vfs().readObjectAsync(joinPaths(baseDir,key+ext));
+                const loaded=await vfs().readObjectAsync(joinPaths(baseDir,key+mdxUiVfsCachedCompExt));
                 if(!loaded){
                     onEventCacheMiss?.next({
                         key,
@@ -62,7 +63,7 @@ export const createVfsMdxUiComponentCache=(baseDir='/component-cache'):MdxUiComp
             loadCache[key]=Promise.resolve(cached);
             cache[key]=cached;
 
-            await vfs().writeObjectAsync(joinPaths(baseDir,key+ext),cached);
+            await vfs().writeObjectAsync(joinPaths(baseDir,key+mdxUiVfsCachedCompExt),cached);
         }
     }
 }

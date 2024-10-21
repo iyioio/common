@@ -42,6 +42,8 @@ export interface MdxUiBuilderOptions
 
     cacheTtl?:number;
 
+    disableCacheRead?:boolean;
+
     disableCacheWrite?:boolean;
 }
 
@@ -166,6 +168,7 @@ export class MdxUiBuilder
         cacheTtl,
         setCodeOnSubmit=false,
         disableCacheWrite=false,
+        disableCacheRead=false,
     }:MdxUiBuilderOptions={}){
         this.instId=++instId;
         this.options={
@@ -179,6 +182,7 @@ export class MdxUiBuilder
             cacheKey,
             cacheTtl,
             disableCacheWrite,
+            disableCacheRead,
         }
         this.highlighter=new MdxUiHighlighter(highlighter,this);
         this.disposables.add(this.highlighter);
@@ -401,7 +405,7 @@ export class MdxUiBuilder
         }
 
         let cached:MdxUiCachedComponent|undefined;
-        if(this.options.cacheKey && this.options.cache){
+        if(this.options.cacheKey && this.options.cache && !this.options.disableCacheRead){
             cached=this.options.cache.getCompSync(this.options.cacheKey,this.options.cacheTtl);
             if(!cached){
                 cached=await this.options.cache.getCompAsync(this.options.cacheKey,this.options.cacheTtl);
