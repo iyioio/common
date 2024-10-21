@@ -71,6 +71,8 @@ export const useVfsString=(pathOrItem:string|VfsItem|null|undefined):string|null
             if(m){
                 setValue(v);
             }
+        }).catch(()=>{
+            //
         })
         return ()=>{
             m=false;
