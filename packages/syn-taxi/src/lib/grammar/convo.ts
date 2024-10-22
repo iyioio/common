@@ -212,7 +212,7 @@ export const convoGrammar={
             ]
         },
         "tag":{
-            "match":"(@)\\s*(\\w*)\\s*=?(.*)",
+            "match":"^\\s*(@)\\s*(\\w*)\\s*=?(.*)",
             "captures":{
                 "1":{
                     "name":"entity.name.tag"
@@ -324,17 +324,15 @@ export const convoGrammar={
             ]
         },
         "markdownLink":{
-            "begin":"!?\\[",
-            "end":"(\\]\\()([^\\)]*)(\\))",
-            "beginCaptures":{
-                "0":{"name":"keyword.control"}
-            },
-            "endCaptures":{
+            "match":"(\\[)([^\\]]*)(\\])(\\()([^\\)]*)(\\))",
+            "captures":{
                 "1":{"name":"keyword.control"},
-                "2":{"name":"string"},
-                "3":{"name":"keyword.control"}
-            },
-            "contentName":"comment"
+                "2":{"name":"comment"},
+                "3":{"name":"keyword.control"},
+                "4":{"name":"keyword.control"},
+                "5":{"name":"string"},
+                "6":{"name":"keyword.control"}
+            }
         },
         "stringBackslash":{
             "match":"(\\\\)\\\\",
@@ -425,7 +423,7 @@ export const convoGrammar={
                 {"include": "#fenced_code_block_json"},
                 {"include": "#fenced_code_block_xml"},
                 {"include": "#fenced_code_block_js"},
-                {"include": "#fenced_code_block_python"},
+                {"include": "#fenced_code_block_python"}
             ]
         },
 
@@ -563,7 +561,7 @@ export const convoGrammar={
           ]
         }
       ]
-    },
+    }
 
 
     }
