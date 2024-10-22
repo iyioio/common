@@ -24,3 +24,5 @@ export const encodeURIFormBody=(body:any):string=>{
 
     return formBody.join('&');
 }
+
+export const defaultHttpClientMaxRetries=5;

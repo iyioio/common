@@ -79,6 +79,12 @@ export interface HttpClientRequestOptions
      * If true body should be passed directly
      */
     rawBody?:boolean;
+
+    /**
+     * The max number of times the request should be retired in the case of an error
+     * @default 5
+     */
+    maxRetries?:number;
 }
 
 export interface HttpFetcher{

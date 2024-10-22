@@ -1,4 +1,5 @@
 import { HashMap } from "./common-types";
+import { defaultHttpClientMaxRetries } from "./http-lib";
 import { HttpFetcher, HttpRequestSigner } from "./http-types";
 import { HttpClient } from "./HttpClient";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
@@ -15,5 +16,5 @@ export const httpBaseUrlMapParam=defineParam<HashMap<string>>('httpBaseUrlMap',s
 export const httpBaseUrlPrefixParam=defineStringParam('httpBaseUrlPrefix');
 export const httpLogRequestsParam=defineBoolParam('httpLogRequests');
 export const httpLogResponsesParam=defineBoolParam('httpLogResponses');
-export const httpMaxRetriesParam=defineNumberParam('httpMaxRetries',5);
+export const httpMaxRetriesParam=defineNumberParam('httpMaxRetries',defaultHttpClientMaxRetries);
 export const httpRetryDelayMsParam=defineNumberParam('httpRetryDelayMs',500);

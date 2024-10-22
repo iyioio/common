@@ -180,6 +180,7 @@ export class HttpClient
             log,
             ignoreErrors,
             rawBody,
+            maxRetries,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -197,7 +198,7 @@ export class HttpClient
 
         const jwt=noAuth?undefined:this.options.jwtProviders?.getFirst(null,p=>p(uri));
 
-        const maxTries=this.options.maxRetries??1;
+        const maxTries=Math.max(1,maxRetries??this.options.maxRetries??1);
 
         let response:Response|undefined;
 
