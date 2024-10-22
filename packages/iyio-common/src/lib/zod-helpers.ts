@@ -205,7 +205,7 @@ export const zodCoerceNullDbValuesInObject=<T>(scheme:ZodSchema<T>,obj:Record<st
 
 const cacheKey=Symbol('zodHelperCacheKey');
 
-export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=10,cache=true):JsonScheme|undefined=>{
+export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=50,cache=true):JsonScheme|undefined=>{
     const cached=cache?(scheme as any)[cacheKey]:undefined;
     if(cached){
         return cached;
