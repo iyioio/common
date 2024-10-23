@@ -324,7 +324,7 @@ export const convoGrammar={
             ]
         },
         "markdownLink":{
-            "match":"(\\[)([^\\]]*)(\\])(\\()([^\\)]*)(\\))",
+            "match":"(!?\\[)([^\\]]*)(\\])(\\()([^\\)]*)(\\))",
             "captures":{
                 "1":{"name":"keyword.control"},
                 "2":{"name":"comment"},
