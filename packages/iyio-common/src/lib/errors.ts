@@ -55,7 +55,7 @@ export enum ErrorType{
 
 }
 
-export abstract class BaseError extends Error
+export class BaseError extends Error
 {
     public readonly cErrT:ErrorType;
 
