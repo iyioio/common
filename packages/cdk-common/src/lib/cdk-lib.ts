@@ -103,6 +103,9 @@ export const getDefaultVpc=(scope:Construct,name='DefaultVpc')=>{
 }
 
 export const setDefaultVpc=(vpc:ec2.IVpc)=>{
+    if(vpc===defaultVpc){
+        return;
+    }
     if(defaultVpc){
         throw new Error('Default VPC already set')
     }
