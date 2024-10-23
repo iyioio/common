@@ -1,6 +1,6 @@
 import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
-import { HttpBaseUrlPrefixNotFoundError } from "./errors";
+import { BaseError, HttpBaseUrlPrefixNotFoundError } from "./errors";
 import { encodeURIFormBody } from "./http-lib";
 import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
 import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps";
@@ -202,6 +202,8 @@ export class HttpClient
 
         let response:Response|undefined;
 
+        let lastStatusCode=200;
+
         for(let t=0;t<maxTries;t++){
             const baseRequest:BaseHttpRequest={
                 uri,
@@ -231,6 +233,8 @@ export class HttpClient
                 }
                 response=await fetcher.fetchAsync(baseRequest);
 
+                lastStatusCode=response.status;
+
                 if(returnFetchResponse){
                     return response as any;
                 }
@@ -240,7 +244,10 @@ export class HttpClient
                 }
 
                 if(response.status>=500 && response.status<=599){
-                    throw new Error(`Request failed with a status of ${response.status}. uri=${uri}`);
+                    throw new BaseError(
+                        lastStatusCode,
+                        `Request failed with a status of ${response.status}. uri=${uri}`
+                    );
                 }
 
                 break;
@@ -254,11 +261,11 @@ export class HttpClient
         }
 
         if(!response){
-            throw new Error(`Max http retries reached. max = ${maxTries}`)
+            throw new BaseError(lastStatusCode,`Max http retries reached. max = ${maxTries}`)
         }
 
         if(!response.ok && !ignoreErrors){
-            throw new Error(`Request failed with a status of ${response.status}. uri=${uri}`)
+            throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}`)
         }
 
         if(!parseResponse || !response.headers.get('Content-Type')?.includes('/json')){
