@@ -17,6 +17,9 @@ export const joinPaths=(... paths:string[]):string=>
         path+=(part[0]==='/'?'':'/')+part;
         if(path.endsWith('/')){
             path=path.substring(0,path.length-1);
+            if(!path){
+                path='/';
+            }
         }
     }
     return path;
