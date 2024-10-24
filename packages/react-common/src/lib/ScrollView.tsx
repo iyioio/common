@@ -1,7 +1,12 @@
 import { atDotCss } from "@iyio/at-dot-css";
+import { Point } from "@iyio/common";
 import { UIEvent, useEffect, useRef, useState } from "react";
 import { View, ViewProps } from "./View";
 import { useElementSize } from "./useElementSize";
+
+
+const scrollHistoryStoreKey='iyio.ScrollView.scrollHistory.';
+const scrollHistory:Record<string,Point>={}
 
 
 export type ScrollViewDirection='y'|'x'|'both';
@@ -38,6 +43,20 @@ export interface ScrollViewProps extends ViewProps
      * be flex columns with a flex value set to 1.
      */
     byPassFlex1?:boolean;
+
+    /**
+     * When defined the scroll position will persist while the current page is loaded.
+     * To persist scroll position between page loads set persistScrollHistory to true.
+     */
+    scrollHistoryKey?:string;
+
+    /**
+     * If true scroll position will persist between page loads. scrollHistoryKey must also be
+     * set for scroll history to be enabled.
+     */
+    persistScrollHistory?:boolean;
+
+    scrollHistoryBehavior?:ScrollBehavior;
 }
 
 export function ScrollView({
@@ -64,6 +83,9 @@ export function ScrollView({
     byPass,
     byPassFlex1,
     onScroll,
+    scrollHistoryKey,
+    persistScrollHistory,
+    scrollHistoryBehavior='instant',
     ...props
 }:ScrollViewProps){
 
@@ -157,6 +179,68 @@ export function ScrollView({
         autoScrollXOffset,
         autoScrollYOffset,
     ]);
+
+    useEffect(()=>{
+        if(!overflowContainer || !scrollHistoryKey){
+            return;
+        }
+        console.log('hio 👋 👋 👋 watch scroll',scrollHistoryKey);
+        let m=true;
+        let ready=false;
+        const key=scrollHistoryStoreKey+scrollHistoryKey;
+
+        const listener=()=>{
+            if(!m || !ready){
+                return;
+            }
+            const pos:Point={x:overflowContainer.scrollLeft,y:overflowContainer.scrollTop};
+            console.log('hio 👋 👋 👋 scroll end',pos);
+            scrollHistory[key]=pos;
+            if(persistScrollHistory){
+                try{
+                    globalThis.localStorage?.setItem(key,JSON.stringify(pos));
+                }catch{
+                    //
+                }
+            }
+        }
+        overflowContainer.addEventListener('scrollend',listener);
+
+        let last=scrollHistory[key];
+        if(!last && persistScrollHistory){
+            const json=globalThis.localStorage?.getItem(key);
+            if(json){
+                try{
+                    last=JSON.parse(json);
+                }catch(ex){
+                    console.warn('Invalid ScrollView scroll history stored in local storage',ex);
+                }
+            }
+        }
+        if(last){
+            overflowContainer.scrollTo({left:last.x,top:last.y,behavior:scrollHistoryBehavior});
+            setTimeout(()=>{
+                if(m && last){
+                    overflowContainer.scrollTo({left:last.x,top:last.y,behavior:'smooth'});
+                }
+            },500);
+            setTimeout(()=>{
+                if(m && last){
+                    overflowContainer.scrollTo({left:last.x,top:last.y,behavior:'smooth'});
+                }
+                ready=true;
+            },1000);
+        }else{
+            ready=true;
+        }
+
+
+        return ()=>{
+            m=false;
+            overflowContainer.removeEventListener('scrollend',listener);
+        }
+
+    },[overflowContainer,scrollHistoryKey,scrollHistoryBehavior,persistScrollHistory]);
 
     const containerRef=containerProps?.elemRef;
     useEffect(()=>{
