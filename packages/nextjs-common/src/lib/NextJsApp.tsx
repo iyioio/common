@@ -15,6 +15,7 @@ export interface NextJsAppProps<TLayoutProps=DefaultLayoutProps> extends NextJsA
     afterLayout?:any;
     GlobalStyle?:FunctionComponent;
     initBeforeRenderLayout?:boolean;
+    componentOverride?:any;
 }
 
 export function NextJsApp({
@@ -25,6 +26,7 @@ export function NextJsApp({
         pageProps,
         router,
     },
+    componentOverride,
     children,
     afterLayout,
     GlobalStyle,
@@ -59,7 +61,7 @@ export function NextJsApp({
 
             {renderLayout &&
                 <LayoutComponent routeInfo={getRouteInfo(router)} {...layoutProps}>
-                    <Component {...pageProps}/>
+                    {componentOverride??<Component {...pageProps}/>}
                 </LayoutComponent>
             }
 
