@@ -7,6 +7,7 @@ import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsItem, VfsLocalFsConf
 export const vfsMntTypes={
     file:'file',
     httpProxy:'httpProxy',
+    indexDb:'indexDb',
 } as const;
 
 export const defaultVfsIgnoreFiles=[
@@ -156,7 +157,10 @@ export const normalizeVfsPath=(path:string):string=>{
     if(!path.startsWith('/')){
         path='/'+path;
     }
-    path=path.replace(bsReg,'/')
+    path=path.replace(bsReg,'/');
+    if(!path){
+        path='/';
+    }
     return path;
 }
 const bsReg=/\\/g;
