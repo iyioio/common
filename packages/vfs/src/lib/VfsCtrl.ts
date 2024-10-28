@@ -328,8 +328,11 @@ export class VfsCtrl
         return await ctrl.getItemAsync(this,mnt,path,getVfsSourceUrl(mnt,path),options);
     }
 
-    public async readDirAsync(options:VfsDirReadOptions):Promise<VfsDirReadResult>
+    public async readDirAsync(options:VfsDirReadOptions|string):Promise<VfsDirReadResult>
     {
+        if(typeof options === 'string'){
+            options={path:options}
+        }
         if(options.path.includes('*') && !options.filter?.match){
             let path=normalizeVfsPath(options.path);
             const div=path.lastIndexOf('/');
