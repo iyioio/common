@@ -54,6 +54,10 @@ export interface PanZoomViewProps
     disableScroll?:boolean;
     getCtrl?:(ctrl:PanZoomCtrl)=>void;
     /**
+     * If true the command or control key must be pressed in order for scrolling to work
+     */
+    ctrlScroll?:boolean;
+    /**
      * class names of elements to ignore touches from
      */
     ignoreClasses?:string|string[];
@@ -143,7 +147,8 @@ export function PanZoomView({
     bound,
     disableScroll,
     listenToKeys,
-    forcePreventDragSelection
+    forcePreventDragSelection,
+    ctrlScroll,
 }:PanZoomViewProps){
 
     const [rootElem,setRootElem]=useState<HTMLElement|null>(null);
@@ -546,7 +551,9 @@ export function PanZoomView({
 
         const listener=(e:WheelEvent)=>{
 
-            if(!isDomNodeDescendantOf(e.target as any,rootElem,true)){
+            if( !isDomNodeDescendantOf(e.target as any,rootElem,true) ||
+                (ctrlScroll && !e.ctrlKey && !e.metaKey)
+            ){
                 return;
             }
 
@@ -614,7 +621,7 @@ export function PanZoomView({
         }
 
 
-    },[onPoints,rootElem,disableScroll]);
+    },[onPoints,rootElem,disableScroll,ctrlScroll]);
 
 
     const [dragCover,setDragCover]=useState<HTMLElement|null>(null);
