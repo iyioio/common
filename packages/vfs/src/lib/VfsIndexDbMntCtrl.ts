@@ -306,16 +306,16 @@ export class VfsIndexDbMntCtrl extends VfsMntCtrl
 
         const srcPath=sourceUrl;
 
-        if(sourceUrl!=='/'){
-            try{
-                const s=await this.getItemByPath(sourceUrl);
-                if(s?.type!=='dir'){
-                    return createNotFoundVfsDirReadResult(options);
-                }
-            }catch{
-                return createNotFoundVfsDirReadResult(options);
-            }
-        }
+        // if(sourceUrl!=='/'){
+        //     try{
+        //         const s=await this.getItemByPath(sourceUrl);
+        //         if(s?.type!=='dir'){
+        //             return createNotFoundVfsDirReadResult(options);
+        //         }
+        //     }catch{
+        //         return createNotFoundVfsDirReadResult(options);
+        //     }
+        // }
         const itemsSource=await this.scanAsync<VfsItem>(fileSystemStoreName,item=>{
             return item.path.startsWith(srcPath) && !this.ignoreFilenames.includes(item.name) && testVfsFilter(item.name,options.filter)
         })
