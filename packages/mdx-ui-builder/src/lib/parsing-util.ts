@@ -16,7 +16,7 @@ const getTemplate=(template:string)=>{
     compileSync(template,{
         rehypePlugins:[()=>{
 
-            return (tree:MdxUiNode,file,next)=>{
+            return (tree:MdxUiNode,file:any,next:any)=>{
                 div=tree.children?.[0];
                 next();
             }

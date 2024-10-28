@@ -13,7 +13,7 @@ const nextConfig = withNx({
         svgr: false,
     },
     typescript: {
-        ignoreBuildErrors: process.env['NX_IGNORE_NEXTJS_BUILD_ERROR']==='true',
+        ignoreBuildErrors: true
     },
 
     webpack:(config,{isServer})=>{

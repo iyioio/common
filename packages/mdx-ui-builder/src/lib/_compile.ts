@@ -1,5 +1,5 @@
-import type { Compatible, VFile } from '@mdx-js/mdx/lib/compile';
-import type { CompileOptions } from '@mdx-js/mdx/lib/util/resolve-evaluate-options';
+import type { CompileOptions } from '@mdx-js/mdx';
+import { Compatible, VFile } from 'vfile';
 
 let mdxJs:{
     compile:(
