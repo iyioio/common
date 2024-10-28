@@ -184,7 +184,6 @@ export function ScrollView({
         if(!overflowContainer || !scrollHistoryKey){
             return;
         }
-        console.log('hio 👋 👋 👋 watch scroll',scrollHistoryKey);
         let m=true;
         let ready=false;
         const key=scrollHistoryStoreKey+scrollHistoryKey;
@@ -194,7 +193,6 @@ export function ScrollView({
                 return;
             }
             const pos:Point={x:overflowContainer.scrollLeft,y:overflowContainer.scrollTop};
-            console.log('hio 👋 👋 👋 scroll end',pos);
             scrollHistory[key]=pos;
             if(persistScrollHistory){
                 try{
