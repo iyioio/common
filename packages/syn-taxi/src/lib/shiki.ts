@@ -1,8 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Subject } from 'rxjs';
-import { Highlighter, BundledLanguage as Lang, createHighlighter } from 'shiki';
-import { bundledLanguages } from 'shiki/langs';
+import type { Highlighter, BundledLanguage as Lang } from 'shiki';
 import { atDotCssGrammar } from './grammar/atDotCss';
 import { convoGrammar } from './grammar/convo';
 import { mdxGrammar } from './grammar/mdx';
@@ -66,6 +65,8 @@ const _loadShikiLangAsync=async (
     }catch{
         //
     }
+
+    const bundledLanguages=(await import('shiki/langs')).bundledLanguages;
 
     const bundled=custom?[custom]:((await bundledLanguages[name as Lang]?.())?.default);
 
@@ -133,12 +134,15 @@ export const loadMdCodeBlocks=(lang:string,code:string):boolean=>{
 
 const codeBlockReg=/(^|\n)```\s*([\w\-]+)/g;
 
-export const getShikiAsync=():Promise<Highlighter>=>{
+export const getShikiAsync=async ():Promise<Highlighter>=>{
     if(!defaultHighlighter){
-        defaultHighlighter=createHighlighter({
-            themes:['dark-plus'],
-            langs:[],
-        });
+        defaultHighlighter=(async ()=>{
+            const sh=await import('shiki');
+            return sh.createHighlighter({
+                themes:['dark-plus'],
+                langs:[],
+            })
+        })();
     }
     return defaultHighlighter;
 }
