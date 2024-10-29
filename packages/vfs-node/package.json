@@ -1,6 +1,6 @@
 {
     "name": "@iyio/vfs-node",
-    "version": "0.6.3",
+    "version": "0.6.5",
     "type": "commonjs",
     "sideEffects": false
 }

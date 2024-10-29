@@ -1,6 +1,6 @@
 {
     "name": "@iyio/mdx-ui-builder",
-    "version": "0.6.3",
+    "version": "0.6.5",
     "type": "commonjs",
     "sideEffects": false
 }

@@ -38,6 +38,10 @@ export interface HttpRoute extends HttpRouteBase
     rawBody?:boolean;
 }
 
+export type HttpRouterRequest=IncomingMessage & {
+    body?:any;
+}
+
 export const isHttpHandlerResult=(value:any):value is HttpHandlerResult=>{
     return value?.[httpResultFlag]===true;
 }

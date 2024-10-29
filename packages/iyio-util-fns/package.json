@@ -1,6 +1,6 @@
 {
     "name": "@iyio/iyio-util-fns",
-    "version": "0.6.3",
+    "version": "0.6.5",
     "type": "commonjs",
     "sideEffects": false
 }

@@ -3,6 +3,7 @@ export * from "./lib/AlignmentTransition";
 export * from "./lib/AnimatedPageTransition";
 export * from "./lib/BaseAppContainer";
 export * from "./lib/BaseLayoutStyleSheet";
+export * from "./lib/BaseLayoutView";
 export * from "./lib/BasePage";
 export * from "./lib/ButtonBase";
 export * from "./lib/Carousel";
