@@ -1,4 +1,4 @@
-import { aiComplete } from "@iyio/ai-complete";
+import { aiComplete } from "@convo-lang/ai-complete";
 import { DisposeContainer, shortUuid } from "@iyio/common";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
 

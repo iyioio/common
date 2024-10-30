@@ -1,5 +1,5 @@
 {
-    "name": "@iyio/ai-complete-lambda",
+    "name": "@convo-lang/ai-complete-lambda",
     "version": "0.6.5",
     "type": "commonjs",
     "sideEffects": false

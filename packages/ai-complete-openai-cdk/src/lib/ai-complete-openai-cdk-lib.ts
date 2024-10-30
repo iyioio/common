@@ -1,4 +1,4 @@
-import { openAiModule } from '@iyio/ai-complete-openai';
+import { openAiModule } from '@convo-lang/ai-complete-openai';
 import { cognitoBackendAuthProviderModule } from "@iyio/aws-credential-providers";
 import { awsSecretsModule } from '@iyio/aws-secrets';
 import { EnvParams, ScopeModule, initRootScope } from "@iyio/common";

@@ -8,17 +8,17 @@ Better documentation is coming, Stay calm and code on.
 
 ## Packages
 
-- [@iyio/ai-complete](packages/ai-complete/README.md) - 
+- [@convo-lang/ai-complete](packages/ai-complete/README.md) - 
   An AI service adapter and proxy
 
-- [@iyio/ai-complete-lambda](packages/ai-complete-lambda/README.md) -
-  Lambda function used as a @iyio/ai-complete proxy for using ai-complete in the browser
+- [@convo-lang/ai-complete-lambda](packages/ai-complete-lambda/README.md) -
+  Lambda function used as a @convo-lang/ai-complete proxy for using ai-complete in the browser
 
-- [@iyio/ai-complete-openai](packages/ai-complete-openai/README.md) -
-  OpenAi completion provider for @iyio/ai-complete
+- [@convo-lang/ai-complete-openai](packages/ai-complete-openai/README.md) -
+  OpenAi completion provider for @convo-lang/ai-complete
 
-- [@iyio/ai-complete-openai-cdk](packages/ai-complete-openai-cdk/README.md) -
-  CDK construct used to deploy @iyio/ai-complete using OpenAi as a completion provider
+- [@convo-lang/ai-complete-openai-cdk](packages/ai-complete-openai-cdk/README.md) -
+  CDK construct used to deploy @convo-lang/ai-complete using OpenAi as a completion provider
 
 - [@iyio/any-comp](packages/any-comp/README.md) -
   A simplified version of story book with minimal dependencies

@@ -1,4 +1,4 @@
-import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, getLastNonCallAiCompleteMessage } from '@iyio/ai-complete';
+import { AiCompletionFunctionCallError, AiCompletionMessage, AiCompletionMessageType, AiCompletionOption, AiCompletionProvider, AiCompletionRequest, AiCompletionResult, getLastNonCallAiCompleteMessage } from '@convo-lang/ai-complete';
 import { FileBlob, Lock, Scope, SecretManager, asType, delayAsync, deleteUndefined, httpClient, parseMarkdownImages, secretManager, shortUuid, unused } from '@iyio/common';
 import { parse } from 'json5';
 import OpenAIApi, { toFile } from 'openai';

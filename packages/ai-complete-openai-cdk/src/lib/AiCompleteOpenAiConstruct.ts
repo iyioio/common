@@ -1,5 +1,5 @@
-import { aiCompletionFnArnParam, aiCompletionGetTokenQuotaFnArnParam } from '@iyio/ai-complete';
-import { openAiSecretsParam } from '@iyio/ai-complete-openai';
+import { aiCompletionFnArnParam, aiCompletionGetTokenQuotaFnArnParam } from '@convo-lang/ai-complete';
+import { openAiSecretsParam } from '@convo-lang/ai-complete-openai';
 import { FnInfo, FnsBuilder, ManagedProps, NodeFn, NodeFnProps, getDefaultManagedProps, grantTableQueryPerms } from '@iyio/cdk-common';
 import * as cdk from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
@@ -62,7 +62,7 @@ export class AiCompleteOpenAiConstruct extends Construct
             createProps:{
                 bundledHandlerFileNames:[
                     '../../dist/packages/ai-complete-openai-cdk/handlers/CompleteOpenAiPrompt',
-                    '../../node_modules/@iyio/ai-complete-openai-cdk/handlers/CompleteOpenAiPrompt',
+                    '../../node_modules/@convo-lang/ai-complete-openai-cdk/handlers/CompleteOpenAiPrompt',
                 ],
                 timeoutMs:1000*60*5,
                 ...defaultFnProps,
@@ -78,7 +78,7 @@ export class AiCompleteOpenAiConstruct extends Construct
                 createProps:{
                     bundledHandlerFileNames:[
                         '../../dist/packages/ai-complete-openai-cdk/handlers/GetAiCompleteTokenQuota',
-                        '../../node_modules/@iyio/ai-complete-openai-cdk/handlers/GetAiCompleteTokenQuota',
+                        '../../node_modules/@convo-lang/ai-complete-openai-cdk/handlers/GetAiCompleteTokenQuota',
                     ],
                     timeoutMs:1000*20,
                     ...defaultFnProps,

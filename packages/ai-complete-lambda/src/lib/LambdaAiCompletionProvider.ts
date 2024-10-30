@@ -1,4 +1,4 @@
-import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, CompletionOptions, aiCompletionFnArnParam } from '@iyio/ai-complete';
+import { AiCompletionMessage, AiCompletionProvider, AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, CompletionOptions, aiCompletionFnArnParam } from '@convo-lang/ai-complete';
 import { LambdaClient } from '@iyio/aws-lambda';
 import { Scope } from '@iyio/common';
 

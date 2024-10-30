@@ -1,5 +1,5 @@
-import { AiCompletionRequest, aiComplete } from '@iyio/ai-complete';
-import { openAiModule } from '@iyio/ai-complete-openai';
+import { AiCompletionRequest, aiComplete } from '@convo-lang/ai-complete';
+import { openAiModule } from '@convo-lang/ai-complete-openai';
 import { EnvParams, initRootScope } from '@iyio/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 

@@ -1,4 +1,4 @@
-import { TokenQuota, TokenQuotaScheme } from '@iyio/ai-complete';
+import { TokenQuota, TokenQuotaScheme } from '@convo-lang/ai-complete';
 import { FnEvent, createFnHandler } from '@iyio/common';
 import { initBackend } from "../ai-complete-openai-cdk-lib";
 import { getTokenQuotaAsync } from '../price-capping';

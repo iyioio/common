@@ -1,4 +1,4 @@
-import { AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, aiComplete, aiCompleteModelCliam } from '@iyio/ai-complete';
+import { AiCompletionRequest, AiCompletionRequestScheme, AiCompletionResult, AiCompletionResultScheme, aiComplete, aiCompleteModelCliam } from '@convo-lang/ai-complete';
 import { FnEvent, UnauthorizedError, createFnHandler, shortUuid } from '@iyio/common';
 import { initBackend } from "../ai-complete-openai-cdk-lib";
 import { openAiAllowOpenAccessParam } from '../ai-complete-openai-cdk.deps';

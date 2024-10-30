@@ -1,4 +1,4 @@
-import { TokenQuota } from "@iyio/ai-complete";
+import { TokenQuota } from "@convo-lang/ai-complete";
 import { createUpdateExpression, dynamoClient } from "@iyio/aws-dynamo";
 import { DataTableDescription } from "@iyio/common";
 import { aiCompleteAnonUsdCapParam, aiCompleteAnonUsdCapTotalParam, aiCompleteCapsTableParam } from "./ai-complete-openai-cdk.deps";

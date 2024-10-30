@@ -1,7 +1,7 @@
 import { Conversation } from '@iyio/convo-lang';
 import { initRootScope, EnvParams } from '@iyio/common';
-import { aiCompleteConvoModule } from '@iyio/ai-complete';
-import { openAiModule } from '@iyio/ai-complete-openai';
+import { aiCompleteConvoModule } from '@convo-lang/ai-complete';
+import { openAiModule } from '@convo-lang/ai-complete-openai';
 
 // initRootScope is used to configure services and configuration variables
 initRootScope(reg=>{

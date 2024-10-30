@@ -1,7 +1,7 @@
 
-import { aiCompleteConvoModule } from "@iyio/ai-complete";
-//import { aiCompleteLambdaModule } from "@iyio/ai-complete-lambda";
-import { openAiModule } from "@iyio/ai-complete-openai";
+import { aiCompleteConvoModule } from "@convo-lang/ai-complete";
+//import { aiCompleteLambdaModule } from "@convo-lang/ai-complete-lambda";
+import { openAiModule } from "@convo-lang/ai-complete-openai";
 import { EnvParams, ScopeRegistration, delayAsync, getErrorMessage, initRootScope, parseCliArgsT, rootScope, safeParseNumberOrUndefined } from "@iyio/common";
 import { realpath, writeFile } from "fs/promises";
 import { join } from "path";

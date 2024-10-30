@@ -1,4 +1,4 @@
-import { AiCompletionProviders, HttpAiCompletionProvider } from "@iyio/ai-complete";
+import { AiCompletionProviders, HttpAiCompletionProvider } from "@convo-lang/ai-complete";
 import { ScopeRegistration, isServerSide } from "@iyio/common";
 
 export const protoFrontendModule=(reg:ScopeRegistration)=>{
