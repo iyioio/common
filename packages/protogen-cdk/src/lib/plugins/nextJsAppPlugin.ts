@@ -120,6 +120,7 @@ export const nextJsAppPlugin:ProtoPipelineConfigurablePlugin<typeof NextJsPlugin
                         sites.push({
                             name:strFirstToUpper(name.replace(/-(\w)/g,(_,c:string)=>c.toUpperCase())),
                             redirectHandler,
+                            envPattern:node.children?.['$envPattern']?.value,
                             staticSite:{
                                 routes:routes.length?routes:undefined,
                                 ignorePaths:ignorePaths.length?ignorePaths.map(p=>p.value??'').filter(v=>v):undefined,

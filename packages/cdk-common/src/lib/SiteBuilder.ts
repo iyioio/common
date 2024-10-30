@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { StaticWebSite, StaticWebSiteProps } from "./StaticWebSite";
+import { isCdkEnvPatternMatch } from "./cdk-lib";
 
 export interface SiteBuilderProps
 {
@@ -14,6 +15,11 @@ export interface SiteInfo
     redirectHandler?:string;
     staticSite?:StaticWebSiteProps;
     modify?:(info:SiteInfo)=>void;
+
+    /**
+     * An environment pattern that can be used to disable a site
+     */
+    envPattern?:string;
 }
 
 export interface SiteResult
@@ -44,6 +50,10 @@ export class SiteBuilder extends Construct
         const results:SiteResult[]=[];
 
         for(const info of sites){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const sources=siteContentSources?.filter(s=>s.targetSiteName===info.name)??[];
             if((sources.length || info.redirectHandler) && info.staticSite){

@@ -7,6 +7,7 @@ import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
+import { isCdkEnvPatternMatch } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { createBucket } from "./createBucket";
 
@@ -45,6 +46,11 @@ export interface BucketInfo
     websiteIndexDocument?:string;
     websiteErrorDocument?:string;
     events?:IEventDestination[];
+
+    /**
+     * An environment pattern that can be used to disable a bucket
+     */
+    envPattern?:string;
 }
 
 export interface BucketResult
@@ -76,6 +82,10 @@ export class BucketBuilder extends Construct implements IAccessGrantGroup
 
 
         for(const info of buckets){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const bucket=createBucket(this,info.name,{
                 enableCors:info.enableCors,

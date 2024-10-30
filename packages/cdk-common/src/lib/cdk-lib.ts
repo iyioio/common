@@ -141,3 +141,44 @@ export const getTmpCdkDir=(autoCreate=false)=>{
     }
     return tmpCdkDir;
 }
+
+/**
+ * Checks to see if a resource is for a particular environment
+ * @example matches any env that is not testing or staging = !testing !staging
+ * @example only matches env admin = admin
+ * @param envPattern The pattern to match with
+ * @param envs A space separated list of environments
+ */
+export const isCdkEnvPatternMatch=(envPattern:string|null|undefined,envs?:string)=>{
+
+    if(!envPattern){
+        return true;
+    }
+
+    if(!envs){
+        envs=process.env['IYIO_CDK_ENV']??'default';
+    }
+
+    const envAry=envs.split(' ').map(s=>s.trim());
+    const parts=envPattern.split(' ').map(s=>s.trim());
+    let hasInclude=false;
+
+    for(const env of envAry){
+        for(const name of parts){
+            if(!name){
+                continue;
+            }
+            if(name.startsWith('!')){
+                if(name.substring(1)===envs){
+                    return false;
+                }
+            }else{
+                if(name===envs){
+                    return true;
+                }
+                hasInclude=true;
+            }
+        }
+    }
+    return !hasInclude;
+}

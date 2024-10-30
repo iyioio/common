@@ -2,11 +2,16 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from "constructs";
 import { ManagedProps } from "./ManagedProps";
 import { SqlCluster, SqlClusterOptionsBase } from "./SqlCluster";
-import { getDefaultVpc } from './cdk-lib';
+import { getDefaultVpc, isCdkEnvPatternMatch } from './cdk-lib';
 
 export interface SqlClusterBuilderCluster extends SqlClusterOptionsBase
 {
-    name:string
+    name:string;
+
+    /**
+     * An environment pattern that can be used to disable a queue
+     */
+    envPattern?:string;
 }
 
 export interface SqlClusterBuilderOptions
@@ -29,6 +34,14 @@ export class SqlClusterBuilder extends Construct
     {
         super(scope,id);
 
-        this.clusters=clusters.map(c=>new SqlCluster(this,c.name,{vpc,managed,...c}))
+        this.clusters=[];
+
+        for(const info of clusters){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
+            this.clusters.push(new SqlCluster(this,info.name,{vpc,managed,...info}))
+        }
     }
 }

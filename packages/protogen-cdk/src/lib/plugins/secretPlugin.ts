@@ -56,6 +56,7 @@ export const secretPlugin:ProtoPipelineConfigurablePlugin<typeof SecretPluginCon
             infos.push({
                 name:node.name,
                 arnParam:paramName,
+                envPattern:node.children?.['$envPattern']?.value,
             })
         }
 

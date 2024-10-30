@@ -91,6 +91,8 @@ export const bucketPlugin:ProtoPipelineConfigurablePlugin<typeof BucketPluginCon
                             }
                         }):undefined,
                         events:parseProtoEventDestinations(b),
+
+                        envPattern:b.children?.['$envPattern']?.value,
                     }
                     return info;
                 }),importMap)

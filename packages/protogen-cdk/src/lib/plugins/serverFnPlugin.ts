@@ -199,6 +199,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     minify:node.children?.['minify']?.value==='false'?false:undefined
                 },
                 arnParam:paramName,
+                envPattern:node.children?.['$envPattern']?.value,
             };
             infos.push(fnInfo);
 

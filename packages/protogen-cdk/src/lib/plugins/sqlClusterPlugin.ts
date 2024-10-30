@@ -61,7 +61,8 @@ export const sqlClusterPlugin:ProtoPipelineConfigurablePlugin<typeof SqlClusterC
                         autoPauseMinutes:safeParseNumberOrUndefined(c.children?.['autoPauseMinutes']?.value),
                         migrations:c.children?.['migrations']?.value,
                         rdsVersion:safeParseNumberOrUndefined(c.children?.['rdsVersion']?.value) as any,
-                        version:c.children?.['version']?.value
+                        version:c.children?.['version']?.value,
+                        envPattern:c.children?.['$envPattern']?.value,
                     }))
                 })
             })

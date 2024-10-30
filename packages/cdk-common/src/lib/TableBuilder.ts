@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
-import { grantTableQueryPerms, grantTableScanPerms } from "./cdk-lib";
+import { grantTableQueryPerms, grantTableScanPerms, isCdkEnvPatternMatch } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 import { getDefaultManagedProps, ManagedProps } from "./ManagedProps";
 
@@ -18,6 +18,11 @@ export interface TableInfo
     tableDescription:DataTableDescription;
     arnParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
+
+    /**
+     * An environment pattern that can be used to disable a table
+     */
+    envPattern?:string;
 }
 
 export interface TableInfoAndTable
@@ -48,6 +53,10 @@ export class TableBuilder extends Construct implements IAccessGrantGroup
 
 
         for(const info of tables){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const tbl=info.tableDescription;
 

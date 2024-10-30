@@ -8,7 +8,7 @@ export interface AiCompletionInfo{
 export const aiCompletionCdkTemplate=(constructName:string,infos:AiCompletionInfo[])=>{
 
     return `import { Construct } from "constructs";
-import { AiCompleteOpenAiConstruct, AiCompleteOpenAiConstructOptions } from "@iyio/ai-complete-openai-cdk";
+import { AiCompleteOpenAiConstruct, AiCompleteOpenAiConstructOptions } from "@convo-lang/ai-complete-openai-cdk";
 import { ManagedProps, NodeFnProps } from "@iyio/cdk-common";
 
 export interface ${constructName}Props

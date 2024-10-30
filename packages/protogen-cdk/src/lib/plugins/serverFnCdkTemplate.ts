@@ -55,7 +55,8 @@ ${
         grantAccessRequests:${JSON.stringify(info.grantAccessRequests)},`:''}${info.noPassiveAccess?`
         noPassiveAccess:true,`:''}
         createProps:${JSON.stringify(info.createProps)},${info.siteSources?`
-        siteSources:${JSON.stringify(info.siteSources)},`:''}
+        siteSources:${JSON.stringify(info.siteSources)},`:''}${info.envPattern?`
+        envPattern:${JSON.stringify(info.envPattern)},`:''}
     }`)
     .join(',\n')
 }

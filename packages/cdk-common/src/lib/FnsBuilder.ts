@@ -4,6 +4,7 @@ import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
 import { NodeFn, NodeFnProps } from "./NodeFn";
+import { isCdkEnvPatternMatch } from "./cdk-lib";
 import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget, SiteContentSourceDescription } from "./cdk-types";
 
 export interface FnInfoAndNodeFn
@@ -27,6 +28,11 @@ export interface FnInfo
      * createProps.createPublicUrl must be true in-order for siteSources to be applied
      */
     siteSources?:SiteContentSourceDescription[];
+
+    /**
+     * An environment pattern that can be used to disable a function
+     */
+    envPattern?:string;
 }
 
 export interface FnsBuilderProps
@@ -64,6 +70,10 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
         const fns:FnInfoAndNodeFn[]=[];
 
         for(const info of fnsInfo){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const nodeFn=new NodeFn(this,info.name,info.createProps);
 

@@ -2,6 +2,7 @@ import { ParamTypeDef } from "@iyio/common";
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
+import { isCdkEnvPatternMatch } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 
 export interface SecretBuilderProps
@@ -15,6 +16,11 @@ export interface SecretInfo
     name:string;
     arnParam?:ParamTypeDef<string>;
     grantAccess?:boolean;
+
+    /**
+     * An environment pattern that can be used to disable a queue
+     */
+    envPattern?:string;
 }
 
 export interface SecretResult
@@ -45,6 +51,10 @@ export class SecretBuilder extends Construct implements IAccessGrantGroup
 
 
         for(const info of secretsAry){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const secret=new secrets.Secret(this,info.name);
 

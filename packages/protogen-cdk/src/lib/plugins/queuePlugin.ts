@@ -77,6 +77,8 @@ export const queuePlugin:ProtoPipelineConfigurablePlugin<typeof QueuePluginConfi
                         removalPolicy:q.children?.['removalPolicy']?.value as (RemovalPolicy|undefined),
                         retentionPeriod:secondsToCdkDuration(q.children?.['retentionPeriodSeconds']?.value),
                         visibilityTimeout:secondsToCdkDuration(q.children?.['visibilityTimeoutSeconds']?.value),
+
+                        envPattern:q.children?.['$envPattern']?.value,
                     }
                     return info;
                 }),importMap)

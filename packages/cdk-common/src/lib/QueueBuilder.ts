@@ -3,6 +3,7 @@ import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
+import { isCdkEnvPatternMatch } from "./cdk-lib";
 import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
 
 export interface QueueBuilderProps
@@ -33,6 +34,11 @@ export interface QueueInfo extends sqs.QueueProps
     target?:string|string[];
 
     batchSize?:number;
+
+    /**
+     * An environment pattern that can be used to disable a queue
+     */
+    envPattern?:string;
 
 }
 
@@ -66,6 +72,10 @@ export class QueueBuilder extends Construct implements IAccessGrantGroup
 
 
         for(const info of queues){
+
+            if(!isCdkEnvPatternMatch(info.envPattern)){
+                continue;
+            }
 
             const {
                 name,
