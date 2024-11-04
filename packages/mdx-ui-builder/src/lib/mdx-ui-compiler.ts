@@ -151,6 +151,11 @@ export const compileMdxUiAsync=async (code:string,{
         });
     }
 
+    code=code.replace(/```\s*\w+[ \t]+(\+?)>[ \t]*(\w+)((.|\n|\r)*?)```/g,(_,keep:string,name:string,convo:string)=>{
+        moduleBlocks.push(`const ${name}=${JSON.stringify(convo)}`);
+        return keep?_:' '.repeat(_.length)
+    });
+
     const file=await compileAsync(code,cOptions);
 
     if(typeof file.value !== 'string'){
