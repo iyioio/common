@@ -6,7 +6,8 @@ import { DirectionInputCtrl } from "./DirectionInputCtrl";
 export const DirectionInputReactContext=createContext<DirectionInputCtrl|null>(null);
 
 export const useCreateDirectionInputCtrl=()=>{
-    return useMemo(()=>new DirectionInputCtrl(),[]);
+    const existing=useDirectionInputCtrl();
+    return useMemo(()=>existing??new DirectionInputCtrl(),[existing]);
 }
 
 export const useDirectionInputCtrl=()=>{
@@ -26,6 +27,26 @@ export const useDirectionInput=(callback:(direction:Direction)=>void,ctrl?:Direc
 
         const sub=c.onDirectionInput.subscribe(dir=>{
             ref.current?.(dir);
+        });
+        return ()=>{
+            sub.unsubscribe();
+        }
+    },[c]);
+}
+
+export const useDirectionIndexRequest=(callback:(index:number)=>void,ctrl?:DirectionInputCtrl)=>{
+    const _ctrl=useDirectionInputCtrl();
+    const ref=useRef(callback);
+    ref.current=callback
+    const c=ctrl??_ctrl;
+
+    useEffect(()=>{
+        if(!c){
+            return;
+        }
+
+        const sub=c.onIndexRequested.subscribe(i=>{
+            ref.current?.(i);
         });
         return ()=>{
             sub.unsubscribe();

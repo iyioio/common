@@ -26,7 +26,17 @@ export class DirectionInputCtrl
         this._count.next(value);
     }
 
+    private readonly _onIndexRequested=new Subject<number>();
+    public get onIndexRequested():Observable<number>{return this._onIndexRequested}
+
     public triggerInput(direction:Direction){
         this._onDirectionInput.next(direction);
+    }
+
+    public requestIndex(index:number){
+        if(index<0 || index>=this.count){
+            return;
+        }
+        this._onIndexRequested.next(index);
     }
 }
