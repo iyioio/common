@@ -4,7 +4,7 @@ export const setClipboardTextAsync=async (text:string):Promise<boolean>=>{
         (typeof globalThis.navigator?.clipboard.writeText === 'function')
     ){
         try{
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.write([new ClipboardItem({"text/plain":text})])
             return true;
         }catch{
             return setClipboardFallback(text);
