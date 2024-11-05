@@ -1,14 +1,14 @@
 import { ZodSchema } from "zod";
 import { CancelToken } from "./CancelToken";
 import { DisposeContainer } from "./DisposeContainer";
-import { aryRemoveItem } from "./array";
+import { aryRemoveItem, asArray } from "./array";
 import { NoId, ValueRef } from "./common-types";
 import { DataTableDescription } from "./data-table";
 import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib";
 import { DisposedError } from "./errors";
 import { deepCompare, objGetFirstValue } from "./object";
 import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
-import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types";
+import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlInsertOptions, SqlResult } from "./sql-types";
 import { zodCoerceNullDbValuesInObject } from "./zod-helpers";
 
 export abstract class SqlBaseMethods implements ISqlMethods
@@ -161,11 +161,34 @@ export abstract class SqlBaseMethods implements ISqlMethods
      * @param table The table to insert the item into.
      * @param values The items to insert into the table
      */
-    public async insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<void>
+    public async insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<void>
     {
 
         table=getDataTableId(table);
-        await this._insertAsync(table,values,false,(typeof table !== 'string'?table:undefined));
+        if(options?.batchSize){
+            const ary=asArray(values);
+            if(!ary){
+                return;
+            }
+
+            for(let i=0;i<ary.length;i+=options.batchSize){
+                await this._insertAsync(
+                    options,
+                    table,
+                    ary.slice(i,i+options.batchSize),
+                    false,
+                    (typeof table !== 'string'?table:undefined)
+                );
+            }
+        }else{
+            await this._insertAsync(
+                options,
+                table,
+                values,
+                false,
+                (typeof table !== 'string'?table:undefined)
+            );
+        }
     }
 
 
@@ -191,26 +214,46 @@ export abstract class SqlBaseMethods implements ISqlMethods
      * @param table The table to insert the item into.
      * @param values The items to insert into the table
      */
-    public async insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<T[]|T>
+    public async insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<T[]|T>
     {
 
         const tableName=getDataTableId(table);
 
-        const r=await this._insertAsync(tableName,values,true,(typeof table !== 'string'?table:undefined));
+        const insertAsync=(rows:NoId<T>|NoId<T>[])=>{
+            return this._insertAsync(options,tableName,rows,true,(typeof table !== 'string'?table:undefined));
+        }
 
 
 
         if(Array.isArray(values)){
-            const rows=(r.rows as any)??[];
+            const insertFormatAsync=async (ary:NoId<T>[])=>{
+                const r=await insertAsync(ary);
+                const rows=(r.rows as any)??[];
 
-            if((typeof table === 'object') && table.scheme){
-                for(const item of rows){
-                    zodCoerceNullDbValuesInObject(table.scheme,item);
+                if((typeof table === 'object') && table.scheme){
+                    for(const item of rows){
+                        zodCoerceNullDbValuesInObject(table.scheme,item);
+                    }
                 }
-            }
 
-            return rows;
+                return rows;
+            }
+            if(options?.batchSize){
+                const ary=asArray(values);
+                if(!ary){
+                    return [];
+                }
+                const all:T[]=[];
+                for(let i=0;i<ary.length;i+=options.batchSize){
+                    const inserted=await insertFormatAsync(ary.slice(i,i+options.batchSize));
+                    all.push(...inserted);
+                }
+                return all;
+            }else{
+                return await insertFormatAsync(values);
+            }
         }else{
+            const r=await insertAsync(values);
             const item=r.rows?.[0];
             if(!item){
                 throw new Error('No SQL Row Inserted');
@@ -227,8 +270,13 @@ export abstract class SqlBaseMethods implements ISqlMethods
      * Used by the insertAsync and insertReturnAsync functions.
      * @param returnInserted If true the query will be executed with "RETURNING *"
      */
-    private async _insertAsync<T>(table:string,values:NoId<T>|NoId<T>[],returnInserted:boolean,dataTable?:DataTableDescription):Promise<SqlResult>
-    {
+    private async _insertAsync<T>(
+        options:SqlInsertOptions|undefined,
+        table:string,
+        values:NoId<T>|NoId<T>[],
+        returnInserted:boolean,
+        dataTable?:DataTableDescription
+    ):Promise<SqlResult>{
         if(!Array.isArray(values)){
             values=[values];
         }

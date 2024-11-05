@@ -40,14 +40,22 @@ export interface SqlExecOptions
     database?:string|null;
 }
 
+export interface SqlInsertOptions
+{
+    /**
+     * If defined rows should be inserted in batches of the given size
+     */
+    batchSize?:number;
+}
+
 export interface ISqlMethods
 {
     log:boolean;
     dispose():void;
-    insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<void>;
-    insertReturnAsync<T>(table:string|DataTableDescription<T>,value:NoId<T>):Promise<T>;
-    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>[]):Promise<T[]>;
-    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[]):Promise<T[]|T>;
+    insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<void>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,value:NoId<T>,options?:SqlInsertOptions):Promise<T>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>[],options?:SqlInsertOptions):Promise<T[]>;
+    insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<T[]|T>;
     selectAsync<T>(query:string):Promise<T[]>;
     selectFirstOrDefaultAsync<T>(query:string):Promise<T|undefined>;
     selectFromAsync<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>,query:string):Promise<T[]>;
