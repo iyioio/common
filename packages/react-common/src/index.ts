@@ -34,6 +34,7 @@ export * from "./lib/PanZoomControls";
 export * from "./lib/PanZoomView";
 export * from "./lib/Portal";
 export * from "./lib/PortalRenderer";
+export * from "./lib/ProgressBar";
 export * from "./lib/RichTextView";
 export * from "./lib/RouteLoadingIndicator";
 export * from "./lib/ScrollView";

@@ -5,6 +5,7 @@ import { BehaviorSubject } from 'rxjs';
 import { JsonView } from './JsonView';
 import { LoadingIndicator } from './LoadingIndicator';
 import { Portal } from './Portal';
+import { ProgressBar } from './ProgressBar';
 import { SlimButton } from './SlimButton';
 import { Text } from './Text';
 import { View } from './View';
@@ -28,6 +29,10 @@ export function LockScreenView({
     const errorComplete=useMemo(()=>new BehaviorSubject<boolean>(false),[]);
     const error=useSubject(lock.error);
     const [errorShowMore,setErrorShowMore]=useState(false);
+
+    const progress=lock.progress;
+    const pro=useSubject(progress?.progressSubject);
+    const status=useSubject(progress?.statusSubject);
 
     useEffect(()=>{
         lock.errorHandler={
@@ -78,8 +83,13 @@ export function LockScreenView({
                 {!hide &&
                     <View col g1>
                         <View col g1 alignCenter>
-                            <LoadingIndicator />
+                            {lock.progress?
+                                <ProgressBar className={style.progress()} value={pro}/>
+                            :
+                                <LoadingIndicator />
+                            }
                             <Text face2 className="LockScreenView-message" text={lock.message} />
+                            {!!status && <Text mt1 face3 className="LockScreenView-message" text={status} />}
                             {error && <>
                                 <View row g050>
                                     <SlimButton onClick={()=>setErrorShowMore(!errorShowMore)}>
@@ -98,7 +108,6 @@ export function LockScreenView({
 
                             </>}
                         </View>
-                        {lock.progress && /*<LockProgress progress={lock.progress}/>*/null}
                     </View>
                 }
 
@@ -131,5 +140,10 @@ const style=atDotCss({name:'LockScreenView',order:'frameworkHigh',css:`
     .LockScreenView-errorContinue{
         font-size:24px;
         font-weight:bold;
+    }
+    @.progress{
+        width:100%;
+        max-width:200px;
+        align-self:center;
     }
 `});
