@@ -8,6 +8,10 @@ export class Lock
 
     private _maxConcurrent:number;
 
+    public get maxConcurrent(){return this._maxConcurrent}
+    public get count(){return this._count}
+
+
     constructor(maxConcurrent:number=1)
     {
         this._maxConcurrent=maxConcurrent;
