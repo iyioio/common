@@ -69,6 +69,15 @@ export const isPromise=<T=any>(value:any):value is Promise<T>=>(
     (typeof (value as Partial<Promise<T>>)?.finally === 'function')
 )?true:false;
 
+export const dumpJson=<T>(value:T,...log:any[]):T=>{
+    try{
+        console.log(JSON.stringify(value,null,4),...log);
+    }catch{
+        console.log(value,...log);
+    }
+    return value;
+}
+
 export const dump=<T>(value:T,...log:any[]):T=>{
     console.log(value,...log);
     return value;
