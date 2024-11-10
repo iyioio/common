@@ -273,7 +273,7 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
         if(!f||f[`${n}8${a}`])c.push(`.${cn}8${a}{${p}:${s8}}`)
         if(!f||f[`${n}9${a}`])c.push(`.${cn}9${a}{${p}:${s9}}`)
         if(!f||f[`${n}10${a}`])c.push(`.${cn}10${a}{${p}:${s10}}`)
-        if(!f||f[`${n}0${a}`])c.push(`.${cn}0${a}{${p}:${s0}}`)
+        if(!f||f[`${n}0${a}`])c.push(`.${cn}0${a}{${p}:${s0} !important}`)
 
         if(noEdge){
             return;
@@ -490,7 +490,7 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('rightText','text-align:right')
     add('preSpace','white-space:pre')
     add('singleLine','text-overflow: ellipsis;overflow: hidden;white-space: nowrap')
-    add('lineHeight100','line-height:2em')
+    add('lineHeight100','line-height:1em')
     add('lineHeight125','line-height:1.25em')
     add('lineHeight150','line-height:1.5em')
     add('lineHeight175','line-height:1.75em')
