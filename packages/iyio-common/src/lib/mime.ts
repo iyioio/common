@@ -94,7 +94,12 @@ export function getContentType(
     if(!path){
         return defaultType;
     }
-    const i=path.lastIndexOf('.');
+    let i=path.indexOf('?');
+    if(i!==-1){
+        path=path.substring(0,i);
+    }
+
+    i=path.lastIndexOf('.');
     if(i!==-1){
         path=path.substring(i+1);
     }
