@@ -1,6 +1,7 @@
 import { MarkdownImageParsingItem } from "./markdown-types";
 
 const imageReg=/!\[(.*?)\]\((.*?)\)/gs;
+const imageProtoReg=/!\[(.*?)\]\((\w+:\/\/.*?|data:\w+\/\w+;\w+,.*?)\)/gs;
 
 export const containsMarkdownImage=(content:string):boolean=>{
     const r=imageReg.test(content);
@@ -11,12 +12,14 @@ export const containsMarkdownImage=(content:string):boolean=>{
 export interface ParseMarkdownImagesOptions
 {
     noTrim?:boolean;
+    requireImgProtocol?:boolean;
 }
 
 export const parseMarkdownImages=(
     content:string,
     {
-        noTrim
+        noTrim,
+        requireImgProtocol=false,
     }:ParseMarkdownImagesOptions={}
 ):MarkdownImageParsingItem[]=>{
     const items:MarkdownImageParsingItem[]=[];
@@ -24,7 +27,8 @@ export const parseMarkdownImages=(
 
     let match:RegExpMatchArray|null;
     let i=0;
-    while(match=imageReg.exec(content)){
+    const reg=requireImgProtocol?imageProtoReg:imageReg;
+    while(match=reg.exec(content)){
         if(match.index===undefined){
             break;
         }
