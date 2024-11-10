@@ -130,6 +130,7 @@ export * from './lib/obj-mirror-lib';
 export * from './lib/obj-watch-lib';
 export * from './lib/obj-watch-types';
 export * from './lib/object';
+export * from './lib/object-sorted';
 export * from './lib/pointers';
 export * from './lib/progress-lib';
 export * from './lib/progress-types';
