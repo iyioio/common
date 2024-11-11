@@ -1,8 +1,25 @@
 import { DataTableColInfo } from "./data-table";
 import { safeParseNumber } from "./numbers";
 
+const jsonPathReg=/^(\w+)\.([^:]+):(\w+)$/;
+const castTypes=['boolean']
+
 export const escapeSqlString=(value:string)=>"'"+value.replace(/'/g,"''")+"'";
-export const escapeSqlName=(value:string)=>'"'+value.replace(/"/g,'""')+'"';
+export const escapeSqlName=(value:string)=>{
+    if(value.includes(':')){
+        const jMatch=jsonPathReg.exec(value);
+
+        if(jMatch){
+            const type=jMatch[3] as string;
+            if(!castTypes.includes(type)){
+                throw new Error('Invalid JSON path expression - '+value);
+            }
+            const parts=(jMatch[2] as string).split('.').map(v=>escapeSqlString(v));
+            return `("${(jMatch[1] as string).replace(/`/g,'""')}"->${parts.join('->')})::${type}`;
+        }
+    }
+    return '"'+value.replace(/"/g,'""')+'"'
+}
 
 const isEscaped=Symbol('isEscaped');
 

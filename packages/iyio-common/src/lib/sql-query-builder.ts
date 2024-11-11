@@ -176,12 +176,13 @@ const appendCondition=(ctx:QueryBuildCtx,cond:QueryConditionOrGroup,depth:number
     }
     ctx.sql.push(')');
 }
+const nonEncloseValues=[true,false];
 const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQueryValue,depth:number,ignoreFunc=false,fallbackValue?:string)=>{
 
     if(depth>ctx.maxDepth){
         throw new Error(`Max query depth reached. maxDepth=${ctx.maxDepth}`);
     }
-
+    const startI=ctx.sql.length;
     if(enclose){
         ctx.sql.push('(');
     }
@@ -210,6 +211,10 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
     }else if(value.col){
         appendCol(ctx,value.col);
     }else if(value.value!==undefined){
+        if(nonEncloseValues.includes(value.value as any)){
+            ctx.sql.splice(startI,1);
+            enclose=false;
+        }
         ctx.sql.push(escapeSqlValue(value.value,undefined,false));
     }else if(value.generatedValue){
         const g=value.generatedValue;
