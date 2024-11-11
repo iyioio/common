@@ -91,5 +91,10 @@ export * from "./lib/useRoute";
 export * from "./lib/useSeriesDataQuery";
 export * from "./lib/useSwipe";
 export * from "./lib/useUiReady";
+export * from "./lib/viewport/Surface";
+export * from "./lib/viewport/SurfaceCtrl";
+export * from "./lib/viewport/Viewport";
+export * from "./lib/viewport/ViewportCtrl";
+export * from "./lib/viewport/viewport-lib";
 export * from "./lib/window-hooks";
 
