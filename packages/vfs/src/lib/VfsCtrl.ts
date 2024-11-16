@@ -1,10 +1,10 @@
-import { DisposeCallback, DisposeContainer, EvtQueue, deepClone } from "@iyio/common";
+import { DisposeCallback, DisposeContainer, EvtQueue, ValueRef, deepClone } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
 import { vfsMntPtProvider } from "./vfs-deps";
 import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, vfsTopic } from "./vfs-lib";
-import { VfsConfig, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
+import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsCtrlOptions
 {
@@ -328,6 +328,16 @@ export class VfsCtrl
         return await ctrl.getItemAsync(this,mnt,path,getVfsSourceUrl(mnt,path),options);
     }
 
+    public async getSourceUrl(path:string){
+        path=normalizeVfsPath(path);
+
+        const mnt=this.getMntPt(path);
+        if(!mnt){
+            return undefined;
+        }
+        return getVfsSourceUrl(mnt,path);
+    }
+
     public async readDirAsync(options:VfsDirReadOptions|string):Promise<VfsDirReadResult>
     {
         if(typeof options === 'string'){
@@ -358,6 +368,81 @@ export class VfsCtrl
         }
         return await ctrl.readDirAsync(this,mnt,options,getVfsSourceUrl(mnt,options.path));
     }
+
+    public async readDirRecursiveAsync(options:VfsDirReadRecursiveOptions|string):Promise<VfsDirReadResult>
+    {
+        const items:VfsItem[]=[];
+
+        if(typeof options === 'string'){
+            options={path:options}
+        }
+
+        await this._readDirRecursiveAsync(0,options.path,{value:0},options.offset??0,items,options);
+
+        items.sort((a,b)=>a.path.localeCompare(b.path));
+
+        return {
+            items,
+            offset:0,
+            count:items.length,
+            total:items.length,
+            notFound:false,
+        }
+    }
+
+    private async _readDirRecursiveAsync(
+        depth:number,
+        path:string,
+        count:ValueRef<number>,
+        offset:number,
+        items:VfsItem[],
+        options:VfsDirReadRecursiveOptions
+    ):Promise<void>{
+        if( (options.maxDepth!==undefined && depth>=options.maxDepth) ||
+            (options.limit!==undefined && items.length>=options.limit)
+        ){
+            return;
+        }
+
+        const r=await this.readDirAsync({
+            path,
+            limit:options.limit===undefined?undefined:options.limit-items.length,
+            filter:options.filter
+        });
+
+        if(r.items){
+            for(const item of r.items){
+                if(options.excludeDirectories && item.type==='dir'){
+                    continue;
+                }
+                count.value++;
+                if(count.value>offset){
+                    items.push(item);
+                    if(options.limit!==undefined && items.length>=options.limit){
+                        return;
+                    }
+                }
+            }
+            for(const item of r.items){
+                if(item.type!=='dir'){
+                    continue;
+                }
+                await this._readDirRecursiveAsync(
+                    depth+1,
+                    item.path,
+                    count,
+                    offset,
+                    items,
+                    options,
+                )
+                if(options.limit!==undefined && items.length>=options.limit){
+                    return;
+                }
+            }
+        }
+    }
+
+
     public async mkDirAsync(path:string):Promise<VfsItem>
     {
         path=normalizeVfsPath(path);

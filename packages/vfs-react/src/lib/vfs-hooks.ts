@@ -1,6 +1,6 @@
 import { asArray } from "@iyio/common";
 import { useDeepCompareItem } from "@iyio/react-common";
-import { VfsDirReadOptions, VfsItem, VfsItemGetOptions, vfs } from "@iyio/vfs";
+import { VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsItem, VfsItemGetOptions, vfs } from "@iyio/vfs";
 import { useEffect, useState } from "react";
 
 export const useVfsItem=(path:string|null|undefined,options?:VfsItemGetOptions):VfsItem|null|undefined=>{
@@ -29,7 +29,7 @@ export const useVfsItem=(path:string|null|undefined,options?:VfsItemGetOptions):
 
 }
 
-export const useVfsObject=<T=any>(pathOrItem:string|VfsItem|null|undefined):T|null|undefined=>{
+export const useVfsObject=<T=any>(pathOrItem:string|VfsItem|null|undefined,refresh?:number):T|null|undefined=>{
 
     const path=(typeof pathOrItem==='string')?pathOrItem:pathOrItem?.path;
 
@@ -49,7 +49,7 @@ export const useVfsObject=<T=any>(pathOrItem:string|VfsItem|null|undefined):T|nu
         return ()=>{
             m=false;
         }
-    },[path]);
+    },[path,refresh]);
 
     return value;
 
@@ -125,6 +125,39 @@ export const useVfsDirItems=(
             m=false;
         }
     },[_dir,_options]);
+
+    return items;
+}
+
+export const useVfsDirRecursiveItems=(
+    dir:string|VfsItem|null|undefined,
+    options?:Omit<VfsDirReadRecursiveOptions,'path'>,
+    refresh?:number
+):VfsItem[]|null=>{
+
+    const [items,setItems]=useState<VfsItem[]|null>(null);
+
+    const _dir=useDeepCompareItem(dir);
+    const _options=useDeepCompareItem(options);
+
+    useEffect(()=>{
+        if(!_dir){
+            setItems(null);
+            return;
+        }
+        let m=true;
+        vfs().readDirRecursiveAsync({
+            path:(typeof _dir==='string')?_dir:_dir.path,
+            ..._options
+        }).then(v=>{
+            if(m){
+                setItems(v.items);
+            }
+        })
+        return ()=>{
+            m=false;
+        }
+    },[_dir,_options,refresh]);
 
     return items;
 }

@@ -1,6 +1,6 @@
 import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths } from "@iyio/common";
 import { execAsync, pathExistsAsync } from "@iyio/node-common";
-import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
+import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testInclusiveVfsPathFilter, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
 import chokidar from 'chokidar';
 import { Dirent, createReadStream, createWriteStream } from "fs";
 import { appendFile, mkdir, readFile, readdir, rm, stat, unlink, writeFile } from "fs/promises";
@@ -43,11 +43,14 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
                 alwaysStat:true,
                 depth:options?.recursive?undefined:0,
                 ignored:ignore?(path:string)=>{
-                    return !testVfsFilter(path,ignore);
+                    return testInclusiveVfsPathFilter(path,ignore);
                 }:undefined
             })
 
             const trigger=(targetPath:string,path:string,type:VfsItemType,changeType:VfsItemChangeType)=>{
+                if(ignore && testInclusiveVfsPathFilter(path,ignore)){
+                    return;
+                }
                 console.info(`VfsDiskMntCtrl ${changeType} ${type} - ${path} -> ${targetPath}`);
                 this._onItemsChange.next({
                     type:'vfsItemChange',
@@ -169,14 +172,15 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
 
         for(let i=options.offset??0;i<dirItems.length && items.length<(options.limit??dirItems.length);i++){
             const item=dirItems[i] as Dirent;
-            if(this.ignoreFilenames.includes(item.name) || (options.filter && !testVfsFilter(item.name,options.filter))){
+            const name=getFileName(item.name);
+            if(this.ignoreFilenames.includes(name) || (options.filter && !testVfsFilter(name,options.filter))){
                 continue;
             }
             const isDir=item.isDirectory();
             items.push({
                 type:isDir?'dir':'file',
                 path:joinPaths(options.path,item.name),
-                name:getFileName(item.name),
+                name,
                 contentType:isDir?undefined:getContentType(item.name),
             })
         }

@@ -85,7 +85,23 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
 
     protected override _readDirAsync=async (fs:VfsCtrl,mnt:VfsMntPt,options:VfsDirReadOptions,sourceUrl:string|undefined):Promise<VfsDirReadResult>=>
     {
-        const oq:any={...options}
+        const str=options.filter?.match?.toString();
+        const match=(options?.filter?.match?
+                (typeof options.filter.match==='string')?
+                    options.filter.match
+                :
+                    str?.substring(1,str.length-1)
+            :
+                undefined
+        )
+        const oq:any={
+            ...options,
+            filter:match?{
+                ...options.filter,
+                match:match,
+                stringMatchIsReg:(typeof options?.filter?.match !== 'string')
+            }:undefined
+        }
         delete oq.path;
         const r=await this.getHttpClient().getAsync<VfsDirReadResult>(this.getUrl(sourceUrl,'dir',oq));
         if(!r){

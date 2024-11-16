@@ -144,6 +144,15 @@ export interface VfsFilter
      * A regular expression or a star string
      */
     match?:RegExp|string;
+
+    /**
+     * If true and match is a string the match string is treated as a full regex
+     */
+    stringMatchIsReg?:boolean;
+    /**
+     * Inverts or negates the filter.
+     */
+    not?:boolean;
 }
 
 export interface VfsDirReadOptions
@@ -151,6 +160,16 @@ export interface VfsDirReadOptions
     path:string;
     offset?:number;
     limit?:number;
+    filter?:VfsFilter;
+}
+
+export interface VfsDirReadRecursiveOptions
+{
+    path:string;
+    excludeDirectories?:boolean;
+    maxDepth?:number;
+    limit?:number;
+    offset?:number;
     filter?:VfsFilter;
 }
 

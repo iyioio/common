@@ -105,6 +105,53 @@ export const createNotFoundVfsDirReadResult=(options:VfsDirReadOptions):VfsDirRe
     }
 }
 
+const dirSep=/[\/\\]/;
+export const testInclusiveVfsPathFilter=(path:string,filter:(VfsFilter|null|undefined)[]|VfsFilter|null|undefined):boolean=>{
+    if(!path){
+        return false;
+    }
+    const parts=path.split(dirSep);
+    for(const p of parts){
+        if(!p){
+            continue;
+        }
+        if(Array.isArray(filter)){
+            for(const f of filter){
+                if(_testVfsFilter(p,f)){
+                    return true;
+                }
+            }
+        }else{
+            if(_testVfsFilter(p,filter)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+export const testExclusiveVfsPathFilter=(path:string,filter:(VfsFilter|null|undefined)[]|VfsFilter|null|undefined):boolean=>{
+    if(!path){
+        return false;
+    }
+    const parts=path.split(dirSep);
+    for(const p of parts){
+        if(!p){
+            continue;
+        }
+        if(Array.isArray(filter)){
+            for(const f of filter){
+                if(!_testVfsFilter(p,f)){
+                    return false;
+                }
+            }
+        }else{
+            if(!_testVfsFilter(p,filter)){
+                return false;
+            }
+        }
+    }
+    return true;
+}
 export const testVfsFilter=(filename:string,filter:(VfsFilter|null|undefined)[]|VfsFilter|null|undefined):boolean=>{
     filename=getFileName(filename);
     if(Array.isArray(filter)){
@@ -120,27 +167,34 @@ export const testVfsFilter=(filename:string,filter:(VfsFilter|null|undefined)[]|
 }
 
 const _testVfsFilter=(filename:string,filter:VfsFilter|null|undefined):boolean=>{
+    const _false=filter?.not?true:false;
     if(!filter){
-        return true;
+        return !_false;
+    }
+    if(filter.equals!==undefined && filter.equals!==filename){
+        return _false;
     }
     if(filter.startsWith!==undefined && !filename.startsWith(filter.startsWith)){
-        return false;
+        return _false;
     }
     if(filter.endsWith!==undefined && !filename.endsWith(filter.endsWith)){
-        return false;
+        return _false;
+    }
+    if(filter.contains!==undefined && !filename.includes(filter.contains)){
+        return _false;
     }
     if(filter.match){
         if(typeof filter.match === 'string'){
-            if(!starStringTestCached(filter,filter.match,filename,'i')){
-                return false;
+            if(!starStringTestCached(filter,filter.match,filename,'i',undefined,filter.stringMatchIsReg)){
+                return _false;
             }
         }else{
             if(!filter.match.test(filename)){
-                return false;
+                return _false;
             }
         }
     }
-    return true;
+    return !_false;
 }
 
 export const normalizeVfsPath=(path:string):string=>{
