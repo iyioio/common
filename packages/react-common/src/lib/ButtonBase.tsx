@@ -48,7 +48,7 @@ export function ButtonBase({
     href,
     pop,
     linkTarget,
-    openLinkInNewWindow,
+    openLinkInNewWindow=actionItem?.openLinkInNewWindow,
     elem,
     elemRef,
     tabIndex=0,

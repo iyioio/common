@@ -19,6 +19,7 @@ export interface UiActionItem<
     icon?:TIcon;
     iconColor?:string;
     to?:string;
+    openLinkInNewWindow?:boolean;
     type?:TType;
     action?:(item:UiActionItem<any,any,any>)=>void;
     description?:string;
