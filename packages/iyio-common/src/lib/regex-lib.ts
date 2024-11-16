@@ -67,15 +67,16 @@ export const starStringTestCached=(
     starString:string,
     value:string,
     flags?:string,
-    startEndOfInput:StarStringStartEndOfInput='both'
+    startEndOfInput:StarStringStartEndOfInput='both',
+    treatAsNormalReg?:boolean
 ):boolean=>{
     try{
-        if(starString.includes('*')){
+        if(starString.includes('*') || treatAsNormalReg){
             const cache=getCache();
             let reg=cache.get(cacheObj);
             if(!reg || reg.pattern!==starString){
                 reg={
-                    reg:starStringToRegex(starString,flags,startEndOfInput),
+                    reg:treatAsNormalReg?new RegExp(starString,flags):starStringToRegex(starString,flags,startEndOfInput),
                     pattern:starString
                 }
                 cache.set(cacheObj,reg);
