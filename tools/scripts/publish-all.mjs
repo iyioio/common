@@ -5,6 +5,12 @@ import chalk from 'chalk';
 import fetch from 'node-fetch';
 import { enumProjects } from './enum-projects.mjs';
 
+const _publishScope=process.env['NPM_PUBLISH_SCOPE'];
+if(!_publishScope){
+    throw new Error('NPM_PUBLISH_SCOPE env var not defined')
+}
+const publishScope=_publishScope+'/';
+
 const dryRun=process.argv.includes('--dry-run');
 
 let includeProjects=null;
@@ -20,8 +26,10 @@ for(let i=2;i<process.argv.length;i++){
 const publishMap={};
 
 enumProjects({publicOnly:true},({name,project,pkg})=>{
-
-    if(!project.data?.targets?.publish || (includeProjects && !includeProjects.includes(name))){
+    if( !project.data?.targets?.publish ||
+        (includeProjects && !includeProjects.includes(name)) ||
+        !pkg.name.startsWith(publishScope)
+    ){
         return;
     }
 
