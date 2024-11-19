@@ -1,5 +1,5 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, UiActionItem, uiRouterService } from "@iyio/common";
-import { createElement, CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import { createElement, CSSProperties, DragEventHandler, KeyboardEvent, MouseEvent, MouseEventHandler } from "react";
 import { getReactChildString } from "./react-util";
 
 export interface ButtonBaseProps extends BaseLayoutOuterProps
@@ -7,6 +7,24 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     onClickEvt?:(e:MouseEvent)=>void;
     onClick?:()=>void;
     onKeyPress?:(e:KeyboardEvent)=>void;
+    onDrag?:DragEventHandler<HTMLElement>;
+    onDragCapture?:DragEventHandler<HTMLElement>;
+    onDragEnd?:DragEventHandler<HTMLElement>;
+    onDragEndCapture?:DragEventHandler<HTMLElement>;
+    onDragEnter?:DragEventHandler<HTMLElement>;
+    onDragEnterCapture?:DragEventHandler<HTMLElement>;
+    onDragExit?:DragEventHandler<HTMLElement>;
+    onDragExitCapture?:DragEventHandler<HTMLElement>;
+    onDragLeave?:DragEventHandler<HTMLElement>;
+    onDragLeaveCapture?:DragEventHandler<HTMLElement>;
+    onDragOver?:DragEventHandler<HTMLElement>;
+    onDragOverCapture?:DragEventHandler<HTMLElement>;
+    onDragStart?:DragEventHandler<HTMLElement>;
+    onDragStartCapture?:DragEventHandler<HTMLElement>;
+    onDrop?:DragEventHandler<HTMLElement>;
+    onDropCapture?:DragEventHandler<HTMLElement>;
+    onContextMenu?:MouseEventHandler<HTMLElement>;
+    draggable?:boolean;
     children?:any;
     disabled?:boolean;
     type?:'submit' | 'reset' | 'button';
@@ -58,6 +76,24 @@ export function ButtonBase({
     description,
     title,
     extraProps,
+    draggable,
+    onDrag,
+    onDragCapture,
+    onDragEnd,
+    onDragEndCapture,
+    onDragEnter,
+    onDragEnterCapture,
+    onDragExit,
+    onDragExitCapture,
+    onDragLeave,
+    onDragLeaveCapture,
+    onDragOver,
+    onDragOverCapture,
+    onDragStart,
+    onDragStartCapture,
+    onDrop,
+    onDropCapture,
+    onContextMenu,
     ...props
 }:ButtonBaseInternalProps){
 
@@ -126,6 +162,24 @@ export function ButtonBase({
         title,
         'aria-label':description,
         'data-href':elem==='a'?undefined:to,
+        onDrag,
+        onDragCapture,
+        onDragEnd,
+        onDragEndCapture,
+        onDragEnter,
+        onDragEnterCapture,
+        onDragExit,
+        onDragExitCapture,
+        onDragLeave,
+        onDragLeaveCapture,
+        onDragOver,
+        onDragOverCapture,
+        onDragStart,
+        onDragStartCapture,
+        onDrop,
+        onDropCapture,
+        onContextMenu,
+        draggable,
         ...extraProps,
     },children);
 
