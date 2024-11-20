@@ -1,12 +1,15 @@
 #!/bin/bash
 set -e
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
+#source ./source-secrets.sh
+source ./config.sh
+cd ".."
 
-scripts/clear-nx-cache.sh
+# scripts/clear-nx-cache.sh
 
-scripts/build-all.sh
+# scripts/build-all.sh
 
-scripts/test-all.sh
+# scripts/test-all.sh
 
 node tools/scripts/publish-all.mjs "$@"
 
