@@ -1,5 +1,5 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { base64UrlReg, createBase64DataUrl, domListener, isDomNodeDescendantOf, MutableRef, Point } from "@iyio/common";
+import { base64UrlReg, createBase64DataUrl, domListener, dupDeleteUndefined, isDomNodeDescendantOf, MutableRef, Point, Sides } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
 import { PanZoomControls } from "./PanZoomControls";
@@ -49,7 +49,7 @@ export interface PanZoomViewProps
     children?:any;
     minScale?:number;
     maxScale?:number;
-    initState?:PanZoomState;
+    initState?:Partial<PanZoomState>;
     mode?:PanZoomMode;
     disableScroll?:boolean;
     getCtrl?:(ctrl:PanZoomCtrl)=>void;
@@ -312,7 +312,7 @@ export function PanZoomView({
             return;
         }
 
-        if(state.ignoreRest || state.disabled){
+        if(state.ignoreRest || state.disabled || ctrl.locked){
             return;
         }
 
@@ -464,7 +464,7 @@ export function PanZoomView({
             }
         }
 
-    },[minScale,maxScale,plane,rootElem])
+    },[ctrl,minScale,maxScale,plane,rootElem])
 
     const onTouch=useCallback((e:TouchEvent)=>{
         stateRef.current.isTouch=true;
@@ -655,7 +655,7 @@ export function PanZoomView({
     },[dragCover])
 
     useEffect(()=>{
-        if(!listenToKeys || disabled){
+        if(!listenToKeys || disabled || ctrl.locked){
             return;
         }
         return domListener().keyDownEvt.addListenerWithDispose(e=>{
@@ -724,6 +724,8 @@ export function PanZoomView({
     )
 }
 
+const planeAnSpeed=600;
+
 const style=atDotCss({name:'PanZoomView',order:'frameworkHigh',css:`
     .PanZoomView{
         position:absolute;
@@ -749,6 +751,9 @@ const style=atDotCss({name:'PanZoomView',order:'frameworkHigh',css:`
         width:0;
         height:0;
         overflow:visible;
+    }
+    .PanZoomView-plane.animated{
+        transition:transform ${planeAnSpeed}ms ease-in-out;
     }
     .PanZoomView-dragCover{
         position:absolute;
@@ -812,13 +817,17 @@ export class PanZoomCtrl
 
     private readonly refs:CtrlRefs;
 
-    public constructor(refs:CtrlRefs,initState?:PanZoomState)
+    private _locked=0;
+    public get locked(){return this._locked}
+
+    public constructor(refs:CtrlRefs,initState?:Partial<PanZoomState>)
     {
         this.refs=refs;
-        this.state=new BehaviorSubject<PanZoomState>(initState?{...initState}:{
+        this.state=new BehaviorSubject<PanZoomState>({
             x:0,
             y:0,
-            scale:1
+            scale:1,
+            ...dupDeleteUndefined(initState)
         })
     }
 
@@ -829,6 +838,67 @@ export class PanZoomCtrl
             x:(pt.x-this.state.value.x)/this.state.value.scale-(bounds?.x??0)/this.state.value.scale,
             y:(pt.y-this.state.value.y)/this.state.value.scale-(bounds?.y??0)/this.state.value.scale,
         }
+    }
+
+    public animateState(state:PanZoomState){
+        const plane=this.refs.plane;
+        if(!plane || this._locked){
+            return;
+        }
+        this._locked++;
+        plane.classList.add('animated');
+        setTimeout(()=>{
+            plane.classList.remove('animated');
+            this._locked--;
+        },planeAnSpeed+100);
+        this.state.next({...state})
+    }
+
+    public panTo({
+        elem,
+        margin,
+        disableScaling,
+    }:PanToOptions){
+
+        const root=this.refs.rootElem;
+        const plane=this.refs.plane;
+        if(!root || !plane){
+            return;
+        }
+
+        const rb=root.getBoundingClientRect();
+        const pb=plane.getBoundingClientRect();
+        const _eb=elem.getBoundingClientRect();
+        const eb=(margin?
+            {
+                x:_eb.x-margin.left,
+                y:_eb.y-margin.top,
+                width:_eb.width+margin.left+margin.right,
+                height:_eb.height+margin.top+margin.bottom,
+            }:
+            {x:_eb.x,y:_eb.y,width:_eb.width,height:_eb.height}
+        )
+        const scale=disableScaling?this.state.value.scale:rb.width/eb.width;
+
+        const xDiff=eb.x-pb.x;
+        const yDiff=eb.y-pb.y;
+        eb.width*=scale;
+        eb.height*=scale;
+        eb.x+=xDiff*scale-xDiff;
+        eb.y+=yDiff*scale-yDiff;
+
+
+        const eCenter={x:eb.x+eb.width/2,y:eb.y+eb.height/2};
+        const rCenter={x:rb.x+rb.width/2,y:rb.y+rb.height/2};
+
+
+        const currentState=this.state.value;
+        this.animateState({
+            scale:currentState.scale*scale,
+            x:currentState.x-(eCenter.x-rCenter.x),
+            y:currentState.y-(eCenter.y-rCenter.y),
+        });
+
     }
 
     public zoom(scale:number,mode:'add'|'set'='add'){
@@ -949,4 +1019,11 @@ const checkBounds=(rootElem:HTMLElement,state:PanZoomState)=>{
     }
 
     return {x,y}
+}
+
+export interface PanToOptions
+{
+    elem:HTMLElement;
+    margin?:Sides;
+    disableScaling?:boolean;
 }
