@@ -1,6 +1,6 @@
 {
     "name": "@iyio/pdf-viewer",
-    "version": "0.7.0",
+    "version": "0.7.2",
     "type": "commonjs",
     "sideEffects": false
 }
