@@ -10,6 +10,7 @@ export interface LoadingDotsProps
     inset?:number;
     className?:string;
     fill?:boolean;
+    color?:string;
 }
 
 export function LoadingDots({
@@ -18,13 +19,14 @@ export function LoadingDots({
     inset=0,
     className,
     fill,
+    color,
     ...props
 }:LoadingDotsProps & BaseLayoutProps){
 
     const content=(
         <svg
             className={style.root({disabled},className,props)}
-            style={style.vars({size:(typeof size === 'number')?size+'px':size})}
+            style={style.vars({size:(typeof size === 'number')?size+'px':size,color} as any)}
             viewBox={inset?`${-inset} ${-inset} ${41+inset*2} ${10+inset*2}`:"0 0 41 10"}
             fill="none"
         >
@@ -63,7 +65,7 @@ const style=atDotCss({name:'LoadingDots',namespace:'iyio',order:'framework',css:
     @.root circle{
         animation:@@@dot 1s ease-in-out infinite;
         animation-delay: calc(@@order * 150ms);
-        fill:var(--iyio-LoadingDots-color,#ffffff)
+        fill:var(--iyio--LoadingDots-color,var(--iyio-LoadingDots-color,#ffffff))
     }
 
     @.root.disabled circle{
