@@ -858,6 +858,7 @@ export class PanZoomCtrl
         elem,
         margin,
         disableScaling,
+        instant,
     }:PanToOptions){
 
         const root=this.refs.rootElem;
@@ -893,11 +894,16 @@ export class PanZoomCtrl
 
 
         const currentState=this.state.value;
-        this.animateState({
+        const newState:PanZoomState={
             scale:currentState.scale*scale,
             x:currentState.x-(eCenter.x-rCenter.x),
             y:currentState.y-(eCenter.y-rCenter.y),
-        });
+        }
+        if(instant){
+            this.state.next(newState);
+        }else{
+            this.animateState(newState);
+        }
 
     }
 
@@ -1026,4 +1032,5 @@ export interface PanToOptions
     elem:HTMLElement;
     margin?:Sides;
     disableScaling?:boolean;
+    instant?:boolean;
 }
