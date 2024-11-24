@@ -1,4 +1,4 @@
-import { DisposeCallback, DisposeContainer, EvtQueue, ValueRef, deepClone } from "@iyio/common";
+import { DisposeCallback, DisposeContainer, EvtQueue, ValueRef, deepClone, joinPaths } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
@@ -548,6 +548,17 @@ export class VfsCtrl
         }
         const buffer=Buffer.from(base64OrDataUri,'base64');
         return this.writeBufferAsync(path,buffer);
+    }
+    public async writeFileAsync(path:string,appendFileNameToPath:boolean,file:File):Promise<VfsItem>
+    {
+        path=normalizeVfsPath(path);
+        if(appendFileNameToPath){
+            if(!file.name){
+                throw new Error('File does not have a name to append');
+            }
+            path=joinPaths(path,file.name);
+        }
+        return await this.writeBufferAsync(path,new Blob([file]));
     }
     public async writeBufferAsync(path:string,buffer:Uint8Array|Blob|Blob[]|string):Promise<VfsItem>
     {
