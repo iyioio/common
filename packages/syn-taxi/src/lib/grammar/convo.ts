@@ -114,7 +114,7 @@ export const convoGrammar={
             ]
         },
         "controlFlowStatements":{
-            "match": "^\\s*(>)\\s*(parallelEnd|parallel|insertEnd|queue|flush)",
+            "match": "^\\s*(>)\\s*(parallelEnd|parallel|insertEnd|agentEnd|queue|flush)",
             "captures": {
                 "1":{
                     "name":"keyword.control"
@@ -159,22 +159,25 @@ export const convoGrammar={
             }
         },
         "function":{
-            "begin": "^\\s*(>)\\s*(\\w+)?\\s+(\\w+)\\s*([\\*\\?!]*)\\s*(\\()",
+            "begin": "^\\s*(>)\\s*(agent|on|public)?\\s*(\\w+)?\\s+(\\w+)\\s*([\\*\\?!]*)\\s*(\\()",
             "end": "\\)",
             "beginCaptures": {
                 "1":{
                     "name":"keyword.control"
                 },
                 "2":{
-                    "name":"storage.modifier"
+                    "name":"keyword.control"
                 },
                 "3":{
-                    "name":"support.function"
+                    "name":"storage.modifier"
                 },
                 "4":{
-                    "name":"entity.name.type"
+                    "name":"support.function"
                 },
                 "5":{
+                    "name":"entity.name.type"
+                },
+                "6":{
                     "name":"keyword.control"
                 }
             },
