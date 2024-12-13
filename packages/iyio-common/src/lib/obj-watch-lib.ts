@@ -49,7 +49,11 @@ export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined
     }
     let watcher:ObjWatcher<T>|undefined=(obj as any)[watcherProp];
     if(watcher){
-        return watcher;
+        if(watcher.obj!==obj){
+            delete (obj as any)[watcherProp];
+        }else{
+            return watcher;
+        }
     }
     if(!autoCreate){
         return undefined;
