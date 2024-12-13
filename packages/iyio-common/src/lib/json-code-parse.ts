@@ -2,6 +2,9 @@ import { CodeParser } from "./code-parsing-types";
 import { getErrorMessage } from "./error-lib";
 
 export const parseJsonCode:CodeParser<any>=(code,options)=>{
+    if(!code?.trim()){
+        return {endIndex:0};
+    }
     const startIndex=options?.startIndex??0;
     if(startIndex){
         code=code.substring(startIndex);
