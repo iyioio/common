@@ -1,3 +1,4 @@
+import * as iam from "aws-cdk-lib/aws-iam";
 import { AccessManager } from "./AccessManager";
 import { BridgeEvent } from "./BridgeEvent";
 import { ParamOutput } from "./ParamOutput";
@@ -28,6 +29,8 @@ export interface ManagedProps
     readonly resources:NamedResource[];
 
     readonly beforeOutputs:((managed:ManagedProps)=>void)[];
+
+    getEventBridgeLambdaInvokeRole?():iam.Role;
 
 
 }

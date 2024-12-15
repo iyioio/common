@@ -8,6 +8,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from "constructs";
 import { existsSync } from "fs";
 import * as Path from "path";
+import { ManagedProps } from "./ManagedProps";
 import { getDefaultVpc } from "./cdk-lib";
 
 export type NodeFnProps=Partial<Omit<lambdaNodeJs.NodejsFunctionProps,'vpc'>> & AdditionalFuncOptions;
@@ -39,6 +40,18 @@ interface AdditionalFuncOptions
     timeoutMs?:number;
 
     vpc?:ec2.IVpc|boolean;
+
+    /**
+     * If true the function can be an event target and be invoked by EventBridge
+     */
+    eventTarget?:boolean;
+
+    /**
+     * If true the function can create scheduled events
+     */
+    createScheduledEvents?:boolean;
+
+    managed?:ManagedProps;
 }
 
 export interface CreateNodeFnResult
@@ -63,6 +76,8 @@ export class NodeFn extends Construct{
         urlCors,
         timeoutMs,
         vpc,
+        eventTarget,
+        createScheduledEvents,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
         bundling={minify,sourceMap:true,target:'node18'},
@@ -72,6 +87,7 @@ export class NodeFn extends Construct{
         architecture=lambda.Architecture.ARM_64,
         memorySize=256,
         timeout=timeoutMs===undefined?undefined:cdk.Duration.millis(timeoutMs),
+        managed,
         ...props
     }:NodeFnProps){
 
@@ -154,6 +170,13 @@ export class NodeFn extends Construct{
                 url.grantInvokeUrl(new iam.AnyPrincipal());
             }
             new cdk.CfnOutput(this,name+'Url',{value:url.url});
+        }
+
+        if(eventTarget){
+            const role=managed?.getEventBridgeLambdaInvokeRole?.();
+            if(role){
+                func.grantInvoke(role);
+            }
         }
 
         new cdk.CfnOutput(this,name+'FunctionName',{value:func.functionName});

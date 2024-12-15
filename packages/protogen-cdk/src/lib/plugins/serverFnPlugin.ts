@@ -186,7 +186,9 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
             clientParamImports.push(paramName);
 
             const sourcePath=node.children?.['sourcePath']?.value;
-            const timeoutValue=safeParseNumberOrUndefined(node.children?.['timeout']?.value)
+            const timeoutValue=safeParseNumberOrUndefined(node.children?.['timeout']?.value);
+            const eventTarget=node.children?.['eventTarget']?.value;
+            const createScheduledEvents=node.children?.['createScheduledEvents']?.value;
 
             const fnInfo:FnInfoTemplate={
                 name,
@@ -196,7 +198,9 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     handler:'handler',
                     timeoutMs:timeoutValue===undefined?serverFnDefaultTimeoutMs:timeoutValue*1000,
                     vpc:(node.children?.['vpc'])?true:undefined,
-                    minify:node.children?.['minify']?.value==='false'?false:undefined
+                    minify:node.children?.['minify']?.value==='false'?false:undefined,
+                    eventTarget:(eventTarget!==undefined && eventTarget!=='false')?true:undefined,
+                    createScheduledEvents:(createScheduledEvents!==undefined && createScheduledEvents!=='false')?true:undefined,
                 },
                 arnParam:paramName,
                 envPattern:node.children?.['$envPattern']?.value,

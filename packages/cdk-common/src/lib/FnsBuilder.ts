@@ -55,17 +55,19 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
 
     public constructor(scope:Construct,name:string,{
         fnsInfo,
-        managed:{
+        managed=getDefaultManagedProps(),
+    }:FnsBuilderProps){
+
+        super(scope,name);
+
+        const {
             params,
             accessManager,
             siteContentSources,
             fns:managedFns,
             apiRouteTargets,
             resources,
-        }=getDefaultManagedProps(),
-    }:FnsBuilderProps){
-
-        super(scope,name);
+        }=managed;
 
         const fns:FnInfoAndNodeFn[]=[];
 
@@ -75,7 +77,7 @@ export class FnsBuilder extends Construct implements IAccessGrantGroup, IAccessR
                 continue;
             }
 
-            const nodeFn=new NodeFn(this,info.name,info.createProps);
+            const nodeFn=new NodeFn(this,info.name,{managed,...info.createProps});
 
             apiRouteTargets.push({
                 fn:nodeFn.func,

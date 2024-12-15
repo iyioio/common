@@ -1,6 +1,7 @@
 import { awsRegionParam } from '@iyio/aws';
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from 'constructs';
 import { AccessManager } from "./AccessManager";
 import { BridgeEvent } from './BridgeEvent';
@@ -103,6 +104,7 @@ export class ManagedStack extends cdk.Stack
             userPools:this.userPools,
             resources:this.resources,
             beforeOutputs:this.beforeOutputs,
+            getEventBridgeLambdaInvokeRole:()=>this.getEventBridgeLambdaInvokeRole(),
         };
     }
 
@@ -128,5 +130,21 @@ export class ManagedStack extends cdk.Stack
             b(this.managed);
         }
         this.params.generateOutputs(this);
+    }
+
+    private eventBridgeLambdaInvokeRole:iam.Role|undefined;
+
+    public getEventBridgeLambdaInvokeRole(){
+        if(this.eventBridgeLambdaInvokeRole){
+            return this.eventBridgeLambdaInvokeRole;
+        }
+
+        this.eventBridgeLambdaInvokeRole=new iam.Role(this,'EvtLambdaInvokeRole',{
+            assumedBy:new iam.ServicePrincipal('scheduler.amazonaws.com')
+        });
+
+        new cdk.CfnOutput(this,'ManagedEvtLambdaInvokeRoleArnParam',{value:this.eventBridgeLambdaInvokeRole.roleArn});
+
+        return this.eventBridgeLambdaInvokeRole;
     }
 }
