@@ -7,3 +7,5 @@ export const awsRegionParam=defineStringParam('awsRegion');
 export const awsProfileParam=defineStringParam('aswProfile');
 
 export const awsHttpSignerServiceParam=defineStringParam('awsHttpSignerService','lambda');
+
+export const awsManagedEvtLambdaInvokeRoleArnParam=defineStringParam('awsManagedEvtLambdaInvokeRoleArnParam');

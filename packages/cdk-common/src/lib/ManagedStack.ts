@@ -1,4 +1,4 @@
-import { awsRegionParam } from '@iyio/aws';
+import { awsManagedEvtLambdaInvokeRoleArnParam, awsRegionParam } from '@iyio/aws';
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -143,7 +143,7 @@ export class ManagedStack extends cdk.Stack
             assumedBy:new iam.ServicePrincipal('scheduler.amazonaws.com')
         });
 
-        new cdk.CfnOutput(this,'ManagedEvtLambdaInvokeRoleArnParam',{value:this.eventBridgeLambdaInvokeRole.roleArn});
+        this.params.setParam(awsManagedEvtLambdaInvokeRoleArnParam,this.eventBridgeLambdaInvokeRole.roleArn);
 
         return this.eventBridgeLambdaInvokeRole;
     }

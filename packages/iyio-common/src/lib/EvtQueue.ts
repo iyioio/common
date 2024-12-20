@@ -117,7 +117,22 @@ export class EvtQueue
     /**
      * Queues a message or list of messages without waiting for listeners to complete
      */
-    public queue(topic:string,evt:Evt|Evt[]){
-        this.queueAsync(topic,evt);
+    public queue(evt:Evt|Evt[]):void;
+    public queue(topic:string,evt:Evt|Evt[]):void;
+    public queue(topicOrEvt:string|Evt|Evt[],evt?:Evt|Evt[]):void{
+        if(typeof topicOrEvt === 'string'){
+            if(evt){
+                this.queueAsync(topicOrEvt,evt);
+            }
+        }else{
+            if(Array.isArray(topicOrEvt)){
+                const first=topicOrEvt[0];
+                if(first){
+                    this.queueAsync(first.type,topicOrEvt);
+                }
+            }else{
+                this.queueAsync(topicOrEvt.type,topicOrEvt);
+            }
+        }
     }
 }

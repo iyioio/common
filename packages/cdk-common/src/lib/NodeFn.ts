@@ -179,6 +179,13 @@ export class NodeFn extends Construct{
             }
         }
 
+        if(createScheduledEvents){
+            func.addToRolePolicy(new iam.PolicyStatement({
+                actions:['scheduler:*','iam:PassRole'],
+                resources:['*']
+            }))
+        }
+
         new cdk.CfnOutput(this,name+'FunctionName',{value:func.functionName});
 
         this.funcName=name;
