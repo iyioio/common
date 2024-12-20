@@ -206,7 +206,10 @@ export const splitStringWithQuotes=(str:string,{
     return ary;
 }
 
-export const strLineCount=(str:string,startIndex=0,endIndex=str.length-1):number=>{
+export const strLineCount=(str:string|null|undefined,startIndex=0,endIndex=(str?.length??0)-1):number=>{
+    if(!str){
+        return 1;
+    }
     let lineNumber=1;
     for(let i=startIndex;i<=endIndex;i++){
         if(str[i]==='\n'){
