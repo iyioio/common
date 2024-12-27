@@ -146,22 +146,6 @@ export const baseLayoutColorBaseProps={
     color14:'ioColor14',
     color15:'ioColor15',
     color16:'ioColor16',
-    frontColor1:'ioFrontColor1',
-    frontColor2:'ioFrontColor2',
-    frontColor3:'ioFrontColor3',
-    frontColor4:'ioFrontColor4',
-    frontColor5:'ioFrontColor5',
-    frontColor6:'ioFrontColor6',
-    frontColor7:'ioFrontColor7',
-    frontColor8:'ioFrontColor8',
-    frontColor9:'ioFrontColor9',
-    frontColor10:'ioFrontColor10',
-    frontColor11:'ioFrontColor11',
-    frontColor12:'ioFrontColor12',
-    frontColor13:'ioFrontColor13',
-    frontColor14:'ioFrontColor14',
-    frontColor15:'ioFrontColor15',
-    frontColor16:'ioFrontColor16',
 } as const;
 Object.freeze(baseLayoutColorBaseProps);
 
@@ -178,8 +162,6 @@ export const baseLayoutColorMappedProps={
     colorMuted:'ioColorMuted',// mapped - color13
     colorContainer:'ioColorContainer',// mapped - color14
     colorInput:'ioColorInput',// mapped - color15
-    frontColorPrimary:'ioFrontColorPrimary',//mapped frontColor1
-    frontColorSecondary:'ioFrontColorSecondary',//mapped frontColor2
 } as const;
 Object.freeze(baseLayoutColorMappedProps);
 

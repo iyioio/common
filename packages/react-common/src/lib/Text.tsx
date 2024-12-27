@@ -1,8 +1,8 @@
-import { baseLayoutCn, BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps } from "@iyio/common";
+import { baseLayoutCn, BaseLayoutColorProps, BaseLayoutFontProps, BaseLayoutProps, BaseLayoutTextOnlyFontProps } from "@iyio/common";
 import { createElement, CSSProperties } from "react";
 
 
-export interface TextProps extends BaseLayoutProps, BaseLayoutFontProps, BaseLayoutColorProps
+export interface TextProps extends BaseLayoutProps, BaseLayoutFontProps, BaseLayoutColorProps, BaseLayoutTextOnlyFontProps
 {
     text?:string;
     children?:any;

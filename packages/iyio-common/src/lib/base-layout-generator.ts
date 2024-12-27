@@ -1,9 +1,9 @@
-import { AllBaseLayoutProps, BaseLayoutAnimationProps } from "./base-layout";
+import { AllBaseLayoutProps, BaseLayoutAnimationProps, baseLayoutVarPrefix } from "./base-layout";
 import { getBaseLayoutDefaults } from "./base-layout-defaults";
 import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions, FontFace } from "./base-layout-generator-types";
 import { currentBreakpoints } from "./window-size-lib";
 
-
+const pf=baseLayoutVarPrefix;
 
 export const generateBaseLayoutCss=(options:BaseLayoutCssOptions):string=>{
 
@@ -154,48 +154,48 @@ export interface BaseLayoutBreakpointOptions extends BaseLayoutCssGenerationOpti
     includeAnimations?:boolean;
 }
 
-const defaultFontFaceDefault:FontFace={
-    family:'Helvetica Neue, Helvetica, Arial, sans-serif',
-};
-export const generateFontFaceCss=(f:FontFace={}):string=>(
-    `${f.family?'font-family:'+f.family+';':''}${f.size?'font-size:'+f.size+';':''}${f.color?'color:'+f.color+';':''}${f.weight?'font-weight:'+f.weight+';':''}${f.style?'font-style:'+f.style+';':''}${f.lineHeight?'line-height:'+f.lineHeight+';':''}${f.stretch?'font-stretch:'+f.stretch+';':''}${f.kerning?'font-kerning:'+f.kerning+';':''}${f.transform?'text-transform:'+f.transform+';':''}${f.variation?'font-variation:'+f.variation+';':''}${f.spacing?'letter-spacing:'+f.spacing+';':''}${f.css??''}`
+export const generateFontFaceCss=(name:string):string=>(
+    `font-family:var(${pf}${name}-family);color:var(${pf}${name}-color);font-size:var(${pf}${name}-size);line-height:var(${pf}${name}-lineHeight);font-weight:var(${pf}${name}-weight);font-style:var(${pf}${name}-style);font-stretch:var(${pf}${name}-stretch);font-kerning:var(${pf}${name}-kerning);text-transform:var(${pf}${name}-transform);font-variant:var(${pf}${name}-variation);letter-spacing:var(${pf}${name}-spacing);`
+)
+export const generateFontFaceCssVars=(name:string,f:FontFace={}):string=>(
+    `${
+    pf}${name}-family:${f.family??'inherit'};${
+    pf}${name}-color:${f.color??'inherit'};${
+    pf}${name}-size:${f.size??'inherit'};${
+    pf}${name}-lineHeight:${f.lineHeight??'inherit'};${
+    pf}${name}-weight:${f.weight??'inherit'};${
+    pf}${name}-style:${f.style??'inherit'};${
+    pf}${name}-stretch:${f.stretch??'inherit'};${
+    pf}${name}-kerning:${f.kerning??'inherit'};${
+    pf}${name}-transform:${f.transform??'inherit'};${
+    pf}${name}-variation:${f.variation??'inherit'};${
+    pf}${name}-spacing:${f.spacing??'inherit'};`
 )
 
 export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={}):string=>
 {
+
     const options=getBaseLayoutDefaults(opts);
     const {
-        spacing:{
-            space0:s0,
-            space025:s025,
-            space050:s050,
-            space075:s075,
-            space1:s1,
-            space2:s2,
-            space3:s3,
-            space4:s4,
-            space5:s5,
-            space6:s6,
-            space7:s7,
-            space8:s8,
-            space9:s9,
-            space10:s10,
+        spacing:{space050:obs050,space0:s0,space025:s025,space05:s05=obs050,space075:s075,space1:s1,space125:s125,space15:s15,space175:s175,space2:s2,space225:s225,space25:s25,space275:s275,space3:s3,space325:s325,space35:s35,space375:s375,space4:s4,space425:s425,space45:s45,space475:s475,space5:s5,space525:s525,space55:s55,space575:s575,space6:s6,space625:s625,space65:s65,space675:s675,space7:s7,space725:s725,space75:s75,space775:s775,space8:s8,space825:s825,space85:s85,space875:s875,space9:s9,space925:s925,space95:s95,space975:s975,space10:s10,
         },
         columnWidths:{
-            xs,
-            sm,
-            md,
-            lg,
-            xl,
+            columnXs:xs,
+            columnSm:sm,
+            columnMd:md,
+            columnLg:lg,
+            columnXl:xl,
         },
         animationSpeeds:{
-            fast,
-            quick,
-            slow,
-            extraSlow,
+            animationFast:fast,
+            animationQuick:quick,
+            animationSlow:slow,
+            animationExtraSlow:extraSlow,
         },
-        fontConfig: fc={},
-        colors: cl={},
+        border,
+        rounded,
+        fontConfig:fc={},
+        colors:cl={},
         classNameAppend:a='',
         mediaQuery,
         filter:f,
@@ -209,173 +209,83 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
         vars,
     }=options;
 
-    if(fc.normalize===undefined){fc.normalize=true}
-    if(!fc.lineHeight){fc.lineHeight='1.2em'}
-    if(!fc.body){fc.body='faceDefault'}
-    if(!fc.h1){fc.h1='face1'}
-    if(!fc.h2){fc.h2='face2'}
-    if(!fc.h3){fc.h3='face3'}
-    if(!fc.h4){fc.h4='face4'}
-    if(!fc.h5){fc.h5='face5'}
-    if(!fc.h6){fc.h6='face6'}
-    if(!fc.linkDecoration){fc.linkDecoration='none'}
-    if(!fc.linkDisplay){fc.linkDisplay='inline-block'}
-    if(!fc.weightBold){fc.weightBold='700'}
-    if(!fc.weightThin){fc.weightThin='200'}
-    if(!fc.faceDefault){fc.faceDefault={...defaultFontFaceDefault}}
-
-    if(!cl.colorPrimary){cl.colorPrimary='color1'}
-    if(!cl.colorSecondary){cl.colorSecondary='color2'}
-    if(!cl.colorInfo){cl.colorInfo='color6'}
-    if(!cl.colorSuccess){cl.colorSuccess='color7'}
-    if(!cl.colorWarn){cl.colorWarn='color8'}
-    if(!cl.colorDanger){cl.colorDanger='color9'}
-    if(!cl.colorForeground){cl.colorForeground='color10'}
-    if(!cl.colorBg){cl.colorBg='color11'}
-    if(!cl.colorBorder){cl.colorBorder='color12'}
-    if(!cl.colorMuted){cl.colorMuted='color13'}
-    if(!cl.colorContainer){cl.colorContainer='color14'}
-    if(!cl.colorInput){cl.colorInput='color15'}
-    if(!cl.frontColorPrimary){cl.frontColorPrimary='frontColor1'}
-    if(!cl.frontColorSecondary){cl.frontColorSecondary='frontColor2'}
+    const mks=(n:string)=>{
+        const b=n.substring(0,1).toUpperCase()+n.substring(1);
+        if(mediaQuery){
+            return `.io${b}${a}`;
+        }else{
+            return `.io${b}${a},.io${b}${a}--o:nth-child(odd),.io${b}${a}--e:nth-child(even),.io${b}${a}--c:first-child:first-child,.io${b}${a}--l:last-child:last-child,.io${b}${a}--d:disabled:disabled:disabled,.io${b}${a}--a:active:active:active,.io${b}${a}--f:focus:focus:focus,.io${b}${a}--h:hover:hover:hover:hover`;
+        }
+    }
 
     const forCols=(n:string,p:string)=>{
-        const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
-        if(!f||f[`${n}Xs${a}`])c.push(`.${cn}Xs${a}{${p}:${xs}}`)
-        if(!f||f[`${n}Sm${a}`])c.push(`.${cn}Sm${a}{${p}:${sm}}`)
-        if(!f||f[`${n}Md${a}`])c.push(`.${cn}Md${a}{${p}:${md}}`)
-        if(!f||f[`${n}Lg${a}`])c.push(`.${cn}Lg${a}{${p}:${lg}}`)
-        if(!f||f[`${n}Xl${a}`])c.push(`.${cn}Xl${a}{${p}:${xl}}`)
+        if(!f||f[`${n}Xs${a}`])c.push(`${mks(`${n}Xs${a}`)}{${p}:${xs}}`)
+        if(!f||f[`${n}Sm${a}`])c.push(`${mks(`${n}Sm${a}`)}{${p}:${sm}}`)
+        if(!f||f[`${n}Md${a}`])c.push(`${mks(`${n}Md${a}`)}{${p}:${md}}`)
+        if(!f||f[`${n}Lg${a}`])c.push(`${mks(`${n}Lg${a}`)}{${p}:${lg}}`)
+        if(!f||f[`${n}Xl${a}`])c.push(`${mks(`${n}Xl${a}`)}{${p}:${xl}}`)
     }
 
     const forAnimation=(n:keyof BaseLayoutAnimationProps,trans:string)=>{
-        const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
-        if(!f||f[`${n}-fast${a}`])c.push(`.${cn}-fast${a}{transition:${trans.replace(/_/g,fast)}}`)
-        if(!f||f[`${n}${a}`])c.push(`.${cn}${a}{transition:${trans.replace(/_/g,quick)}}`)
-        if(!f||f[`${n}-slow${a}`])c.push(`.${cn}-slow${a}{transition:${trans.replace(/_/g,slow)}}`)
-        if(!f||f[`${n}-extraSlow${a}`])c.push(`.${cn}-extraSlow${a}{transition:${trans.replace(/_/g,extraSlow)}}`)
+        if(!f||f[`${n}-fast${a}`])c.push(`${mks(`${n}-fast${a}`)}{transition:${trans.replace(/_/g,fast)}}`)
+        if(!f||f[`${n}${a}`])c.push(`${mks(`${n}${a}`)}{transition:${trans.replace(/_/g,quick)}}`)
+        if(!f||f[`${n}-slow${a}`])c.push(`${mks(`${n}-slow${a}`)}{transition:${trans.replace(/_/g,slow)}}`)
+        if(!f||f[`${n}-extraSlow${a}`])c.push(`${mks(`${n}-extraSlow${a}`)}{transition:${trans.replace(/_/g,extraSlow)}}`)
     }
 
-    const forSpacings=(n:string,p:string,noEdge=false)=>{
-
-        const cn='io'+n.substring(0,1).toUpperCase()+n.substring(1);
-
-        if(!f||f[`${n}025${a}`])c.push(`.${cn}025${a}{${p}:${s025}}`)
-        if(!f||f[`${n}050${a}`])c.push(`.${cn}050${a}{${p}:${s050}}`)
-        if(!f||f[`${n}075${a}`])c.push(`.${cn}075${a}{${p}:${s075}}`)
-        if(!f||f[`${n}1${a}`])c.push(`.${cn}1${a}{${p}:${s1}}`)
-        if(!f||f[`${n}2${a}`])c.push(`.${cn}2${a}{${p}:${s2}}`)
-        if(!f||f[`${n}3${a}`])c.push(`.${cn}3${a}{${p}:${s3}}`)
-        if(!f||f[`${n}4${a}`])c.push(`.${cn}4${a}{${p}:${s4}}`)
-        if(!f||f[`${n}5${a}`])c.push(`.${cn}5${a}{${p}:${s5}}`)
-        if(!f||f[`${n}6${a}`])c.push(`.${cn}6${a}{${p}:${s6}}`)
-        if(!f||f[`${n}7${a}`])c.push(`.${cn}7${a}{${p}:${s7}}`)
-        if(!f||f[`${n}8${a}`])c.push(`.${cn}8${a}{${p}:${s8}}`)
-        if(!f||f[`${n}9${a}`])c.push(`.${cn}9${a}{${p}:${s9}}`)
-        if(!f||f[`${n}10${a}`])c.push(`.${cn}10${a}{${p}:${s10}}`)
-        if(!f||f[`${n}0${a}`])c.push(`.${cn}0${a}{${p}:${s0} !important}`)
-
-        if(noEdge){
-            return;
+    const spaceNames=[
+        '0I','0','050','025','05','075','1','125','15','175','2','225','25','275','3','325','35','375',
+        '4','425','45','475','5','525','55','575','6','625','65','675','7','725','75','775',
+        '8','825','85','875','9','925','95','975','10',
+    ];
+    const spaceValues=[
+        s0,s0,s05,s025,s05,s075,s1,s125,s15,s175,s2,s225,s25,s275,s3,s325,s35,s375,s4,s425,s45,s475,
+        s5,s525,s55,s575,s6,s625,s65,s675,s7,s725,s75,s775,s8,s825,s85,s875,s9,s925,s95,s975,s10
+    ];
+    /**
+     * @param s side - (l,r,t,b)
+     * @param slb side long before - (row-,column-)
+     * @param sl side long - (-left,-right,-top,-bottom)
+     * @param cn based class name - (ioM)
+     * @param n short prop name - (m)
+     * @param p Full prop name - (margin)
+     */
+    const _forS=(s:string,slb:string,sl:string,n:string,p:string)=>{
+        for(let i=0;i<spaceNames.length;i++){
+            if(!f||f[`${n}${s}${spaceNames[i]}${a}`])c.push(`${mks(`${n}${s}${spaceNames[i]}${a}`)}{${slb}${p}${sl}:${spaceValues[i]}${i===0?' !important':''}}`)
         }
-
-        if(!f||f[`${n}t025${a}`])c.push(`.${cn}t025${a}{${p}-top:${s025}}`)
-        if(!f||f[`${n}t050${a}`])c.push(`.${cn}t050${a}{${p}-top:${s050}}`)
-        if(!f||f[`${n}t075${a}`])c.push(`.${cn}t075${a}{${p}-top:${s075}}`)
-        if(!f||f[`${n}t1${a}`])c.push(`.${cn}t1${a}{${p}-top:${s1}}`)
-        if(!f||f[`${n}t2${a}`])c.push(`.${cn}t2${a}{${p}-top:${s2}}`)
-        if(!f||f[`${n}t3${a}`])c.push(`.${cn}t3${a}{${p}-top:${s3}}`)
-        if(!f||f[`${n}t4${a}`])c.push(`.${cn}t4${a}{${p}-top:${s4}}`)
-        if(!f||f[`${n}t5${a}`])c.push(`.${cn}t5${a}{${p}-top:${s5}}`)
-        if(!f||f[`${n}t6${a}`])c.push(`.${cn}t6${a}{${p}-top:${s6}}`)
-        if(!f||f[`${n}t7${a}`])c.push(`.${cn}t7${a}{${p}-top:${s7}}`)
-        if(!f||f[`${n}t8${a}`])c.push(`.${cn}t8${a}{${p}-top:${s8}}`)
-        if(!f||f[`${n}t9${a}`])c.push(`.${cn}t9${a}{${p}-top:${s9}}`)
-        if(!f||f[`${n}t10${a}`])c.push(`.${cn}t10${a}{${p}-top:${s10}}`)
-        if(!f||f[`${n}t0${a}`])c.push(`.${cn}t0${a}{${p}-top:${s0}}`)
-
-        if(!f||f[`${n}b025${a}`])c.push(`.${cn}b025${a}{${p}-bottom:${s025}}`)
-        if(!f||f[`${n}b050${a}`])c.push(`.${cn}b050${a}{${p}-bottom:${s050}}`)
-        if(!f||f[`${n}b075${a}`])c.push(`.${cn}b075${a}{${p}-bottom:${s075}}`)
-        if(!f||f[`${n}b1${a}`])c.push(`.${cn}b1${a}{${p}-bottom:${s1}}`)
-        if(!f||f[`${n}b2${a}`])c.push(`.${cn}b2${a}{${p}-bottom:${s2}}`)
-        if(!f||f[`${n}b3${a}`])c.push(`.${cn}b3${a}{${p}-bottom:${s3}}`)
-        if(!f||f[`${n}b4${a}`])c.push(`.${cn}b4${a}{${p}-bottom:${s4}}`)
-        if(!f||f[`${n}b5${a}`])c.push(`.${cn}b5${a}{${p}-bottom:${s5}}`)
-        if(!f||f[`${n}b6${a}`])c.push(`.${cn}b6${a}{${p}-bottom:${s6}}`)
-        if(!f||f[`${n}b7${a}`])c.push(`.${cn}b7${a}{${p}-bottom:${s7}}`)
-        if(!f||f[`${n}b8${a}`])c.push(`.${cn}b8${a}{${p}-bottom:${s8}}`)
-        if(!f||f[`${n}b9${a}`])c.push(`.${cn}b9${a}{${p}-bottom:${s9}}`)
-        if(!f||f[`${n}b10${a}`])c.push(`.${cn}b10${a}{${p}-bottom:${s10}}`)
-        if(!f||f[`${n}b0${a}`])c.push(`.${cn}b0${a}{${p}-bottom:${s0}}`)
-
-        if(!f||f[`${n}l025${a}`])c.push(`.${cn}l025${a}{${p}-left:${s025}}`)
-        if(!f||f[`${n}l050${a}`])c.push(`.${cn}l050${a}{${p}-left:${s050}}`)
-        if(!f||f[`${n}l075${a}`])c.push(`.${cn}l075${a}{${p}-left:${s075}}`)
-        if(!f||f[`${n}l1${a}`])c.push(`.${cn}l1${a}{${p}-left:${s1}}`)
-        if(!f||f[`${n}l2${a}`])c.push(`.${cn}l2${a}{${p}-left:${s2}}`)
-        if(!f||f[`${n}l3${a}`])c.push(`.${cn}l3${a}{${p}-left:${s3}}`)
-        if(!f||f[`${n}l4${a}`])c.push(`.${cn}l4${a}{${p}-left:${s4}}`)
-        if(!f||f[`${n}l5${a}`])c.push(`.${cn}l5${a}{${p}-left:${s5}}`)
-        if(!f||f[`${n}l6${a}`])c.push(`.${cn}l6${a}{${p}-left:${s6}}`)
-        if(!f||f[`${n}l7${a}`])c.push(`.${cn}l7${a}{${p}-left:${s7}}`)
-        if(!f||f[`${n}l8${a}`])c.push(`.${cn}l8${a}{${p}-left:${s8}}`)
-        if(!f||f[`${n}l9${a}`])c.push(`.${cn}l9${a}{${p}-left:${s9}}`)
-        if(!f||f[`${n}l10${a}`])c.push(`.${cn}l10${a}{${p}-left:${s10}}`)
-        if(!f||f[`${n}l0${a}`])c.push(`.${cn}l0${a}{${p}-left:${s0}}`)
-
-        if(!f||f[`${n}r025${a}`])c.push(`.${cn}r025${a}{${p}-right:${s025}}`)
-        if(!f||f[`${n}r050${a}`])c.push(`.${cn}r050${a}{${p}-right:${s050}}`)
-        if(!f||f[`${n}r075${a}`])c.push(`.${cn}r075${a}{${p}-right:${s075}}`)
-        if(!f||f[`${n}r1${a}`])c.push(`.${cn}r1${a}{${p}-right:${s1}}`)
-        if(!f||f[`${n}r2${a}`])c.push(`.${cn}r2${a}{${p}-right:${s2}}`)
-        if(!f||f[`${n}r3${a}`])c.push(`.${cn}r3${a}{${p}-right:${s3}}`)
-        if(!f||f[`${n}r4${a}`])c.push(`.${cn}r4${a}{${p}-right:${s4}}`)
-        if(!f||f[`${n}r5${a}`])c.push(`.${cn}r5${a}{${p}-right:${s5}}`)
-        if(!f||f[`${n}r6${a}`])c.push(`.${cn}r6${a}{${p}-right:${s6}}`)
-        if(!f||f[`${n}r7${a}`])c.push(`.${cn}r7${a}{${p}-right:${s7}}`)
-        if(!f||f[`${n}r8${a}`])c.push(`.${cn}r8${a}{${p}-right:${s8}}`)
-        if(!f||f[`${n}r9${a}`])c.push(`.${cn}r9${a}{${p}-right:${s9}}`)
-        if(!f||f[`${n}r10${a}`])c.push(`.${cn}r10${a}{${p}-right:${s10}}`)
-        if(!f||f[`${n}r0${a}`])c.push(`.${cn}r0${a}{${p}-right:${s0}}`)
-
-        if(!f||f[`${n}v025${a}`])c.push(`.${cn}v025${a}{${p}-top:${s025};${p}-bottom:${s025}}`)
-        if(!f||f[`${n}v050${a}`])c.push(`.${cn}v050${a}{${p}-top:${s050};${p}-bottom:${s050}}`)
-        if(!f||f[`${n}v075${a}`])c.push(`.${cn}v075${a}{${p}-top:${s075};${p}-bottom:${s075}}`)
-        if(!f||f[`${n}v1${a}`])c.push(`.${cn}v1${a}{${p}-top:${s1};${p}-bottom:${s1}}`)
-        if(!f||f[`${n}v2${a}`])c.push(`.${cn}v2${a}{${p}-top:${s2};${p}-bottom:${s2}}`)
-        if(!f||f[`${n}v3${a}`])c.push(`.${cn}v3${a}{${p}-top:${s3};${p}-bottom:${s3}}`)
-        if(!f||f[`${n}v4${a}`])c.push(`.${cn}v4${a}{${p}-top:${s4};${p}-bottom:${s4}}`)
-        if(!f||f[`${n}v5${a}`])c.push(`.${cn}v5${a}{${p}-top:${s5};${p}-bottom:${s5}}`)
-        if(!f||f[`${n}v6${a}`])c.push(`.${cn}v6${a}{${p}-top:${s6};${p}-bottom:${s6}}`)
-        if(!f||f[`${n}v7${a}`])c.push(`.${cn}v7${a}{${p}-top:${s7};${p}-bottom:${s7}}`)
-        if(!f||f[`${n}v8${a}`])c.push(`.${cn}v8${a}{${p}-top:${s8};${p}-bottom:${s8}}`)
-        if(!f||f[`${n}v9${a}`])c.push(`.${cn}v9${a}{${p}-top:${s9};${p}-bottom:${s9}}`)
-        if(!f||f[`${n}v10${a}`])c.push(`.${cn}v10${a}{${p}-top:${s10};${p}-bottom:${s10}}`)
-        if(!f||f[`${n}v0${a}`])c.push(`.${cn}v0${a}{${p}-top:${s0};${p}-bottom:${s0}}`)
-
-        if(!f||f[`${n}h025${a}`])c.push(`.${cn}h025${a}{${p}-left:${s025};${p}-right:${s025}}`)
-        if(!f||f[`${n}h050${a}`])c.push(`.${cn}h050${a}{${p}-left:${s050};${p}-right:${s050}}`)
-        if(!f||f[`${n}h075${a}`])c.push(`.${cn}h075${a}{${p}-left:${s075};${p}-right:${s075}}`)
-        if(!f||f[`${n}h1${a}`])c.push(`.${cn}h1${a}{${p}-left:${s1};${p}-right:${s1}}`)
-        if(!f||f[`${n}h2${a}`])c.push(`.${cn}h2${a}{${p}-left:${s2};${p}-right:${s2}}`)
-        if(!f||f[`${n}h3${a}`])c.push(`.${cn}h3${a}{${p}-left:${s3};${p}-right:${s3}}`)
-        if(!f||f[`${n}h4${a}`])c.push(`.${cn}h4${a}{${p}-left:${s4};${p}-right:${s4}}`)
-        if(!f||f[`${n}h5${a}`])c.push(`.${cn}h5${a}{${p}-left:${s5};${p}-right:${s5}}`)
-        if(!f||f[`${n}h6${a}`])c.push(`.${cn}h6${a}{${p}-left:${s6};${p}-right:${s6}}`)
-        if(!f||f[`${n}h7${a}`])c.push(`.${cn}h7${a}{${p}-left:${s7};${p}-right:${s7}}`)
-        if(!f||f[`${n}h8${a}`])c.push(`.${cn}h8${a}{${p}-left:${s8};${p}-right:${s8}}`)
-        if(!f||f[`${n}h9${a}`])c.push(`.${cn}h9${a}{${p}-left:${s9};${p}-right:${s9}}`)
-        if(!f||f[`${n}h10${a}`])c.push(`.${cn}h10${a}{${p}-left:${s10};${p}-right:${s10}}`)
-        if(!f||f[`${n}h0${a}`])c.push(`.${cn}h0${a}{${p}-left:${s0};${p}-right:${s0}}`)
+    }
+    const _forSD=(s:string,sl:string,sl2:string,n:string,p:string)=>{
+        for(let i=0;i<spaceNames.length;i++){
+            if(!f||f[`${n}${s}${spaceNames[i]}${a}`])c.push(`${mks(`${n}${s}${spaceNames[i]}${a}`)}{${p}${sl}:${spaceValues[i]}${i===0?' !important':''};${p}${sl2}:${spaceValues[i]}${i===0?' !important':''}}`)
+        }
+    }
+    /**
+     * @param n short prop name - (m)
+     * @param p Full prop name - (margin)
+     */
+    const forSpacings=(n:string,p:string,rowCol=false)=>{
+        _forS('','','',n,p);
+        if(rowCol){
+            _forS('v','row-','',n,p);
+            _forS('h','column-','',n,p);
+        }else{
+            _forSD('v','-top','-bottom',n,p);
+            _forSD('h','-left','-right',n,p);
+            _forS('t','','-top',n,p);
+            _forS('b','','-bottom',n,p);
+            _forS('l','','-left',n,p);
+            _forS('r','','-right',n,p);
+        }
     }
 
+    const addVar=(n:keyof AllBaseLayoutProps,cssProp:string,scopedSelector?:string,scopedCss?:string)=>add(n,`${cssProp}:var(${pf}${n})`,scopedSelector,scopedCss);
     const add=(n:keyof AllBaseLayoutProps,css:string,scopedSelector?:string,scopedCss?:string)=>{
         if(!css){
             return;
         }
         if(!f || f[n+a]){
-            const selector=`.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a}`
+            const selector=mks(n);
             c.push(`${selector}{${css}}`);
             if(scopedSelector && scopedCss){
                 c.push(`${selector} ${scopedSelector}{${scopedCss}}`);
@@ -408,14 +318,14 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
 
         if(!f || f[n+a] || f[nA+a]){
             const selector=(
-                `.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a},`+
-                `.io${nA.substring(0,1).toUpperCase()+nA.substring(1)}${a}`
+                `${mks(`${n}${a}`)},`+
+                `${mks(`${nA}${a}`)}`
             )
             c.push(`${selector}{${css}}`);
             if(scopedSelector && scopedCss){
                 const s2=(
-                    `.io${n.substring(0,1).toUpperCase()+n.substring(1)}${a} ${scopedSelector},`+
-                    `.io${nA.substring(0,1).toUpperCase()+nA.substring(1)}${a} ${scopedSelector}`
+                    `${mks(`${n}${a}`)} ${scopedSelector},`+
+                    `${mks(`${nA}${a}`)} ${scopedSelector}`
                 )
                 c.push(`${s2}{${scopedCss}}`);
             }
@@ -439,9 +349,14 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
             }
         }
 
+        c.push(':root{')
+        writeBaseLayoutVars(options,c)
+        c.push('}')
+
+
         c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
         c.push(`.SlimButton[disabled]{cursor:default}`)
-        c.push(`body{${generateFontFaceCss(fc.faceDefault)}}`)
+        c.push(`body{${generateFontFaceCss('faceDefault')}}`)
         c.push(`a{text-decoration:${fc.linkDecoration};display:${fc.linkDisplay}}`)
         if(boxSizing){
             c.push(`*{box-sizing:${boxSizing}}`)
@@ -451,29 +366,29 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
         }
         c.push('.Text{display:inline-block}')
     }
-    add('unsetAll',`unsetAll`);
-    addWithAlias('face20',fc,generateFontFaceCss(fc.face20))
-    addWithAlias('face19',fc,generateFontFaceCss(fc.face19))
-    addWithAlias('face18',fc,generateFontFaceCss(fc.face18))
-    addWithAlias('face17',fc,generateFontFaceCss(fc.face17))
-    addWithAlias('face16',fc,generateFontFaceCss(fc.face16))
-    addWithAlias('face15',fc,generateFontFaceCss(fc.face15))
-    addWithAlias('face14',fc,generateFontFaceCss(fc.face14))
-    addWithAlias('face13',fc,generateFontFaceCss(fc.face13))
-    addWithAlias('face12',fc,generateFontFaceCss(fc.face12))
-    addWithAlias('face11',fc,generateFontFaceCss(fc.face11))
-    addWithAlias('face10',fc,generateFontFaceCss(fc.face10))
-    addWithAlias('face9',fc,generateFontFaceCss(fc.face9))
-    addWithAlias('face8',fc,generateFontFaceCss(fc.face8))
-    addWithAlias('face7',fc,generateFontFaceCss(fc.face7))
-    addWithAlias('face6',fc,generateFontFaceCss(fc.face6))
-    addWithAlias('face5',fc,generateFontFaceCss(fc.face5))
-    addWithAlias('face4',fc,generateFontFaceCss(fc.face4))
-    addWithAlias('face3',fc,generateFontFaceCss(fc.face3))
-    addWithAlias('face2',fc,generateFontFaceCss(fc.face2))
-    addWithAlias('face1',fc,generateFontFaceCss(fc.face1))
-    addWithAlias('face0',fc,generateFontFaceCss(fc.face0))
-    addWithAlias('faceDefault',fc,generateFontFaceCss(fc.faceDefault))
+    add('unsetAll',`all:unset`);
+    addWithAlias('face20',fc,generateFontFaceCss('face20'))
+    addWithAlias('face19',fc,generateFontFaceCss('face19'))
+    addWithAlias('face18',fc,generateFontFaceCss('face18'))
+    addWithAlias('face17',fc,generateFontFaceCss('face17'))
+    addWithAlias('face16',fc,generateFontFaceCss('face16'))
+    addWithAlias('face15',fc,generateFontFaceCss('face15'))
+    addWithAlias('face14',fc,generateFontFaceCss('face14'))
+    addWithAlias('face13',fc,generateFontFaceCss('face13'))
+    addWithAlias('face12',fc,generateFontFaceCss('face12'))
+    addWithAlias('face11',fc,generateFontFaceCss('face11'))
+    addWithAlias('face10',fc,generateFontFaceCss('face10'))
+    addWithAlias('face9',fc,generateFontFaceCss('face9'))
+    addWithAlias('face8',fc,generateFontFaceCss('face8'))
+    addWithAlias('face7',fc,generateFontFaceCss('face7'))
+    addWithAlias('face6',fc,generateFontFaceCss('face6'))
+    addWithAlias('face5',fc,generateFontFaceCss('face5'))
+    addWithAlias('face4',fc,generateFontFaceCss('face4'))
+    addWithAlias('face3',fc,generateFontFaceCss('face3'))
+    addWithAlias('face2',fc,generateFontFaceCss('face2'))
+    addWithAlias('face1',fc,generateFontFaceCss('face1'))
+    addWithAlias('face0',fc,generateFontFaceCss('face0'))
+    addWithAlias('faceDefault',fc,generateFontFaceCss('faceDefault'))
     add('xxxs',`font-size:${fc.xxxs?.size??'0.3rem'};line-height:${fc.xxxs?.lineHeight??fc.lineHeight}`)
     add('xxs',`font-size:${fc.xxs?.size??'0.5rem'};line-height:${fc.xxs?.lineHeight??fc.lineHeight}`)
     add('xs',`font-size:${fc.xs?.size??'0.7rem'};line-height:${fc.xs?.lineHeight??fc.lineHeight}`)
@@ -483,12 +398,46 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('xl',`font-size:${fc.xl?.size??'2rem'};line-height:${fc.xl?.lineHeight??fc.lineHeight}`)
     add('xxl',`font-size:${fc.xxl?.size??'4rem'};line-height:${fc.xxl?.lineHeight??fc.lineHeight}`)
     add('xxxl',`font-size:${fc.xxxl?.size??'8rem'};line-height:${fc.xxxl?.lineHeight??fc.lineHeight}`)
-    add('weightBold',`font-weight:${fc.weightBold}`)
-    add('weightThin',`font-weight:${fc.weightThin}`)
+    add('textXxxs',`font-size:${fc.xxxs?.size??'0.3rem'};line-height:${fc.xxxs?.lineHeight??fc.lineHeight}`)
+    add('textXxs',`font-size:${fc.xxs?.size??'0.5rem'};line-height:${fc.xxs?.lineHeight??fc.lineHeight}`)
+    add('textXs',`font-size:${fc.xs?.size??'0.7rem'};line-height:${fc.xs?.lineHeight??fc.lineHeight}`)
+    add('textSm',`font-size:${fc.sm?.size??'0.8rem'};line-height:${fc.sm?.lineHeight??fc.lineHeight}`)
+    add('textMd',`font-size:${fc.md?.size??'1rem'};line-height:${fc.md?.lineHeight??fc.lineHeight}`)
+    add('textLg',`font-size:${fc.lg?.size??'1.5rem'};line-height:${fc.lg?.lineHeight??fc.lineHeight}`)
+    add('textXl',`font-size:${fc.xl?.size??'2rem'};line-height:${fc.xl?.lineHeight??fc.lineHeight}`)
+    add('textXxl',`font-size:${fc.xxl?.size??'4rem'};line-height:${fc.xxl?.lineHeight??fc.lineHeight}`)
+    add('textXxxl',`font-size:${fc.xxxl?.size??'8rem'};line-height:${fc.xxxl?.lineHeight??fc.lineHeight}`)
+    addVar('weightLight','font-weight')
+    addVar('weightNormal','font-weight');
+    addVar('weightMedium','font-weight');
+    addVar('weightBold','font-weight');
+    add('weight100','font-weight:100')
+    add('weight200','font-weight:200')
+    add('weight300','font-weight:300')
+    add('weight400','font-weight:400')
+    add('weight500','font-weight:500')
+    add('weight600','font-weight:600')
+    add('weight700','font-weight:700')
+    add('weight800','font-weight:800')
     add('centerText','text-align:center')
-    add('leftText','text-align:left')
-    add('rightText','text-align:right')
+    add('leftText','text-align:left')// obsolete
+    add('rightText','text-align:right')// obsolete
     add('preSpace','white-space:pre')
+    add('whiteSpaceNormal','white-space:normal')
+    add('whiteSpaceNoWrap','white-space:nowrap')
+    add('whiteSpacePre','white-space:pre')
+    add('whiteSpacePreWrap','white-space:pre-wrap')
+    add('whiteSpacePreLine','white-space:pre-line')
+    add('whiteSpaceBreakSpaces','white-space:break-spaces')
+    add('textLeft','text-align:left')
+    add('textCenter','text-align:center')
+    add('textRight','text-align:right')
+    add('textUnderline','text-decoration:underline')
+    add('textOverline','text-decoration:overline')
+    add('textStrike','text-decoration:line-through')
+    add('textUpper','text-transform:uppercase')
+    add('textLower','text-transform:lowercase')
+    add('textCap','text-transform:capitalize')
     add('singleLine','text-overflow: ellipsis;overflow: hidden;white-space: nowrap')
     add('lineHeight100','line-height:1em')
     add('lineHeight125','line-height:1.25em')
@@ -499,43 +448,141 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('textShadowMd','text-shadow: 3px 3px 3px #00000033;')
     add('textShadowLg','text-shadow: 7px 7px 10px #00000066;')
 
-    addWithAlias('color1',cl,`color:${cl.color1};fill:${cl.color1}`)
-    addWithAlias('color2',cl,`color:${cl.color2};fill:${cl.color2}`)
-    addWithAlias('color3',cl,`color:${cl.color3};fill:${cl.color3}`)
-    addWithAlias('color4',cl,`color:${cl.color4};fill:${cl.color4}`)
-    addWithAlias('color5',cl,`color:${cl.color5};fill:${cl.color5}`)
-    addWithAlias('color6',cl,`color:${cl.color6};fill:${cl.color6}`)
-    addWithAlias('color7',cl,`color:${cl.color7};fill:${cl.color7}`)
-    addWithAlias('color8',cl,`color:${cl.color8};fill:${cl.color8}`)
-    addWithAlias('color9',cl,`color:${cl.color9};fill:${cl.color9}`)
-    addWithAlias('color10',cl,`color:${cl.color10};fill:${cl.color10}`)
-    addWithAlias('color11',cl,`color:${cl.color11};fill:${cl.color11}`)
-    addWithAlias('color12',cl,`color:${cl.color12};fill:${cl.color12}`)
-    addWithAlias('color13',cl,`color:${cl.color13};fill:${cl.color13}`)
-    addWithAlias('color14',cl,`color:${cl.color14};fill:${cl.color14}`)
-    addWithAlias('color15',cl,`color:${cl.color15};fill:${cl.color15}`)
-    addWithAlias('color16',cl,`color:${cl.color16};fill:${cl.color16}`)
-    addWithAlias('frontColor1',cl,`color:${cl.frontColor1};fill:${cl.frontColor1}`)
-    addWithAlias('frontColor2',cl,`color:${cl.frontColor2};fill:${cl.frontColor2}`)
-    addWithAlias('frontColor3',cl,`color:${cl.frontColor3};fill:${cl.frontColor3}`)
-    addWithAlias('frontColor4',cl,`color:${cl.frontColor4};fill:${cl.frontColor4}`)
-    addWithAlias('frontColor5',cl,`color:${cl.frontColor5};fill:${cl.frontColor5}`)
-    addWithAlias('frontColor6',cl,`color:${cl.frontColor6};fill:${cl.frontColor6}`)
-    addWithAlias('frontColor7',cl,`color:${cl.frontColor7};fill:${cl.frontColor7}`)
-    addWithAlias('frontColor8',cl,`color:${cl.frontColor8};fill:${cl.frontColor8}`)
-    addWithAlias('frontColor9',cl,`color:${cl.frontColor9};fill:${cl.frontColor9}`)
-    addWithAlias('frontColor10',cl,`color:${cl.frontColor10};fill:${cl.frontColor10}`)
-    addWithAlias('frontColor11',cl,`color:${cl.frontColor11};fill:${cl.frontColor11}`)
-    addWithAlias('frontColor12',cl,`color:${cl.frontColor12};fill:${cl.frontColor12}`)
-    addWithAlias('frontColor13',cl,`color:${cl.frontColor13};fill:${cl.frontColor13}`)
-    addWithAlias('frontColor14',cl,`color:${cl.frontColor14};fill:${cl.frontColor14}`)
-    addWithAlias('frontColor15',cl,`color:${cl.frontColor15};fill:${cl.frontColor15}`)
-    addWithAlias('frontColor16',cl,`color:${cl.frontColor16};fill:${cl.frontColor16}`)
+    const bv=`var(${pf}borderWidth) var(${pf}borderStyle) var(${pf}borderColor)`
+    add('border',`border:${bv}`)
+    add('borderH',`border-left:${bv};border-right:${bv}`)
+    add('borderV',`border-top:${bv};border-bottom:${bv}`)
+    add('borderT',`border-top:${bv}`);
+    add('borderB',`border-bottom:${bv}`);
+    add('borderL',`border-left:${bv}`);
+    add('borderR',`border-right:${bv}`);
+
+    addVar('borderWidth','border-width');
+
+    addVar('borderWidthSm','border-width');
+    addVar('borderWidthMd','border-width');
+    addVar('borderWidthLg','border-width');
+    addVar('borderWidthXl','border-width');
+    addVar('borderStyle',`border-style`);
+
+    add('borderSolid',`border-style:solid`);
+    add('borderDashed',`border-style:dashed`);
+    add('borderDotted',`border-style:dotted`);
+    add('borderDouble',`border-style:double`);
+
+    add('borderColorPrimary',`border-color:var(${pf}colorPrimary)`)
+    add('borderColorSecondary',`border-color:var(${pf}colorSecondary)`)
+    add('borderColorMuted',`border-color:var(${pf}colorMuted)`)
+    add('borderColorDanger',`border-color:var(${pf}colorDanger)`)
+    add('borderColorSuccess',`border-color:var(${pf}colorSuccess)`)
+    add('borderColorInfo',`border-color:var(${pf}colorInfo)`)
+    add('borderColorWarn',`border-color:var(${pf}colorWarn)`)
+    for(let i=1;i<=16;i++)add(`borderColor${i}` as any,`border-color:var(${pf}color${i})`)
+
+    add('borderNoneI',`border:none !important`);
+    add('borderNone',`border:none`);
+    add('borderNoneH',`border-left:none;border-right:none`);
+    add('borderNoneV',`border-top:none;border-bottom:none`);
+    add('borderNoneT',`border-top:none`);
+    add('borderNoneB',`border-bottom:none`);
+    add('borderNoneL',`border-left:none`);
+    add('borderNoneR',`border-right:none`);
+
+
+    add('roundedNoneI','border-radius:0 !important');
+    add('roundedNone','border-radius:0');
+    add('roundedSm',`border-radius:var(${pf}roundedSm)`);
+    add('roundedMd',`border-radius:var(${pf}roundedMd)`);
+    add('roundedLg',`border-radius:var(${pf}roundedLg)`);
+    add('rounded',`border-radius:var(${pf}rounded)`);
+
+    add('colorWhite',`color:var(${pf}colorWhite);fill:var(${pf}colorWhite)`)
+    add('colorBlack',`color:var(${pf}colorBlack);fill:var(${pf}colorBlack)`)
+    add('colorGray',`color:var(${pf}colorGray);fill:var(${pf}colorGray)`)
+    addWithAlias('color1',cl,`color:var(${pf}color1);fill:var(${pf}color1)`)
+    addWithAlias('color2',cl,`color:var(${pf}color2);fill:var(${pf}color2)`)
+    addWithAlias('color3',cl,`color:var(${pf}color3);fill:var(${pf}color3)`)
+    addWithAlias('color4',cl,`color:var(${pf}color4);fill:var(${pf}color4)`)
+    addWithAlias('color5',cl,`color:var(${pf}color5);fill:var(${pf}color5)`)
+    addWithAlias('color6',cl,`color:var(${pf}color6);fill:var(${pf}color6)`)
+    addWithAlias('color7',cl,`color:var(${pf}color7);fill:var(${pf}color7)`)
+    addWithAlias('color8',cl,`color:var(${pf}color8);fill:var(${pf}color8)`)
+    addWithAlias('color9',cl,`color:var(${pf}color9);fill:var(${pf}color9)`)
+    addWithAlias('color10',cl,`color:var(${pf}color10);fill:var(${pf}color10)`)
+    addWithAlias('color11',cl,`color:var(${pf}color11);fill:var(${pf}color11)`)
+    addWithAlias('color12',cl,`color:var(${pf}color12);fill:var(${pf}color12)`)
+    addWithAlias('color13',cl,`color:var(${pf}color13);fill:var(${pf}color13)`)
+    addWithAlias('color14',cl,`color:var(${pf}color14);fill:var(${pf}color14)`)
+    addWithAlias('color15',cl,`color:var(${pf}color15);fill:var(${pf}color15)`)
+    addWithAlias('color16',cl,`color:var(${pf}color16);fill:var(${pf}color16)`)
+
+    add('bgColorWhite',`background-color:var(${pf}bgColorWhite)`)
+    add('bgColorBlack',`background-color:var(${pf}bgColorBlack)`)
+    add('bgColorGray',`background-color:var(${pf}bgColorGray)`)
+    addWithAlias('bgColor1',cl,`background-color:var(${pf}bgColor1)`)
+    addWithAlias('bgColor2',cl,`background-color:var(${pf}bgColor2)`)
+    addWithAlias('bgColor3',cl,`background-color:var(${pf}bgColor3)`)
+    addWithAlias('bgColor4',cl,`background-color:var(${pf}bgColor4)`)
+    addWithAlias('bgColor5',cl,`background-color:var(${pf}bgColor5)`)
+    addWithAlias('bgColor6',cl,`background-color:var(${pf}bgColor6)`)
+    addWithAlias('bgColor7',cl,`background-color:var(${pf}bgColor7)`)
+    addWithAlias('bgColor8',cl,`background-color:var(${pf}bgColor8)`)
+    addWithAlias('bgColor9',cl,`background-color:var(${pf}bgColor9)`)
+    addWithAlias('bgColor10',cl,`background-color:var(${pf}bgColor10)`)
+    addWithAlias('bgColor11',cl,`background-color:var(${pf}bgColor11)`)
+    addWithAlias('bgColor12',cl,`background-color:var(${pf}bgColor12)`)
+    addWithAlias('bgColor13',cl,`background-color:var(${pf}bgColor13)`)
+    addWithAlias('bgColor14',cl,`background-color:var(${pf}bgColor14)`)
+    addWithAlias('bgColor15',cl,`background-color:var(${pf}bgColor15)`)
+    addWithAlias('bgColor16',cl,`background-color:var(${pf}bgColor16)`)
+
+    add('frontColorWhite',`color:var(${pf}frontColorWhite);fill:var(${pf}frontColorWhite)`)
+    add('frontColorBlack',`color:var(${pf}frontColorBlack);fill:var(${pf}frontColorBlack)`)
+    add('frontColorGray',`color:var(${pf}frontColorGray);fill:var(${pf}frontColorGray)`)
+    addWithAlias('frontColor1',cl,`color:var(${pf}frontColor1);fill:var(${pf}frontColor1)`)
+    addWithAlias('frontColor2',cl,`color:var(${pf}frontColor2);fill:var(${pf}frontColor2)`)
+    addWithAlias('frontColor3',cl,`color:var(${pf}frontColor3);fill:var(${pf}frontColor3)`)
+    addWithAlias('frontColor4',cl,`color:var(${pf}frontColor4);fill:var(${pf}frontColor4)`)
+    addWithAlias('frontColor5',cl,`color:var(${pf}frontColor5);fill:var(${pf}frontColor5)`)
+    addWithAlias('frontColor6',cl,`color:var(${pf}frontColor6);fill:var(${pf}frontColor6)`)
+    addWithAlias('frontColor7',cl,`color:var(${pf}frontColor7);fill:var(${pf}frontColor7)`)
+    addWithAlias('frontColor8',cl,`color:var(${pf}frontColor8);fill:var(${pf}frontColor8)`)
+    addWithAlias('frontColor9',cl,`color:var(${pf}frontColor9);fill:var(${pf}frontColor9)`)
+    addWithAlias('frontColor10',cl,`color:var(${pf}frontColor10);fill:var(${pf}frontColor10)`)
+    addWithAlias('frontColor11',cl,`color:var(${pf}frontColor11);fill:var(${pf}frontColor11)`)
+    addWithAlias('frontColor12',cl,`color:var(${pf}frontColor12);fill:var(${pf}frontColor12)`)
+    addWithAlias('frontColor13',cl,`color:var(${pf}frontColor13);fill:var(${pf}frontColor13)`)
+    addWithAlias('frontColor14',cl,`color:var(${pf}frontColor14);fill:var(${pf}frontColor14)`)
+    addWithAlias('frontColor15',cl,`color:var(${pf}frontColor15);fill:var(${pf}frontColor15)`)
+    addWithAlias('frontColor16',cl,`color:var(${pf}frontColor16);fill:var(${pf}frontColor16)`)
+
+    addVar('filterBlurSm','filter');
+    addVar('filterBlurMd','filter');
+    addVar('filterBlurLg','filter');
+    add('filterBlur',`filter:var(${pf}filterBlur)`);
+    addVar('filterBrightenSm','filter');
+    addVar('filterBrightenMd','filter');
+    addVar('filterBrightenLg','filter');
+    add('filterBrighten',`filter:var(${pf}filterBrighten)`);
+    addVar('filterDarkenSm','filter');
+    addVar('filterDarkenMd','filter');
+    addVar('filterDarkenLg','filter');
+    add('filterDarken',`filter:var(${pf}filterDarken)`);
+    add('filterGrayscale','filter:grayscale(100%)');
+    add('filterInvert','filter:invert(100%)');
 
     add('listStyleNone','list-style:none;margin:0;padding:0')
 
     add('mCon',`margin-left:${containerMargin};margin-right:${containerMargin};`)
     add('pCon',`padding-left:${containerMargin};padding-right:${containerMargin};`)
+
+    add('mAuto','margin:auto');
+    add('mtAuto','margin-top:auto');
+    add('mbAuto','margin-bottom:auto');
+    add('mlAuto','margin-left:auto');
+    add('mrAuto','margin-right:auto');
+    add('mvAuto','margin-top:auto;margin-bottom:auto');
+    add('mhAuto','margin-left:auto;margin-right:auto');
 
     forSpacings('g','gap',true)
     forSpacings('p','padding')
@@ -621,8 +668,17 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('absFill','position:absolute !important;left:0;top:0;right:0;bottom:0')
     add('absFillWh','position:absolute !important;left:0;top:0;width:100%;height:100%')
     add('wh100','width:100%;height:100%')
+
+    const sizes=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,24,32,40,45,48,56,64,72,80,88,96,104,112,120,128,135,136,144] as const;
     add('w100','width:100%')
+    for(const s of sizes)add(`w${s}`,`width:${s}rem`)
+    for(const s of sizes)add(`wMin${s}`,`min-width:${s}rem`)
+    for(const s of sizes)add(`wMax${s}`,`max-width:${s}rem`)
     add('h100','height:100%')
+    for(const s of sizes)add(`h${s}`,`height:${s}rem`)
+    for(const s of sizes)add(`hMin${s}`,`min-height:${s}rem`)
+    for(const s of sizes)add(`hMax${s}`,`max-height:${s}rem`)
+
     add('borderBox','box-sizing:border-box')
     add('pointerEventsNone','pointer-events:none')
     add('cursorPointer','cursor:pointer')
@@ -700,5 +756,145 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
         return '';
     }else{
         return c.join(lineSeparator);
+    }
+}
+
+const skipKeys:(keyof BaseLayoutBreakpointOptions)[]=[
+    'appendCss',
+    'classNameAppend',
+    'filter',
+    'includeAnimations',
+    'lineSeparator',
+    'lines',
+    'mediaQuery',
+    'vars',
+    'spacing'
+]
+
+type KeyConfigType='skip'|'mapped'|'font';
+interface KeyConfig<T=any>{
+    type:KeyConfigType;
+}
+
+type TypeConfig<T> = {
+    [prop in keyof T]?:KeyConfig<Required<T>>;
+}
+
+type Subs={
+    [prop in keyof BaseLayoutBreakpointOptions]?:TypeConfig<BaseLayoutBreakpointOptions[prop]>
+}
+
+const subConfigs:Subs={
+    border:{
+        borderWidth:{type:'mapped'},
+        borderColor:{type:'mapped'},
+    },
+    rounded:{
+        rounded:{type:'mapped'}
+    },
+    colors:{
+        colorPrimary:{type:'mapped'},
+        colorSecondary:{type:'mapped'},
+        colorInfo:{type:'mapped'},
+        colorSuccess:{type:'mapped'},
+        colorDanger:{type:'mapped'},
+        colorWarn:{type:'mapped'},
+        colorForeground:{type:'mapped'},
+        colorBorder:{type:'mapped'},
+        colorMuted:{type:'mapped'},
+        colorContainer:{type:'mapped'},
+        colorInput:{type:'mapped'},
+        bgColorPrimary:{type:'mapped'},
+        bgColorSecondary:{type:'mapped'},
+        bgColorInfo:{type:'mapped'},
+        bgColorSuccess:{type:'mapped'},
+        bgColorDanger:{type:'mapped'},
+        bgColorWarn:{type:'mapped'},
+        bgColorForeground:{type:'mapped'},
+        bgColorBorder:{type:'mapped'},
+        bgColorMuted:{type:'mapped'},
+        bgColorContainer:{type:'mapped'},
+        bgColorInput:{type:'mapped'},
+        frontColorPrimary:{type:'mapped'},
+        frontColorSecondary:{type:'mapped'},
+        frontColorInfo:{type:'mapped'},
+        frontColorSuccess:{type:'mapped'},
+        frontColorDanger:{type:'mapped'},
+        frontColorWarn:{type:'mapped'},
+        frontColorForeground:{type:'mapped'},
+        frontColorBorder:{type:'mapped'},
+        frontColorMuted:{type:'mapped'},
+        frontColorContainer:{type:'mapped'},
+        frontColorInput:{type:'mapped'},
+    },
+    fontConfig:{
+        h1:{type:'mapped'},
+        h2:{type:'mapped'},
+        h3:{type:'mapped'},
+        h4:{type:'mapped'},
+        h5:{type:'mapped'},
+        h6:{type:'mapped'},
+        body:{type:'mapped'},
+        faceDefault:{type:'font'},
+        face0:{type:'font'},
+        face1:{type:'font'},
+        face2:{type:'font'},
+        face3:{type:'font'},
+        face4:{type:'font'},
+        face5:{type:'font'},
+        face6:{type:'font'},
+        face7:{type:'font'},
+        face8:{type:'font'},
+        face9:{type:'font'},
+        face10:{type:'font'},
+        face11:{type:'font'},
+        face12:{type:'font'},
+        face13:{type:'font'},
+        face14:{type:'font'},
+        face15:{type:'font'},
+        face16:{type:'font'},
+        face17:{type:'font'},
+        face18:{type:'font'},
+        face19:{type:'font'},
+        face20:{type:'font'},
+    },
+    filterConfig:{
+        filterBlur:{type:'mapped'},
+        filterBrighten:{type:'mapped'},
+        filterDarken:{type:'mapped'},
+    }
+};
+
+export const writeBaseLayoutVars=(options:BaseLayoutBreakpointOptions,out:string[])=>{
+    const pf=baseLayoutVarPrefix;
+    for(const t in options){
+
+        if(skipKeys.includes(t as any)){
+            continue;
+        }
+
+        const value=(options as any)[t];
+        if(value===undefined){
+            continue;
+        }
+
+        if((typeof value === 'object') && value){
+            const sub=(subConfigs as any)[t];
+            for(const cp in value){
+                const config:KeyConfig|undefined=sub?.[cp];
+                const cv=value[cp];
+                if(!config){
+                    out.push(`${pf}${cp}:${cv};`);
+                }else if(config.type==='mapped'){
+                    out.push(`${pf}${cp}:var(${pf}${cv});`);
+                }else if(config.type==='font'){
+                    out.push(generateFontFaceCssVars(cp,cv));
+                }
+
+
+            }
+        }else{
+            out.push(`${pf}${t}:${value};`);
+        }
     }
 }

@@ -6,37 +6,66 @@ import { Breakpoints } from "./window-size-lib";
 
 export interface BaseLayoutSpacings
 {
+    space050?:string;
+
     space0?:string;
     space025?:string;
-    space050?:string;
+    space05?:string;
     space075?:string;
     space1?:string;
+    space125?:string;
+    space15?:string;
+    space175?:string;
     space2?:string;
+    space225?:string;
+    space25?:string;
+    space275?:string;
     space3?:string;
+    space325?:string;
+    space35?:string;
+    space375?:string;
     space4?:string;
+    space425?:string;
+    space45?:string;
+    space475?:string;
     space5?:string;
+    space525?:string;
+    space55?:string;
+    space575?:string;
     space6?:string;
+    space625?:string;
+    space65?:string;
+    space675?:string;
     space7?:string;
+    space725?:string;
+    space75?:string;
+    space775?:string;
     space8?:string;
+    space825?:string;
+    space85?:string;
+    space875?:string;
     space9?:string;
+    space925?:string;
+    space95?:string;
+    space975?:string;
     space10?:string;
 }
 
 export interface BaseLayoutColumnWidths
 {
-    xs?:string;
-    sm?:string;
-    md?:string;
-    lg?:string;
-    xl?:string;
+    columnXs?:string;
+    columnSm?:string;
+    columnMd?:string;
+    columnLg?:string;
+    columnXl?:string;
 }
 
 export interface BaseLayoutAnimationSpeeds
 {
-    fast?:string;
-    quick?:string;
-    slow?:string;
-    extraSlow?:string;
+    animationFast?:string;
+    animationQuick?:string;
+    animationSlow?:string;
+    animationExtraSlow?:string;
 }
 
 export interface FontFaceSize
@@ -97,8 +126,10 @@ export interface FontFaceConfig extends FontFaces
     xxxl?:FontFaceSize;
     normalize?:boolean;
     lineHeight?:string;
+    weightLight?:string;
+    weightNormal?:string;
+    weightMedium?:string;
     weightBold?:string;
-    weightThin?:string;
     linkDecoration?:string;
     linkDisplay?:string;
     body?:keyof FontFaces;
@@ -110,11 +141,54 @@ export interface FontFaceConfig extends FontFaces
     h6?:keyof FontFaces;
 }
 
+export interface FilterConfig
+{
+    filterBlur?:'filterBlurSm'|'filterBlurMd'|'filterBlurLg';
+    filterBlurSm?:string;
+    filterBlurMd?:string;
+    filterBlurLg?:string;
+    filterBrighten?:'filterBrightenSm'|'filterBrightenMd'|'filterBrightenLg';
+    filterBrightenSm?:string;
+    filterBrightenMd?:string;
+    filterBrightenLg?:string;
+    filterDarken?:'filterDarkenSm'|'filterDarkenMd'|'filterDarkenLg';
+    filterDarkenSm?:string;
+    filterDarkenMd?:string;
+    filterDarkenLg?:string;
+}
+
 export type LayoutColors = {
     -readonly [prop in keyof typeof baseLayoutColorBaseProps]?:string;
 }
 export type LayoutMappedColors = {
     -readonly [prop in keyof typeof baseLayoutColorMappedProps]?:keyof LayoutColors;
+}
+
+export interface BorderConfigValues{
+    borderWidthSm?:string;
+    borderWidthMd?:string;
+    borderWidthLg?:string;
+    borderWidthXl?:string;
+}
+
+export interface BorderConfig extends BorderConfigValues
+{
+    borderWidth?:keyof BorderConfigValues;
+    borderStyle?:string;
+    borderColor?:string;
+}
+
+export interface RoundedConfigValues
+{
+    roundedSm?:string;
+    roundedMd?:string;
+    roundedLg?:string;
+    roundedXl?:string;
+}
+export interface RoundedConfig extends RoundedConfigValues
+{
+    disabledRounding?:boolean;
+    rounded?:keyof RoundedConfigValues;
 }
 
 export type LayoutColorConfig = LayoutColors & LayoutMappedColors;
@@ -135,6 +209,10 @@ export interface BaseLayoutCssGenerationOptions
 
     filter?:HashMap<boolean>;
 
+    /**
+     * Will be replaced with hard coded values
+     * @obsolete
+     */
     spacing?:BaseLayoutSpacings;
 
     columnWidths?:BaseLayoutColumnWidths;
@@ -154,12 +232,18 @@ export interface BaseLayoutCssGenerationOptions
 
     fontConfig?:FontFaceConfig;
 
+    filterConfig?:FilterConfig;
+
     colors?:LayoutColorConfig;
 
     boxSizing?:string|null;
 
+    border?:BorderConfig;
+
+    rounded?:RoundedConfig;
+
     /**
-     * do not the -- as part of the var names.
+     * do not include the -- as part of the var names.
      */
     vars?:BaseLayoutVarContainer[];
 }
@@ -176,7 +260,7 @@ export interface BaseLayoutVarContainer
 
 export type BaseLayoutBreakpointOptionsDefaults=BaseLayoutBreakpointOptions & RequiredRecursive<Pick<BaseLayoutBreakpointOptions,
     'spacing'|'columnWidths'|'animationSpeeds'|'containerMargin'|
-    'semiTransparency'|'animationSpeeds'
+    'semiTransparency'|'animationSpeeds'|'border'|'rounded'|'filterConfig'
 >>
 
 export interface BaseLayoutCssOptions extends BaseLayoutCssGenerationOptions
