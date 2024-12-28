@@ -192,8 +192,6 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
             animationSlow:slow,
             animationExtraSlow:extraSlow,
         },
-        border,
-        rounded,
         fontConfig:fc={},
         colors:cl={},
         classNameAppend:a='',
@@ -356,7 +354,7 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
 
         c.push(`.SlimButton{all:unset;display:flex;cursor:pointer}`)
         c.push(`.SlimButton[disabled]{cursor:default}`)
-        c.push(`body{${generateFontFaceCss('faceDefault')}}`)
+        c.push(`body{${generateFontFaceCss('faceDefault')}fill:var(${pf}faceDefault-color)}`)
         c.push(`a{text-decoration:${fc.linkDecoration};display:${fc.linkDisplay}}`)
         if(boxSizing){
             c.push(`*{box-sizing:${boxSizing}}`)
@@ -671,11 +669,11 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
 
     const sizes=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,24,32,40,45,48,56,64,72,80,88,96,104,112,120,128,135,136,144] as const;
     add('w100','width:100%')
-    for(const s of sizes)add(`w${s}`,`width:${s}rem`)
+    for(const s of sizes)add(`width${s}`,`width:${s}rem`)
     for(const s of sizes)add(`wMin${s}`,`min-width:${s}rem`)
     for(const s of sizes)add(`wMax${s}`,`max-width:${s}rem`)
     add('h100','height:100%')
-    for(const s of sizes)add(`h${s}`,`height:${s}rem`)
+    for(const s of sizes)add(`height${s}`,`height:${s}rem`)
     for(const s of sizes)add(`hMin${s}`,`min-height:${s}rem`)
     for(const s of sizes)add(`hMax${s}`,`max-height:${s}rem`)
 
