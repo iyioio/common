@@ -43,6 +43,9 @@ const _buildQuery=(ctx:QueryBuildCtx, depth:number, query:Query, subCondition:Qu
     ctx.idStack.push(asName);
 
     ctx.sql.push('select');
+    if(query.distinct){
+        ctx.sql.push('distinct')
+    }
     if(query.columns){
 
         for(const v of query.columns){

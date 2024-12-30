@@ -29,6 +29,11 @@ export interface Query
     table?:string|Query;
 
     /**
+     * If true distinct results should be returned
+     */
+    distinct?:boolean;
+
+    /**
      * A name to define the table as in the query. If not defined a unique name will be generated.
      */
     tableAs?:string;
