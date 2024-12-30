@@ -322,6 +322,7 @@ export const baseLayoutBorderProps={
     borderB:'ioBorderB',// mapped borderWidth borderStyle borderColor
     borderL:'ioBorderL',// mapped borderWidth borderStyle borderColor
     borderR:'ioBorderR',// mapped borderWidth borderStyle borderColor
+    borderU:'ioBorderU',// mapped borderWidth borderStyle borderColor
     borderNone:'ioBorderNone',
     borderNoneH:'ioBorderNoneH',
     borderNoneV:'ioBorderNoneV',
@@ -365,6 +366,62 @@ export const baseLayoutRoundedProps={
     roundedLg:'ioRoundedLg',
     roundedXl:'ioRoundedXl',
     rounded:'ioRounded',// mapped - roundedMd
+    roundedTNoneI:'ioRoundedTNoneI',
+    roundedTNone:'ioRoundedTNone',
+    roundedTSm:'ioRoundedTSm',
+    roundedTMd:'ioRoundedTMd',
+    roundedTLg:'ioRoundedTLg',
+    roundedTXl:'ioRoundedTXl',
+    roundedT:'ioRoundedT',// mapped - roundedMd
+    roundedBNoneI:'ioRoundedBNoneI',
+    roundedBNone:'ioRoundedBNone',
+    roundedBSm:'ioRoundedBSm',
+    roundedBMd:'ioRoundedBMd',
+    roundedBLg:'ioRoundedBLg',
+    roundedBXl:'ioRoundedBXl',
+    roundedB:'ioRoundedB',// mapped - roundedMd
+    roundedLNoneI:'ioRoundedLNoneI',
+    roundedLNone:'ioRoundedLNone',
+    roundedLSm:'ioRoundedLSm',
+    roundedLMd:'ioRoundedLMd',
+    roundedLLg:'ioRoundedLLg',
+    roundedLXl:'ioRoundedLXl',
+    roundedL:'ioRoundedL',// mapped - roundedMd
+    roundedRNoneI:'ioRoundedRNoneI',
+    roundedRNone:'ioRoundedRNone',
+    roundedRSm:'ioRoundedRSm',
+    roundedRMd:'ioRoundedRMd',
+    roundedRLg:'ioRoundedRLg',
+    roundedRXl:'ioRoundedRXl',
+    roundedR:'ioRoundedR',// mapped - roundedMd
+    roundedTrNoneI:'ioRoundedTrNoneI',
+    roundedTrNone:'ioRoundedTrNone',
+    roundedTrSm:'ioRoundedTrSm',
+    roundedTrMd:'ioRoundedTrMd',
+    roundedTrLg:'ioRoundedTrLg',
+    roundedTrXl:'ioRoundedTrXl',
+    roundedTr:'ioRoundedTr',// mapped - roundedMd
+    roundedTlNoneI:'ioRoundedTlNoneI',
+    roundedTlNone:'ioRoundedTlNone',
+    roundedTlSm:'ioRoundedTlSm',
+    roundedTlMd:'ioRoundedTlMd',
+    roundedTlLg:'ioRoundedTlLg',
+    roundedTlXl:'ioRoundedTlXl',
+    roundedTl:'ioRoundedTl',// mapped - roundedMd
+    roundedBrNoneI:'ioRoundedBrNoneI',
+    roundedBrNone:'ioRoundedBrNone',
+    roundedBrSm:'ioRoundedBrSm',
+    roundedBrMd:'ioRoundedBrMd',
+    roundedBrLg:'ioRoundedBrLg',
+    roundedBrXl:'ioRoundedBrXl',
+    roundedBr:'ioRoundedBr',// mapped - roundedMd
+    roundedBlNoneI:'ioRoundedBlNoneI',
+    roundedBlNone:'ioRoundedBlNone',
+    roundedBlSm:'ioRoundedBlSm',
+    roundedBlMd:'ioRoundedBlMd',
+    roundedBlLg:'ioRoundedBlLg',
+    roundedBlXl:'ioRoundedBlXl',
+    roundedBl:'ioRoundedBl',// mapped - roundedMd
 } as const;
 Object.freeze(baseLayoutRoundedProps);
 export type BaseLayoutRoundedProps = {
@@ -1016,6 +1073,7 @@ export const baseLayoutMarginProps={
     mt975:'ioMt975',
     mt10:'ioMt10',
     mb0I:'ioMb0I',
+    mb0:'ioMb0',
     mb025:'ioMb025',
     mb05:'ioMb05',
     mb075:'ioMb075',
@@ -1597,6 +1655,7 @@ export type BaseLayoutFlagProps = {
 const allMap={
     ...baseLayoutFlagProps,
     ...baseLayoutAnimationProps,
+    ...baseLayoutTextOnlyFontProps
 } as const;
 
 export const allBaseLayoutFlagProps:(keyof BaseLayoutFlagProps)[]=[];

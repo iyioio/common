@@ -448,6 +448,7 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
 
     const bv=`var(${pf}borderWidth) var(${pf}borderStyle) var(${pf}borderColor)`
     add('border',`border:${bv}`)
+    add('borderU',`border-left:${bv};border-right:${bv};border-bottom:${bv}`)
     add('borderH',`border-left:${bv};border-right:${bv}`)
     add('borderV',`border-top:${bv};border-bottom:${bv}`)
     add('borderT',`border-top:${bv}`);
@@ -493,6 +494,62 @@ export const generateBaseLayoutBreakpointCss=(opts:BaseLayoutBreakpointOptions={
     add('roundedMd',`border-radius:var(${pf}roundedMd)`);
     add('roundedLg',`border-radius:var(${pf}roundedLg)`);
     add('rounded',`border-radius:var(${pf}rounded)`);
+
+    add('roundedTNoneI','border-top-left-radius:0 !important;border-top-right-radius:0 !important');
+    add('roundedTNone','border-top-left-radius:0;border-top-left-radius:0');
+    add('roundedTSm',`border-top-left-radius:var(${pf}roundedSm);border-top-right-radius:var(${pf}roundedSm)`);
+    add('roundedTMd',`border-top-left-radius:var(${pf}roundedMd);border-top-right-radius:var(${pf}roundedMd)`);
+    add('roundedTLg',`border-top-left-radius:var(${pf}roundedLg);border-top-right-radius:var(${pf}roundedLg)`);
+    add('roundedT',`border-top-left-radius:var(${pf}rounded);border-top-right-radius:var(${pf}rounded)`);
+
+    add('roundedBNoneI','border-bottom-left-radius:0 !important;border-bottom-right-radius:0 !important');
+    add('roundedBNone','border-bottom-left-radius:0;border-bottom-left-radius:0');
+    add('roundedBSm',`border-bottom-left-radius:var(${pf}roundedSm);border-bottom-right-radius:var(${pf}roundedSm)`);
+    add('roundedBMd',`border-bottom-left-radius:var(${pf}roundedMd);border-bottom-right-radius:var(${pf}roundedMd)`);
+    add('roundedBLg',`border-bottom-left-radius:var(${pf}roundedLg);border-bottom-right-radius:var(${pf}roundedLg)`);
+    add('roundedB',`border-bottom-left-radius:var(${pf}rounded);border-bottom-right-radius:var(${pf}rounded)`);
+
+    add('roundedLNoneI','border-bottom-left-radius:0 !important;border-top-left-radius:0 !important');
+    add('roundedLNone','border-bottom-left-radius:0;border-bottom-left-radius:0');
+    add('roundedLSm',`border-bottom-left-radius:var(${pf}roundedSm);border-top-left-radius:var(${pf}roundedSm)`);
+    add('roundedLMd',`border-bottom-left-radius:var(${pf}roundedMd);border-top-left-radius:var(${pf}roundedMd)`);
+    add('roundedLLg',`border-bottom-left-radius:var(${pf}roundedLg);border-top-left-radius:var(${pf}roundedLg)`);
+    add('roundedL',`border-bottom-left-radius:var(${pf}rounded);border-top-left-radius:var(${pf}rounded)`);
+
+    add('roundedRNoneI','border-bottom-right-radius:0 !important;border-top-right-radius:0 !important');
+    add('roundedRNone','border-bottom-right-radius:0;border-bottom-right-radius:0');
+    add('roundedRSm',`border-bottom-right-radius:var(${pf}roundedSm);border-top-right-radius:var(${pf}roundedSm)`);
+    add('roundedRMd',`border-bottom-right-radius:var(${pf}roundedMd);border-top-right-radius:var(${pf}roundedMd)`);
+    add('roundedRLg',`border-bottom-right-radius:var(${pf}roundedLg);border-top-right-radius:var(${pf}roundedLg)`);
+    add('roundedR',`border-bottom-right-radius:var(${pf}rounded);border-top-right-radius:var(${pf}rounded)`);
+
+    add('roundedTlNoneI','border-top-left-radius:0 !important');
+    add('roundedTlNone','border-top-left-radius:0');
+    add('roundedTlSm',`border-top-left-radius:var(${pf}roundedSm)`);
+    add('roundedTlMd',`border-top-left-radius:var(${pf}roundedMd)`);
+    add('roundedTlLg',`border-top-left-radius:var(${pf}roundedLg)`);
+    add('roundedTl',`border-top-left-radius:var(${pf}rounded)`);
+
+    add('roundedTrNoneI','border-top-right-radius:0 !important');
+    add('roundedTrNone','border-top-right-radius:0');
+    add('roundedTrSm',`border-top-right-radius:var(${pf}roundedSm)`);
+    add('roundedTrMd',`border-top-right-radius:var(${pf}roundedMd)`);
+    add('roundedTrLg',`border-top-right-radius:var(${pf}roundedLg)`);
+    add('roundedTr',`border-top-right-radius:var(${pf}rounded)`);
+
+    add('roundedBlNoneI','border-bottom-left-radius:0 !important');
+    add('roundedBlNone','border-bottom-left-radius:0');
+    add('roundedBlSm',`border-bottom-left-radius:var(${pf}roundedSm)`);
+    add('roundedBlMd',`border-bottom-left-radius:var(${pf}roundedMd)`);
+    add('roundedBlLg',`border-bottom-left-radius:var(${pf}roundedLg)`);
+    add('roundedBl',`border-bottom-left-radius:var(${pf}rounded)`);
+
+    add('roundedBrNoneI','border-bottom-right-radius:0 !important');
+    add('roundedBrNone','border-bottom-right-radius:0');
+    add('roundedBrSm',`border-bottom-right-radius:var(${pf}roundedSm)`);
+    add('roundedBrMd',`border-bottom-right-radius:var(${pf}roundedMd)`);
+    add('roundedBrLg',`border-bottom-right-radius:var(${pf}roundedLg)`);
+    add('roundedBr',`border-bottom-right-radius:var(${pf}rounded)`);
 
     add('colorWhite',`color:var(${pf}colorWhite);fill:var(${pf}colorWhite)`)
     add('colorBlack',`color:var(${pf}colorBlack);fill:var(${pf}colorBlack)`)
@@ -788,7 +845,7 @@ const subConfigs:Subs={
         borderColor:{type:'mapped'},
     },
     rounded:{
-        rounded:{type:'mapped'}
+        rounded:{type:'mapped'},
     },
     colors:{
         colorPrimary:{type:'mapped'},
