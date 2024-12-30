@@ -163,7 +163,7 @@ export abstract class SqlBaseMethods implements ISqlMethods
      */
     public async insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<void>
     {
-
+        const dataTable=typeof table === 'object'?table:undefined;
         table=getDataTableId(table);
         if(options?.batchSize){
             const ary=asArray(values);
@@ -177,7 +177,7 @@ export abstract class SqlBaseMethods implements ISqlMethods
                     table,
                     ary.slice(i,i+options.batchSize),
                     false,
-                    (typeof table !== 'string'?table:undefined)
+                    dataTable
                 );
             }
         }else{
@@ -186,7 +186,7 @@ export abstract class SqlBaseMethods implements ISqlMethods
                 table,
                 values,
                 false,
-                (typeof table !== 'string'?table:undefined)
+                dataTable
             );
         }
     }
@@ -288,6 +288,9 @@ export abstract class SqlBaseMethods implements ISqlMethods
         const keys:string[]=[];
         for(const v of values){
             for(const e in v){
+                if(dataTable && dataTable.primaryKey===e && (v as any)?.[e]===0){
+                    continue;
+                }
                 if(!keys.includes(e)){
                     keys.push(e);
                 }
