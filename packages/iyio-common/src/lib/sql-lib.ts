@@ -3,9 +3,11 @@ import { safeParseNumber } from "./numbers";
 
 const jsonPathReg=/^(\w+)\.([^:]+):(\w+)$/;
 const castTypes=[
-    'json','jsonb','boolean','text','int',
-    'json[]','jsonb[]','boolean[]','text[]','int[]',
-]
+    'json','jsonb','boolean','text','int','numeric',
+    'json[]','jsonb[]','boolean[]','text[]','int[]','numeric[]',
+] as const;
+
+export type SqlJsonCastType=typeof castTypes[number];
 
 export const escapeSqlString=(value:string)=>"'"+value.replace(/'/g,"''")+"'";
 export const escapeSqlName=(value:string)=>{
@@ -14,7 +16,7 @@ export const escapeSqlName=(value:string)=>{
 
         if(jMatch){
             const type=jMatch[3] as string;
-            if(!castTypes.includes(type)){
+            if(!castTypes.includes(type as any)){
                 throw new Error('Invalid JSON path expression - '+value);
             }
             const parts=(jMatch[2] as string).split('.').map(v=>escapeSqlString(v));
@@ -22,6 +24,10 @@ export const escapeSqlName=(value:string)=>{
         }
     }
     return '"'+value.replace(/"/g,'""')+'"'
+}
+
+export const escapeSqlJsonName=(dotPath:string,type:SqlJsonCastType)=>{
+    return escapeSqlName(dotPath+':'+type);
 }
 
 const isEscaped=Symbol('isEscaped');
