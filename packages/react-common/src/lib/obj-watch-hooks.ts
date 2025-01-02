@@ -36,7 +36,7 @@ export const useWatchPath=<
 export const useWatchDeep=<T>(obj:T)=>{
     const [update,setUpdate]=useState(0);
     useEffect(()=>{
-        if(!obj){
+        if(!obj || (typeof obj !== 'object')){
             return;
         }
         const watchedPath=watchObjDeep(obj,()=>{
