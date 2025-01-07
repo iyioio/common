@@ -126,7 +126,7 @@ export const getBaseLayoutDefaults=(options:BaseLayoutBreakpointOptions={}):Base
             colorGray='#777777',
             color1='#213555',
             colorPrimary='color1',
-            color2='D8C4B6',
+            color2='#D8C4B6',
             colorSecondary='color2',
             color3='#3E5879',
             color4='#F5EFE7',
