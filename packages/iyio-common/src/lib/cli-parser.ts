@@ -192,3 +192,8 @@ export const convertParsedCliArgs=<T>(argMap:HashMap<string[]>,converter:CliArgs
 
     return converted as any;
 }
+
+export const escapeCommandLineString=(str:string)=>{
+    return "'"+str.replace(singleQuoteReg,"'\\''")+"'";
+}
+const singleQuoteReg=/'/g
