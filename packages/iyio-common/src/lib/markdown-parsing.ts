@@ -1,7 +1,7 @@
 import { MarkdownImageParsingItem } from "./markdown-types";
 
-const imageReg=/!\[(.*?)\]\((.*?)\)/gs;
-const imageProtoReg=/!\[(.*?)\]\((\w+:\/\/.*?|data:\w+\/\w+;\w+,.*?)\)/gs;
+const imageReg=/!\[([^\]]*)\]\(([^\)]*)\)/gs;
+const imageProtoReg=/!\[([^\]]*)\]\((\w+:\/\/.*?|data:\w+\/\w+;\w+,[^\)]*)\)/gs;
 
 export const containsMarkdownImage=(content:string):boolean=>{
     const r=imageReg.test(content);
