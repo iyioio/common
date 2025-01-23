@@ -219,15 +219,14 @@ export const zodTypeToJsonScheme=(scheme:ZodTypeAny,maxDepth=50,cache=true):Json
 
 
 
-const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,optional:boolean}|undefined=>{
+const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number,optional=false,description?:string):{jsonType:JsonScheme,optional:boolean}|undefined=>{
 
     if(depth<=0){
         return undefined;
     }
 
-    const description=type.description;
+    description=type.description||description;
 
-    let optional=false;
     if(type instanceof ZodOptional){
         type=type.unwrap();
         optional=true;
@@ -247,7 +246,7 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number):{jsonType:JsonScheme,o
         return undefined;
     }else if(type instanceof ZodLazy){
         const inner=(type._def as ZodLazyDef)?.getter?.();
-        return inner?_zodTypeToJsonScheme(inner,depth-1):undefined;
+        return inner?_zodTypeToJsonScheme(inner,depth-1,optional,description):undefined;
     }else if(type instanceof ZodEnum){
         const tsType=getZodEnumPrimitiveType(type);
         if(tsType!=='undefined'){
