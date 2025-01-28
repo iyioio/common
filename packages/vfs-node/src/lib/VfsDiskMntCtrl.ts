@@ -1,9 +1,9 @@
-import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths } from "@iyio/common";
-import { execAsync, pathExistsAsync } from "@iyio/node-common";
-import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testInclusiveVfsPathFilter, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
+import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths, shortUuid } from "@iyio/common";
+import { execAsync, pathExistsAsync, spawnAsync } from "@iyio/node-common";
+import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testInclusiveVfsPathFilter, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
 import chokidar from 'chokidar';
 import { Dirent, createReadStream, createWriteStream } from "fs";
-import { appendFile, mkdir, readFile, readdir, rm, stat, unlink, writeFile } from "fs/promises";
+import { appendFile, mkdir, readFile, readdir, rename, rm, stat, unlink, writeFile } from "fs/promises";
 
 export interface VfsDiskMntCtrlOptions extends VfsMntCtrlOptions
 {
@@ -257,7 +257,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
-        await writeFile(sourceUrl,content);
+        await writeMoveFileAsync(sourceUrl,content);
         const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
         if(!item){
             throw new Error('Item to returned');
@@ -290,7 +290,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
-        await writeFile(sourceUrl,(buffer instanceof Blob)?new Uint8Array(await buffer.arrayBuffer()):buffer);
+        await writeMoveFileAsync(sourceUrl,(buffer instanceof Blob)?new Uint8Array(await buffer.arrayBuffer()):buffer);
         const item=await this._getItemAsync(fs,mnt,path,sourceUrl);
         if(!item){
             throw new Error('Item to returned');
@@ -304,7 +304,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             throw new Error('sourceUrl required');
         }
         await this.makeDirectoryForFileAsync(sourceUrl);
-        const writeStream=createWriteStream(sourceUrl,{flags:'w',autoClose:true});
+        const tmp=getTmpName(sourceUrl);
+        const writeStream=createWriteStream(tmp,{flags:'w',autoClose:true});
         return await new Promise<VfsItem>((resolve,reject)=>{
             writeStream.on('open',()=>{
                 stream.pipe(writeStream);
@@ -314,13 +315,19 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
                 if(error){
                     return;
                 }
-                this._getItemAsync(fs,mnt,path,sourceUrl).then(item=>{
-                    if(item){
-                        resolve(item);
-                    }else{
-                        reject(new Error('Item to returned'))
-                    }
-                }).catch(err=>reject(err));
+                try{
+                    rename(tmp,sourceUrl).then(()=>{
+                        this._getItemAsync(fs,mnt,path,sourceUrl).then(item=>{
+                            if(item){
+                                resolve(item);
+                            }else{
+                                reject(new Error('Item to returned'))
+                            }
+                        }).catch(err=>reject(err));
+                    }).catch(err=>reject(err));
+                }catch(ex){
+                    reject(ex);
+                }
             })
             writeStream.on('error',err=>{
                 error=true;
@@ -357,4 +364,49 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             }).catch(err=>reject(err))
         })
     }
+
+
+    protected override readonly _execShellCmdAsync=async (cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void):Promise<VfsShellOutput>=>{
+        const output:string[]=[];
+        const errorOutput:string[]=[];
+        let exitCode=0;
+        const onOutput=(cmd.discardOutput || (cmd.returnImmediately && !cmd.outputStreamId))?undefined:(type:string,out:string)=>{
+            pipeOut(type as any,cmd.outputStreamId as string,out);
+        }
+        const p=spawnAsync({
+            cmd:cmd.shellCmd,
+            cwd:cmd.cwd,
+            onOutput,
+            onExit:c=>exitCode=c,
+        });
+
+        if(cmd.returnImmediately){
+            return {
+                output:'',
+                exitCode:1,
+            }
+        }
+
+        await p;
+        const result:VfsShellOutput={
+            exitCode,
+            output:output.join(''),
+        }
+        if(errorOutput){
+            result.errorOutput=errorOutput.join('')
+        }
+        return result;
+
+    }
+}
+
+const getTmpName=(path:string)=>{
+    const dir=getDirectoryName(path);
+    return joinPaths(dir,`.tmp.${getFileName(path).substring(0,30)}--${shortUuid()}`);
+}
+
+const writeMoveFileAsync=async (path:string,data:string|Uint8Array)=>{
+    const tmpPath=getTmpName(path);
+    await writeFile(tmpPath,data);
+    rename(tmpPath,path);
 }
