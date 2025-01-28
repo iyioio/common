@@ -1,12 +1,5 @@
-export enum LogLevel{
-    none=0,
-    info=1,
-    log=2,
-    warn=4,
-    error=8,
-    debug=16,
-    all=31
-}
+import { LogLevel } from "./log";
+
 
 /**
  * When passed to any of the console log functions listening will be disabled for the call
