@@ -169,11 +169,17 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         dirItems.sort((a,b)=>((a.isDirectory()?'a':'b')+a.name).localeCompare((b.isDirectory()?'a':'b')+b.name));
 
         const items:VfsItem[]=[];
+        let total=0;
 
-        for(let i=options.offset??0;i<dirItems.length && items.length<(options.limit??dirItems.length);i++){
+        //for(let i=options.offset??0;i<dirItems.length && items.length<(options.limit??dirItems.length);i++){
+        for(let i=0;i<dirItems.length;i++){
             const item=dirItems[i] as Dirent;
             const name=getFileName(item.name);
             if(this.ignoreFilenames.includes(name) || (options.filter && !testVfsFilter(name,options.filter))){
+                continue;
+            }
+            total++;
+            if(i<(options.offset??0) || items.length>=(options.limit??dirItems.length)){
                 continue;
             }
             const isDir=item.isDirectory();
@@ -189,7 +195,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             items,
             offset:options.offset??0,
             count:items.length,
-            total:dirItems.length,
+            total,
             notFound:false,
         }
 
@@ -408,5 +414,5 @@ const getTmpName=(path:string)=>{
 const writeMoveFileAsync=async (path:string,data:string|Uint8Array)=>{
     const tmpPath=getTmpName(path);
     await writeFile(tmpPath,data);
-    rename(tmpPath,path);
+    await rename(tmpPath,path);
 }
