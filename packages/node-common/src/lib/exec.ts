@@ -123,13 +123,14 @@ export interface SpawnOptions
     onChild?:(proc:ChildProcess)=>void;
     onOutput?:(type:string,value:string)=>void;
     onError?:(type:string,value:string)=>void;
+    onExit?:(code:number)=>void;
 }
 
 export const spawnAsync=(
     cmdOrOptions:SpawnOptions|string,
     _silent=false,
     _throwOnError=false
-)=>{
+):Promise<string>=>{
     const options:SpawnOptions=typeof cmdOrOptions === 'string'?{
         cmd:cmdOrOptions,
         silent:_silent,
@@ -147,10 +148,11 @@ export const spawnAsync=(
         onOutput,
         onError,
         outPrefix='',
-        throwOnError
+        throwOnError,
+        onExit,
     }=options;
 
-    return new Promise((r,j)=>{
+    return new Promise<string>((r,j)=>{
         if(!silent){
             stdout('> '+cmd);
         }
@@ -159,7 +161,14 @@ export const spawnAsync=(
 
         child=spawn(cmd,{cwd,shell:true});
         child.on('error',j);
-        child.on('exit',code=>code?j(code):r(''));
+        child.on('exit',code=>{
+            onExit?.(code??0);
+            if(code){
+                j(code);
+            }else{
+                r('');
+            }
+        });
         child.on('disconnect',()=>r(''));
         child.on('close',()=>r(''));
         child.stdout.setEncoding('utf8');
