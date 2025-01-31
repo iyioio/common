@@ -1,7 +1,7 @@
 import { DisposeContainer, UnsupportedError, getUriProtocol, joinPaths, removeUriProtocol } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsCtrl } from "./VfsCtrl";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsMntCtrlOptionsBase
 {
@@ -34,6 +34,7 @@ export abstract class VfsMntCtrl
     public get canGetReadStream(){return this._getReadStream!==undefined}
     public get canWatch(){return this._watch!==undefined}
     public get canTouch(){return this._touchAsync!==undefined}
+    public get canExecShellCmd(){return this._execShellCmdAsync!==undefined}
 
     protected readonly removeProtocolFromSourceUrls?:boolean;
     protected readonly addProtocolToSourceUrls?:string;
@@ -266,5 +267,25 @@ export abstract class VfsMntCtrl
     protected readonly _getReadStream?:(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined)=>Promise<VfsReadStreamWrapper>;
 
 
+    public async execShellCmdAsync(cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void):Promise<VfsShellOutput>
+    {
+        if(!this._execShellCmdAsync){
+            throw new UnsupportedError(`execShellCmdAsync not supported by mount controller of type ${this.type}`);
+        }
+        return this._execShellCmdAsync(cmd,pipeOut);
+    }
+
+    protected readonly _execShellCmdAsync?:(cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void)=>Promise<VfsShellOutput>;
+
+    public getPipeOutputAsync(cwd:string|undefined|null,pipeId:string):Promise<Record<string,string[]>|undefined>
+    {
+        if(!this._getPipeOutputAsync){
+            return Promise.resolve(undefined);
+        }
+        return this._getPipeOutputAsync(cwd,pipeId);
+
+    }
+
+    protected readonly _getPipeOutputAsync?:(cwd:string|undefined|null,pipeId:string)=>Promise<Record<string,string[]>|undefined>;
 
 }

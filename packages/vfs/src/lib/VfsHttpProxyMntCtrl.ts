@@ -2,7 +2,7 @@ import { HttpClient, NotFoundError, getObjKeyCount, httpClient, joinPaths, objec
 import { VfsCtrl } from "./VfsCtrl";
 import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
 import { vfsMntTypes } from "./vfs-lib";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsReadStreamWrapper } from "./vfs-types";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType } from "./vfs-types";
 
 export interface VfsHttpProxyMntCtrlOptions extends VfsMntCtrlOptions
 {
@@ -218,5 +218,20 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
                 }
             },
         }
+    }
+
+
+    protected override readonly _execShellCmdAsync=async (cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void):Promise<VfsShellOutput>=>
+    {
+        const r=await this.getHttpClient().postAsync<VfsShellOutput>(this.getUrl(cmd.cwd??'/','exec'),cmd);
+        if(!r){
+            throw new Error('No output returned');
+        }
+        return r;
+    }
+
+    protected override readonly _getPipeOutputAsync=(cwd:string|undefined|null,pipeId:string):Promise<Record<string,string[]>|undefined>=>
+    {
+        return this.getHttpClient().getAsync(this.getUrl(joinPaths(cwd??'/',pipeId),'pipe'));
     }
 }

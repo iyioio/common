@@ -1,6 +1,6 @@
-import { BadRequestError, NotFoundError, asArray, escapeRegex, getContentType, parseObjectQueryJsonValue, safeParseNumberOrUndefined } from "@iyio/common";
+import { BadRequestError, NotFoundError, asArray, escapeRegex, getContentType, getDirectoryName, getFileName, parseObjectQueryJsonValue, safeParseNumberOrUndefined } from "@iyio/common";
 import { HttpRoute, createHttpHandlerResult } from "@iyio/node-common";
-import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt, vfs } from "@iyio/vfs";
+import { VfsCtrl, VfsDirReadOptions, VfsMntCtrl, VfsMntPt, VfsShellCommand, vfs } from "@iyio/vfs";
 
 export interface VfsHttpRouteOptions
 {
@@ -270,6 +270,41 @@ export const createVfsApiRoutes=({
                     })
 
                     return await fs.writeStringAsync(path,str);
+                }
+
+            }
+        },
+
+        {
+            method:'POST',
+            match:new RegExp(`${regPrefix}/exec`),
+            handler:async ({
+                body,
+            })=>{
+                const cmd=body as VfsShellCommand;
+                if((typeof cmd !== 'object') || !cmd){
+                    throw new BadRequestError();
+                }
+                if(!cmd.cwd){
+                    throw new BadRequestError('cwd required')
+                }
+                return await getFs().execShellCmdAsync(cmd);
+            }
+        },
+
+        {
+            method:'GET',
+            match:new RegExp(`${regPrefix}/pipe(/.*|$)`),
+            handler:async ({
+                query,
+            })=>{
+
+                const path=getPath(query);
+                const r=await getFs().getPipeOutputAsync(getDirectoryName(path),getFileName(path));
+                if(!r || !Object.keys(r).length){
+                    return createHttpHandlerResult({statusCode:204});
+                }else{
+                    return r;
                 }
 
             }

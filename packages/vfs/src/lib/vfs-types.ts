@@ -24,6 +24,18 @@ export interface VfsConfig
      * this option for recursive configuration to be enabled.
      */
     allowRecursiveLocalConfig?:boolean;
+
+    /**
+     * If true shell commands will be allowed to execute. Both the vfs ctrl and mount point must
+     * be configured to allow executing shell commands. Take caution when enabling shell execution.
+     */
+    allowExec?:boolean;
+
+    /**
+     * If true shell pipe reading will be allowed to wait for data when no data is available.
+     * Caution - when using multiple threads output can be unreliable.
+     */
+    enablePipeWaiting?:boolean;
 }
 
 export interface VfsMntPt
@@ -60,6 +72,12 @@ export interface VfsMntPt
      * must also enable this option for recursive configuration to be enabled.
      */
     allowRecursiveLocalConfig?:boolean;
+
+    /**
+     * If true shell commands will be allowed to execute. Both the vfs ctrl and mount point must
+     * be configured to allow executing shell commands. Take caution when enabling shell execution.
+     */
+    allowExec?:boolean;
 }
 
 export interface VfsLocalFsConfig
@@ -180,6 +198,45 @@ export interface VfsDirReadResult
     count:number;
     total:number;
     notFound:boolean;
+}
+
+export interface VfsShellCommand
+{
+    /**
+     * A shell command to execute
+     */
+    shellCmd:string;
+
+    /**
+     * The directory where the command will be execute in within the virtual file system.
+     */
+    cwd?:string;
+
+    /**
+     * If true the output of the shell command will be discarded. This is useful if the output
+     * of a shell command is not needed.
+     */
+    discardOutput?:boolean;
+
+    /**
+     * If true the shell command execution request will not wait to complete before returning and
+     * the returned output will be empty and the exit code will always be 0.
+     */
+    returnImmediately?:boolean;
+
+    /**
+     * Id of an output stream to stream output to.
+     */
+    outputStreamId?:string;
+}
+
+export type VfsShellPipeOutType='std'|'err';
+
+export interface VfsShellOutput
+{
+    output:string;
+    errorOutput?:string;
+    exitCode:number;
 }
 
 export interface VfsReadStream

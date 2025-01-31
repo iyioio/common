@@ -1,10 +1,10 @@
-import { DisposeCallback, DisposeContainer, EvtQueue, ValueRef, deepClone, joinPaths } from "@iyio/common";
+import { CancelToken, DisposeCallback, DisposeContainer, EvtQueue, UnauthorizedError, ValueRef, deepClone, joinPaths, minuteMs } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
 import { vfsMntPtProvider } from "./vfs-deps";
 import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, vfsTopic } from "./vfs-lib";
-import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
+import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsCtrlOptions
 {
@@ -96,6 +96,7 @@ export class VfsCtrl
     public async canGetReadStream(path:string){return (await this.getMntCtrlAsync(path))?.canGetReadStream??false}
     public async canWatch(path:string){return (await this.getMntCtrlAsync(path))?.canWatch??false}
     public async canTouch(path:string){return (await this.getMntCtrlAsync(path))?.canTouch??false}
+    public async canExecShellCmd(path:string){return (await this.getMntCtrlAsync(path))?.canExecShellCmd??false}
 
     private readonly mntCtrlLookup:Record<string,VfsMntCtrl>={}
     private readonly mntCtrls:CtrlInfo[]=[];
@@ -369,6 +370,34 @@ export class VfsCtrl
         return await ctrl.readDirAsync(this,mnt,options,getVfsSourceUrl(mnt,options.path));
     }
 
+    public async enumDirAsync(
+        options:VfsDirReadOptions|string,
+        callback:(result:VfsDirReadResult)=>void|boolean|Promise<void|boolean>,
+        cancel?:CancelToken
+    ):Promise<number>{
+        if(typeof options === 'string'){
+            options={path:options}
+        }else{
+            options={...options}
+        }
+        if(options.offset===undefined){
+            options.offset=0;
+        }
+        let total=0;
+        while(!cancel?.isCanceled){
+            const r=await this.readDirAsync(options);
+            if(cancel?.isCanceled){
+                return total;
+            }
+            total+=r.count;
+            const _continue=await callback(r);
+            if(_continue===false || total>=r.total){
+                return total;
+            }
+        }
+        return total;
+    }
+
     public async readDirRecursiveAsync(options:VfsDirReadRecursiveOptions|string):Promise<VfsDirReadResult>
     {
         const items:VfsItem[]=[];
@@ -600,9 +629,137 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
         return await ctrl.getReadStreamAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
+
+    public async execShellCmdAsync(cmd:VfsShellCommand):Promise<VfsShellOutput>
+    {
+        if(!this.config.allowExec){
+            throw new UnauthorizedError('Shell command execution is not allowed at the controller level');
+        }
+        const cwd=normalizeVfsPath(cmd.cwd??'~');
+
+        const mnt=this.getMntPt(cwd);
+        if(!mnt){
+            throw new Error(`No mount point found for path ${cwd}`);
+        }
+        if(!mnt.allowExec){
+            throw new UnauthorizedError(`Shell command execution is not allowed at the mount path level. cwd:${cwd}`);
+        }
+        cmd={...cmd,cwd:getVfsSourceUrl(mnt,cwd)||'/'};
+        const ctrl=await this.requireMntCtrlAsync(mnt);
+        return await ctrl.execShellCmdAsync(cmd,this.pipeOut);
+    }
+
+    public async getPipeOutputAsync(cwd:string|undefined|null,pipeId:string):Promise<Record<string,string[]>|undefined>{
+
+        const localPipe=this.pipes[pipeId];
+        if(localPipe){
+            const out=localPipe.out;
+            if(this.config.enablePipeWaiting && !Object.keys(out).length){
+                return await this.waitForPipeOutputAsync(pipeId);
+            }
+            localPipe.out={};
+            return out;
+        }
+
+        cwd=normalizeVfsPath(cwd??'~');
+        const mnt=this.getMntPt(cwd);
+        if(!mnt){
+            throw new Error(`No mount point found for path ${cwd}`);
+        }
+        cwd=getVfsSourceUrl(mnt,cwd);
+        const ctrl=await this.requireMntCtrlAsync(mnt);
+        return await ctrl.getPipeOutputAsync(cwd,pipeId);
+    }
+
+    private waitForPipeOutputAsync(pipeId:string):Promise<Record<string,string[]>|undefined>{
+        return new Promise<Record<string,string[]>|undefined>((resolve)=>{
+            let m=true;
+            const iv=setTimeout(()=>{
+                if(!m){
+                    return;
+                }
+                m=false;
+                delete this.pipeCallbacks[pipeId];
+                resolve(undefined);
+            },20000);
+
+            this.pipeCallbacks[pipeId]=v=>{
+                clearTimeout(iv);
+                if(!m){
+                    return;
+                }
+                m=false;
+                delete this.pipeCallbacks[pipeId];
+                resolve(v);
+            };
+        })
+    }
+
+    private readonly pipeOut=(type:VfsShellPipeOutType,pipeId:string,out:string)=>{
+        const pipe=this.pipes[pipeId]??(this.pipes[pipeId]={
+            id:pipeId,
+            ttl:Date.now()+pipeTtl,
+            out:{}
+        });
+        pipe.ttl=Date.now()+pipeTtl;
+        const callback=this.pipeCallbacks[pipeId];
+        if(callback){
+            delete this.pipeCallbacks[pipeId];
+            callback({[type]:[out]})
+        }else{
+            (pipe.out[type]??(pipe.out[type]=[])).push(out);
+        }
+        this.startPipeCleanUp();
+    }
+
+    private pipeCleanUpActive=false;
+    private readonly pipes:Record<string,Pipe>={};
+    private readonly pipeCallbacks:Record<string,(out:Record<string,string[]>)=>void>={};
+    private startPipeCleanUp()
+    {
+        if(this.pipeCleanUpActive){
+            return;
+        }
+        this.pipeCleanUpActive=true;
+        const iv=setInterval(()=>{
+            if(this.isDisposed || !this.cleanUpPipes()){
+                this.pipeCleanUpActive=false;
+                clearInterval(iv);
+            }
+        },minuteMs);
+    }
+
+    /**
+     * Returns true if there are pipe left to clean up.
+     */
+    private cleanUpPipes(){
+        let active=false;
+        const now=Date.now();
+        for(const e in this.pipes){
+            const pipe=this.pipes[e];
+            if(!pipe){
+                continue;
+            }
+            if(pipe.ttl<now){
+                delete this.pipes[e];
+                delete this.pipeCallbacks[e];
+            }else{
+                active=true;
+            }
+        }
+        return active;
+    }
+
 }
 
+const pipeTtl=10*minuteMs;
 
+interface Pipe
+{
+    id:string;
+    ttl:number;
+    out:Record<string,string[]>;
+}
 
 interface CtrlInfo
 {
