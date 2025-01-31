@@ -2,8 +2,11 @@
 import { open, url, waitForDebugger } from 'node:inspector';
 
 let debuggerStarted=false;
-export const triggerNodeBreakpoint=()=>
+export const triggerNodeBreakpoint=(disable=false)=>
 {
+    if(disable){
+        return;
+    }
     if(url() || debuggerStarted){
         // eslint-disable-next-line no-debugger
         debugger;
