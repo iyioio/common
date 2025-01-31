@@ -327,7 +327,7 @@ export class OpenAiCompletionProvider implements AiCompletionProvider
             response_format:'text',
         })
 
-        const text=r;
+        const text:string=(r as any)?.text??(r as any);
 
         return {
             tokenPrice:1,// todo - use real price - for now just say $1, which is very high
