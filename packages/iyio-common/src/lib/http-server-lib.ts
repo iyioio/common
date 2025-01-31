@@ -29,6 +29,7 @@ export const createHttpResponse=({
     cors,
     contentType,
     body,
+    isBase64Encoded,
 }:HttpResponseOptions):HttpResponse=>(deleteUndefined({
     statusCode,
     headers: deleteUndefined({
@@ -37,6 +38,7 @@ export const createHttpResponse=({
         Server: serverName,
         ...headers
     }) as HashMap<string>,
+    isBase64Encoded,
     body,
 }))
 

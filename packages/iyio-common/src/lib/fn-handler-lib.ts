@@ -8,7 +8,7 @@ import { HttpResponseOptions } from './http-server-types';
 import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
-import { getObjKeyCount, queryParamsToObject } from './object';
+import { getObjKeyCount, queryParamsToObjectJson } from './object';
 import { isZodArray, zodCoerceObject } from './zod-helpers';
 
 export const fnHandler=async (options:FnHandlerOptions)=>{
@@ -197,6 +197,7 @@ export const fnHandler=async (options:FnHandlerOptions)=>{
             headers,
             claims,
             sub,
+            responseDefaults,
         }
 
         if(fnInvokeEvent?.apiKey){
@@ -287,9 +288,15 @@ const parseJson=<T=any>(value:string):T=>{
     }
 }
 
-const getQuery=(evt?:any,defaultQueryString?:string):Record<string,string>=>{
+const getQuery=(evt?:any,defaultQueryString?:string):Record<string,any>=>{
     const _queryString=evt?.rawQueryString??defaultQueryString;
-    return evt?.queryStringParameters??(_queryString?queryParamsToObject(_queryString):{});
+    if(_queryString!==undefined){
+        return queryParamsToObjectJson(_queryString);
+    }else if(evt?.queryStringParameters){
+        return queryParamsToObjectJson(evt?.queryStringParameters);
+    }else{
+        return {}
+    }
 }
 
 export const createFnHandler=(handler:FnHandler,options:FnBaseHandlerOptions={}):((evt:any,context:any)=>Promise<any>) & {rawHandler:FnHandler}=>{
@@ -330,7 +337,7 @@ export const createEmptyEventSource=():FnEvent=>({
     claims:{},
 })
 
-const parseQuery=(inputScheme:ZodSchema,query:Record<string,string>)=>{
+const parseQuery=(inputScheme:ZodSchema,query:Record<string,any>)=>{
     if(query['__input']!==undefined){
         if(inputScheme instanceof ZodObject){
             for(const e in inputScheme.shape){

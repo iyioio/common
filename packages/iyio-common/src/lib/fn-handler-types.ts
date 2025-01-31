@@ -1,4 +1,5 @@
 import { ZodError, ZodSchema } from "zod";
+import { HttpResponseOptions } from "./http-server-types";
 import { HttpMethod } from "./http-types";
 
 export const RawFnFlag=Symbol('RawFnFlag');
@@ -54,6 +55,7 @@ export interface FnEvent
     query:Record<string,string>;
     headers:Record<string,string>;
     claims:Record<string,any>;
+    responseDefaults?:HttpResponseOptions;
 
     /**
      * In most cases this is the remote IP address of the calling client

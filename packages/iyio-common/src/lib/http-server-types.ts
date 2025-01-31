@@ -32,6 +32,7 @@ export interface HttpResponseOptions
     contentType?:string;
     body?:string;
     cors?:boolean;
+    isBase64Encoded?:boolean;
 }
 
 export interface HttpResponse
@@ -39,6 +40,7 @@ export interface HttpResponse
     statusCode:number;
     headers:HashMap<string>;
     body?:string;
+    isBase64Encoded?:boolean;
 }
 
 export interface RouteMap{
