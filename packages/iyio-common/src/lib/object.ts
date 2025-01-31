@@ -557,9 +557,9 @@ export const objectToQueryParams=(obj:Record<string,any>):string=>{
     return values.join('&');
 }
 
-export const queryParamsToObjectJson=(query:string):Record<string,any>=>
+export const queryParamsToObjectJson=(query:string|Record<string,any>):Record<string,any>=>
 {
-    const obj=queryParamsToObject(query);
+    const obj=typeof query === 'string'?queryParamsToObject(query):query;
     for(const e in obj){
         const v=obj[e];
         if(v?.startsWith(jsonParaPrefix)){
