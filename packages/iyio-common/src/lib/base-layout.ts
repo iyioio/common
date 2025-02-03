@@ -3,6 +3,13 @@ import { HashMap } from "./common-types";
 import { ClassNameValue, cn } from "./css";
 import { DirectionalBreakpoint, DirectionalBreakpointAlias, allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases } from "./window-size-lib";
 
+// todo - add:
+// aspect ratio
+// grids that fill and wrap
+// shadows
+// more opacity options
+// opacity0I
+
 export const baseLayoutVarPrefix='--io-'
 
 const allBaseLayoutModifiersMap    =['h',    'a',     'f',    'd',       'c',    'l',   'o',  'e'];
