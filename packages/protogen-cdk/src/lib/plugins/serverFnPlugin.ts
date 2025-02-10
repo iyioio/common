@@ -201,6 +201,7 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     minify:node.children?.['minify']?.value==='false'?false:undefined,
                     eventTarget:(eventTarget!==undefined && eventTarget!=='false')?true:undefined,
                     createScheduledEvents:(createScheduledEvents!==undefined && createScheduledEvents!=='false')?true:undefined,
+                    memorySize:node.children?.['memoryMb']?Number(node.children?.['memoryMb'].value):undefined
                 },
                 arnParam:paramName,
                 envPattern:node.children?.['$envPattern']?.value,
