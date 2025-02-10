@@ -120,6 +120,7 @@ url      = "localhost"
                     const {type,custom}=getSqlType(child,context.nodes);
                     const isJson=type==='Json';
                     const maxLength=getSqlMaxLength(child,longProps);
+                    const defaultValue=child.children?.['default']?.value;
 
                     if(type){
 
@@ -131,6 +132,8 @@ url      = "localhost"
                             type==='String' && maxLength!==null?` @db.VarChar(${maxLength})`:''
                         }${
                             child.children?.['unique']?' @unique':''
+                        }${
+                            defaultValue?` @default(${defaultValue})`:''
                         }`)
 
                         if(child.refType){
