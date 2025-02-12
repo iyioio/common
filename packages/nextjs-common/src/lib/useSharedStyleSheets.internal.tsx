@@ -2,19 +2,19 @@ import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "@iyio/common"
 import { useEffect, useState } from "react";
 
 
-const getSheets=()=>{
+const getSheets=(updateKey?:number)=>{
     const ary:any[]=[];
     for(let i=0;i<sharedStyleSheets.length;i++){
         const s=sharedStyleSheets[i];
         if(!s){
             continue;
         }
-        ary.push(<style type="text/css" key={s.id} id={s.id} dangerouslySetInnerHTML={{__html:s.css}}/>)
+        ary.push(<style data-sheet-order={i} type="text/css" key={updateKey===undefined?s.id:`sk${updateKey}-${s.id}`} id={s.id} dangerouslySetInnerHTML={{__html:s.css}}/>)
     }
     return ary;
 }
 
-export const useNextJsStyleSheets=()=>{
+export const useNextJsStyleSheets=(updateKey?:number)=>{
 
     const [sheets,setSheets]=useState<any[]>(getSheets);
 
@@ -25,7 +25,7 @@ export const useNextJsStyleSheets=()=>{
             clearInterval(iv);
             iv=setTimeout(()=>{
                 if(m){
-                    setSheets(getSheets());
+                    setSheets(getSheets(updateKey));
                 }
             },0);
         })
@@ -33,20 +33,15 @@ export const useNextJsStyleSheets=()=>{
             m=false;
             sub.unsubscribe();
         }
-    },[]);
+    },[updateKey]);
 
     return sheets;
 
 }
 
-export const useWorkaroundForNextJsOutOfOrderStyleSheets=():boolean=>{
+export const useWorkaroundForNextJsOutOfOrderStyleSheets=():number=>{
 
-    const [refresh,setRefresh]=useState(false);
-    useEffect(()=>{
-        if(refresh){
-            setRefresh(false);
-        }
-    },[refresh]);
+    const [refresh,setRefresh]=useState(0);
 
     useEffect(()=>{
         let iv:any=null;
@@ -81,7 +76,7 @@ export const useWorkaroundForNextJsOutOfOrderStyleSheets=():boolean=>{
 
                     if(sheetElem.previousElementSibling!==prevElem){
                         clearInterval(iv);
-                        setRefresh(true);
+                        setRefresh(v=>v+1);
                         return;
                     }
                 }

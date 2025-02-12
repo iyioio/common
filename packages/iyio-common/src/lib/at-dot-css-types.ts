@@ -147,6 +147,13 @@ export interface AtDotStyle<S extends string>
      * If true debugging information will be logged to the console.
      */
     debug?:boolean;
+
+    /**
+     * If true or truthy the style sheet will be nested in the root selector
+     */
+    nest?:boolean;
+
+
 }
 
 export type AtDotStyleDefaults=Partial<Omit<AtDotStyle<string>,'css'>>;

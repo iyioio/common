@@ -7,6 +7,8 @@ const varReg=/(@@@?)([\w-]+)/g;
 const breakPointReg=/@(mobileSmUp|mobileUp|tabletSmUp|tabletUp|desktopSmUp|desktopUp|mobileSmDown|mobileDown|tabletSmDown|tabletDown|desktopSmDown|desktopDown)/g;
 const prefixReg=/\W(backdrop-filter)\s*:([^;}:]*)/gim;
 
+export const atDotNestStart='/***NEST_START***/'
+
 interface PropRef
 {
     name:string;
@@ -117,6 +119,8 @@ function varNameDef(
     return `--${this.name}-${name}`;
 }
 
+const insertedSheets:Record<string,boolean>={}
+
 /**
  * Creates a new at-dot-css flavored CSS style sheet. The returned style object will contain
  * function properties corresponding to each of the at-dot selectors defined in the style sheet.
@@ -154,6 +158,11 @@ export const atDotCss=<S extends string>(
             return;
         }
         ctrl.isInserted=true;
+        if(insertedSheets[name]){
+            console.warn(`Conflicting at-dot-css style sheet inserted. name=${name}`)
+        }
+        insertedSheets[name]=true;
+        console.log('hio 👋 👋 👋 inserted',name);
 
         if(!processed){
             processed=true;
@@ -165,6 +174,11 @@ export const atDotCss=<S extends string>(
                 .replace(breakPointReg,(_,bp)=>`@media(${getSizeQueryForBreakpoint(bp)})`)
                 .replace(prefixReg,(match,prop,value)=>`${match};-webkit-${prop}:${value}`)
             ) as any;
+            if(options.nest){
+                options.css=`.${name}{\n${options.css}\n}` as any;
+            }else if(options.css.includes(atDotNestStart)){
+                options.css=options.css.replace(atDotNestStart,`.${name}{\n`)+'\n}' as any;
+            }
         }
 
         if(options.debug){
