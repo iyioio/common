@@ -1,4 +1,5 @@
 import { ParamTypeDef, asArray } from "@iyio/common";
+import { Duration } from "aws-cdk-lib";
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
@@ -12,7 +13,7 @@ export interface QueueBuilderProps
     managed?:ManagedProps;
 }
 
-export interface QueueInfo extends sqs.QueueProps
+export interface QueueInfo extends Omit<sqs.QueueProps,'visibilityTimeout'>
 {
     name:string;
     arnParam?:ParamTypeDef<string>;
@@ -39,6 +40,8 @@ export interface QueueInfo extends sqs.QueueProps
      * An environment pattern that can be used to disable a queue
      */
     envPattern?:string;
+
+    visibilityTimeout?:number;
 
 }
 
@@ -99,7 +102,10 @@ export class QueueBuilder extends Construct implements IAccessGrantGroup
                 }
             }
 
-            const queue=new sqs.Queue(this,name,props);
+            const queue=new sqs.Queue(this,name,{
+                ...props,
+                visibilityTimeout:props.visibilityTimeout?Duration.seconds(props.visibilityTimeout):undefined
+            });
 
             namedBuckets?.push({
                 name:info.name,

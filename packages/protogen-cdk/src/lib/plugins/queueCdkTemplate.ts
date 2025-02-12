@@ -44,7 +44,7 @@ export class ${constructName} extends QueueBuilder
 }
 
 const getQueues=():QueueInfo[]=>[${queues.map((b,i)=>JSON.stringify(b,null,4)
-    .replace(/([\n\r]\s*)"arnParam".*/,(_,space)=>`${space}"arnParam":${b.arnParam?'_param'+i:'undefined'}`)).join(',\n')}
+    .replace(/([\n\r]\s*)"arnParam".*/,(_,space)=>`${space}"arnParam":${b.arnParam?'_param'+i+',':'undefined'}`)).join(',\n')}
 ];`
 }
 

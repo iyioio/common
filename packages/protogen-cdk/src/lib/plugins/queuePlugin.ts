@@ -76,7 +76,7 @@ export const queuePlugin:ProtoPipelineConfigurablePlugin<typeof QueuePluginConfi
                         receiveMessageWaitTime:secondsToCdkDuration(q.children?.['receiveMessageWaitTimeSeconds']?.value),
                         removalPolicy:q.children?.['removalPolicy']?.value as (RemovalPolicy|undefined),
                         retentionPeriod:secondsToCdkDuration(q.children?.['retentionPeriodSeconds']?.value),
-                        visibilityTimeout:secondsToCdkDuration(q.children?.['visibilityTimeoutSeconds']?.value),
+                        visibilityTimeout:safeParseNumberOrUndefined(q.children?.['visibilityTimeoutSeconds']?.value),
 
                         envPattern:q.children?.['$envPattern']?.value,
                     }
