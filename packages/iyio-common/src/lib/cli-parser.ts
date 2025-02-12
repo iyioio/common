@@ -197,3 +197,13 @@ export const escapeCommandLineString=(str:string)=>{
     return "'"+str.replace(singleQuoteReg,"'\\''")+"'";
 }
 const singleQuoteReg=/'/g
+
+export const escapeCommandLineValue=(str:string)=>{
+    if(unescapeReg.test(str)){
+        return str;
+    }else{
+        return escapeCommandLineString(str);
+    }
+}
+
+const unescapeReg=/^[\w\.\-]+$/
