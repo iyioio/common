@@ -1,4 +1,4 @@
-import { DisposeCallback, Evt, EvtTrigger } from "@iyio/common";
+import { CancelToken, DisposeCallback, Evt, EvtTrigger } from "@iyio/common";
 import type { VfsMntCtrl } from "./VfsMntCtrl";
 
 export interface VfsConfig
@@ -115,6 +115,10 @@ export interface VfsItem
      */
     url?:string;
 
+    inlineContent?:string;
+
+    inlineData?:Uint8Array;
+
 }
 
 /**
@@ -228,6 +232,18 @@ export interface VfsShellCommand
      * Id of an output stream to stream output to.
      */
     outputStreamId?:string;
+
+    /**
+     * If true and the result of the command has a non-zero exit code an error will be thrown.
+     */
+    throwOnError?:boolean;
+
+    cancel?:CancelToken;
+
+    /**
+     * If true the output of the command will not be logged
+     */
+    noLog?:boolean;
 }
 
 export type VfsShellPipeOutType='std'|'err';

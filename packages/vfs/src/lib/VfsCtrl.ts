@@ -1,4 +1,4 @@
-import { CancelToken, DisposeCallback, DisposeContainer, EvtQueue, UnauthorizedError, ValueRef, deepClone, joinPaths, minuteMs } from "@iyio/common";
+import { CancelToken, DisposeCallback, DisposeContainer, EvtQueue, UnauthorizedError, ValueRef, deepClone, getUriProtocol, joinPaths, minuteMs } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
@@ -329,7 +329,7 @@ export class VfsCtrl
         return await ctrl.getItemAsync(this,mnt,path,getVfsSourceUrl(mnt,path),options);
     }
 
-    public async getSourceUrl(path:string){
+    public getSourceUrl(path:string):string|undefined{
         path=normalizeVfsPath(path);
 
         const mnt=this.getMntPt(path);
@@ -337,6 +337,21 @@ export class VfsCtrl
             return undefined;
         }
         return getVfsSourceUrl(mnt,path);
+    }
+
+    public getLocalPath(path:string):string|undefined{
+        const srcUrl=this.getSourceUrl(path);
+        if(!srcUrl){
+            return undefined;
+        }
+        const proto=getUriProtocol(srcUrl);
+        if(proto){
+            if(proto==='file'){
+                return srcUrl.substring(proto.length+3);
+            }
+            return undefined;
+        }
+        return srcUrl;
     }
 
     public async readDirAsync(options:VfsDirReadOptions|string):Promise<VfsDirReadResult>
@@ -630,8 +645,11 @@ export class VfsCtrl
         return await ctrl.getReadStreamAsync(this,mnt,path,getVfsSourceUrl(mnt,path));
     }
 
-    public async execShellCmdAsync(cmd:VfsShellCommand):Promise<VfsShellOutput>
+    public async execShellCmdAsync(cmd:VfsShellCommand|string):Promise<VfsShellOutput>
     {
+        if(typeof cmd==='string'){
+            cmd={shellCmd:cmd}
+        }
         if(!this.config.allowExec){
             throw new UnauthorizedError('Shell command execution is not allowed at the controller level');
         }
@@ -646,7 +664,11 @@ export class VfsCtrl
         }
         cmd={...cmd,cwd:getVfsSourceUrl(mnt,cwd)||'/'};
         const ctrl=await this.requireMntCtrlAsync(mnt);
-        return await ctrl.execShellCmdAsync(cmd,this.pipeOut);
+        const r=await ctrl.execShellCmdAsync(cmd,this.pipeOut);
+        if(cmd.throwOnError && r.exitCode!==0){
+            throw new Error(`Shell command failed with exit code ${r.exitCode}.${r.errorOutput?' Error:'+r.errorOutput:''}`)
+        }
+        return r;
     }
 
     public async getPipeOutputAsync(cwd:string|undefined|null,pipeId:string):Promise<Record<string,string[]>|undefined>{

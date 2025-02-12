@@ -377,6 +377,9 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         const errorOutput:string[]=[];
         let exitCode=0;
         const onOutput=(cmd.discardOutput || (cmd.returnImmediately && !cmd.outputStreamId))?undefined:(type:string,out:string)=>{
+            if(!cmd.discardOutput && type==='out'){
+                output.push(out);
+            }
             pipeOut(type as any,cmd.outputStreamId as string,out);
         }
         const p=spawnAsync({
@@ -384,6 +387,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             cwd:cmd.cwd,
             onOutput,
             onExit:c=>exitCode=c,
+            cancel:cmd.cancel,
+            silent:cmd.noLog
         });
 
         if(cmd.returnImmediately){

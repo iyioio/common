@@ -223,6 +223,9 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
 
     protected override readonly _execShellCmdAsync=async (cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void):Promise<VfsShellOutput>=>
     {
+        if(cmd.cancel){
+            cmd={...cmd,cancel:undefined}
+        }
         const r=await this.getHttpClient().postAsync<VfsShellOutput>(this.getUrl(cmd.cwd??'/','exec'),cmd);
         if(!r){
             throw new Error('No output returned');

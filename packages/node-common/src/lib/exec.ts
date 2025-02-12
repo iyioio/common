@@ -1,3 +1,4 @@
+import { CancelToken } from '@iyio/common';
 import { ChildProcess, ChildProcessWithoutNullStreams, exec, spawn } from 'node:child_process';
 
 export interface ExecOptions
@@ -110,6 +111,29 @@ export const execAsync:execAsyncOverrides=(
     })
 }
 
+const consoleInfo=(...value:string[]):void=>{
+    if(value.length===1){
+        let v=value[0];
+        if(v?.endsWith('\n')){
+            v=v.substring(0,v.length-1);
+        }
+        console.info(v);
+    }else{
+        console.info(...value);
+    }
+}
+const consoleWarn=(...value:string[]):void=>{
+    if(value.length===1){
+        let v=value[0];
+        if(v?.endsWith('\n')){
+            v=v.substring(0,v.length-1);
+        }
+        console.warn(v);
+    }else{
+        console.warn(...value);
+    }
+}
+
 export interface SpawnOptions
 {
     cmd:string;
@@ -124,12 +148,13 @@ export interface SpawnOptions
     onOutput?:(type:string,value:string)=>void;
     onError?:(type:string,value:string)=>void;
     onExit?:(code:number)=>void;
+    cancel?:CancelToken;
 }
 
 export const spawnAsync=(
     cmdOrOptions:SpawnOptions|string,
     _silent=false,
-    _throwOnError=false
+    _throwOnError=false,
 ):Promise<string>=>{
     const options:SpawnOptions=typeof cmdOrOptions === 'string'?{
         cmd:cmdOrOptions,
@@ -142,14 +167,15 @@ export const spawnAsync=(
         cwd,
         out,
         silent=out?true:false,
-        stdout=console.info,
-        stderr=console.warn,
+        stdout=consoleInfo,
+        stderr=consoleWarn,
         onChild,
         onOutput,
         onError,
         outPrefix='',
         throwOnError,
         onExit,
+        cancel,
     }=options;
 
     return new Promise<string>((r,j)=>{
@@ -160,10 +186,14 @@ export const spawnAsync=(
         let child:ChildProcessWithoutNullStreams|undefined=undefined;
 
         child=spawn(cmd,{cwd,shell:true});
-        child.on('error',j);
+        child.on('error',err=>{
+            if(throwOnError){
+                j(err);
+            }
+        });
         child.on('exit',code=>{
             onExit?.(code??0);
-            if(code){
+            if(code && throwOnError){
                 j(code);
             }else{
                 r('');
@@ -179,7 +209,9 @@ export const spawnAsync=(
             if(onOutput){
                 onOutput('out',data)
             }
-            stdout(outPrefix?outPrefix+data:data);
+            if(!silent){
+                stdout(outPrefix?outPrefix+data:data);
+            }
         });
         child.stderr.setEncoding('utf8');
         child.stderr.on('data',(data)=>{
@@ -195,6 +227,13 @@ export const spawnAsync=(
                 child?.kill();
             }
         });
-        onChild?.(child)
+        onChild?.(child);
+        cancel?.onCancelOrNextTick(()=>{
+            try{
+                child?.kill(9);
+            }catch{
+                // do nothing
+            }
+        });
     })
 }
