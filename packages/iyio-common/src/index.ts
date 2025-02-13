@@ -24,6 +24,7 @@ export * from './lib/MemoryStore';
 export * from './lib/NamedValue';
 export * from './lib/ObjMirror';
 export * from './lib/ObjWatcher';
+export * from './lib/PauseableSubject';
 export * from './lib/PopupWindow';
 export * from './lib/PromiseCache';
 export * from './lib/PromiseSource';
