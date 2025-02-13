@@ -388,7 +388,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             onOutput,
             onExit:c=>exitCode=c,
             cancel:cmd.cancel,
-            silent:cmd.noLog
+            silent:cmd.noLog,
+            logPid:true,
         });
 
         if(cmd.returnImmediately){

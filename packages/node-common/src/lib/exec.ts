@@ -149,6 +149,7 @@ export interface SpawnOptions
     onError?:(type:string,value:string)=>void;
     onExit?:(code:number)=>void;
     cancel?:CancelToken;
+    logPid?:boolean;
 }
 
 export const spawnAsync=(
@@ -166,7 +167,7 @@ export const spawnAsync=(
         cmd,
         cwd,
         out,
-        silent=out?true:false,
+        silent,
         stdout=consoleInfo,
         stderr=consoleWarn,
         onChild,
@@ -176,16 +177,34 @@ export const spawnAsync=(
         throwOnError,
         onExit,
         cancel,
+        logPid,
     }=options;
 
     return new Promise<string>((r,j)=>{
-        if(!silent){
-            stdout('> '+cmd);
-        }
-        out?.('> '+cmd)
+
         let child:ChildProcessWithoutNullStreams|undefined=undefined;
 
-        child=spawn(cmd,{cwd,shell:true});
+        try{
+            child=spawn(cmd,{cwd,shell:true});
+            if(logPid){
+                if(!silent){
+                    stdout(`pid(${child.pid}) > `+cmd);
+                }
+                out?.('pid(${child.pid}) > '+cmd)
+            }else{
+                if(!silent){
+                    stdout('> '+cmd);
+                }
+                out?.('> '+cmd)
+            }
+        }finally{
+            if(!child){
+                if(!silent){
+                    stdout('> '+cmd);
+                }
+                out?.('> '+cmd)
+            }
+        }
         child.on('error',err=>{
             if(throwOnError){
                 j(err);
@@ -209,6 +228,7 @@ export const spawnAsync=(
             if(onOutput){
                 onOutput('out',data)
             }
+            out?.(data);
             if(!silent){
                 stdout(outPrefix?outPrefix+data:data);
             }
@@ -221,6 +241,7 @@ export const spawnAsync=(
             if(onError){
                 onError('err',data)
             }
+            out?.(data);
             stderr(outPrefix?outPrefix+data:data);
             if(throwOnError){
                 j(data);
@@ -230,7 +251,7 @@ export const spawnAsync=(
         onChild?.(child);
         cancel?.onCancelOrNextTick(()=>{
             try{
-                child?.kill(9);
+                child?.kill();
             }catch{
                 // do nothing
             }
