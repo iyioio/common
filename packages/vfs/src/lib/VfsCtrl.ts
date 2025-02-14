@@ -1,6 +1,7 @@
 import { CancelToken, DisposeCallback, DisposeContainer, EvtQueue, UnauthorizedError, ValueRef, deepClone, getUriProtocol, joinPaths, minuteMs } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
 import { VfsMntCtrl } from "./VfsMntCtrl";
+import { VfsShellStream } from "./VfsShellStream";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
 import { vfsMntPtProvider } from "./vfs-deps";
 import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, vfsTopic } from "./vfs-lib";
@@ -671,12 +672,45 @@ export class VfsCtrl
         return r;
     }
 
-    public async getPipeOutputAsync(cwd:string|undefined|null,pipeId:string):Promise<Record<string,string[]>|undefined>{
+    public execShellCmdStream(cmd:VfsShellCommand|string):VfsShellStream
+    {
+        if(typeof cmd==='string'){
+            cmd={shellCmd:cmd}
+        }
+        if(!this.config.allowExec){
+            throw new UnauthorizedError('Shell command execution is not allowed at the controller level');
+        }
+        const stream=new VfsShellStream(this,cmd);
+        return stream;
+    }
+
+    public async writeToPipeAsync(cwd:string|undefined|null,pipeId:string,value:string):Promise<boolean>
+    {
+        if(!this.config.allowExec){
+            throw new UnauthorizedError('Shell command execution is not allowed at the controller level');
+        }
+        cwd=normalizeVfsPath(cwd??'~');
+
+        const mnt=this.getMntPt(cwd);
+        if(!mnt){
+            throw new Error(`No mount point found for path ${cwd}`);
+        }
+        if(!mnt.allowExec){
+            throw new UnauthorizedError(`Shell command execution is not allowed at the mount path level. cwd:${cwd}`);
+        }
+
+        const ctrl=await this.requireMntCtrlAsync(mnt);
+
+        return await ctrl.writeToPipeAsync(pipeId,value);
+
+    }
+
+    public async getPipeOutputAsync(cwd:string|undefined|null,pipeId:string,wait=false):Promise<Record<string,string[]>|undefined>{
 
         const localPipe=this.pipes[pipeId];
         if(localPipe){
             const out=localPipe.out;
-            if(this.config.enablePipeWaiting && !Object.keys(out).length){
+            if((this.config.enablePipeWaiting || wait) && !Object.keys(out).length){
                 return await this.waitForPipeOutputAsync(pipeId);
             }
             localPipe.out={};

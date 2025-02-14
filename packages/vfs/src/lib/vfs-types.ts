@@ -246,7 +246,7 @@ export interface VfsShellCommand
     noLog?:boolean;
 }
 
-export type VfsShellPipeOutType='std'|'err';
+export type VfsShellPipeOutType='std'|'err'|'exit';
 
 export interface VfsShellOutput
 {

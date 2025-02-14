@@ -1,6 +1,7 @@
 import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths, shortUuid } from "@iyio/common";
 import { execAsync, pathExistsAsync, spawnAsync } from "@iyio/node-common";
 import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testInclusiveVfsPathFilter, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
+import { ChildProcess } from "child_process";
 import chokidar from 'chokidar';
 import { Dirent, createReadStream, createWriteStream } from "fs";
 import { appendFile, mkdir, readFile, readdir, rename, rm, stat, unlink, writeFile } from "fs/promises";
@@ -371,6 +372,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         })
     }
 
+    private readonly procMap:Record<string,ChildProcess>={}
 
     protected override readonly _execShellCmdAsync=async (cmd:VfsShellCommand,pipeOut:(type:VfsShellPipeOutType,pipeId:string,out:string)=>void):Promise<VfsShellOutput>=>{
         const output:string[]=[];
@@ -386,16 +388,29 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
             cmd:cmd.shellCmd,
             cwd:cmd.cwd,
             onOutput,
-            onExit:c=>exitCode=c,
+            onExit:c=>{
+                if(cmd.outputStreamId){
+                    delete this.procMap[cmd.outputStreamId];
+                }
+                exitCode=c;
+                if(cmd.outputStreamId){
+                    pipeOut('exit',cmd.outputStreamId,c.toString());
+                }
+            },
             cancel:cmd.cancel,
             silent:cmd.noLog,
             logPid:true,
+            onChild:child=>{
+                if(cmd.outputStreamId){
+                    this.procMap[cmd.outputStreamId]=child;
+                }
+            }
         });
 
         if(cmd.returnImmediately){
             return {
                 output:'',
-                exitCode:1,
+                exitCode:0,
             }
         }
 
@@ -409,6 +424,23 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
         }
         return result;
 
+    }
+
+    protected override _writeToPipeAsync=(pipeId:string,value:string):Promise<boolean>=>
+    {
+        const proc=this.procMap[pipeId];
+        if(!proc?.stdin){
+            return Promise.resolve(false);
+        }
+        return new Promise<boolean>((resolve,reject)=>{
+            proc.stdin?.write(value,(err)=>{
+                if(err){
+                    reject(err);
+                }else{
+                    resolve(true);
+                }
+            })
+        })
     }
 }
 

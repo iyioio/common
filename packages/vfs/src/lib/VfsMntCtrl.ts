@@ -288,4 +288,12 @@ export abstract class VfsMntCtrl
 
     protected readonly _getPipeOutputAsync?:(cwd:string|undefined|null,pipeId:string)=>Promise<Record<string,string[]>|undefined>;
 
+    public writeToPipeAsync(pipeId:string,value:string):Promise<boolean>{
+        if(!this._writeToPipeAsync){
+            return Promise.resolve(false);
+        }
+        return this._writeToPipeAsync(pipeId,value);
+    }
+    protected readonly _writeToPipeAsync?:(pipeId:string,value:string)=>Promise<boolean>;
+
 }

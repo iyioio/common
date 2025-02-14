@@ -190,7 +190,7 @@ export const spawnAsync=(
                 if(!silent){
                     stdout(`pid(${child.pid}) > `+cmd);
                 }
-                out?.('pid(${child.pid}) > '+cmd)
+                out?.(`pid(${child.pid}) > `+cmd)
             }else{
                 if(!silent){
                     stdout('> '+cmd);
@@ -211,6 +211,12 @@ export const spawnAsync=(
             }
         });
         child.on('exit',code=>{
+            if(logPid){
+                if(!silent){
+                    stdout(`pid(${child?.pid}) > # exit(${code}) -- `+cmd);
+                }
+                out?.(`pid(${child?.pid}) > # exit(${code}) -- `+cmd)
+            }
             onExit?.(code??0);
             if(code && throwOnError){
                 j(code);
