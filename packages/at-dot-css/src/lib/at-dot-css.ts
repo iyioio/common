@@ -162,7 +162,6 @@ export const atDotCss=<S extends string>(
             console.warn(`Conflicting at-dot-css style sheet inserted. name=${name}`)
         }
         insertedSheets[name]=true;
-        console.log('hio 👋 👋 👋 inserted',name);
 
         if(!processed){
             processed=true;
