@@ -1,4 +1,4 @@
-import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint, styleSheetRenderer } from "@iyio/common";
+import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint, strHash, styleSheetRenderer } from "@iyio/common";
 
 const ctrlKey=Symbol('ctrlKey');
 
@@ -178,6 +178,7 @@ export const atDotCss=<S extends string>(
             }else if(options.css.includes(atDotNestStart)){
                 options.css=options.css.replace(atDotNestStart,`.${name}{\n`)+'\n}' as any;
             }
+            options.hash=strHash(options.css).toString();
         }
 
         if(options.debug){

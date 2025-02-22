@@ -4,6 +4,7 @@ export interface SharedStyleSheet
 {
     id:string;
     css:string;
+    hash?:string;
     order?:number|StyleSheetOrder;
 }
 

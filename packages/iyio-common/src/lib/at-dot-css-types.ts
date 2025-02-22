@@ -135,6 +135,7 @@ export interface AtDotStyle<S extends string>
     css:S;
     disableParsing?:boolean;
     order?:number|StyleSheetOrder;
+    hash?:string;
     /**
      * If true and a namespace is included the root class name will also include the name without
      * the name space. For example a sheet with includeNameWithoutNameSpace set to true and a name

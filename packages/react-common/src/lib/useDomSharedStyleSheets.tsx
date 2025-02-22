@@ -13,7 +13,14 @@ const sheets:SheetRecord[]=[];
 const updateSheets=()=>{
     for(let i=0;i<sharedStyleSheets.length;i++){
         const s=sharedStyleSheets[i];
-        if(!s || sheets.some(st=>st.sheet.id===s.id)){
+        if(!s){
+            continue;
+        }
+        const current=sheets.find(st=>st.sheet.id===s.id)
+        if(current){
+            if(current.sheet.hash && s.hash && s.hash!==current.sheet.hash){
+                current.elem.innerHTML=s.css;
+            }
             continue;
         }
         const sheet={
@@ -30,16 +37,26 @@ const updateSheets=()=>{
     let prev:SheetRecord|undefined;
     for(let i=0;i<sheets.length;i++){
         const sheet=sheets[i];
-        if(!sheet || sheet.inserted){
+        if(!sheet){
             continue
         }
-        sheet.inserted=true;
-        if(!prev){
-            document.head.append(sheet.elem);
-            continue;
+        sheet.elem.setAttribute('data-sheet-order',i.toString());
+
+        if(sheet.inserted){
+            if(prev && prev.elem!==sheet.elem.previousElementSibling){
+                sheet.inserted=false;
+                sheet.elem.remove();
+            }
         }
 
-        prev.elem.insertAdjacentElement('afterend',sheet.elem);
+        if(!sheet.inserted){
+            sheet.inserted=true;
+            if(!prev){
+                document.head.append(sheet.elem);
+            }else{
+                prev.elem.insertAdjacentElement('afterend',sheet.elem);
+            }
+        }
 
         prev=sheet;
     }
