@@ -226,7 +226,7 @@ export const markdownNodeToString=(line:MarkdownLine,node:MarkdownNode,format:Ma
             if(node.link || node.url || node.email){
                 content=`<a${recordToAtts(
                     {
-                        href:`${node.email?'mailto:':''}${node.url?escapeHtml(node.url):'#'}`,
+                        href:`${node.email?'mailto:':''}${node.url?node.url:'#'}`,
                         title:node.title,
                     },
                     options.getNodeHtmlAtts?.(line,node,'link'))
