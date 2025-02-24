@@ -35,6 +35,18 @@ export const escapeHtmlKeepDoubleQuote=(str:string):string=>
          .replace(/'/g, "&#039;");
 }
 
+export const escapeHtmlKeepAmp=(str:string):string=>
+{
+    if(!str){
+        return '';
+    }
+    return str
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 export const unescapeHtml=(str:string):string=>{
     return unescapeReplaceHtml(str,false);
 }

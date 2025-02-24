@@ -574,8 +574,9 @@ export const queryParamsToObject=(query:string):Record<string,string>=>
     if(!query){
         return {}
     }
-    if(query.startsWith('?')){
-        query=query.substring(1);
+    let q=query.indexOf('?');
+    if(q!==-1){
+        query=query.substring(q+1);
     }
 
     const obj:Record<string,string>={};
