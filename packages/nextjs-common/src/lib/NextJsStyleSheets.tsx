@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { Fragment } from 'react/jsx-runtime';
+import { Fragment } from 'react';
 import { useNextJsStyleSheets, useWorkaroundForNextJsOutOfOrderStyleSheets } from './useSharedStyleSheets.internal';
 
 export function NextJsStyleSheets(){
