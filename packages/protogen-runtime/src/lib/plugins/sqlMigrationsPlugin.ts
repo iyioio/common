@@ -141,7 +141,13 @@ export const sqlMigrationsPlugin:ProtoPipelineConfigurablePlugin<typeof SqlMigra
                     }
                 }
 
-                out.push({name,up:sqlUp,down:sqlDown});
+                out.push({
+                    name,
+                    up:sqlUp,
+                    down:sqlDown,
+                    upTrigger:child.children?.['upTrigger']?.value as any,
+                    downTrigger:child.children?.['downTrigger']?.value as any,
+                });
 
                 if(!inlineSql){
                     prevSchemePath=schemePath;

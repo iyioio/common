@@ -164,6 +164,9 @@ export interface SqlExecCommand
     transactionId?:string;
 }
 
+export type SqlMigrationTrigger='change'|'always';
+export const defaultSqlMigrationTrigger:SqlMigrationTrigger='change';
+
 export interface SqlMigration
 {
     name:string;
@@ -177,6 +180,15 @@ export interface SqlMigration
      * An SQL script to downgrade to the migration from the next migration
      */
     down:string;
+
+    /**
+     * Controls when the migration is triggered. By default a migration is triggered when there is
+     * a change that needs to be applied. A migration can also be specified to be triggered after
+     * any change using the "always" value.
+     * @default "change"
+     */
+    upTrigger?:SqlMigrationTrigger;
+    downTrigger?:SqlMigrationTrigger;
 }
 
 

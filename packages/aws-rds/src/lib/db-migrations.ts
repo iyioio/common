@@ -24,12 +24,16 @@ export async function applyDbMigrationAsync(
 
     // todo - add support for downwards migrations
 
+    const applyEnd:SqlMigration[]=[];
     //up
     for(const migration of migrations){
 
         if(appliedMigrations.includes(migration.name)){
             if(migration.name===targetMigration){
                 break;
+            }
+            if(migration.upTrigger==='always'){
+                applyEnd.push(migration);
             }
             continue;
         }
@@ -42,6 +46,10 @@ export async function applyDbMigrationAsync(
             break;
         }
 
+    }
+
+    for(const migration of applyEnd){
+        await client.execAsync(migration.up);
     }
 
 }

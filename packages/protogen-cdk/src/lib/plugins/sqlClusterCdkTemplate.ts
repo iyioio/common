@@ -32,6 +32,7 @@ export const sqlClusterCdkTemplate=({
     const importMigrations=imports.length?`import { ${imports.join(', ')} } from "@${namespace}/${sqlMigrationsPackage}";\n`:'';
 
     return `${importMigrations}import { SqlClusterBuilder, SqlClusterBuilderCluster, SqlClusterBuilderOptions } from "@iyio/cdk-common";
+import { SqlMigration } from "@iyio/common";
 import { Construct } from "constructs";
 
 
@@ -49,7 +50,7 @@ const clusters:SqlClusterBuilderCluster[]=[${clusters.map((c,i)=>`
         defaultDatabaseName:process.env['DATABASE_NAME_OVERRIDE']||${JSON.stringify(c.defaultDatabaseName??null)},${c.migrations?`
         clusterIdentifier:process.env['DATABASE_CLUSTER_ID'],
         secretArn:process.env['DATABASE_SECRET_ARN'],
-        migrations:_migrations${i}`:''}
+        migrations:_migrations${i} as SqlMigration[]`:''}
     }`).join(',')}
 ]
 
