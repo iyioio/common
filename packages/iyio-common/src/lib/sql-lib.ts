@@ -139,7 +139,7 @@ const _escapeSqlValue=(value:any,wrapArray:boolean,depth:number,colInfo?:DataTab
                 }
                 return (
                     (options?.inConditionValue?'(':wrapArray?'\'{':'')+
-                    value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,colInfo,{...options,inConditionValue:false},options?.inConditionValue?false:true)).join(',')+
+                    value.map(v=>_escapeSqlValue(v,wrapArray,depth+1,colInfo,{...options,inConditionValue:false},wrapArray?true:false)).join(',')+
                     (options?.inConditionValue?')':wrapArray?'}\'':'')
                 );
             }else{

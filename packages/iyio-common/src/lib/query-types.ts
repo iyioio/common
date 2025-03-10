@@ -292,7 +292,7 @@ export type QueryConditionOrGroup=QueryCondition|QueryGroupCondition;
 export const queryFunctions=[
     'count','sum','avg','min','max','round',
     'lower','upper','len','trim','ltrim','rtrim','concat','replace','strcmp',
-    'reverse','coalesce','any','all'
+    'reverse','coalesce','any','all','first','last','mid','now',
 ] as const;
 Object.freeze(queryFunctions);
 /**
@@ -366,6 +366,11 @@ export interface QueryValue
      * being the value of the coalesce prop.
      */
     coalesce?:string|number|boolean|((string|number|boolean)[]);
+
+    /**
+     * Casts a value to the given type
+     */
+    cast?:string;
 
     /**
      * An array of query values and expression operators that can be used to express complex

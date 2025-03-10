@@ -219,6 +219,9 @@ const appendValue=(ctx:QueryBuildCtx,enclose:boolean,value:QueryValue|NamedQuery
             enclose=false;
         }
         ctx.sql.push(escapeSqlValue(value.value,undefined,false));
+        if(value.cast){
+            ctx.sql.push('::'+value.cast)
+        }
     }else if(value.generatedValue){
         const g=value.generatedValue;
         switch(g.type){
