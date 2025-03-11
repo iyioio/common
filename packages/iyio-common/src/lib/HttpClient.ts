@@ -181,6 +181,7 @@ export class HttpClient
             ignoreErrors,
             rawBody,
             maxRetries,
+            readErrors,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -265,6 +266,14 @@ export class HttpClient
         }
 
         if(!response.ok && !ignoreErrors){
+            if(readErrors){
+                try{
+                    const txt=await response.text();
+                     throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, error=${txt}`);
+                }catch{
+                    throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, error=UNABLE_TO_READ_ERROR`);
+                }
+            }
             throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}`)
         }
 
