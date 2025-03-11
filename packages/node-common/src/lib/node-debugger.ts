@@ -1,10 +1,23 @@
 
 import { open, url, waitForDebugger } from 'node:inspector';
 
-let debuggerStarted=false;
-export const triggerNodeBreakpoint=(disable=false)=>
+export interface TriggerBreakpointOptions
 {
-    if(disable){
+    disable?:boolean;
+    port?:number;
+    host?:string;
+}
+
+let debuggerStarted=false;
+export const triggerNodeBreakpoint=(options?:TriggerBreakpointOptions|boolean)=>
+{
+    if(typeof options === 'boolean'){
+        options={
+            disable:options
+        }
+    }
+
+    if(options?.disable){
         return;
     }
     if(url() || debuggerStarted){
@@ -14,7 +27,7 @@ export const triggerNodeBreakpoint=(disable=false)=>
     }
     console.log(`starting debugger. pid:${process.pid}`);
     debuggerStarted=true;
-    open();
+    open(options?.port,options?.host??'0.0.0.0');
     waitForDebugger();
     // eslint-disable-next-line no-debugger
     debugger;
