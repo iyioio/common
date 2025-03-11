@@ -1,6 +1,6 @@
 import { UnsupportedError } from "@iyio/common";
+import { parseJson5 } from '@iyio/json5';
 import { format } from "date-fns";
-import { parse as parseJson5 } from 'json5';
 import { ConvoError } from "./ConvoError";
 import { ConvoBaseType, ConvoDocumentReference, ConvoFlowController, ConvoMessage, ConvoMessageTemplate, ConvoMetadata, ConvoPrintFunction, ConvoScope, ConvoScopeError, ConvoScopeFunction, ConvoStatement, ConvoTag, ConvoThreadFilter, ConvoTokenUsage, ConvoType, FlatConvoMessage, OptionalConvoValue, convoFlowControllerKey, convoObjFlag, convoReservedRoles } from "./convo-types";
 
