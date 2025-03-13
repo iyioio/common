@@ -1,6 +1,6 @@
 {
     "name": "@iyio/json5",
-    "version": "0.0.1",
+    "version": "0.7.12",
     "type": "commonjs",
     "sideEffects": false
 }
