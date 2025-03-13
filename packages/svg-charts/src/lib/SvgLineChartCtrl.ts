@@ -24,6 +24,11 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
     {
         super(options,svg,true);
 
+        this.options = {
+            enableSnapping: false, // Default to false
+            ...(options ?? {}),
+        };
+
         this.svg.addEventListener('mousemove',this.mouseListener);
         this.svg.addEventListener('mouseleave',this.mouseOutListener);
 
@@ -80,6 +85,48 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
             if(inter?.length){
                 const {x,y}=inter[0];
                 const offset=10;
+
+                // Handle snapping if enabled
+            if (this.options.enableSnapping) {
+                // Find the nearest data point index
+                const nearestIndex = this.findNearestDataPointIndex(x, line.data);
+                const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex + ro.left;
+                
+                // Get the point on the actual path at this x coordinate
+                const pathLength = line.path.getTotalLength();
+                let bestPoint = { x: 0, y: 0 };
+                let bestDistance = Infinity;
+                
+                // Sample points along the path to find the closest point at our x coordinate
+                for (let i = 0; i <= pathLength; i++) {
+                    const point = line.path.getPointAtLength(i);
+                    const distance = Math.abs(point.x - nearestX);
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestPoint = point;
+                    }
+                }
+
+                // Use the y-coordinate from the actual path
+                line.dot.setAttribute('cx', nearestX.toString());
+                line.dot.setAttribute('cy', bestPoint.y.toString());
+                line.text.setAttribute('x', (nearestX + 10).toString());
+                line.text.setAttribute('y', (bestPoint.y + 10).toString());
+                line.text.innerHTML = formatNumberWithBases(line.data[nearestIndex], 100);
+
+                line.text.style.visibility = 'visible';
+                line.dot.style.visibility = 'visible';
+                this.hoverPath.style.visibility = 'visible';
+
+                intersections.push({
+                    x: nearestX,
+                    y: bestPoint.y,
+                    clientX: rect.x + ro.left + nearestX,
+                    clientY: rect.y + ro.top + bestPoint.y,
+                    value: line.data[nearestIndex],
+                    valueClass: line.dot.getAttribute('class') ?? ''
+                });
+            } else {
                 line.dot.setAttribute('cx',x.toString());
                 line.dot.setAttribute('cy',y.toString());
                 if(this.options.showIntersectionValues){
@@ -93,6 +140,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 this.hoverPath.style.visibility='visible';
                 const value=(1-y/ro.canvasHeight)*(ro.max-ro.min)+ro.min;
                 line.text.innerHTML=formatNumberWithBases(value,100);
+
                 intersections.push({
                     x,
                     y,
@@ -101,6 +149,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                     value,
                     valueClass:line.dot.getAttribute('class')??''
                 })
+                }
             }else{
                 line.text.style.visibility='hidden';
                 line.dot.style.visibility='hidden';
@@ -204,5 +253,17 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
     private removeLine(line:Line){
         line.group.remove();
         aryRemoveItem(this.lines,line);
+    }
+
+    private findNearestDataPointIndex(x: number, data: number[]): number {
+        const ro = this.renderOptions;
+        const step = ro.width / (data.length - 1);
+        const index = Math.round((x - ro.left) / step);
+        return Math.min(Math.max(index, 0), data.length - 1);
+    }
+
+    private snapToNearestDataPoint(x: number, data: number[]): number {
+        const index = this.findNearestDataPointIndex(x, data);
+        return data[index];
     }
 }
