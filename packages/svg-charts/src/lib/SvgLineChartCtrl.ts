@@ -90,7 +90,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
             if (this.options.enableSnapping) {
                 // Find the nearest data point index
                 const nearestIndex = this.findNearestDataPointIndex(x, line.data);
-                const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex + ro.left;
+                const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex;
                 
                 // Get the point on the actual path at this x coordinate
                 const pathLength = line.path.getTotalLength();
@@ -260,10 +260,5 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         const step = ro.width / (data.length - 1);
         const index = Math.round((x - ro.left) / step);
         return Math.min(Math.max(index, 0), data.length - 1);
-    }
-
-    private snapToNearestDataPoint(x: number, data: number[]): number {
-        const index = this.findNearestDataPointIndex(x, data);
-        return data[index];
     }
 }
