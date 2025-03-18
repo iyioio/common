@@ -114,7 +114,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 line.text.setAttribute('y', (bestPoint.y + 10).toString());
                 line.text.innerHTML = formatNumberWithBases(line.data[nearestIndex], 100);
 
-                line.text.style.visibility = 'visible';
+                line.text.style.visibility = 'hidden';
                 line.dot.style.visibility = 'visible';
                 this.hoverPath.style.visibility = 'visible';
 
