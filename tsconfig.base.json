@@ -37,6 +37,7 @@
             "@iyio/convo-lang-cli": ["packages/convo-lang-cli/src/index.ts"],
             "@iyio/convo-lang-react": ["packages/convo-lang-react/src/index.ts"],
             "@iyio/common": ["packages/iyio-common/src/index.ts"],
+            "@iyio/json5": ["packages/json5/src/index.ts"],
             "@iyio/nextjs-common": ["packages/nextjs-common/src/index.ts"],
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
             "@iyio/nx-common": ["packages/nx-common/src/index.ts"],

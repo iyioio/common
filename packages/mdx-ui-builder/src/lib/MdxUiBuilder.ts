@@ -1,5 +1,5 @@
 import { DisposeContainer, InternalOptions, ReadonlySubject, asArray, delayAsync, escapeHtml, getErrorMessage, removeEmptyLinesAtIndex, setIndentation } from "@iyio/common";
-import { parse as parseJson5 } from 'json5';
+import { parseJson5 } from '@iyio/json5';
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
 import { MdxUiTextEditor } from "./MdxUiTextEditor";

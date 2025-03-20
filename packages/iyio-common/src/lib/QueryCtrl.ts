@@ -122,7 +122,7 @@ export class QueryCtrl<T=any>
         this.querySub.unsubscribe();
     }
 
-    public async loadAsync(queryOptions:QueryOptions|null|undefined){
+    public async loadAsync(queryOptions:QueryOptions|null|undefined,clearCache?:boolean){
 
         if(this._isDisposed){
             return;
@@ -161,7 +161,7 @@ export class QueryCtrl<T=any>
                 data=await queryClient().selectQueryItemsAsync<T>(query);
                 if(rId!==this.runId){return}
 
-                const ts=await this.getTotalStateAsync(query,prev);
+                const ts=await this.getTotalStateAsync(query,prev,clearCache);
                 if(rId!==this.runId){return}
 
                 total=ts.total;
@@ -222,7 +222,7 @@ export class QueryCtrl<T=any>
         this.querySubject.next(q);
     }
 
-    private async getTotalStateAsync(query:Query,prev:QueryState<T>|undefined)
+    private async getTotalStateAsync(query:Query,prev:QueryState<T>|undefined,clearCache?:boolean)
     {
         const totalQuery:Query={
             table:query.table,
@@ -230,7 +230,7 @@ export class QueryCtrl<T=any>
             condition:deepClone(query.condition,cloneMaxDepth),
             columns:[{func:'count',name:'count'}]
         }
-        if(prev?.query && prev?.total!==undefined && deepCompare(totalQuery,prev?.totalQuery)){
+        if(!clearCache && prev?.query && prev?.total!==undefined && deepCompare(totalQuery,prev?.totalQuery)){
             return {
                 total:prev.total,
                 totalQuery:prev.totalQuery

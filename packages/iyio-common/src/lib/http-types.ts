@@ -85,6 +85,11 @@ export interface HttpClientRequestOptions
      * @default 5
      */
     maxRetries?:number;
+
+    /**
+     * If true error responses will be read and added to throw errors
+     */
+    readErrors?:boolean;
 }
 
 export interface HttpFetcher{
