@@ -109,7 +109,7 @@ export abstract class SvgBaseChartCtrl
             removeElementsOnDispose:true,
             min,
             steps:options?.steps??getDefaultChartSteps(),
-
+            enableSnapping: false,
             ...(options??{}),
         }
 
