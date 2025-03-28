@@ -118,13 +118,16 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 line.dot.style.visibility = 'visible';
                 this.hoverPath.style.visibility = 'visible';
 
+                const timestamp = this.data.timestamps?.[nearestIndex];
+
                 intersections.push({
                     x: nearestX,
                     y: bestPoint.y,
                     clientX: rect.x + ro.left + nearestX,
                     clientY: rect.y + ro.top + bestPoint.y,
                     value: line.data[nearestIndex],
-                    valueClass: line.dot.getAttribute('class') ?? ''
+                    valueClass: line.dot.getAttribute('class') ?? '',
+                    timestamp: timestamp
                 });
             } else {
                 line.dot.setAttribute('cx',x.toString());
@@ -141,13 +144,17 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 const value=(1-y/ro.canvasHeight)*(ro.max-ro.min)+ro.min;
                 line.text.innerHTML=formatNumberWithBases(value,100);
 
+                const index = Math.round((x / ro.width) * (line.data.length - 1));
+                const timestamp = this.data.timestamps?.[index];
+
                 intersections.push({
                     x,
                     y,
                     clientX:rect.x+ro.left+x,
                     clientY:rect.y+ro.top+y,
                     value,
-                    valueClass:line.dot.getAttribute('class')??''
+                    valueClass:line.dot.getAttribute('class')??'',
+                    timestamp: timestamp
                 })
                 }
             }else{

@@ -45,6 +45,7 @@ export interface ChartData
     renderId?:string;
     labels:string[];
     series:number[][];
+    timestamps?: number[];
 }
 
 
@@ -92,4 +93,5 @@ export interface ChartIntersection
     clientY:number;
     value:number;
     valueClass:string;
+    timestamp?: number;
 }

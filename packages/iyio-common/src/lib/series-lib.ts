@@ -206,6 +206,8 @@ export const createSeriesQuery=(
         getSeriesData(rows:HashMap[]){
             const labels:string[]=ranges.map((r,i)=>r.name??'column-'+i);
             const series:number[][]=[];
+            // Add timestamps from range starts
+        const timestamps:number[]=ranges.map(r=>r.start);
 
             for(let rowI=0;rowI<seriesColNames.length;rowI++){
                 const nameRow=seriesColNames[rowI] as string[];
@@ -224,6 +226,7 @@ export const createSeriesQuery=(
             return {
                 labels,
                 series,
+                timestamps
             }
         },
     }
