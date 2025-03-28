@@ -38,12 +38,23 @@ export function SvgChartOverlay({
             elem.style.display='flex';
             elem.style.transform=`translate(${x}px,${y}px)`;
 
-            itemsElem.innerHTML=v.map((v,i)=>`
+            itemsElem.innerHTML=v.map((v,i)=>{
+                console.log(v);
+                let timestampStr = '';
+                if (v.timestamp) {
+                    const date = new Date(v.timestamp);
+                    const month = date.toLocaleString('default', { month: 'short' });
+                    const day = date.getDate();
+                    const year = date.getFullYear();
+                    timestampStr = `${month} ${day}, ${year}: `;
+                }
+                return`
                 <div class="${classNamePrefix}overlay-item ${classNamePrefix}${i%2?'even':'odd'}">
                     <div class="${classNamePrefix}overlay-item-color ${classNamePrefix}${i%2?'even':'odd'}"></div>
-                    <div class="${classNamePrefix}overlay-item-value">${formatNumberWithBases(v.value,100)}</div>
+                    <div class="${classNamePrefix}overlay-item-value"> ${timestampStr} ${formatNumberWithBases(v.value,100)}</div>
                 </div>
-            `).join('')
+            `
+            }).join('')
         })
 
         return ()=>{
