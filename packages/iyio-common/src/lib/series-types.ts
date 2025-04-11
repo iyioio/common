@@ -5,6 +5,7 @@ export interface SeriesData
 {
     labels:string[];
     series:number[][];
+    timestamps:number[][];
 }
 
 export interface SeriesDataQuery

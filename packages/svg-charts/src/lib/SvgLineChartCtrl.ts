@@ -118,7 +118,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 line.dot.style.visibility = 'visible';
                 this.hoverPath.style.visibility = 'visible';
 
-                const timestamp = this.data.timestamps?.[nearestIndex];
+                const timestamp = this.data.timestamps?.[line.index]?.[nearestIndex];
 
                 intersections.push({
                     x: nearestX,
@@ -145,7 +145,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 line.text.innerHTML=formatNumberWithBases(value,100);
 
                 const index = Math.round((x / ro.width) * (line.data.length - 1));
-                const timestamp = this.data.timestamps?.[index];
+                const timestamp = this.data.timestamps?.[line.index]?.[index];
 
                 intersections.push({
                     x,
