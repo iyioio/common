@@ -40,14 +40,14 @@ export class WeekSeriesIntervalCtrl implements SeriesIntervalCtrl<Date>
     }
 
     public getDefault(offset:number){
-        return this.add(startOfWeek(new Date()),offset);
+        return this.add(new Date(),offset);
     }
     public add(value:Date,count:number):Date{
         return addWeeks(value,count);
     }
     public getRange(value:Date):SeriesRange<Date>
     {
-        const start=startOfWeek(value)
+        const start=value
         return {
             name:format(start,this.format),
             start,
@@ -149,17 +149,17 @@ export class WeekMsSeriesIntervalCtrl implements SeriesIntervalCtrl<number>
     }
 
     public getDefault(offset:number){
-        return this.add(startOfWeek(new Date()).getTime(),offset);
+        return this.add(new Date().getTime(),offset);
     }
     public add(value:number,count:number):number{
         return addWeeks(value,count).getTime();
     }
     public getRange(value:number):SeriesRange<number>
     {
-        const start=startOfWeek(value)
+        const start=value
         return {
             name:format(start,this.format),
-            start:start.getTime(),
+            start:start,
             end:endOfWeek(value).getTime(),
         }
     }
