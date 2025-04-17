@@ -25,7 +25,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         super(options,svg,true);
 
         this.options = {
-            enableSnapping: false, // Default to false
+            enableSnapping: false,
             ...(options ?? {}),
         };
 
@@ -86,18 +86,14 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 const {x,y}=inter[0];
                 const offset=10;
 
-                // Handle snapping if enabled
             if (this.options.enableSnapping) {
-                // Find the nearest data point index
                 const nearestIndex = this.findNearestDataPointIndex(x, line.data);
                 const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex;
                 
-                // Get the point on the actual path at this x coordinate
                 const pathLength = line.path.getTotalLength();
                 let bestPoint = { x: 0, y: 0 };
                 let bestDistance = Infinity;
                 
-                // Sample points along the path to find the closest point at our x coordinate
                 for (let i = 0; i <= pathLength; i++) {
                     const point = line.path.getPointAtLength(i);
                     const distance = Math.abs(point.x - nearestX);
@@ -107,7 +103,6 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                     }
                 }
 
-                // Use the y-coordinate from the actual path
                 line.dot.setAttribute('cx', nearestX.toString());
                 line.dot.setAttribute('cy', bestPoint.y.toString());
                 line.text.setAttribute('x', (nearestX + 10).toString());

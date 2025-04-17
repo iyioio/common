@@ -163,7 +163,6 @@ export const createSeriesQuery=(
         }
 
 
-    // Store offset-adjusted ranges
     allRanges.push(
         ranges.map(r => ({
           ...r,
@@ -216,7 +215,7 @@ export const createSeriesQuery=(
         getSeriesData(rows:HashMap[]){
             const labels:string[]=ranges.map((r,i)=>r.name??'column-'+i);
             const series:number[][]=[];
-            // Add timestamps from range starts
+
             const timestamps: number[][] = allRanges.map(rngs => rngs.map(r => r.start));
 
             for(let rowI=0;rowI<seriesColNames.length;rowI++){
