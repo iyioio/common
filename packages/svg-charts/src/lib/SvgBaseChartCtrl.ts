@@ -628,26 +628,38 @@ export abstract class SvgBaseChartCtrl
                 this.vLabels.pop()?.remove();
             }
 
+            const validLabels: SVGForeignObjectElement[] = [];
+
             for(let i=0;i<valueCount;i++){
+                const labelText = this.data.labels[i] ?? '';
+                if(!labelText) {
+                    continue;
+                }
+
                 const isFirst=i===0 && renderPadding.left<20;
                 const isLast=i===valueCount-1 && renderPadding.right<20;
+                
+                let obj: SVGForeignObjectElement;
                 if(this.vLabels.length<=i){
-                    const newLine=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
-                    newLine.setAttribute('class',`${classNamePrefix}label-label`);
-                    this.vLabelGroup.appendChild(newLine);
-                    this.vLabels.push(newLine);
+                    obj=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+                    obj.setAttribute('class',`${classNamePrefix}label-label`);
+                    this.vLabelGroup.appendChild(obj);
+                    this.vLabels.push(obj);
+                } else {
+                    obj = this.vLabels[i];
                 }
+
                 const w=(width/(valueCount-1));
-                const lw=w/(isFirst||isLast?2:1);
+                const lw = w * (isFirst || isLast ? 2 : 3);
                 const h=viewBoxHeight-bottom;
-                const obj=this.vLabels[i];
+                
                 const className=`${classNamePrefix}text ${classNamePrefix}text-label ${isFirst?` ${classNamePrefix}text-first`:isLast?` ${classNamePrefix}text-last`:''}`;
-                const text=escapeHtml(this.data.labels[i]??'')
+                const text=escapeHtml(labelText);
                 obj.innerHTML=`
                     <div class="${className}" title="${text}" style="width:${lw}px;height:${h}px">
                         <div>${text}</div>
                     </div>
-                `
+                `;
 
                 const x=w*i+left;
                 obj.setAttribute('y',toSafeSvgAttValue(bottom));
@@ -655,7 +667,16 @@ export abstract class SvgBaseChartCtrl
                 obj.setAttribute('width',toSafeSvgAttValue(lw));
                 obj.setAttribute('height',toSafeSvgAttValue(h));
 
+                validLabels.push(obj);
             }
+
+            this.vLabels.forEach(label => {
+                if(!validLabels.includes(label)) {
+                    label.remove();
+                }
+            });
+
+            this.vLabels = validLabels;
 
         }else if(this.vLabelGroup){
             this.vLabelGroup.remove();
