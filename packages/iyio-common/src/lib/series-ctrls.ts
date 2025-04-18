@@ -116,7 +116,7 @@ export class DayMsSeriesIntervalCtrl implements SeriesIntervalCtrl<number>
 
     public format:string;
 
-    public constructor(format='E')
+    public constructor(format='do')
     {
         this.format=format;
     }

@@ -272,13 +272,11 @@ export const autoSeriesToRanges=(auto:AutoSeries):SeriesRange[]=>{
 
     }
 
-      if (auto.labelInterval && auto.labelInterval > 1 && ranges !== undefined) {
-
+    if (auto.labelInterval && auto.labelInterval > 1) {
         if (auto.type === 'day') {
             let firstDayOfWeekIndex = -1;
             for (let i = 0; i < ranges.length; i++) {
                 const date = new Date(ranges[i]?.start);
-
                 if (date.getDay() === 0 || firstDayOfWeekIndex === -1) {
                     firstDayOfWeekIndex = i;
                     break;
@@ -287,14 +285,16 @@ export const autoSeriesToRanges=(auto:AutoSeries):SeriesRange[]=>{
 
             if (firstDayOfWeekIndex !== -1) {
                 for (let i = 0; i < ranges.length; i++) {
-                    if (ranges[i] !== undefined && ranges[i]?.name !== undefined) {
-                        ranges[i]!.name = "";
+                    if ((i - firstDayOfWeekIndex) % auto.labelInterval !== 0) {
+                        if(ranges){
+                            ranges[i]!.name = ""; 
+                        }
                     }
                 }
             } else {
                 for (let i = 0; i < ranges.length; i++) {
                     if (i % auto.labelInterval !== 0) {
-                        if (ranges[i] !== undefined && ranges[i]?.name !== undefined) {
+                        if(ranges){
                             ranges[i]!.name = "";
                         }
                     }
