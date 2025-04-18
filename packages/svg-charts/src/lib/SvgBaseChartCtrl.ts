@@ -650,7 +650,7 @@ export abstract class SvgBaseChartCtrl
                 }
 
                 const w=(width/(valueCount-1));
-                const lw = w * (isFirst || isLast ? 2 : 3);
+                const lw = w * (isFirst || isLast ? 3 : 3);
                 const h=viewBoxHeight-bottom;
                 
                 const className=`${classNamePrefix}text ${classNamePrefix}text-label ${isFirst?` ${classNamePrefix}text-first`:isLast?` ${classNamePrefix}text-last`:''}`;
