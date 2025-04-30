@@ -201,7 +201,8 @@ export const serverFnPlugin:ProtoPipelineConfigurablePlugin<typeof ServerFnPlugi
                     minify:node.children?.['minify']?.value==='false'?false:undefined,
                     eventTarget:(eventTarget!==undefined && eventTarget!=='false')?true:undefined,
                     createScheduledEvents:(createScheduledEvents!==undefined && createScheduledEvents!=='false')?true:undefined,
-                    memorySize:node.children?.['memoryMb']?Number(node.children?.['memoryMb'].value):undefined
+                    memorySize:node.children?.['memoryMb']?Number(node.children?.['memoryMb'].value):undefined,
+                    layerInfos:protoGetChildrenByName(node,'layer',false).filter(v=>v.value).map(v=>({path:libStyle==='nx'?joinPaths('../..',v.value as string):v.value as string}))
                 },
                 arnParam:paramName,
                 envPattern:node.children?.['$envPattern']?.value,

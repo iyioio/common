@@ -52,6 +52,13 @@ interface AdditionalFuncOptions
     createScheduledEvents?:boolean;
 
     managed?:ManagedProps;
+
+    layerInfos?:NodeFnLayerInfo[];
+}
+
+export interface NodeFnLayerInfo{
+    name?:string;
+    path:string;
 }
 
 export interface CreateNodeFnResult
@@ -80,7 +87,7 @@ export class NodeFn extends Construct{
         createScheduledEvents,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
-        bundling={minify,sourceMap:true,target:'node18'},
+        bundling={minify,sourceMap:true,target:'node18',externalModules:['@aws-sdk/*','sharp']},
         handler,
         logRetention=logs.RetentionDays.ONE_WEEK,
         runtime=lambda.Runtime.NODEJS_18_X,
@@ -88,6 +95,7 @@ export class NodeFn extends Construct{
         memorySize=256,
         timeout=timeoutMs===undefined?undefined:cdk.Duration.millis(timeoutMs),
         managed,
+        layerInfos,
         ...props
     }:NodeFnProps){
 
@@ -105,7 +113,6 @@ export class NodeFn extends Construct{
         let func:lambda.Function|null=null;
 
         const options:Omit<lambda.FunctionProps,'code'|'handler'>={
-            logRetention,
             architecture,
             memorySize,
             timeout,
@@ -113,7 +120,24 @@ export class NodeFn extends Construct{
             vpc:vpc||undefined,
             role,
             ...props,
+            layers:layerInfos?([
+                ...(props.layers??[]),
+                ...layerInfos.map(p=>{
+                    let name=p.name;
+                    if(!name){
+                        const parts=p.path.split('.');
+                        name=parts[parts.length-1]??''
+                    }
+                    return new lambda.LayerVersion(this,name,{
+                        code:lambda.Code.fromAsset(p.path),
+                        compatibleArchitectures:[architecture]
+                    })
+            }),
+            ]):props.layers,
+        }
 
+        if(!useDefaultLogGroup && !disableLogging){
+            (options as any).logRetention=logRetention;
         }
 
         if(bundledHandlerFileNames){
@@ -145,6 +169,10 @@ export class NodeFn extends Construct{
                 handler:handler??'handler',
                 ...options,
             });
+        }
+
+        if(useDefaultLogGroup && !disableLogging){
+            //func.logGroup=getDefaultLogGroup(this,logRetention); // todo after update CDK version
         }
 
         let url:lambda.FunctionUrl|undefined=undefined;
@@ -197,3 +225,20 @@ export class NodeFn extends Construct{
 
 
 const toFileName=(name:string)=>name.replace(/([a-z0-9])([A-Z]+)/g,(_,l,u)=>`${l}-${u}`).toLocaleLowerCase()+'.ts';
+
+let defaultLogGroup:logs.ILogGroup|null=null;
+
+let useDefaultLogGroup=false;
+let disableLogging=false;
+
+export const setDisableNodeFnLogging=(disable:boolean)=>{
+    disableLogging=disable;
+}
+
+export const setUseDefaultLogGroup=(use:boolean)=>{
+    useDefaultLogGroup=use;
+}
+
+const getDefaultLogGroup=(scope:Construct,retention=logs.RetentionDays.ONE_WEEK)=>{
+    return defaultLogGroup??(defaultLogGroup=new logs.LogGroup(scope,'DefaultLogGroup',{retention}));
+}
