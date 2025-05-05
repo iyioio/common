@@ -1,6 +1,7 @@
-import { NotFoundError, getContentType, getFileName } from "@iyio/common";
+import { NotFoundError, Scope, getContentType, getFileName } from "@iyio/common";
 import { supClient } from "@iyio/supabase-common";
 import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, vfsMntTypes } from "@iyio/vfs";
+import { vfsSupabaseBucketParam } from "./vfs-supabase.deps";
 
 export interface VfsSupabaseMntCtrlOptions extends VfsMntCtrlOptions
 {
@@ -10,6 +11,12 @@ export interface VfsSupabaseMntCtrlOptions extends VfsMntCtrlOptions
 
 export class VfsSupabaseMntCtrl extends VfsMntCtrl
 {
+
+    public static fromScope(scope:Scope){
+        return new VfsSupabaseMntCtrl({
+            bucketName:scope.require(vfsSupabaseBucketParam)
+        })
+    }
 
     private readonly ignoreFilenames:string[];
 
