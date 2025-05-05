@@ -1,3 +1,4 @@
+import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
 import { delayAsync, unused } from "./common-lib";
 import { HashMap } from "./common-types";
 import { BaseError, HttpBaseUrlPrefixNotFoundError } from "./errors";
@@ -48,6 +49,11 @@ export interface HttpClientOptions
      * References to JwtProviders
      */
     jwtProviders?:TypeDef<JwtProvider>;
+
+    /**
+     * a JwtProvider
+     */
+    jwtProvider?:JwtProvider;
 
     /**
      * If true all requests are written to the console
@@ -197,7 +203,7 @@ export class HttpClient
             }
         }
 
-        const jwt=noAuth?undefined:this.options.jwtProviders?.getFirst(null,p=>p(uri));
+        const jwt=noAuth?undefined:(this.options.jwtProvider?.(uri)??this.options.jwtProviders?.getFirst(null,p=>p(uri)));
 
         const maxTries=Math.max(1,maxRetries??this.options.maxRetries??1);
 
@@ -224,7 +230,7 @@ export class HttpClient
                 }
             }
 
-            const fetcher=this.options.fetchers?.getFirst(null,p=>p.canFetch(baseRequest)?p:undefined);
+            const fetcher=this.options.fetchers?this.options.fetchers?.getFirst(null,p=>p.canFetch(baseRequest)?p:undefined):getDefaultFetcher();
             if(!fetcher){
                 throw new Error('No HttpFetcherType found');
             }
@@ -396,4 +402,10 @@ export class HttpClient
     {
         return await this.requestAsync<TReturn>('DELETE',uri,undefined,options);
     }
+}
+
+
+let defaultFetcher:HttpDefaultFetcher|undefined;
+const getDefaultFetcher=()=>{
+    return defaultFetcher??(defaultFetcher=new HttpDefaultFetcher());
 }
