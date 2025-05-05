@@ -1,6 +1,6 @@
 import { NotFoundError, getContentType, getFileName } from "@iyio/common";
-import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, vfsMntTypes } from "@iyio/vfs";
-import { supClient } from "./_tmp";
+import { supClient } from "@iyio/supabase-common";
+import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, vfsMntTypes } from "@iyio/vfs";
 
 export interface VfsSupabaseMntCtrlOptions extends VfsMntCtrlOptions
 {
@@ -30,16 +30,16 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
     }
 
 
-    protected override _touchAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem|undefined>=>{
+    protected override _touchAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsItem>=>{
         if(!sourceUrl){
             throw new Error('sourceUrl required');
         }
 
-        try {
-            return await this._getItemAsync(fs, mnt, path, sourceUrl);
-        } catch (error) {
-            return await this._writeStringAsync(fs, mnt, path, sourceUrl, '');
+        const r=await this._getItemAsync(fs, mnt, path, sourceUrl);
+        if(r){
+            return r;
         }
+        return await this._writeStringAsync(fs, mnt, path, sourceUrl, '');
     }
 
 
@@ -79,7 +79,7 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         }
 
         const path = sourceUrl.endsWith('/') ? sourceUrl : sourceUrl + '/';
-        
+
         const r = await supClient().storage.from(this.bucketName).list(path, {
             limit: options.limit,
             offset: options.offset,
@@ -95,13 +95,13 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         }
 
         const items: VfsItem[] = [];
-        
+
         for(const obj of r.data) {
             // Skip files that should be ignored
             if(this.ignoreFilenames.includes(obj.name)) {
                 continue;
             }
-            
+
             const isFolder = obj.metadata && obj.metadata["mimetype"] === 'application/x-directory';
             items.push({
                 id: obj.id,
@@ -115,9 +115,11 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
 
         return {
             items,
-            total: items.length,
+            count: items.length,
             offset: options.offset || 0,
-            limit: options.limit
+            total:items.length,// todo - get count from DB
+            notFound:false,
+
         };
     }
 
@@ -129,13 +131,13 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
 
         const dirPath = sourceUrl.endsWith('/') ? sourceUrl : sourceUrl + '/';
         const dirMarker = new Blob([], { type: 'application/x-directory' });
-        
+
         const r = await supClient().storage.from(this.bucketName).upload(dirPath + '.dir', dirMarker);
-        
+
         if(r.error){
             throw new Error(r.error.message);
         }
-        
+
         return {
             id: r.data?.id || dirPath,
             type: 'dir',
@@ -154,17 +156,17 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
 
         // Get item info before removing it
         const item = await this._getItemAsync(fs, mnt, path, sourceUrl);
-        
+
         if(!item) {
             throw new NotFoundError();
         }
-        
+
         const r = await supClient().storage.from(this.bucketName).remove([sourceUrl]);
-        
+
         if(r.error){
             throw new Error(r.error.message);
         }
-        
+
         return item;
     }
 
@@ -199,15 +201,15 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         }
 
         const blob = new Blob([content], { type: getContentType(sourceUrl) });
-        
+
         const r = await supClient().storage.from(this.bucketName).upload(sourceUrl, blob, {
             upsert: true
         });
-        
+
         if(r.error){
             throw new Error(r.error.message);
         }
-        
+
         return await this._getItemAsync(fs, mnt, path, sourceUrl) || {
             id: r.data?.id || sourceUrl,
             type: 'file',
@@ -230,9 +232,9 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         } catch (error) {
             throw new Error ("Error")
         }
-        
+
         const combinedContent = existingContent + content;
-        
+
         return await this._writeStringAsync(fs, mnt, path, sourceUrl, combinedContent);
     }
 
@@ -249,15 +251,15 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         }
 
         const blob = buffer instanceof Blob ? buffer : new Blob([buffer], { type: getContentType(sourceUrl) });
-        
+
         const r = await supClient().storage.from(this.bucketName).upload(sourceUrl, blob, {
             upsert: true
         });
-        
+
         if(r.error){
             throw new Error(r.error.message);
         }
-        
+
         return await this._getItemAsync(fs, mnt, path, sourceUrl) || {
             id: r.data?.id || sourceUrl,
             type: 'file',
@@ -268,46 +270,48 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         };
     }
 
-    protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>=>
-    {
-        if(!sourceUrl){
-            throw new Error('sourceUrl required');
-        }
+    // todo - correctly implement
+    // protected override _writeStreamAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,stream:VfsReadStream):Promise<VfsItem>=>
+    // {
+    //     if(!sourceUrl){
+    //         throw new Error('sourceUrl required');
+    //     }
 
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of stream) {
-            chunks.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(await chunk.arrayBuffer()));
-        }
-        
-        const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-        const buffer = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const chunk of chunks) {
-            buffer.set(chunk, offset);
-            offset += chunk.length;
-        }
+    //     const chunks: Uint8Array[] = [];
+    //     for await (const chunk of stream) {
+    //         chunks.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(await chunk.arrayBuffer()));
+    //     }
 
-        return await this._writeBufferAsync(fs, mnt, path, sourceUrl, buffer);
-    }
+    //     const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    //     const buffer = new Uint8Array(totalLength);
+    //     let offset = 0;
+    //     for (const chunk of chunks) {
+    //         buffer.set(chunk, offset);
+    //         offset += chunk.length;
+    //     }
 
-    protected override _getReadStream=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsReadStreamWrapper>=>
-    {
-        if(!sourceUrl){
-            throw new Error('sourceUrl required');
-        }
+    //     return await this._writeBufferAsync(fs, mnt, path, sourceUrl, buffer);
+    // }
 
-        // Create an async generator function that reads the file
-        const readGenerator = async function*(self: VfsSupabaseMntCtrl) {
-            const blob = await self.readBlobAsync(sourceUrl);
-            yield blob;
-        };
-        
-        // Return a wrapper for the generator
-        return Promise.resolve({
-            stream: readGenerator(this),
-            close: async () => {
-                // Nothing to close for this simple implementation
-            }
-        });
-    }
+    // todo - correctly implement
+    // protected override _getReadStream=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<VfsReadStreamWrapper>=>
+    // {
+    //     if(!sourceUrl){
+    //         throw new Error('sourceUrl required');
+    //     }
+
+    //     // Create an async generator function that reads the file
+    //     const readGenerator = async function*(self: VfsSupabaseMntCtrl) {
+    //         const blob = await self.readBlobAsync(sourceUrl);
+    //         yield blob;
+    //     };
+
+    //     // Return a wrapper for the generator
+    //     return Promise.resolve({
+    //         stream: readGenerator(this),
+    //         close: async () => {
+    //             // Nothing to close for this simple implementation
+    //         }
+    //     });
+    // }
 }
