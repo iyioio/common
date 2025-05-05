@@ -69,7 +69,8 @@
             "@iyio/vfs-node": ["packages/vfs-node/src/index.ts"],
             "@iyio/vfs-react": ["packages/vfs-react/src/index.ts"],
             "@iyio/mdx-ui-builder": ["packages/mdx-ui-builder/src/index.ts"],
-            "@iyio/mdx-ui-builder-react": ["packages/mdx-ui-builder-react/src/index.ts"]
+            "@iyio/mdx-ui-builder-react": ["packages/mdx-ui-builder-react/src/index.ts"],
+            "@iyio/supabase-common": ["packages/supabase-common/src/index.ts"]
         }
     },
     "exclude": ["node_modules", "tmp","tmpl"]
