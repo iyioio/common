@@ -259,6 +259,8 @@ export interface VfsReadStream
 {
     pipe(destinationStream:any,options?:any):any;
     destroy(error?:Error):any;
+    on?:(eventName:string,listener:(...args:any[])=>void)=>void;
+    off?:(eventName:string,listener:(...args:any[])=>void)=>void;
 }
 
 export interface VfsReadStreamWrapper
