@@ -5,8 +5,8 @@ export function uuid():string{
     return v4();
 }
 
+const buf=new Uint8Array(16);
 export function shortUuid():string{
-    const buf:number[]=[];
     v4(undefined,buf,0);
-    return base64EncodeAry(buf,fsBase64Chars)
+    return base64EncodeAry([...buf],fsBase64Chars)
 }
