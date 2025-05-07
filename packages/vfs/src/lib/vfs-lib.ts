@@ -8,6 +8,7 @@ export const vfsMntTypes={
     file:'file',
     httpProxy:'httpProxy',
     indexDb:'indexDb',
+    bucket:'bucket',
 } as const;
 
 export const defaultVfsIgnoreFiles=[

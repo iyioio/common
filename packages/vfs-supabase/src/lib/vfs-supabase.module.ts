@@ -4,6 +4,6 @@ import { VfsSupabaseMntCtrl } from "./VfsSupabaseMntCtrl";
 
 export const useVfsSupabase=(scope:ScopeRegistration)=>{
 
-    scope.addProvider(vfsMntPtProvider,scope=>VfsSupabaseMntCtrl.fromScope(scope),vfsMntTypes.file);
+    scope.addProvider(vfsMntPtProvider,scope=>new VfsSupabaseMntCtrl(),vfsMntTypes.file);
 
 }

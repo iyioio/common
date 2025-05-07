@@ -19,7 +19,7 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
     }:VfsSupabaseMntCtrlOptions={}){
         super({
             ...options,
-            type:vfsMntTypes.file,
+            type:vfsMntTypes.bucket,
             removeProtocolFromSourceUrls:true,
         })
         this.ignoreFilenames=ignoreFilenames;
