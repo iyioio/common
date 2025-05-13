@@ -25,7 +25,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         super(options,svg,true);
 
         this.options = {
-            enableSnapping: false, // Default to false
+            enableSnapping: false,
             ...(options ?? {}),
         };
 
@@ -80,56 +80,44 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         for(const line of this.lines){
 
 
-            //console.log(line.path.getAttribute('d'),this.debugPath.getAttribute('d'))
-            const inter=findPathIntersections(line.path.getAttribute('d')??'',this.hoverPath.getAttribute('d')??'',false);
-            if(inter?.length){
-                const {x,y}=inter[0];
-                const offset=10;
-
-                // Handle snapping if enabled
             if (this.options.enableSnapping) {
-                // Find the nearest data point index
                 const nearestIndex = this.findNearestDataPointIndex(x, line.data);
                 const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex;
                 
-                // Get the point on the actual path at this x coordinate
-                const pathLength = line.path.getTotalLength();
-                let bestPoint = { x: 0, y: 0 };
-                let bestDistance = Infinity;
-                
-                // Sample points along the path to find the closest point at our x coordinate
-                for (let i = 0; i <= pathLength; i++) {
-                    const point = line.path.getPointAtLength(i);
-                    const distance = Math.abs(point.x - nearestX);
-                    if (distance < bestDistance) {
-                        bestDistance = distance;
-                        bestPoint = point;
-                    }
-                }
+                const value = line.data[nearestIndex];
 
-                // Use the y-coordinate from the actual path
+                const y = ro.diff === 0
+                    ? ro.canvasHeight / 2 
+                    : ro.canvasHeight - ((value - ro.min) / ro.diff * ro.canvasHeight);
+
                 line.dot.setAttribute('cx', nearestX.toString());
-                line.dot.setAttribute('cy', bestPoint.y.toString());
+                line.dot.setAttribute('cy', y.toString());
                 line.text.setAttribute('x', (nearestX + 10).toString());
-                line.text.setAttribute('y', (bestPoint.y + 10).toString());
-                line.text.innerHTML = formatNumberWithBases(line.data[nearestIndex], 100);
+                line.text.setAttribute('y', (y + 10).toString());
+                line.text.innerHTML = formatNumberWithBases(value, 100);
 
                 line.text.style.visibility = 'hidden';
                 line.dot.style.visibility = 'visible';
                 this.hoverPath.style.visibility = 'visible';
 
-                const timestamp = this.data.timestamps?.[nearestIndex];
+                const timestamp = this.data.timestamps?.[line.index]?.[nearestIndex];
 
                 intersections.push({
                     x: nearestX,
-                    y: bestPoint.y,
+                    y,
                     clientX: rect.x + ro.left + nearestX,
-                    clientY: rect.y + ro.top + bestPoint.y,
+                    clientY: rect.y + ro.top + y,
                     value: line.data[nearestIndex],
                     valueClass: line.dot.getAttribute('class') ?? '',
                     timestamp: timestamp
                 });
             } else {
+                            //console.log(line.path.getAttribute('d'),this.debugPath.getAttribute('d'))
+            const inter=findPathIntersections(line.path.getAttribute('d')??'',this.hoverPath.getAttribute('d')??'',false);
+            if(inter?.length){
+                const {x,y}=inter[0];
+                const offset=10;
+
                 line.dot.setAttribute('cx',x.toString());
                 line.dot.setAttribute('cy',y.toString());
                 if(this.options.showIntersectionValues){
@@ -145,7 +133,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 line.text.innerHTML=formatNumberWithBases(value,100);
 
                 const index = Math.round((x / ro.width) * (line.data.length - 1));
-                const timestamp = this.data.timestamps?.[index];
+                const timestamp = this.data.timestamps?.[line.index]?.[index];
 
                 intersections.push({
                     x,
@@ -156,14 +144,13 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                     valueClass:line.dot.getAttribute('class')??'',
                     timestamp: timestamp
                 })
-                }
             }else{
                 line.text.style.visibility='hidden';
                 line.dot.style.visibility='hidden';
                 this.hoverPath.style.visibility='hidden';
             }
         }
-
+    }
         this.setIntersections(intersections);
     }
 
@@ -264,8 +251,19 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
 
     private findNearestDataPointIndex(x: number, data: number[]): number {
         const ro = this.renderOptions;
-        const step = ro.width / (data.length - 1);
-        const index = Math.round((x - ro.left) / step);
-        return Math.min(Math.max(index, 0), data.length - 1);
+        if (data.length <= 1) {
+            return 0;
+        }
+        const segmentWidth = ro.width / (data.length - 1);
+        const fractionalIndex = x / segmentWidth;
+        const lowerIndex = Math.floor(fractionalIndex);
+        const upperIndex = Math.ceil(fractionalIndex);
+        const boundedLowerIndex = Math.max(0, Math.min(lowerIndex, data.length - 1));
+        const boundedUpperIndex = Math.max(0, Math.min(upperIndex, data.length - 1));
+        const lowerX = boundedLowerIndex * segmentWidth;
+        const upperX = boundedUpperIndex * segmentWidth;
+        const distanceToLower = Math.abs(x - lowerX);
+        const distanceToUpper = Math.abs(x - upperX);
+        return distanceToLower <= distanceToUpper ? boundedLowerIndex : boundedUpperIndex;
     }
 }

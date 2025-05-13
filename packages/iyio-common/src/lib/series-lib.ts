@@ -44,6 +44,7 @@ export const createSeriesQuery=(
     }
 
     const seriesColNames:string[][]=[];
+    const allRanges:SeriesRange[][]=[];
     let offset=0;
     const rangeType=series.rangeType??'<=>';
 
@@ -161,6 +162,14 @@ export const createSeriesQuery=(
             })
         }
 
+
+    allRanges.push(
+        ranges.map(r => ({
+          ...r,
+          start: r.start + offset,
+          end: r.end + offset
+        }))
+      );
         if(repeatAry){
             offset=(repeatAry[queryIndex]??0)-(ranges[0]?.start??0);
         }else if(series.offset){
@@ -206,8 +215,8 @@ export const createSeriesQuery=(
         getSeriesData(rows:HashMap[]){
             const labels:string[]=ranges.map((r,i)=>r.name??'column-'+i);
             const series:number[][]=[];
-            // Add timestamps from range starts
-        const timestamps:number[]=ranges.map(r=>r.start);
+
+            const timestamps: number[][] = allRanges.map(rngs => rngs.map(r => r.start));
 
             for(let rowI=0;rowI<seriesColNames.length;rowI++){
                 const nameRow=seriesColNames[rowI] as string[];
@@ -261,6 +270,37 @@ export const autoSeriesToRanges=(auto:AutoSeries):SeriesRange[]=>{
 
         current=ctrl.add(current,1);
 
+    }
+
+    if (auto.labelInterval && auto.labelInterval > 1) {
+        if (auto.type === 'day') {
+            let firstDayOfWeekIndex = -1;
+            for (let i = 0; i < ranges.length; i++) {
+                const date = new Date(ranges[i]?.start);
+                if (date.getDay() === 0 || firstDayOfWeekIndex === -1) {
+                    firstDayOfWeekIndex = i;
+                    break;
+                }
+            }
+
+            if (firstDayOfWeekIndex !== -1) {
+                for (let i = 0; i < ranges.length; i++) {
+                    if ((i - firstDayOfWeekIndex) % auto.labelInterval !== 0) {
+                        if(ranges){
+                            ranges[i]!.name = ""; 
+                        }
+                    }
+                }
+            } else {
+                for (let i = 0; i < ranges.length; i++) {
+                    if (i % auto.labelInterval !== 0) {
+                        if(ranges){
+                            ranges[i]!.name = "";
+                        }
+                    }
+                }
+            }
+        }
     }
 
     return ranges;
