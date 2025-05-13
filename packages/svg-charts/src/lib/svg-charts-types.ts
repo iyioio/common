@@ -45,7 +45,7 @@ export interface ChartData
     renderId?:string;
     labels:string[];
     series:number[][];
-    timestamps?: number[];
+    timestamps?: number[][];
 }
 
 

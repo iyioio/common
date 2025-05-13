@@ -39,7 +39,6 @@ export function SvgChartOverlay({
             elem.style.transform=`translate(${x}px,${y}px)`;
 
             itemsElem.innerHTML=v.map((v,i)=>{
-                console.log(v);
                 let timestampStr = '';
                 if (v.timestamp) {
                     const date = new Date(v.timestamp);

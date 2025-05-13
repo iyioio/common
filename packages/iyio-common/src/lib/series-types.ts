@@ -5,6 +5,7 @@ export interface SeriesData
 {
     labels:string[];
     series:number[][];
+    timestamps:number[][];
 }
 
 export interface SeriesDataQuery
@@ -33,6 +34,7 @@ export interface AutoSeries
     count:number;
     format?:string;
     useNumbers?:boolean;
+    labelInterval?: number;
 }
 
 export interface Series<T=any>
