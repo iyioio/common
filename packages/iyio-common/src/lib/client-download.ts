@@ -47,5 +47,5 @@ export const downloadObject=(name:string,obj:any,format?:boolean|string|number)=
 }
 
 export const downloadText=(name:string,text:string,contentType:string)=>{
-    downloadBlob(name,new Blob([text],{type:contentType}));
+    return downloadBlob(name,new Blob([text],{type:contentType}));
 }
