@@ -399,6 +399,8 @@ export class StaticWebSite extends Construct {
         this.bucketDeployment=new s3Deployment.BucketDeployment(this,'BucketDeployment',{
             destinationBucket:bucket,
             sources,
+            memoryLimit:1024,
+            ephemeralStorageSize:cdk.Size.gibibytes(3),
 
             // handles cache invalidation
             distributionPaths:dist?["/*"]:undefined,
