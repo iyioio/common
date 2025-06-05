@@ -128,7 +128,8 @@ export const useDataQuery=(
 
         return {
             labels,
-            series:[values]
+            series:[values],
+            timestamps:[],
         }
 
     },[data,vc,lc]);
