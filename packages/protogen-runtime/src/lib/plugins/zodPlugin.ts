@@ -665,7 +665,7 @@ const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>
 
     let noAutoLength=attChildren['email']?true:false;
 
-    if(propType==='string' && !attChildren['email'] && (prop.name==='email' || prop.name.endsWith('Email'))){
+    if(propType==='string' && attChildren['email']?.value!=='false' && (prop.name==='email' || prop.name.endsWith('Email'))){
         call+='.email()';
         noAutoLength=true;
     }
@@ -692,7 +692,7 @@ const getFormatCalls=(prop:ProtoNode,propType:string,autoLong:string[]):string=>
     add(['string'],'length',attChildren['length'],att=>parseNum(att.value))
     add(['string'],'endsWith',attChildren['endsWith'],att=>att.value)
     add(['string'],'startsWith',attChildren['startsWith'],att=>att.value)
-    add(['string'],'email',attChildren['email']);
+    //add(['string'],'email',attChildren['email']);
     add(['string'],'url',attChildren['url']);
     add(['string'],'emoji',attChildren['emoji']);
     add(['string'],'uuid',attChildren['uuid']);
