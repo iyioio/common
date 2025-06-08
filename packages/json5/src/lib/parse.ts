@@ -1,7 +1,7 @@
 import { Json5Reviver } from './json5-types';
 import * as util from './util';
 
-let source:any;
+let source:string;
 let parseState:any;
 let stack:any;
 let pos:any;
@@ -10,7 +10,6 @@ let column:any;
 let token:any;
 let key:any;
 let root:any;
-
 
 
 export const parse=(text:string, reviver?:Json5Reviver|null)=>{
@@ -23,6 +22,20 @@ export const parse=(text:string, reviver?:Json5Reviver|null)=>{
     token = undefined
     key = undefined
     root = undefined
+
+    source=source.trim();
+    if(source.startsWith('```')){
+        const l=source.indexOf('\n');
+        if(l!==-1){
+            source=source.substring(l+1).trim();
+        }
+    }
+    if(source.endsWith('```')){
+        const l=source.lastIndexOf('\n');
+        if(l!==-1){
+            source=source.substring(0,l).trim();
+        }
+    }
 
     do {
         token = lex()
@@ -109,7 +122,7 @@ function lex () {
 
 function peek ():any {
     if (source[pos]) {
-        return String.fromCodePoint(source.codePointAt(pos))
+        return String.fromCodePoint(source.codePointAt(pos)??0)
     }
 }
 
