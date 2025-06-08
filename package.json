@@ -40,14 +40,11 @@
         "highlight.js": "^11.7.0",
         "jimp": "^0.22.12",
         "markdown-it": "^14.1.0",
-        "next": "^14.2.5",
         "ngrok": "^5.0.0-beta.2",
         "node-fetch": "^2.6.9",
         "openai": "^4.20.1",
         "pdfjs-dist": "^3.11.174",
         "puppeteer": "^22.10.0",
-        "react": "^18.0.0",
-        "react-dom": "^18.0.0",
         "regenerator-runtime": "0.13.7",
         "rxjs": "^7.8.0",
         "shiki": "^1.14.1",
@@ -59,6 +56,11 @@
         "vfile": "^6.0.3",
         "ws": "^8.13.0",
         "zod": "^3.21.4"
+    },
+    "peerDependencies": {
+        "react":">=18 || >=19",
+        "react-dom":">=18 || >=19",
+        "next":">=14 || >=15"
     },
     "devDependencies": {
         "@babel/core": "7.12.13",
