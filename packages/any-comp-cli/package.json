@@ -1,6 +1,6 @@
 {
     "name": "@iyio/any-comp-cli",
-    "version": "0.7.15",
+    "version": "0.7.17",
     "type": "commonjs",
     "sideEffects": false,
     "bin": {
