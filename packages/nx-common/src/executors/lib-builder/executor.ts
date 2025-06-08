@@ -8,7 +8,12 @@ import Path = require('path');
 
 const autoConfig='auto';
 
-const updateDeps=(filter:string|RegExp,type:'^'|'~'|'>=',deps:{[depName:string]:string},updates:{[depName:string]:string})=>{
+const updateDeps=(
+    filter:string|RegExp,
+    type:'^'|'~'|'>=',
+    deps:Record<string,string>,
+    updates:Record<string,string>
+)=>{
 
     if(!deps || !filter){
         return;
@@ -92,6 +97,13 @@ export default async function runExecutor(
 
         const packageJsonPath=Path.join(outputPath,'package.json');
         const pkg=JSON.parse((await readFile(packageJsonPath)).toString());
+        let rootPeers:Record<string,string>|undefined;
+
+        if(await existsAsync('./package.json')){
+            const rootPkg=JSON.parse((await readFile('./package.json')).toString());
+            rootPeers=rootPkg['peerDependencies'];
+        }
+
 
         delete pkg.type;
 
@@ -125,6 +137,27 @@ export default async function runExecutor(
             updateDeps(reg,'>=',pkg.dependencies,updates);
             updateDeps(reg,'>=',pkg.devDependencies,updates);
             updateDeps(reg,'>=',pkg.peerDependencies,updates);
+        }
+
+        if(rootPeers && Object.keys(rootPeers).length){
+            if(!pkg.peerDependencies){
+                pkg.peerDependencies={};
+            }
+            for(const name in rootPeers){
+                if(!pkg.dependencies?.[name] && !pkg.devDependencies?.[name]){
+                    continue;
+                }
+                if(pkg.dependencies){
+                    delete pkg.dependencies[name];
+                }
+                if(pkg.devDependencies){
+                    delete pkg.devDependencies[name];
+                }
+                pkg.peerDependencies[name]=rootPeers[name];
+            }
+            if(!Object.keys(pkg.peerDependencies).length){
+                delete pkg.peerDependencies;
+            }
         }
 
         await writeFile(packageJsonPath,JSON.stringify(pkg,null,4));
