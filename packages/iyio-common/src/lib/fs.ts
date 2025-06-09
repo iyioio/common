@@ -3,6 +3,10 @@ import { StringOrEmpty } from "./common-types";
 const bsReg=/\\/g;
 const doubleSlashReg=/\/{2,}/g;
 export const normalizePath=(path:string):string=>{
+    const proto=protocolReg.exec(path)?.[0]??'';
+    if(proto){
+        path=path.substring(proto.length);
+    }
     if(path.includes('\\')){
         path=path.replace(bsReg,'/');
     }
@@ -10,7 +14,7 @@ export const normalizePath=(path:string):string=>{
         path=path.replace(doubleSlashReg,'/');
     }
     if(path==='/'){
-        return path;
+        return proto+path;
     }
     if(path.endsWith('/')){
         path=path.substring(0,path.length-1);
@@ -18,7 +22,7 @@ export const normalizePath=(path:string):string=>{
     if(!path){
         path='.';
     }
-    return path;
+    return proto+path;
 }
 
 export const joinPaths=(...paths:string[]):string=>
