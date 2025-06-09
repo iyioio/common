@@ -1,6 +1,27 @@
 import { StringOrEmpty } from "./common-types";
 
-export const joinPaths=(... paths:string[]):string=>
+const bsReg=/\\/g;
+const doubleSlashReg=/\/{2,}/g;
+export const normalizePath=(path:string):string=>{
+    if(path.includes('\\')){
+        path=path.replace(bsReg,'/');
+    }
+    if(path.includes('//')){
+        path=path.replace(doubleSlashReg,'/');
+    }
+    if(path==='/'){
+        return path;
+    }
+    if(path.endsWith('/')){
+        path=path.substring(0,path.length-1);
+    }
+    if(!path){
+        path='.';
+    }
+    return path;
+}
+
+export const joinPaths=(...paths:string[]):string=>
 {
     if(!paths){
         return '';
@@ -79,7 +100,7 @@ export const getDirectoryName=(path?:string|null): string=>
     }
 
     const i=path.lastIndexOf('/');
-    return i===-1?'/':path.substring(0,i);
+    return i===-1?'./':path.substring(0,i);
 }
 
 export const getFileNameNoExt=(path?:string|null): string=>
