@@ -1,6 +1,10 @@
 import { Csv, CsvRow } from "./csv-types";
 import { getValueByPath } from "./object";
 
+export const toCsv=(rows:any[],maxDepth=2,head?:string[]):string=>{
+    return toCsvLines(rows,maxDepth,head).join('\n');
+}
+
 export const parseCsv=(content:string):Csv=>{
     const rows:CsvRow[]=[];
 
