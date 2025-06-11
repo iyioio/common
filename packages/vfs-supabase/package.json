@@ -1,6 +1,6 @@
 {
     "name": "@iyio/vfs-supabase",
-    "version": "0.7.19",
+    "version": "0.7.22",
     "type": "commonjs",
     "sideEffects": false
 }
