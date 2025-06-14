@@ -29,6 +29,7 @@ export interface ScrollViewProps extends ViewProps
     autoScrollYOffset?:number;
     containerFill?:boolean;
     containerCol?:boolean;
+    disableScroll?:boolean;
     onScroll?:(e:UIEvent<HTMLElement>)=>void;
     /**
      * When true the children of the scroll view will be returned by passing the scroll view layout
@@ -86,6 +87,7 @@ export function ScrollView({
     scrollHistoryKey,
     persistScrollHistory,
     scrollHistoryBehavior='instant',
+    disableScroll,
     ...props
 }:ScrollViewProps){
 
@@ -257,7 +259,7 @@ export function ScrollView({
             elemRef={v=>{elemRef?.(v);setRoot(v)}}
             className={byPass?
                 style.byPassRoot({byPassFlex1},className):
-                style.root({[`scroll-${direction}`]:true},className)
+                style.root({[`scroll-${direction}`]:true,disableScroll},className)
             }
             style={{
                 maxHeight:(fitToMaxSize && (direction==='y'||direction==='both'))?fitToMaxSize:undefined,
@@ -313,6 +315,10 @@ const style=atDotCss({name:'ScrollView',order:'framework',css:`
         max-width:100%;
         max-height:100%;
     }
+    @.root.disableScroll{
+        display:flex;
+        flex-direction:column;
+    }
     @.root.scroll-y > div{
         position:absolute;
         left:0;
@@ -338,12 +344,24 @@ const style=atDotCss({name:'ScrollView',order:'framework',css:`
         overflow-y:auto;
         overflow-y:overlay;
     }
+    @.root.disableScroll > div{
+        overflow-x:unset;
+        overflow-y:unset;
+        display:flex;
+        flex-direction:column;
+        flex:1;
+    }
     @.container{
         position:relative;
     }
     @.container.col{
         display:flex;
         flex-direction:column;
+    }
+    @.root.disableScroll @.container{
+        display:flex;
+        flex-direction:column;
+        flex:1;
     }
 
 

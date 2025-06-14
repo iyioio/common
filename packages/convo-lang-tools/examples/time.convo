@@ -1,7 +1,0 @@
-# Returns the current date and time
-> getCurrentDateTime() -> (
-    return(dateTime())
-)
-
-> user
-What time is it?
