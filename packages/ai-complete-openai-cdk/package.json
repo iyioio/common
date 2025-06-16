@@ -1,6 +1,0 @@
-{
-    "name": "@convo-lang/ai-complete-openai-cdk",
-    "version": "0.7.22",
-    "type": "commonjs",
-    "sideEffects": false
-}

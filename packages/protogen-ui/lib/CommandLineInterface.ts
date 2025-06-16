@@ -123,20 +123,6 @@ export class CommandLineInterface
         return delayAsync(ms);
     }
 
-    public async generate(prompt:string)
-    {
-        const ctrls=await this.ctrl.assistant.generateNodesAsync(`generate ${prompt}`);
-
-        return `${ctrls.length} node(s) generated:\n${ctrls.map(n=>n.node.name).join('\n')}`;
-    }
-
-    public async generateWithPrompt(prompt:string)
-    {
-        const ctrls=await this.ctrl.assistant.generateNodesAsync(prompt);
-
-        return `${ctrls.length} node(s) generated:\n${ctrls.map(n=>n.node.name).join('\n')}`;
-    }
-
     public async add(type:string)
     {
         const ctrls=await this.ctrl.addNewMarkdownNodesInViewportAsync(`## ${type}`);

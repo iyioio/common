@@ -1,5 +1,4 @@
-import { aiComplete } from "@convo-lang/ai-complete";
-import { DisposeContainer, shortUuid } from "@iyio/common";
+import { DisposeContainer } from "@iyio/common";
 import { ProtogenCtrl } from "../lib/ProtogenCtrl";
 
 export class Assistant{
@@ -26,39 +25,7 @@ export class Assistant{
 
     public async generateNodesAsync(prompt:string)
     {
-        const result=await aiComplete().completeAsync({
-                messages:[
-                    {
-                        id:shortUuid(),
-                        type:'text',
-                        role:'system',
-                        content:
-`You are an expert programer writing documentation for an application in a language based on markdown.
-The documentation defines each part of the application using a markdown header using 2 hash symbols ( ## ) followed by properties specific to that part of the application.
-The header first defines the name of the application part starting with an uppercase letter.
-Following the name of the part of the application is the type of the application part.
-Application part types are as follows:
-- struct - A data structure
-- table - A database table
-- action - An action a user in an application can execute
-- serverFn - A function the runs on a server
-- function - A javascript function that can run on a client device or on a server
 
-The current documentation is as follows:
-${this.ctrl.nodes.value.map((e,i)=>i>20?'':e.getFullCode()).join('\n\n')}`,
-                },
-                {
-                    id:shortUuid(),
-                    type:'text',
-                    role:'user',
-                    content:prompt
-                }
-            ]
-        });
-
-        //const newCode=results[i++]?.options?.[0]?.message?.content??'_';
-        const code=result?.options?.[0]?.message?.content??'';
-        return await this.ctrl.addNewMarkdownNodesInViewportAsync(code);
 
     }
 }
