@@ -647,6 +647,18 @@ export const isNonClassInstanceObject=(value:any)=>{
     )
 }
 
+/**
+ * Returns true if the value is an object that is not an instance of a class
+ */
+export const isClassInstanceObject=(value:any)=>{
+    return (
+        value &&
+        (typeof value === 'object') &&
+        Object.getPrototypeOf(value)!==Object.prototype &&
+        !Array.isArray(value)
+    )
+}
+
 export const objValuesToAry=<T>(obj:T):(Exclude<T,undefined|null>[keyof Exclude<T,undefined|null>])[]=>{
     const ary:any[]=[];
     if(!obj){
