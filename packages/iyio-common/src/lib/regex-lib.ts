@@ -72,7 +72,7 @@ export const starStringTestCached=(
 ):boolean=>{
     try{
         if(starString.includes('*') || treatAsNormalReg){
-            const cache=getCache();
+            const cache=getStarCache();
             let reg=cache.get(cacheObj);
             if(!reg || reg.pattern!==starString){
                 reg={
@@ -94,9 +94,31 @@ export const starStringTestCached=(
     }
 }
 
-let regCache:WeakMap<any,CachedReg>|undefined=undefined;
-const getCache=()=>{
-    return regCache??(regCache=new WeakMap());
+export const parseRegexCached=(cacheObj:any,reg:string|RegExp,flags?:string):RegExp=>{
+    if(typeof reg !== 'string'){
+        return reg;
+    }
+
+    const cache=getNormCache();
+    const pattern=reg+(flags??'');
+    const cached=cache.get(cacheObj);
+    if(cached && cached.pattern===pattern){
+        return cached.reg;
+    }
+    reg=new RegExp(reg,flags);
+    cache.set(cacheObj,{reg,pattern});
+    return reg;
+
+
+}
+
+let starRegCache:WeakMap<any,CachedReg>|undefined=undefined;
+const getStarCache=()=>{
+    return starRegCache??(starRegCache=new WeakMap());
+}
+let normRegCache:WeakMap<any,CachedReg>|undefined=undefined;
+const getNormCache=()=>{
+    return normRegCache??(normRegCache=new WeakMap());
 }
 interface CachedReg
 {
