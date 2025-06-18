@@ -44,6 +44,7 @@ export interface QueuePushRequest
 {
     queueName:string;
     value:any;
+    delayMs?:number;
 }
 
 export interface QueuePushResult

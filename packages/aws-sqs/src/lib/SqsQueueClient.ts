@@ -1,4 +1,4 @@
-import { DeleteMessageBatchCommand, DeleteMessageCommand, ReceiveMessageCommand, SQSClient, SQSClientConfig, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { DeleteMessageBatchCommand, DeleteMessageCommand, ReceiveMessageCommand, SQSClient, SQSClientConfig, SendMessageCommand, SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
 import { AuthDependentClient, IQueueClient, QueueMessage, QueueMessageCollection, QueuePullRequest, QueuePushRequest, QueuePushResult, Scope, ValueCache, authService } from "@iyio/common";
 import { getSqsUrl } from "./sqs-lib";
@@ -37,10 +37,14 @@ export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQ
         if(!url){
             return null;
         }
-        const r=await this.getClient().send(new SendMessageCommand({
+        const input:SendMessageCommandInput={
             QueueUrl:url,
-            MessageBody:JSON.stringify(request.value)
-        }));
+            MessageBody:JSON.stringify(request.value),
+        }
+        if(request.delayMs){
+            input.DelaySeconds=Math.min(15*60,Math.max(0,Math.round(request.delayMs/1000)));
+        }
+        const r=await this.getClient().send(new SendMessageCommand(input));
 
         return {
             messageId:r.MessageId
