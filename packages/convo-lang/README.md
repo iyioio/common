@@ -1,6 +1,11 @@
 # Convo-Lang
 A Conversational Language
 
+---
+> ⚠️⚠️⚠️ This project has been moved to https://github.com/convo-lang/convo-lang ⚠️⚠️⚠️
+---
+
+
 ![convo](https://raw.githubusercontent.com/convo-lang/convo-lang/refs/heads/main/assets/learn-convo-demo.webp)
 
 **Interactive Demo** - [https://learn.convo-lang.ai/playground](https://learn.convo-lang.ai/playground)
