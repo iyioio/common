@@ -1,6 +1,6 @@
 {
     "name": "@iyio/nx-common",
-    "version": "0.7.23",
+    "version": "0.7.24",
     "main": "src/index.js",
     "generators": "./generators.json",
     "executors": "./executors.json"
