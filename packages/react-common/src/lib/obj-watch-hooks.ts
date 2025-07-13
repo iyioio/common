@@ -95,7 +95,7 @@ export const useWObjWithRefresh=<T>(obj:T,{
 
     useEffect(()=>{
 
-        if(!obj || disable){
+        if(!obj || disable || (typeof obj!=='object')){
             return;
         }
 
