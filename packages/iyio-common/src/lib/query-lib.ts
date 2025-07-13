@@ -1,5 +1,6 @@
+import { wSetProp } from "./obj-watch-lib";
 import { deepClone } from "./object";
-import { isQueryGroupCondition, Query, QueryConditionOrGroup, QueryGroupConditionOp } from "./query-types";
+import { isQueryCondition, isQueryGroupCondition, Query, QueryConditionOrGroup, QueryGroupConditionOp, QueryValue } from "./query-types";
 
 /**
  * Applies any shorthand properties to the query. By default a new query object is created if any
@@ -47,6 +48,94 @@ export const addQueryCondition=(query:Query,condition:QueryConditionOrGroup,merg
         query.condition={
             conditions:[query.condition,condition],
             op:mergeOp
+        }
+    }
+}
+
+export const setQueryTableAsDefault=(query:Query|null|undefined)=>{
+    _setQueryTableAsDefault(query,[]);
+}
+
+const _setQueryTableAsDefault=(query:Query|null|undefined,usedNames:string[])=>{
+
+    if(!query){
+        return;
+    }
+
+    if(query.tableAs){
+        usedNames.push(query.tableAs);
+    }
+
+    switch(typeof query.table){
+        case 'string':
+            if(query.tableAs===undefined && !usedNames.includes(query.table)){
+                usedNames.push(query.table);
+                wSetProp(query,'tableAs',query.table);
+            }
+            break;
+
+        case 'object':
+            _setQueryTableAsDefault(query.table,usedNames);
+            break;
+    }
+
+    if(query.columns){
+        for(const c of query.columns){
+            setQueryValueTableAsDefault(c,usedNames);
+        }
+    }
+    if(query.condition){
+        setQueryConditionTableAsDefault(query.condition,usedNames);
+        if(isQueryGroupCondition(query.condition)){
+            for(const c of query.condition.conditions){
+
+            }
+        }else if(isQueryCondition(query.condition)){
+
+        }
+    }
+
+}
+
+const setQueryConditionTableAsDefault=(cond:QueryConditionOrGroup|null|undefined,usedNames:string[])=>{
+    if(!cond){
+        return;
+    }
+    if(isQueryGroupCondition(cond)){
+        for(const c of cond.conditions){
+            setQueryConditionTableAsDefault(c,usedNames);
+        }
+    }else if(isQueryCondition(cond)){
+        if(cond.left){
+            setQueryValueTableAsDefault(cond.left,usedNames);
+        }
+        if(cond.right){
+            setQueryValueTableAsDefault(cond.right,usedNames);
+        }
+    }
+
+}
+const setQueryValueTableAsDefault=(value:QueryValue|null|undefined,usedNames:string[])=>{
+    if(!value){
+        return;
+    }
+    if(value.subQuery){
+        _setQueryTableAsDefault(value.subQuery.query,usedNames);
+        if(value.subQuery.condition){
+            setQueryConditionTableAsDefault(value.subQuery.condition,usedNames);
+        }
+    }
+    if(value.args){
+        for(const a of value.args){
+            setQueryValueTableAsDefault(a,usedNames);
+        }
+    }
+    if(value.expression){
+        for(const e of value.expression){
+            if(typeof e === 'string'){
+                continue;
+            }
+            setQueryValueTableAsDefault(e,usedNames);
         }
     }
 }
