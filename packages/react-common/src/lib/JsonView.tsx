@@ -7,12 +7,14 @@ interface JsonViewProps
     value?:any;
     whitespace?:number|string;
     replacer?:((this:any,key:string,value:any)=>any)|boolean;
+    update?:any;
 }
 
 export function JsonView({
     value,
     whitespace=4,
     replacer,
+    update,
     ...props
 }:JsonViewProps & BaseLayoutProps & BaseLayoutFontProps & BaseLayoutColorProps){
 
@@ -28,7 +30,7 @@ export function JsonView({
                 error:'Unable to stringify value - '+(ex as any)?.message,
             },null,whitespace);
         }
-    },[value,whitespace,replacer]);
+    },[value,whitespace,replacer,update]);
 
     style.root();
 
