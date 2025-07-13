@@ -319,7 +319,7 @@ const style=atDotCss({name:'ScrollView',order:'framework',css:`
         display:flex;
         flex-direction:column;
     }
-    @.root.scroll-y > div{
+    @.root.scroll-y > div,@.root.scroll-both > div{
         position:absolute;
         left:0;
         right:0;
@@ -340,7 +340,7 @@ const style=atDotCss({name:'ScrollView',order:'framework',css:`
     }
     @.root.scroll-both > div{
         overflow-x:auto;
-        overflow-y:overlay;
+        overflow-x:overlay;
         overflow-y:auto;
         overflow-y:overlay;
     }
