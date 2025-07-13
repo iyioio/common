@@ -1,4 +1,5 @@
 import { atDotCss } from '@iyio/at-dot-css';
+import { cn } from '@iyio/common';
 import { useEffect, useState } from 'react';
 import { useShiki } from './shiki';
 
@@ -9,6 +10,7 @@ interface CodeViewProps
     children?:string;
     language?:string;
     noBg?:boolean;
+    className?:string;
 }
 
 /**
@@ -20,6 +22,7 @@ export function CodeView({
     children,
     language,
     noBg,
+    className,
 }:CodeViewProps){
 
     style.root();
@@ -41,7 +44,7 @@ export function CodeView({
     },[sh,loadIndex,code,elem,language,noBg]);
 
     return (
-        <pre className="CodeView" style={style.vars({wrap:wrap?'pre-wrap':'pre'})}><code ref={setElem}/></pre>
+        <pre className={cn("CodeView",className)} style={style.vars({wrap:wrap?'pre-wrap':'pre'})}><code ref={setElem}/></pre>
     )
 
 }
