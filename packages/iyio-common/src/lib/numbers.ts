@@ -42,3 +42,23 @@ export const safeParseNumberOrUndefined=(value:any):number|undefined=>{
  * Returns true if the value can be paused as a finite number.
  */
 export const canBeNumber=(value:any):boolean=>isFinite(Number(value));
+
+export const parseBoolean=(value:any)=>{
+    if(typeof value === 'string'){
+        switch(value.toLowerCase()){
+            case 'true':
+            case 'yes':
+            case 'y':
+            case 'enable':
+            case 'enabled':
+            case 'ok':
+            case '1':
+            case 'on':
+                return true;
+            default:
+                return false;
+        }
+    }else{
+        return Boolean(value);
+    }
+}

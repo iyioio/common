@@ -1,5 +1,5 @@
-import { HashMap } from "@iyio/common";
-import { z, ZodSchema, ZodType } from "zod";
+import { HashMap, valueIsZodObject } from "@iyio/common";
+import { ZodSchema, ZodType } from "zod";
 import { ProtoStage } from "./protogen-pipeline-types";
 
 export const protoGetStageFromName=(name:string):ProtoStage|null=>{
@@ -28,7 +28,7 @@ export const protoGetStageFromName=(name:string):ProtoStage|null=>{
 }
 
 export const protoParseConfig=(configScheme:ZodSchema,args:HashMap<any>):any=>{
-    if(!(configScheme instanceof z.ZodObject)){
+    if(!(valueIsZodObject(configScheme))){
         return {}
     }
 

@@ -1,0 +1,16 @@
+{
+  "name": "v3",
+  "version": "1.0.0",
+  "main": "test-zod-3.js",
+  "type":"module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}

@@ -12,34 +12,44 @@ export const zodTypeToPrimitiveType=(type:ZodTypeAny):TsPrimitiveType|undefined=
 }
 
 export const isZodArray=(type:ZodTypeAny):boolean=>{
-    return unwrapZodType(type) instanceof ZodArray;
+    return valueIsZodArray(unwrapZodType(type));
+}
+
+const getName=(type:any)=>{
+    return type?._def?.typeName || type?.def?.type;
+}
+
+export const getZodTypeName=(type:ZodTypeAny|null|undefined):string|undefined=>{
+    if(!type){
+        return undefined;
+    }
+    const name:string=((type as any)?._def?.typeName || (type as any)?.def?.type)?.toLowerCase?.();
+    if(!name){
+        return undefined;
+    }else if(name.startsWith('zod')){
+        return name.substring(3);
+    }else{
+        return name;
+    }
 }
 
 export const unwrapZodType=(type:ZodTypeAny,maxUnwrap=20):ZodTypeAny=>{
     for(let i=0;i<maxUnwrap;i++){
-        let updated=false;
+        const name=getName(type);
 
-        if(type instanceof ZodOptional){
-            type=type.unwrap();
-            updated=true;
-        }
-
-        if(type instanceof ZodNullable){
-            type=type.unwrap();
-            updated=true;
-        }
-
-        if(type instanceof ZodLazy){
-            const inner=(type._def as ZodLazyDef)?.getter?.();
-            if(inner){
-                type=inner;
-                updated=true;
+        if(name==='ZodLazy' || name==='lazy'){
+            const inner=(((type as any)._def ?? (type as any).def) as ZodLazyDef)?.getter?.();
+            if(!inner){
+                break;
             }
+            type=inner;
         }
 
-        if(!updated){
+        if(!(type as any).unwrap || (name!=='ZodOptional' && name!=='optional' && name!=='ZodNullable' && name!=='nullable')){
             break;
         }
+        type=(type as any).unwrap();
+        maxUnwrap--;
     }
     return type;
 }
@@ -50,24 +60,22 @@ const _zodTypeToPrimitiveType=(type:ZodTypeAny,depth:number):TsPrimitiveType|und
         return undefined;
     }
 
-    if(type instanceof ZodOptional){
-        type=type.unwrap();
-    }
+    type=unwrapZodType(type);
 
-    if(type instanceof ZodString){
+    if(valueIsZodString(type)){
         return 'string';
-    }else if(type instanceof ZodNumber){
+    }else if(valueIsZodNumber(type)){
         return 'number';
-    }else if(type instanceof ZodBoolean){
+    }else if(valueIsZodBoolean(type)){
         return 'boolean';
-    }else if(type instanceof ZodNull){
+    }else if(valueIsZodNull(type)){
         return 'null';
-    }else if(type instanceof ZodUndefined){
+    }else if(valueIsZodUndefined(type)){
         return 'undefined';
-    }else if(type instanceof ZodLazy){
+    }else if(valueIsZodLazy(type)){
         const inner=(type._def as ZodLazyDef)?.getter?.();
         return inner?_zodTypeToPrimitiveType(inner,depth-1):undefined;
-    }else if(type instanceof ZodEnum){
+    }else if(valueIsZodEnum(type)){
         return getZodEnumPrimitiveType(type);
     }else{
         return undefined;
@@ -183,7 +191,7 @@ export const zodCoerceNullDbValuesInObject=<T>(scheme:ZodSchema<T>,obj:Record<st
                 delete obj[e];
                 continue;
             }
-            if(prop instanceof ZodArray){
+            if(valueIsZodArray(prop)){
                 obj[e]=[];
                 continue;
             }
@@ -227,27 +235,27 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number,optional=false,descript
 
     description=type.description||description;
 
-    if(type instanceof ZodOptional){
-        type=type.unwrap();
+    if(valueIsZodOptional(type)){
+        type=unwrapZodType(type);
         optional=true;
     }
 
     const jsonType:JsonScheme={}
 
-    if(type instanceof ZodString){
+    if(valueIsZodString(type)){
         jsonType.type='string';
-    }else if(type instanceof ZodNumber){
+    }else if(valueIsZodNumber(type)){
         jsonType.type=type._def.checks.some(c=>c.kind==='int')?'integer':'number';
-    }else if(type instanceof ZodBoolean){
+    }else if(valueIsZodBoolean(type)){
         jsonType.type='boolean';
-    }else if(type instanceof ZodNull){
+    }else if(valueIsZodNull(type)){
         jsonType.type='null';
-    }else if(type instanceof ZodUndefined){
+    }else if(valueIsZodUndefined(type)){
         return undefined;
-    }else if(type instanceof ZodLazy){
+    }else if(valueIsZodLazy(type)){
         const inner=(type._def as ZodLazyDef)?.getter?.();
         return inner?_zodTypeToJsonScheme(inner,depth-1,optional,description):undefined;
-    }else if(type instanceof ZodEnum){
+    }else if(valueIsZodEnum(type)){
         const tsType=getZodEnumPrimitiveType(type);
         if(tsType!=='undefined'){
             jsonType.type=tsType;
@@ -256,15 +264,15 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number,optional=false,descript
         if(Array.isArray(values)){
             jsonType.enum=[...values];
         }
-    }else if(type instanceof ZodUnion){
+    }else if(valueIsZodUnion(type)){
         jsonType.enum=[];
         const values=type._def.options;
         for(const v of values){
-            if(v instanceof ZodLiteral){
+            if(valueIsZodLiteral(v)){
                 jsonType.enum.push(v.value);
             }
         }
-    }else if(type instanceof ZodObject){
+    }else if(valueIsZodObject(type)){
         jsonType.type='object';
         const required:string[]=[];
         const properties:Record<string,JsonScheme>={};
@@ -283,7 +291,7 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number,optional=false,descript
         }
         jsonType.properties=properties;
 
-    }else if(type instanceof ZodArray){
+    }else if(valueIsZodArray(type)){
         jsonType.type='array';
         const itemType=_zodTypeToJsonScheme(type._def.type,depth-1);
         if(itemType){
@@ -291,9 +299,9 @@ const _zodTypeToJsonScheme=(type:ZodTypeAny,depth:number,optional=false,descript
         }else{
             jsonType.items=false;
         }
-    }else if(type instanceof ZodRecord){
+    }else if(valueIsZodRecord(type)){
         jsonType.type='object';
-    }else if(type instanceof ZodAny){
+    }else if(valueIsZodAny(type)){
         // do nothing
     }else{
         return undefined;
@@ -355,7 +363,7 @@ export const _zodDeepOptional=(
 
     const unwrapped=unwrapZodType(type);
 
-    if(unwrapped instanceof ZodObject){
+    if(valueIsZodObject(unwrapped)){
         const match=converted.find(c=>c.from===type);
         if(match){
             return match.to;
@@ -378,7 +386,7 @@ export const _zodDeepOptional=(
         converted.push({from:type,to:newObj});
 
         return newObj;
-    }else if(unwrapped instanceof ZodArray){
+    }else if(valueIsZodArray(unwrapped)){
         const itemType=_zodDeepOptional(
             unwrapped._def.type,
             depth,
@@ -394,4 +402,68 @@ export const _zodDeepOptional=(
     }else{
         return isOptional?unwrapped.optional():unwrapped;
     }
+}
+
+export const valueIsZodOptional=(value:any):value is ZodOptional<any>=>{
+    const name=getName(value);
+    return name==='ZodOptional' || name==='optional';
+}
+export const valueIsZodString=(value:any):value is ZodString=>{
+    const name=getName(value);
+    return name==='ZodString' || name==='string';
+}
+export const valueIsZodNumber=(value:any):value is ZodNumber=>{
+    const name=getName(value);
+    return name==='ZodNumber' || name==='number';
+}
+export const valueIsZodBoolean=(value:any):value is ZodBoolean=>{
+    const name=getName(value);
+    return name==='ZodBoolean' || name==='boolean';
+}
+export const valueIsZodNull=(value:any):value is ZodNull=>{
+    const name=getName(value);
+    return name==='ZodNull' || name==='null';
+}
+export const valueIsZodUndefined=(value:any):value is ZodUndefined=>{
+    const name=getName(value);
+    return name==='ZodUndefined' || name==='undefined';
+}
+export const valueIsZodLazy=(value:any):value is ZodLazy<any>=>{
+    const name=getName(value);
+    return name==='ZodLazy' || name==='lazy';
+}
+export const valueIsZodEnum=(value:any):value is ZodEnum<any>=>{
+    const name=getName(value);
+    return name==='ZodEnum' || name==='enum';
+}
+export const valueIsZodUnion=(value:any):value is ZodUnion<any>=>{
+    const name=getName(value);
+    return name==='ZodUnion' || name==='union';
+}
+export const valueIsZodLiteral=(value:any):value is ZodLiteral<any>=>{
+    const name=getName(value);
+    return name==='ZodLiteral' || name==='literal';
+}
+export const valueIsZodObject=(value:any):value is ZodObject<any>=>{
+    const name=getName(value);
+    return name==='ZodObject' || name==='object';
+}
+export const valueIsZodArray=(value:any):value is ZodArray<any>=>{
+    const name=getName(value);
+    return name==='ZodArray' || name==='array';
+}
+export const valueIsZodRecord=(value:any):value is ZodRecord=>{
+    const name=getName(value);
+    return name==='ZodRecord' || name==='record';
+}
+export const valueIsZodAny=(value:any):value is ZodAny=>{
+    const name=getName(value);
+    return name==='ZodAny' || name==='any';
+}
+export const valueIsZodNullable=(value:any):value is ZodNullable<any>=>{
+    const name=getName(value);
+    return name==='ZodNullable' || name==='nullable';
+}
+export const valueIsZodType=(value:any):value is ZodType<any>=>{
+    return getName(value)?true:false;
 }

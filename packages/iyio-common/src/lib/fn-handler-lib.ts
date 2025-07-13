@@ -1,4 +1,4 @@
-import { ZodBoolean, ZodNumber, ZodObject, ZodSchema, ZodString } from 'zod';
+import { ZodSchema } from 'zod';
 import { getErrorMessage } from './error-lib';
 import { BadRequestError, BaseError } from './errors';
 import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
@@ -9,7 +9,7 @@ import { HttpMethod } from './http-types';
 import { parseJwt } from './jwt';
 import { validateJwt } from './jwt-lib';
 import { getObjKeyCount, queryParamsToObjectJson } from './object';
-import { isZodArray, zodCoerceObject } from './zod-helpers';
+import { isZodArray, valueIsZodBoolean, valueIsZodNumber, valueIsZodObject, valueIsZodString, zodCoerceObject } from './zod-helpers';
 
 export const fnHandler=async (options:FnHandlerOptions)=>{
 
@@ -339,16 +339,16 @@ export const createEmptyEventSource=():FnEvent=>({
 
 const parseQuery=(inputScheme:ZodSchema,query:Record<string,any>)=>{
     if(query['__input']!==undefined){
-        if(inputScheme instanceof ZodObject){
+        if(valueIsZodObject(inputScheme)){
             for(const e in inputScheme.shape){
                 query={[e]:query['__input']??''};
                 break;
             }
-        }else if(inputScheme instanceof ZodString){
+        }else if(valueIsZodString(inputScheme)){
             return query['__input'];
-        }else if(inputScheme instanceof ZodNumber){
+        }else if(valueIsZodNumber(inputScheme)){
             return Number(query['__input']);
-        }else if(inputScheme instanceof ZodBoolean){
+        }else if(valueIsZodBoolean(inputScheme)){
             return query['__input']===''?true:Boolean(query['__input']);
         }
     }

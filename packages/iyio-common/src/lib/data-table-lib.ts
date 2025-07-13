@@ -1,9 +1,10 @@
-import { ZodObject, ZodRawShape, ZodSchema, ZodType } from "zod";
+import { ZodRawShape, ZodSchema } from "zod";
 import { DataTableColInfo, DataTableDescription } from "./data-table";
+import { valueIsZodObject, valueIsZodType } from "./zod-helpers";
 
 export const getDataTableShape=(table:DataTableDescription):ZodRawShape|undefined=>{
 
-    if(!(table.scheme instanceof ZodObject)){
+    if(!(valueIsZodObject(table.scheme))){
         return undefined;
     }
 
@@ -26,7 +27,7 @@ export const getDataTableColInfo=(table:DataTableDescription|string|null|undefin
 }
 
 export const getDataTableScheme=<T>(tableOrScheme:DataTableDescription<T>|ZodSchema<T>):ZodSchema<T>|undefined=>{
-    if(tableOrScheme instanceof ZodType){
+    if(valueIsZodType(tableOrScheme)){
         return tableOrScheme;
     }else{
         return tableOrScheme.scheme;
