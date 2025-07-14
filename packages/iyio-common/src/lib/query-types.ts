@@ -69,6 +69,11 @@ export interface Query
     limit?:number;
 
     /**
+     * The logical limit to the query disregarding pagination
+     */
+    logicalLimit?:number;
+
+    /**
      * Skips the specified number of rows returned
      */
     offset?:number;

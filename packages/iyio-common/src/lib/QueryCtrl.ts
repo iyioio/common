@@ -225,10 +225,13 @@ export class QueryCtrl<T=any>
     private async getTotalStateAsync(query:Query,prev:QueryState<T>|undefined,clearCache?:boolean)
     {
         const totalQuery:Query={
-            table:query.table,
-            tableAs:query.tableAs,
-            condition:deepClone(query.condition,cloneMaxDepth),
-            columns:[{func:'count',name:'count'}]
+            table:{
+                ...query,
+                columns:[{value:1,name:'v'}],
+                limit:query.logicalLimit
+            },
+            tableAs:'t',
+            columns:[{func:'count',name:'count'}],
         }
         if(!clearCache && prev?.query && prev?.total!==undefined && deepCompare(totalQuery,prev?.totalQuery)){
             return {
