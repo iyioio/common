@@ -1,6 +1,6 @@
 {
     "name": "@iyio/any-comp-test",
-    "version": "0.7.24",
+    "version": "0.7.28",
     "type": "commonjs",
     "sideEffects": false
 }
