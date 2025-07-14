@@ -96,7 +96,7 @@ export const convoGrammar={
             "patterns":[{"include":"#lineExpression"}]
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|result|define|debug|end)",
+            "begin": "^\\s*(>)\\s*(do|result|define|debug|trigger|end)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -282,6 +282,8 @@ export const convoGrammar={
                 {"include":"#comment"},
                 {"include":"#tag"},
                 {"include":"#heredoc"},
+                {"include":"#stringPrompt"},
+                {"include":"#stringEmbed"},
                 {"include":"#stringDq"},
                 {"include":"#stringSq"},
                 {"include":"#pipe"},
@@ -299,6 +301,8 @@ export const convoGrammar={
                 {"include":"#comment"},
                 {"include":"#tag"},
                 {"include":"#heredoc"},
+                {"include":"#stringPrompt"},
+                {"include":"#stringEmbed"},
                 {"include":"#stringDq"},
                 {"include":"#stringSq"},
                 {"include":"#pipe"},
@@ -342,6 +346,38 @@ export const convoGrammar={
                     "name":"variable"
                 }
             }
+        },
+        "stringPrompt":{
+            "begin":"(\\?\\?\\?)\\s*((\\()([^)]*)(\\)))?",
+            "end":"\\?\\?\\?",
+            "beginCaptures":{
+                "1":{"name":"constant.character.escape"},
+                "3":{"name":"constant.character.escape"},
+                "4":{"name":"variable"},
+                "5":{"name":"constant.character.escape"},
+            },
+            "endCaptures":{
+                "0":{"name":"constant.character.escape"}
+            },
+            "patterns": [
+                {"include":"#expression"}
+            ]
+        },
+        "stringEmbed":{
+            "begin":"(===)\\s*((\\()([^)]*)(\\)))?",
+            "end":"===",
+            "beginCaptures":{
+                "1":{"name":"string"},
+                "3":{"name":"constant.character.escape"},
+                "4":{"name":"variable"},
+                "5":{"name":"constant.character.escape"}
+            },
+            "endCaptures":{
+                "0":{"name":"string"}
+            },
+            "patterns": [
+                {"include":"#expression"}
+            ]
         },
         "stringDq":{
             "begin":"\"",
@@ -387,11 +423,38 @@ export const convoGrammar={
             }
         },
         "xml":{
-            "match":"(</?)([\\w-]+)(>)",
+            "match":"(</?)([\\w-]+)([^>]*?)(/?>)",
             "captures":{
                 "1":{"name":"entity.name.type"},
                 "2":{"name":"entity.name.type"},
-                "3":{"name":"entity.name.type"}
+                "3":{
+                    "patterns": [
+                        {"include": "#xmlAttDbl"},
+                        {"include": "#xmlAttSingle"},
+                        {"include": "#xmlAtt"},
+                    ]
+                },
+                "4":{"name":"entity.name.type"}
+            }
+        },
+        "xmlAtt":{
+            "match":"\\w+",
+            "captures":{
+                "0":{"name":"variable"}
+            }
+        },
+        "xmlAttDbl":{
+            "match":"(\\w+)\\s*=\\s*(\"[^\"]*\")",
+            "captures":{
+                "1":{"name":"variable"},
+                "2":{"name":"string"}
+            }
+        },
+        "xmlAttSingle":{
+            "match":"(\\w+)\\s*=\\s*('[^']*')",
+            "captures":{
+                "1":{"name":"variable"},
+                "2":{"name":"string"}
             }
         },
         "stringBackslash":{
