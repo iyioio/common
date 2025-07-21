@@ -27,6 +27,7 @@ export const convoGrammar={
                 { "include": "#controlFlowStatements"},
                 { "include": "#insert"},
                 { "include": "#nop"},
+                { "include": "#thinkingRole"},
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
@@ -79,6 +80,30 @@ export const convoGrammar={
                 }
             }
         },
+        "thinkingRole": {
+            "match": "^\\s*(>)\\s*(thinking)\\s+([\\w \\t]+)((\\()([^\\)]*)(\\)))?",
+            "captures": {
+                "1":{
+                    "name":"keyword.control"
+                },
+                "2":{
+                    "name":"storage.modifier"
+                },
+                "3":{
+                    "name":"constant.character.escape",
+                    "patterns":[{"include":"#thinkingRoleTrigger"}]
+                },
+                "5":{"name":"constant.character.escape"},
+                "6":{"patterns":[{"include":"#stringMods"}]},
+                "7":{"name":"constant.character.escape"}
+            }
+        },
+        "thinkingRoleTrigger":{
+            "match":"(\\w+)\\s+(\\w+)",
+            "captures":{
+                "1":{"name":"variable"}
+            }
+        },
         "embedEscape":{
             "match":"(\\\\){\\{",
             "captures": {
@@ -103,7 +128,7 @@ export const convoGrammar={
             "patterns":[{"include":"#lineExpression"}]
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|triggerResult|result|define|debug|trigger|end)",
+            "begin": "^\\s*(>)\\s*(do|thinkingResult|result|define|debug|end)",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -369,7 +394,7 @@ export const convoGrammar={
             ]
         },
         "tag":{
-            "match":"^\\s*(@)((on\\s+(.*))|(json\\s+(.*))|((condition|disabled)\\s*(=\\s*(.*)))|((\\w+)\\s*=?\\s*(.*)))",
+            "match":"^\\s*(@)((on\\s+(.*))|(json\\s+(.*))|((condition|disabled|taskName|taskDescription)\\s*(=\\s*(.*)))|((\\w+)\\s*=?\\s*(.*)))",
             "captures":{
                 "1":{"name":"entity.name.tag"},
                 "3":{"name":"entity.name.tag"},
@@ -378,7 +403,7 @@ export const convoGrammar={
                 "5":{"name":"entity.name.tag"},
                 "6":{"name": "entity.name.type"},
 
-                "8":{"name":"entity.name.tag"},
+                "8":{"name":"variable"},
                 "10":{"patterns": [{"include":"#lineExpression"}]},
 
                 "12":{"name":"entity.name.tag"},
@@ -386,7 +411,7 @@ export const convoGrammar={
             }
         },
         "tagEvent":{
-            "match":"((user[\\s$]|assistant[\\s$])|\\w+)\\s*((=(.*))|(.*))?",
+            "match":"((user(?=\\W|$)|assistant(?=\\W|$))|\\w+)\\s*((=(.*))|(.*))?",
             "captures":{
                 "1":{"name":"string"},
                 "2":{"name":"entity.name.type"},
@@ -515,7 +540,7 @@ export const convoGrammar={
             ]
         },
         "stringMods":{
-            "match":"(((task)\\s*:(.*))|(\\+|\\*)|(system|functions|transforms|replace|replaceForModel|append|prepend|prefix|suffix|respond)|(boolean)|((\\w+)\\s*:\\s*(\\w+\\[?\\]?))|(/\\w+)|((\\w+)\\s*=)|(>>)|(!))",
+            "match":"(((task)\\s*:(.*))|(\\+|\\*)|(system|functions|transforms|replace|replaceForModel|append|pre|prepend|prefix|suffix|respond)|(boolean)|((\\w+)\\s*:\\s*(\\w+\\[?\\]?))|(/\\w+)|((\\w+)\\s*=)|(>>)|(!))",
             "captures":{
 
                 "3":{"name":"variable"},
