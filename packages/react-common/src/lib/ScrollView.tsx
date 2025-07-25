@@ -16,6 +16,7 @@ export interface ScrollViewProps extends ViewProps
     containerProps?:ViewProps;
     containerClassName?:string;
     children?:any;
+    fixedChildren?:any;
     direction?:ScrollViewDirection;
     overflowRef?:(elem:HTMLElement|null)=>void;
     fitToMaxSize?:string;
@@ -62,6 +63,7 @@ export interface ScrollViewProps extends ViewProps
 
 export function ScrollView({
     children,
+    fixedChildren,
     containerProps,
     containerClassName,
     containerCol,
@@ -301,6 +303,7 @@ export function ScrollView({
                     {children}
                 </View>
             </div>
+            {fixedChildren}
         </View>
     )
 
@@ -319,32 +322,32 @@ const style=atDotCss({name:'ScrollView',order:'framework',css:`
         display:flex;
         flex-direction:column;
     }
-    @.root.scroll-y > div,@.root.scroll-both > div{
+    @.root.scroll-y > div:first-child,@.root.scroll-both > div:first-child{
         position:absolute;
         left:0;
         right:0;
         top:0;
         bottom:0;
     }
-    @.root.scroll-y > div{
+    @.root.scroll-y > div:first-child{
         overflow-x:hidden;
         overflow-x:clip;
         overflow-y:auto;
         overflow-y:overlay;
     }
-    @.root.scroll-x > div{
+    @.root.scroll-x > div:first-child{
         overflow-y:hidden;
         overflow-y:clip;
         overflow-x:auto;
         overflow-x:overlay;
     }
-    @.root.scroll-both > div{
+    @.root.scroll-both > div:first-child{
         overflow-x:auto;
         overflow-x:overlay;
         overflow-y:auto;
         overflow-y:overlay;
     }
-    @.root.disableScroll > div{
+    @.root.disableScroll > div:first-child{
         overflow-x:unset;
         overflow-y:unset;
         display:flex;
