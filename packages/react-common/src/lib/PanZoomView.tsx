@@ -295,6 +295,9 @@ export function PanZoomView({
             if(!t){
                 return;
             }
+            if(state.forcePreventDragSelection){
+                globalThis.window?.getSelection()?.removeAllRanges();
+            }
             if(t.elem instanceof HTMLElement){
                 t.dt.onEnd?.({x:state.dragX,y:state.dragY},t.elem);
             }
@@ -448,6 +451,9 @@ export function PanZoomView({
             if(!state.dragTarget.dt.skipSetTransform){
                 state.dragTarget.elem.style.transform=`translate(${state.dragX}px,${state.dragY}px)`
             }
+            if(state.forcePreventDragSelection){
+                globalThis.window?.getSelection()?.removeAllRanges();
+            }
             const e=state.dragTarget.elem;
             if(e instanceof HTMLElement){
                 state.dragTarget.dt.onMove?.({x:state.dragX,y:state.dragY},e);
@@ -491,9 +497,6 @@ export function PanZoomView({
     const onMouseDown=useCallback((e:MouseEvent)=>{
         if(e.button===2){
             return;
-        }
-        if(stateRef.current.forcePreventDragSelection){
-            e.preventDefault();
         }
         const state=stateRef.current;
         if(state.isTouch){
