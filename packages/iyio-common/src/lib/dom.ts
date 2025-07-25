@@ -8,6 +8,15 @@ export const getNodeDOMRect=(node:Node):DOMRect|null=>{
     }
 }
 
+export const domRectsIntersect=(a:DOMRect|null|undefined,b:DOMRect|null|undefined):boolean=>{
+    return (a && b && !(
+        a.right<b.left ||
+        a.left>b.right ||
+        a.bottom<b.top ||
+        a.top>b.bottom
+    ))?true:false;
+}
+
 export const isDomNodeDescendantOf=(child:Node|null|undefined,parent:Node|null|undefined,checkChildIsParent:boolean):boolean=>{
     if(!parent || !child){
         return false;
