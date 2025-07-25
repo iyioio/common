@@ -540,7 +540,7 @@ export const convoGrammar={
             ]
         },
         "stringMods":{
-            "match":"(((task)\\s*:(.*))|(\\+|\\*)|(system|functions|transforms|replace|replaceForModel|append|pre|prepend|prefix|suffix|respond)|(boolean)|((\\w+)\\s*:\\s*(\\w+\\[?\\]?))|(/\\w+)|((\\w+)\\s*=)|(>>)|(!))",
+            "match":"(((task)\\s*:(.*))|(\\+|\\*)|(system|functions|transforms|replaceForModel|replace|append|prepend|prefix|suffix|respond|pre)|(boolean)|((\\w+)\\s*:\\s*(\\w+\\[?\\]?))|(/\\w+)|((\\w+)\\s*=)|(>>)|(!))",
             "captures":{
 
                 "3":{"name":"variable"},
