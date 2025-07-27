@@ -31,12 +31,14 @@ export const convoGrammar={
                 { "include": "#function"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
+                { "include": "#functionType"},
                 { "include": "#msgStringStartMsg"},
                 { "include": "#msgStringBackslash"},
                 { "include": "#embedEscape" },
                 { "include": "#embed" },
                 { "include": "#markdownLink" },
                 { "include": "#xml" },
+                { "include": "#specialWords" },
                 { "include": "#comment" },
                 { "include": "#tag" },
                 { "include": "#fenced_code_block"}
@@ -77,6 +79,14 @@ export const convoGrammar={
                 },
                 "3":{
                     "name":"entity.name.type"
+                }
+            }
+        },
+        "specialWords": {
+            "match": "(\\$\\$RAG\\$\\$)",
+            "captures": {
+                "1":{
+                    "name":"keyword.control"
                 }
             }
         },
@@ -254,6 +264,31 @@ export const convoGrammar={
                 {"include":"#lineExpression"}
             ]
         },
+        "functionType":{
+            "match":"(\\w+)?\\s*(->)\\s*(\\w+)",
+            "captures": {
+                "1":{
+                    "name":"entity.name.type"
+                },
+                "2":{
+                    "name":"keyword.control"
+                },
+                "3":{
+                    "name":"entity.name.type"
+                }
+            },
+            "endCaptures": {
+                "0":{
+                    "name":"keyword.control"
+                }
+            },
+            "patterns": [
+                {"include":"#bodyComment"},
+                {"include":"#tag"},
+                {"include":"#functionCall"},
+                {"include":"#lineExpression"}
+            ]
+        },
         "functionCall":{
             "patterns": [
                 { "include": "#functionCallSystem"},
@@ -393,11 +428,12 @@ export const convoGrammar={
                 }
             ]
         },
-        "tag":{
-            "match":"^\\s*(@)((on\\s+(.*))|(json\\s+(.*))|((condition|disabled|taskName|taskDescription)\\s*(=\\s*(.*)))|((\\w+)\\s*=?\\s*(.*)))",
+        "_tag":{
+            "match":"^\\s*(@)((on\\s+(.*))|(json\\s+(.*))|((condition|disabled|taskName|taskDescription)\\s*(=\\s*(.*)))|(import\\s+(.*))|((\\w+)\\s*=?\\s*(.*)))",
             "captures":{
                 "1":{"name":"entity.name.tag"},
                 "3":{"name":"entity.name.tag"},
+
                 "4":{"patterns": [{"include":"#tagEvent"}]},
 
                 "5":{"name":"entity.name.tag"},
@@ -406,29 +442,105 @@ export const convoGrammar={
                 "8":{"name":"variable"},
                 "10":{"patterns": [{"include":"#lineExpression"}]},
 
-                "12":{"name":"entity.name.tag"},
-                "13":{"name":"string"}
+                "11":{"name":"keyword.control"},
+
+                "14":{"name":"entity.name.tag"},
+                "15":{"name":"string"}
             }
         },
+        "tag":{
+            "patterns": [
+                {"include":"#tagEvent"},
+                {"include":"#tagImport"},
+                {"include":"#tagCondition"},
+                {"include":"#tagJson"},
+                {"include":"#tagDefault"}
+
+            ]
+        },
+
         "tagEvent":{
-            "match":"((user(?=\\W|$)|assistant(?=\\W|$))|\\w+)\\s*((=(.*))|(.*))?",
+            "match":"^\\s*(@on)\\s+((user|assistant)|(\\w+))\\s*(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "3":{"name":"entity.name.type"},
+                "4":{"name":"variable"},
+                "5":{"patterns": [{"include":"#tagRequiredExpression"}]}
+            }
+        },
+
+        "tagImport":{
+            "match":"^\\s*(@import)\\s+(.*)",
+            "captures":{
+                "1":{"name":"keyword.control"},
+                "2":{"patterns": [{"include":"#tagImportValue"}]},
+            }
+        },
+
+        "tagImportValue":{
+            "match":"((!\\S+)|(\\S+))",
             "captures":{
                 "1":{"name":"string"},
-                "2":{"name":"entity.name.type"},
-
-                "5":{"patterns": [{"include":"#lineExpression"}]},
-                "6":{"name":"invalid.illegal"}
+                "2":{"name":"keyword.modifier"}
             }
         },
 
-        "tagEventFallback":{
-            "match":"(\\w+)(.*)?",
+        "tagCondition":{
+            "match":"^\\s*(@(condition|disabled|taskName|taskDescription))\\s*(.*)",
             "captures":{
-                "1":{"name":"entity.name.type"},
-                "2":{"name":"string"}
+                "1":{"name":"entity.name.tag"},
+                "3":{"patterns": [{"include":"#tagExpressionValue"}]}
             }
-
         },
+
+        "tagJson":{
+            "match":"^\\s*(@json)\\s*(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "2":{"patterns": [{"include":"#typeExpression"}]}
+            }
+        },
+
+        "tagDefault":{
+            "match":"^\\s*(@\\w+)\\s*((=.*)|(.*))",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "3":{"name":"invalid"},
+                "4":{"name":"string"}
+            }
+        },
+
+        "tagExpressionValue":{
+            "match":"((=\\s*(.*))|(.*))",
+            "captures":{
+                "3":{"patterns": [{"include":"#lineExpression"}]},
+                "4":{"name":"string"}
+            }
+        },
+
+        "tagRequiredExpression":{
+            "match":"((=\\s*(.*))|(.*))",
+            "captures":{
+                "3":{"patterns": [{"include":"#lineExpression"}]},
+                "4":{"name":"invalid"}
+            }
+        },
+
+        "typeExpression":{
+            "patterns":[
+                {"include":"#functionCallType"},
+                {"include":"#typeKeyword"},
+                {"include":"#typeUserTypeExpression"}
+            ]
+        },
+
+        "typeUserTypeExpression":{
+            "match":"[A-Z_]\\w+(\\[\\s*\\])?",
+            "captures":{
+                "0":{"name":"entity.name.type"}
+            }
+        },
+
         "lineExpression":{
             "patterns":[
                 {"include":"#bodyComment"},
@@ -665,14 +777,6 @@ export const convoGrammar={
         },
         "systemFunctions":{
             "match":"\\b(elif|if|else|while|break|foreach|for|in|do|then|fn|return|case|default|switch|test)$",
-            "captures":{
-                "1":{
-                    "name":"keyword.control"
-                }
-            }
-        },
-        "typeFunctions":{
-            "match":"\\b(enum|struct|array)$",
             "captures":{
                 "1":{
                     "name":"keyword.control"
