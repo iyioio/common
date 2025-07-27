@@ -277,11 +277,6 @@ export const convoGrammar={
                     "name":"entity.name.type"
                 }
             },
-            "endCaptures": {
-                "0":{
-                    "name":"keyword.control"
-                }
-            },
             "patterns": [
                 {"include":"#bodyComment"},
                 {"include":"#tag"},
@@ -473,7 +468,7 @@ export const convoGrammar={
             "match":"^\\s*(@import)\\s+(.*)",
             "captures":{
                 "1":{"name":"keyword.control"},
-                "2":{"patterns": [{"include":"#tagImportValue"}]},
+                "2":{"patterns": [{"include":"#tagImportValue"}]}
             }
         },
 
@@ -974,3 +969,4 @@ export const convoGrammar={
     }
 
 }
+H
