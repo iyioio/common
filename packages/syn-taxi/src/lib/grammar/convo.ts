@@ -46,7 +46,7 @@ export const convoGrammar={
         },
         "interpolation":{
             "contentName": "meta.embedded.line.ts",
-            "begin": "\\${",
+            "begin": "\\$\\{",
             "beginCaptures": {
                 "0": {
                     "name": "punctuation.definition.interpolation.begin.bracket.curly.scss punctuation.definition.template-expression.begin.js"
@@ -492,7 +492,10 @@ export const convoGrammar={
             "match":"^\\s*(@json)\\s*(.*)",
             "captures":{
                 "1":{"name":"entity.name.tag"},
-                "2":{"patterns": [{"include":"#typeExpression"}]}
+                "2":{"patterns": [
+                    {"include":"#interpolation"},
+                    {"include":"#typeExpression"}
+                ]}
             }
         },
 
@@ -969,4 +972,3 @@ export const convoGrammar={
     }
 
 }
-H
