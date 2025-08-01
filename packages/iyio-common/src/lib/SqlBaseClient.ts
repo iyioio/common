@@ -317,6 +317,48 @@ export abstract class SqlBaseMethods implements ISqlMethods
 
     }
 
+    public getInsertSql<T>(table:string|DataTableDescription<T>|null,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):string|null{
+        if(!Array.isArray(values)){
+            values=[values];
+        }
+
+        if(values.length===0){
+            return null;
+        }
+
+        const tableName=table?getDataTableId(table):null;
+
+        const dataTable=typeof table==='object'?table:null;
+
+        const keys:string[]=[];
+        for(const v of values){
+            for(const e in v){
+                if(dataTable && dataTable.primaryKey===e && (v as any)?.[e]===0){
+                    continue;
+                }
+                if(!keys.includes(e)){
+                    keys.push(e);
+                }
+            }
+        }
+
+        if(!keys.length){
+            return null;
+        }
+
+
+        const rows:string[]=[];
+        for(const v of values){
+            let row='(';
+            for(const k of keys){
+                row+=(row==='('?'':',')+escapeSqlValue((v as any)[k],getDataTableColInfo(dataTable,k))
+            }
+            rows.push(row+')');
+        }
+
+        return `${tableName?`INSERT INTO ${escapeSqlName(tableName)} `:''}(${keys.map(k=>escapeSqlName(k)).join(',')}) VALUES\n${rows.join(',\n')}`;
+    }
+
     /**
      * Returns an array of items selected by the query.
      * @param query A SQL query to select items with

@@ -52,6 +52,7 @@ export interface ISqlMethods
 {
     log:boolean;
     dispose():void;
+    getInsertSql?<T>(table:string|DataTableDescription<T>|null,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):string|null;
     insertAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>|NoId<T>[],options?:SqlInsertOptions):Promise<void>;
     insertReturnAsync<T>(table:string|DataTableDescription<T>,value:NoId<T>,options?:SqlInsertOptions):Promise<T>;
     insertReturnAsync<T>(table:string|DataTableDescription<T>,values:NoId<T>[],options?:SqlInsertOptions):Promise<T[]>;
