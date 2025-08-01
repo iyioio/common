@@ -41,7 +41,8 @@ export const convoGrammar={
                 { "include": "#specialWords" },
                 { "include": "#comment" },
                 { "include": "#tag" },
-                { "include": "#fenced_code_block"}
+                { "include": "#fenced_code_block"},
+                { "include": "#functionExternEmbed"}
             ]
         },
         "interpolation":{
@@ -283,6 +284,14 @@ export const convoGrammar={
                 {"include":"#functionCall"},
                 {"include":"#lineExpression"}
             ]
+        },
+        "functionExternEmbed":{
+            "match":"(->)",
+            "captures": {
+                "1":{
+                    "name":"keyword.control"
+                }
+            }
         },
         "functionCall":{
             "patterns": [
