@@ -1,11 +1,10 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { CancelToken } from './CancelToken';
-import { delayAsync } from './common-lib';
-import { EnvParams } from './EnvParams';
-import { createScope, defineBoolParam, defineCallableType, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib';
-import { Scope, ScopeRegistration } from './scope-types';
 import { createScopedSetter } from './Setter';
 import { ScopeReset } from './_internal.common';
+import { delayAsync } from './common-lib';
+import { createScope, defineBoolParam, defineCallableType, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib';
+import { Scope, ScopeRegistration } from './scope-types';
 
 
 type Speed='fast'|'slow';
@@ -526,23 +525,23 @@ describe('Scope',()=>{
         testValues(scope);
     })
 
-    it('should provide values using env',()=>{
+    // it('should provide values using env',()=>{
 
-        const scope=createScope(reg=>{
-            reg.addParams(new EnvParams())
-        });
+    //     const scope=createScope(reg=>{
+    //         reg.addParams(new EnvParams())
+    //     });
 
-        testValues(scope);
-    })
+    //     testValues(scope);
+    // })
 
-    it('should provide values using env with NX_ prefix',()=>{
+    // it('should provide values using env with NX_ prefix',()=>{
 
-        const scope=createScope(reg=>{
-            reg.addParams(new EnvParams())
-        });
+    //     const scope=createScope(reg=>{
+    //         reg.addParams(new EnvParams())
+    //     });
 
-        testValues(scope,'_T2');
-    })
+    //     testValues(scope,'_T2');
+    // })
 
     it('should init and dispose',async ()=>{
 

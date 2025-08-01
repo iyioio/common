@@ -1,6 +1,6 @@
 {
     "name": "@iyio/aws-tests",
-    "version": "0.7.34",
+    "version": "0.7.36",
     "type": "commonjs",
     "sideEffects": false
 }
