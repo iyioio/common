@@ -432,31 +432,12 @@ export const convoGrammar={
                 }
             ]
         },
-        "_tag":{
-            "match":"^\\s*(@)((on\\s+(.*))|(json\\s+(.*))|((condition|disabled|taskName|taskDescription)\\s*(=\\s*(.*)))|(import\\s+(.*))|((\\w+)\\s*=?\\s*(.*)))",
-            "captures":{
-                "1":{"name":"entity.name.tag"},
-                "3":{"name":"entity.name.tag"},
-
-                "4":{"patterns": [{"include":"#tagEvent"}]},
-
-                "5":{"name":"entity.name.tag"},
-                "6":{"name": "entity.name.type"},
-
-                "8":{"name":"variable"},
-                "10":{"patterns": [{"include":"#lineExpression"}]},
-
-                "11":{"name":"keyword.control"},
-
-                "14":{"name":"entity.name.tag"},
-                "15":{"name":"string"}
-            }
-        },
         "tag":{
             "patterns": [
                 {"include":"#tagEvent"},
                 {"include":"#tagImport"},
                 {"include":"#tagCondition"},
+                {"include":"#tagLabeledCondition"},
                 {"include":"#tagJson"},
                 {"include":"#tagDefault"}
 
@@ -464,7 +445,7 @@ export const convoGrammar={
         },
 
         "tagEvent":{
-            "match":"^\\s*(@on)\\s+((user|assistant)|(\\w+))\\s*(.*)",
+            "match":"^\\s*(@on)\\s+((user|assistant)|([\\w-]+))\\s*(.*)",
             "captures":{
                 "1":{"name":"entity.name.tag"},
                 "3":{"name":"entity.name.type"},
@@ -494,6 +475,15 @@ export const convoGrammar={
             "captures":{
                 "1":{"name":"entity.name.tag"},
                 "3":{"patterns": [{"include":"#tagExpressionValue"}]}
+            }
+        },
+
+        "tagLabeledCondition":{
+            "match":"^\\s*(@routeTo|@routeFrom)\\s+(\\w+)\\s*(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "2":{"name":"support.function"},
+                "3":{"patterns": [{"include":"#tagRequiredExpression"}]}
             }
         },
 
