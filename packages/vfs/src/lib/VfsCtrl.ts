@@ -4,7 +4,7 @@ import { VfsMntCtrl } from "./VfsMntCtrl";
 import { VfsShellStream } from "./VfsShellStream";
 import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
 import { vfsMntPtProvider } from "./vfs-deps";
-import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, vfsTopic } from "./vfs-lib";
+import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, testVfsFilter, vfsTopic } from "./vfs-lib";
 import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
 
 export interface VfsCtrlOptions
@@ -449,15 +449,13 @@ export class VfsCtrl
             return;
         }
 
-        const r=await this.readDirAsync({
-            path,
-            limit:options.limit===undefined?undefined:options.limit-items.length,
-            filter:options.filter
-        });
+        const r=await this.readDirAsync({path});
 
         if(r.items){
             for(const item of r.items){
-                if(options.excludeDirectories && item.type==='dir'){
+                if( (options.excludeDirectories && item.type==='dir') ||
+                    (options.filter && !testVfsFilter(item.name,options.filter))
+                ){
                     continue;
                 }
                 count.value++;
