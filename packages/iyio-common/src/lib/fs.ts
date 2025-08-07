@@ -2,13 +2,28 @@ import { StringOrEmpty } from "./common-types";
 
 const bsReg=/\\/g;
 const doubleSlashReg=/\/{2,}/g;
+const sdsReg=/\/\.\//g;
+const parentDirReg=/(^|\/)[^\/]+\/\.\.(\/|$)/g;
 export const normalizePath=(path:string):string=>{
+    while(true){
+        const n=_normalizePath(path);
+        if(n===path){
+            return n;
+        }
+        path=n;
+    }
+}
+
+const _normalizePath=(path:string):string=>{
     const proto=protocolReg.exec(path)?.[0]??'';
     if(proto){
         path=path.substring(proto.length);
     }
     if(path.includes('\\')){
         path=path.replace(bsReg,'/');
+    }
+    if(path.includes('/./')){
+        path=path.replace(sdsReg,'/');
     }
     if(path.includes('//')){
         path=path.replace(doubleSlashReg,'/');
@@ -18,6 +33,9 @@ export const normalizePath=(path:string):string=>{
     }
     if(path.endsWith('/')){
         path=path.substring(0,path.length-1);
+    }
+    if(path.includes('..')){
+        path=path.replace(parentDirReg,'/');
     }
     if(!path){
         path='.';
