@@ -84,7 +84,7 @@ export const convoGrammar={
             }
         },
         "specialWords": {
-            "match": "(\\$\\$RAG\\$\\$)",
+            "match": "(\\$\\$(RAG|CONTENT|CHILD|CHILDREN|SLOT_\\w+)\\$\\$)",
             "captures": {
                 "1":{
                     "name":"keyword.control"
@@ -436,7 +436,9 @@ export const convoGrammar={
             "patterns": [
                 {"include":"#tagEvent"},
                 {"include":"#tagImport"},
+                {"include":"#tagImportMatch"},
                 {"include":"#tagCondition"},
+                {"include":"#tagName"},
                 {"include":"#tagLabeledCondition"},
                 {"include":"#tagJson"},
                 {"include":"#tagDefault"}
@@ -462,11 +464,31 @@ export const convoGrammar={
             }
         },
 
+        "tagImportMatch":{
+            "match":"^\\s*(@importMatch)\\s+(!)\\s+(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "2":{"name":"storage.modifier"},
+                "3":{"name":"string.regexp"}
+            }
+        },
+
+        "tagName":{
+            "match":"^\\s*(@name)\\s+([\\w-]+)(\\s+(\\S+))?",
+            "captures":{
+                "1":{"name":"keyword.control"},
+                "2":{"name":"variable"},
+                "3":{"name":"invalid"}
+            }
+        },
+
         "tagImportValue":{
-            "match":"((!\\S+)|(\\S+))",
+            "match":"((!\\S+:(\\S+))|(!\\S+)|(\\S+))",
             "captures":{
                 "1":{"name":"string"},
-                "2":{"name":"keyword.modifier"}
+                "2":{"name":"keyword.modifier"},
+                "3":{"name":"variable"},
+                "4":{"name":"keyword.modifier"}
             }
         },
 
