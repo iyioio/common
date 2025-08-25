@@ -1,4 +1,4 @@
-import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, getSizeQueryForBreakpoint, strHash, styleSheetRenderer } from "@iyio/common";
+import { AllBaseLayoutProps, AtDotStyle, AtDotStyleCtrl, AtDotStyleDefaults, ClassNameValue, ParseAtDotStyle, bcn, cn, escapeHtml, getSizeQueryForBreakpoint, strHash, styleSheetRenderer } from "@iyio/common";
 
 const ctrlKey=Symbol('ctrlKey');
 
@@ -104,6 +104,21 @@ function varsDef(
     }
 }
 
+function varsCssDef(
+    this:PropRef,
+    vars?:any,
+):string|undefined{
+    const out:string[]=[];
+    for(const e in vars){
+        const v=vars[e];
+        if(v===undefined || (typeof v === 'object')){
+            continue;
+        }
+        out.push(`--${this.name}-${e}:${escapeHtml(v)}`);
+    }
+    return out.length?out.join(';'):undefined;
+}
+
 function varDef(
     this:PropRef,
     name:string,
@@ -153,6 +168,26 @@ export const atDotCss=<S extends string>(
     const id=options.id;
 
     let processed=false;
+    const processCss=()=>{
+        if(processed){
+            return;
+        }
+        processed=true;
+        options.css=(
+            options.css
+            .replace(varReg,(_,ats:string,varName:string)=>ats.length===3?
+                `${name}-${varName}`:
+                `var(--${name}-${varName})`)
+            .replace(breakPointReg,(_,bp)=>`@media(${getSizeQueryForBreakpoint(bp)})`)
+            .replace(prefixReg,(match,prop,value)=>`${match};-webkit-${prop}:${value}`)
+        ) as any;
+        if(options.nest){
+            options.css=`.${name}{\n${options.css}\n}` as any;
+        }else if(options.css.includes(atDotNestStart)){
+            options.css=options.css.replace(atDotNestStart,`.${name}{\n`)+'\n}' as any;
+        }
+        options.hash=strHash(options.css).toString();
+    }
     const insertStyleSheet=()=>{
         if(ctrl.isInserted){
             return;
@@ -164,21 +199,7 @@ export const atDotCss=<S extends string>(
         insertedSheets[name]=true;
 
         if(!processed){
-            processed=true;
-            options.css=(
-                options.css
-                .replace(varReg,(_,ats:string,varName:string)=>ats.length===3?
-                    `${name}-${varName}`:
-                    `var(--${name}-${varName})`)
-                .replace(breakPointReg,(_,bp)=>`@media(${getSizeQueryForBreakpoint(bp)})`)
-                .replace(prefixReg,(match,prop,value)=>`${match};-webkit-${prop}:${value}`)
-            ) as any;
-            if(options.nest){
-                options.css=`.${name}{\n${options.css}\n}` as any;
-            }else if(options.css.includes(atDotNestStart)){
-                options.css=options.css.replace(atDotNestStart,`.${name}{\n`)+'\n}' as any;
-            }
-            options.hash=strHash(options.css).toString();
+            processCss();
         }
 
         if(options.debug){
@@ -200,6 +221,13 @@ export const atDotCss=<S extends string>(
         styleSheetRenderer().removeSheet(id);
     }
 
+    const getParsed=():string=>{
+        if(!processed){
+            processCss();
+        }
+        return options.css;
+    }
+
     const ctrl:AtDotStyleCtrl={
         insertStyleSheet:insertStyleSheet,
         removeStyleSheet:removeStyleSheet,
@@ -219,8 +247,10 @@ export const atDotCss=<S extends string>(
     const style:any={
         [ctrlKey]:ctrl,
         root,
+        getParsed,
         toString:root,
         vars:varsDef.bind(rootRef),
+        varsCss:varsCssDef.bind(rootRef),
         var:varDef.bind(rootRef),
         varName:varNameDef.bind(rootRef),
     };

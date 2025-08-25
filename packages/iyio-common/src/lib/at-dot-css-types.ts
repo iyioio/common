@@ -99,8 +99,20 @@ export interface AtDotStyleCtrl
 
 export interface AtDotVars<T=any>
 {
+    /**
+     * Applies populated variables to the given elem
+     */
     vars(vars:Partial<T>,elem:HTMLElement):void;
+    /**
+     * Returns populated variables as a style object
+     */
     vars(vars?:Partial<T>,style?:Partial<CSSStyleDeclaration>|HTMLElement):Record<string,any>|undefined;
+
+    /**
+     * Returns populated variables as a css string
+     */
+    varsCss(vars?:Partial<T>):string|undefined;
+
     /**
      * Returns the css variable expression for the variable, `var(--Example-name)`.
      */
@@ -124,7 +136,10 @@ export type ParseAtDotStyle<
     VMap={
         readonly [K in keyof P as P[K] extends string?GetVarName<P[K]>:never]:any
     }
->=M & AtDotVars<VMap> & ({root:()=>string});
+>=M & AtDotVars<VMap> & ({
+    root:()=>string,
+    getParsed:()=>string;
+});
 
 export interface AtDotStyle<S extends string>
 {
