@@ -120,7 +120,8 @@ export const loadMdCodeBlocks=(lang:string,code:string):boolean=>{
     let match:RegExpMatchArray|null;
     while(match=codeBlockReg.exec(code)){
         const bl=match[2]?.toLowerCase();
-        const blockLang=codeBlockMap[bl??'']??bl
+        const blockLang=codeBlockMap[bl??'']??bl;
+        //@ts-ignore
         if(!blockLang || loadLangMap[blockLang] || !info.embeddedLangsLazy.includes(blockLang)){
             continue;
         }
