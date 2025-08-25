@@ -42,6 +42,11 @@ export interface ParseCliArgsOptions
      */
     stopArg?:string;
 
+    /**
+     * Flag arguments that shouldn't consume values
+     */
+    flags?:string[];
+
 
 }
 
@@ -52,7 +57,8 @@ export const parseCliArgs=({
     restSeparator='--',
     restKey='rest',
     defaultKey='_',
-    stopArg='#'
+    stopArg='#',
+    flags,
 }:ParseCliArgsOptions):HashMap<string[]>=>{
 
     const obj:HashMap<string[]>={};
@@ -90,6 +96,9 @@ export const parseCliArgs=({
             if(value!==null){
                 ary.push(value)
             }
+            if(flags?.includes(key)){
+                key=defaultKey;
+            }
         }else{
             let ary=obj[key];
             if(!ary){
@@ -113,10 +122,17 @@ export const parseCliArgs=({
 
 }
 
-export interface ParseCliArgsOptionsT<T> extends ParseCliArgsOptions
-{
-    converter:CliArgsConverter<T>;
-    aliasMap?:CliArgsAliasMap<T>;
+export interface ParseCliArgsOptionsT<
+    T,
+    F extends keyof T = keyof T
+> extends Omit<ParseCliArgsOptions, 'flags'> {
+    converter: CliArgsConverter<T>;
+    aliasMap?: CliArgsAliasMap<T>;
+
+    /**
+     * Flag arguments that shouldn't consume values
+     */
+    flags?: F[];
 }
 
 export interface ParsedTCliArgs<T>
@@ -125,11 +141,14 @@ export interface ParsedTCliArgs<T>
     argMap:HashMap<string[]>;
 }
 
-export const parseCliArgsT=<T>({
+export const parseCliArgsT=<
+    T,
+    F extends keyof T = keyof T
+>({
     converter,
     aliasMap,
     ...props
-}:ParseCliArgsOptionsT<T>):ParsedTCliArgs<T>=>{
+}:ParseCliArgsOptionsT<T,F>):ParsedTCliArgs<T>=>{
 
     if(aliasMap){
         const map=aliasMapToArgMapping<T>(aliasMap);
@@ -142,7 +161,7 @@ export const parseCliArgsT=<T>({
         }
     }
 
-    const argMap=parseCliArgs(props);
+    const argMap=parseCliArgs(props as ParseCliArgsOptions);
 
     return {
         parsed:convertParsedCliArgs<T>(argMap,converter),
@@ -180,7 +199,7 @@ export type CliArgsConverter<T>={
     [prop in keyof T]-?:(args:string[])=>T[prop];
 }
 
-export const convertParsedCliArgs=<T>(argMap:HashMap<string[]>,converter:CliArgsConverter<T>):Partial<T>=>{
+export const convertParsedCliArgs=<T>(argMap:HashMap<string[]>,converter:CliArgsConverter<T>,boolAsFlag?:boolean):Partial<T>=>{
     const converted:HashMap<any>={};
 
     for(const key in argMap){
