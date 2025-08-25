@@ -1,6 +1,6 @@
 {
     "name": "@iyio/aws-rds",
-    "version": "0.7.43",
+    "version": "0.7.50",
     "type": "commonjs",
     "sideEffects": false
 }
