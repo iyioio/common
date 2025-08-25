@@ -11,6 +11,50 @@ export const defaultBase64Chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstu
 // the ending (=) is not required since it is only used for padding
 export const fsBase64Chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
+const toBase64Native=(data:Uint8Array):string=>{
+    const ca:any=data;
+    if(typeof ca.toBase64 === 'function'){
+        return ca.toBase64();
+    }
+    if(typeof globalThis.Buffer?.from === 'function'){
+        return globalThis.Buffer.from(data).toString('base64');
+    }
+    if((typeof globalThis.btoa === 'function') && globalThis.TextDecoder){
+        const ary:string[]=[];
+        for(let i=0,l=data.length;i<l;i++){
+            ary.push(String.fromCharCode(data[i] as number))
+        }
+        return globalThis.btoa(ary.join(''));
+    }
+    return base64EncodeUint32Array(new Uint32Array(data.buffer,data.byteOffset,Math.floor(data.byteLength/4)));
+}
+
+const markdownDecReg=/(\s+|\[|\])/g;
+/**
+ * Encodes a string to a base64 string
+ */
+export const base64EncodeMarkdownImage=(description:string,contentType:string,data:Uint8Array):string=>
+{
+
+    return `![${description.replace(markdownDecReg,' ')}](data:${contentType};base64,${toBase64Native(data)})`;
+}
+
+/**
+ * Encodes a string to a base64 string
+ */
+export const base64EncodeUrl=(contentType:string,data:Uint8Array):string=>
+{
+    return `data:${contentType};base64,${toBase64Native(data)}`;
+}
+
+/**
+ * Encodes a Uint8Array to a base64 string. Native encoding will be used if possible.
+ */
+export const base64EncodeUint8Array=(data:Uint8Array):string=>
+{
+    return toBase64Native(data)
+}
+
 /**
  * Encodes a string to a base64 string
  */
