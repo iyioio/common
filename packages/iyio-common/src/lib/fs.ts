@@ -25,6 +25,9 @@ const _normalizePath=(path:string):string=>{
     if(path.includes('/./')){
         path=path.replace(sdsReg,'/');
     }
+    if(path.endsWith('/.')){
+        path=path.substring(0,path.length-1);
+    }
     if(path.includes('//')){
         path=path.replace(doubleSlashReg,'/');
     }
