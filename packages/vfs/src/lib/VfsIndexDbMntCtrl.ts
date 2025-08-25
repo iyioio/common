@@ -56,12 +56,12 @@ type TransCallback<Value=any,Request=any>=(params:TransParams<Value,Request>)=>v
 
 type TBuffer=ArrayBuffer;
 const createBuffer=(size:number):TBuffer=>new ArrayBuffer(size);
-const uint8ToBuffer=(ary:Uint8Array):TBuffer=>ary.buffer;
+const uint8ToBuffer=(ary:Uint8Array):TBuffer=>ary.buffer as any;
 const bufferToTBufferAsync=(buffer:Uint8Array|Blob):Promise<TBuffer>=>{
     if(buffer instanceof Blob){
         return buffer.arrayBuffer();
     }else{
-        return Promise.resolve(buffer.buffer)
+        return Promise.resolve(buffer.buffer) as any;
     }
 }
 

@@ -181,7 +181,7 @@ export class VfsHttpProxyMntCtrl extends VfsMntCtrl
 
     protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob):Promise<VfsItem>=>
     {
-        const r=await this.getHttpClient().postResponseAsync(this.getUrl(sourceUrl,'stream'),(buffer instanceof Blob)?buffer:new Blob([buffer]));
+        const r=await this.getHttpClient().postResponseAsync(this.getUrl(sourceUrl,'stream'),(buffer instanceof Blob)?buffer:new Blob([buffer as any]));
         if(!r){
             throw new Error('No http response returned')
         }

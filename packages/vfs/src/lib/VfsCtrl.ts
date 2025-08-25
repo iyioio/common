@@ -590,7 +590,7 @@ export class VfsCtrl
             base64OrDataUri=decodeURIComponent(base64OrDataUri.substring(i+1));
         }
         const buffer=Buffer.from(base64OrDataUri,'base64');
-        return this.writeBufferAsync(path,buffer);
+        return this.writeBufferAsync(path,buffer as any);
     }
     public async writeFileAsync(path:string,appendFileNameToPath:boolean,file:File):Promise<VfsItem>
     {
@@ -614,12 +614,12 @@ export class VfsCtrl
         const ctrl=await this.requireMntCtrlAsync(mnt);
 
         if(typeof buffer === 'string'){
-            buffer=Buffer.from(buffer);
+            buffer=Buffer.from(buffer) as any;
         }else if(Array.isArray(buffer)){
             buffer=new Blob(buffer);
         }
 
-        return await ctrl.writeBufferAsync(this,mnt,path,getVfsSourceUrl(mnt,path),buffer);
+        return await ctrl.writeBufferAsync(this,mnt,path,getVfsSourceUrl(mnt,path),buffer as any);
     }
     public async writeStreamAsync(path:string,stream:VfsReadStream):Promise<VfsItem>
     {
