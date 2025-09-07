@@ -54,6 +54,11 @@ interface AdditionalFuncOptions
     managed?:ManagedProps;
 
     layerInfos?:NodeFnLayerInfo[];
+
+    /**
+     * If true logging for the function will be enabled even if logging is disabled for the deployment
+     */
+    forceLogging?:boolean;
 }
 
 export interface NodeFnLayerInfo{
@@ -96,6 +101,7 @@ export class NodeFn extends Construct{
         timeout=timeoutMs===undefined?undefined:cdk.Duration.millis(timeoutMs),
         managed,
         layerInfos,
+        forceLogging,
         ...props
     }:NodeFnProps){
 
@@ -136,7 +142,7 @@ export class NodeFn extends Construct{
             ]):props.layers,
         }
 
-        if(!useDefaultLogGroup && !disableLogging){
+        if(!useDefaultLogGroup && (!disableLogging || forceLogging)){
             (options as any).logRetention=logRetention;
         }
 
