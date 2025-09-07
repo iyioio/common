@@ -1,7 +1,10 @@
 export function isValidEmail(email:string|undefined|null):boolean
 {
-    if(!email){
+    if(typeof email !== 'string'){
         return false;
     }
-    return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
+    if(email.includes('..') || email.includes('.@')){
+        return false;
+    }
+    return /^[a-zA-Z0-9_+-][a-zA-Z0-9._'%+-]*@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(email);
 }
