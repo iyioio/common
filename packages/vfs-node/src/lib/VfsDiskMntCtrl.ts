@@ -288,7 +288,7 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
 
     protected override _readBufferAsync=(fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined):Promise<Uint8Array>=>
     {
-        return this._readAsync(sourceUrl);
+        return this._readAsync(sourceUrl) as any;
     }
 
     protected override _writeBufferAsync=async (fs:VfsCtrl,mnt:VfsMntPt,path:string,sourceUrl:string|undefined,buffer:Uint8Array|Blob):Promise<VfsItem>=>

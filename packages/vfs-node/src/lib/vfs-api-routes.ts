@@ -262,7 +262,7 @@ export const createVfsApiRoutes=({
                 if(await fs.canWriteStream(path)){
                     return await fs.writeStreamAsync(path,req);
                 }else{
-                    const chunks:Buffer[]=[];
+                    const chunks:any[]=[];
                     await new Promise<void>((resolve, reject) => {
                         req.on('data',(chunk)=>chunks.push(Buffer.from(chunk)));
                         req.on('error',(err)=>reject(err));
