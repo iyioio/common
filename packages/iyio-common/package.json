@@ -1,5 +1,6 @@
 {
     "name": "@iyio/common",
     "version": "0.7.50",
+    "type": "module",
     "sideEffects": false
 }
