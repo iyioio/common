@@ -131,9 +131,9 @@ export interface ContainerProps
 export class Container extends Construct implements IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup
 {
 
-    public readonly task:ecs.FargateTaskDefinition;
+    public readonly task:ecs.FargateTaskDefinition|ecs.Ec2TaskDefinition;
     public readonly container:ecs.ContainerDefinition;
-    public readonly service:ecs.FargateService;
+    public readonly service:ecs.FargateService|ecs.Ec2Service;
     public readonly scaling:ecs.ScalableTaskCount|undefined;
     //public readonly loadBalancer:ecsp.ApplicationLoadBalancedFargateService;
 

@@ -5,7 +5,7 @@ import { ProtoStage } from "./protogen-pipeline-types";
 export const protoGetStageFromName=(name:string):ProtoStage|null=>{
     const match=/(\w+)(\.\w?)?$/.exec(name);
     if(match){
-        name=match[1];
+        name=match[1]??'';
     }
 
     name=name.toLowerCase();

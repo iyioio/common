@@ -149,7 +149,7 @@ export class AnyCompWatcher
 
         try{
             for await (const evt of watcher){
-                await this.scanAsync(join(dir,evt.filename));
+                await this.scanAsync(join(dir,evt.filename??''));
             }
         }catch(ex){
             if(!this.isDisposed){

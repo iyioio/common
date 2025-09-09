@@ -157,10 +157,11 @@ export class RdsClient<T=any> extends SqlBaseClient implements IWithStoreAdapter
                 rows.push(row);
                 for(let i=0;i<r.columnMetadata.length;i++){
                     const col=r.columnMetadata[i];
-                    if(!col.name){
+                    const rr=record[i];
+                    if(!col?.name || !rr){
                         continue;
                     }
-                    row[col.name]=convertFieldValue(record[i],col.typeName);
+                    row[col.name]=convertFieldValue(rr,col.typeName);
                 }
             }
         }

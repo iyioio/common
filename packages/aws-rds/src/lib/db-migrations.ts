@@ -67,6 +67,9 @@ export async function forceClearAllMigrationsAsync(
     for(let i=migrations.length-1;i>-1;i--){
 
         const migration=migrations[i];
+        if(!migration){
+            continue;
+        }
 
         try{
             await client.execAsync(migration.down);

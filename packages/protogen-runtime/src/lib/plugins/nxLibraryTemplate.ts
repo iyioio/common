@@ -156,7 +156,7 @@ export default {
 `{
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
+        "outDir": "../../dist",
         "module": "commonjs",
         "types": ["jest", "node"]
     },
@@ -173,7 +173,7 @@ export default {
 `{
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
+        "outDir": "../../dist",
         "declaration": true,
         "types": ["node"]
     },

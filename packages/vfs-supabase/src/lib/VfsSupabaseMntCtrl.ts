@@ -268,7 +268,7 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
         }
         const {bucket,path:_path}=this.parseSrcUrl(sourceUrl);
 
-        const blob = buffer instanceof Blob ? buffer : new Blob([buffer], { type: getContentType(sourceUrl) });
+        const blob = buffer instanceof Blob ? buffer : new Blob([buffer as any], { type: getContentType(sourceUrl) });
 
         const r = await supClient().storage.from(bucket).upload(path, blob, {
             upsert: true,
@@ -308,7 +308,7 @@ export class VfsSupabaseMntCtrl extends VfsMntCtrl
             stream.on('end',()=>resolve());
         });
 
-        return await this._writeBufferAsync(fs, mnt, path, sourceUrl, new Blob(chunks,{type:getContentType(path)}));
+        return await this._writeBufferAsync(fs, mnt, path, sourceUrl, new Blob(chunks as any,{type:getContentType(path)}));
     }
 
     // todo - correctly implement

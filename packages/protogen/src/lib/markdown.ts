@@ -89,14 +89,14 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
             }
         }else{
             const match=lineReg.exec(line);
-            if(match && (match[lineCol] || match[lineRegMarkdownType].startsWith('#'))){
+            if(match && (match[lineCol] || match[lineRegMarkdownType]?.startsWith('#'))){
 
-                const mdType=match[lineRegMarkdownType];
-                const depth=getDepth(match[lineRegSpace],mdType);
+                const mdType=match[lineRegMarkdownType]??'';
+                const depth=getDepth(match[lineRegSpace]??'',mdType);
                 const parent=nodeStack[depth-1];
 
-                const name=match[lineRegName];
-                let value=match[lineRegRest];
+                const name=match[lineRegName]??'';
+                let value=match[lineRegRest]??'';
                 const {types,tags}=parseTypesAndFlags(rootNodes[rootNodes.length-1]??null,value);
                 if(value.startsWith('!!')){
                     value=value.substring(2).trim();
@@ -104,7 +104,7 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                 const node:ProtoNode={
                     name,
                     address:name,
-                    type:types[0].type,
+                    type:types[0]?.type??'',
                     types,
                     value:getNodeValue(value),
                     renderData:{
@@ -176,8 +176,8 @@ export const protoMarkdownParseNodes=(code:string,options?:ProtoNormalizeNodesOp
                             currentNode.links=[];
                         }
                         currentNode.links.push({
-                            name:subMatch[2].trim(),
-                            address:subMatch[3].trim()
+                            name:subMatch[2]?.trim()??'',
+                            address:subMatch[3]?.trim()??'',
                         })
                     }
                 }
@@ -220,7 +220,7 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
 
     for(const match of matches){
 
-        const nameMatch=match[nameI];
+        const nameMatch=match[nameI]??'';
 
         if(match[tagOpenI]){
             if(!match[tagCloseI]){
@@ -237,18 +237,18 @@ const parseTypesAndFlags=(rootNode:ProtoNode|null,value:string):{
         }
 
         const path=nameMatch.split('.');
-        const isArray=/\[\s*\]/.test(path[0]);
-        const mapTypeMatch=/\[\s*(\w+)\s*\]/.exec(path[0]);
+        const isArray=/\[\s*\]/.test(path[0]??'');
+        const mapTypeMatch=/\[\s*(\w+)\s*\]/.exec(path[0]??'');
         for(let i=0;i<path.length;i++){
-            if(path[i].includes('[')){
-                path[i]=path[i].replace(/\[[\s\w]*]/g,'');
+            if(path[i]?.includes('[')){
+                path[i]=path[i]?.replace(/\[[\s\w]*]/g,'')??'';
             }
         }
 
         if(!path[0] && rootNode){
             path[0]=rootNode.name;
         }
-        const name=path[0];
+        const name=path[0]??'';
         const flags:string|undefined=match[flagsI];
         const eqType=flags?.includes('=');
 
@@ -329,6 +329,9 @@ export const removeProtoMarkdownBaseIndent=(md:string):string=>{
     let indent:string|null=null;
     for(let i=0;i<lines.length;i++){
         const line=lines[i];
+        if(!line){
+            continue;
+        }
         if(indent===null){
             if(!line.trim()){
                 continue;

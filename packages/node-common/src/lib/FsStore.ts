@@ -130,6 +130,9 @@ export class FsStore<T=any> extends JsonStore<T>
                     if(this.isDisposed){
                         break;
                     }
+                    if(!update.filename){
+                        continue;
+                    }
                     let key=decodeURIComponent(
                         update.filename.startsWith('/')?update.filename.substring(1):update.filename);
                     key=key.substring(this.keyPrefix.length);

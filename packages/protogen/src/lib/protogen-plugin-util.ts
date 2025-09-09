@@ -123,6 +123,9 @@ export const protoNodeChildrenToAccessRequests=(node:ProtoNode):AccessRequestDes
 
     for(const c in node.children){
         const child=node.children[c];
+        if(!child){
+            continue;
+        }
         if(child.name==='iam-policy'){
 
             const actions:string[]=[];

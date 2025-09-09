@@ -39,6 +39,9 @@ export const protoFindChild=(
 
     for(const key in parent.children){
         const child=parent.children[key];
+        if(!child){
+            continue;
+        }
         if(filter(child,key,parent)){
             return child;
         }
@@ -79,6 +82,9 @@ const _protoFindChildren=(
 
     for(const key in parent.children){
         const child=parent.children[key];
+        if(!child){
+            continue;
+        }
         if(filter(child,key,parent)){
             children.push(child);
         }
@@ -158,6 +164,9 @@ const _protoGetChildren=(
 
     for(const key in parent.children){
         const child=parent.children[key];
+        if(!child){
+            continue;
+        }
         children.push(child);
         if(recursive){
             _protoGetChildren(child,true,children);
@@ -291,10 +300,12 @@ export const protoMergeNodes=(destNodes:ProtoNode[],srcNodes:ProtoNode[])=>
 
         if(node.renderData?.before){
             const before=destMap[node.renderData.before];
-            const bi=destNodes.indexOf(before);
-            if(before && bi!==-1){
-                destNodes.splice(bi+1,0,node);
-                continue;
+            if(before){
+                const bi=destNodes.indexOf(before);
+                if(before && bi!==-1){
+                    destNodes.splice(bi+1,0,node);
+                    continue;
+                }
             }
         }
 
@@ -589,7 +600,7 @@ export const protoGetNodeAtPath=(path:string[]|string,addressMap:ProtoAddressMap
             path[0]=p.address;
         }
     }
-    let node:ProtoNode|undefined=addressMap[path[0]];
+    let node:ProtoNode|undefined=addressMap[path[0]??''];
 
     for(let i=1;i<path.length;i++){
 
@@ -678,7 +689,7 @@ export const protoChildrenToArray=(children:ProtoChildren|null|undefined,filterO
         ){
             continue;
         }
-        ary.push(children[name]);
+        ary.push(child);
     }
     return ary;
 }
@@ -696,7 +707,10 @@ export const protoAddFlattenedHierarchy=(node:ProtoNode, ary:ProtoNode[])=>{
     ary.push(node);
     if(node.children){
         for(const name in node.children){
-            protoAddFlattenedHierarchy(node.children[name],ary)
+            const child=node.children[name];
+            if(child){
+                protoAddFlattenedHierarchy(child,ary);
+            }
         }
     }
 }
@@ -884,7 +898,7 @@ export const protoClearRevLinks=(nodes:ProtoNode[])=>{
         }
         for(let i=0;i<node.links.length;i++){
             const link=node.links[i];
-            if(link.rev){
+            if(link?.rev){
                 node.links.splice(i,1);
                 i--;
             }
@@ -959,7 +973,10 @@ const _protoRemoveDisplayChildren=(node:ProtoNode,options:ProtoRemoveDisplayChil
         if(e.startsWith('$layout')){
             delete node.children[e];
         }else{
-            protoRemoveDisplayChildren(node.children[e]);
+            const child=node.children[e];
+            if(child){
+                protoRemoveDisplayChildren(child);
+            }
         }
 
     }

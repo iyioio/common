@@ -296,7 +296,7 @@ export default function Document() {
 /*json*/`{
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
+        "outDir": "../../dist",
         "module": "commonjs",
         "types": ["jest", "node"],
         "jsx": "react"

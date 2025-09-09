@@ -41,7 +41,7 @@ export const protoGenerateTsImports=(types:string[],importMap:HashMap<string>,lo
         }
     }
 
-    return Object.keys(imports).map(path=>`import { ${imports[path].join(', ')} } from '${path}';`);
+    return Object.keys(imports).map(path=>`import { ${imports[path]?.join(', ')} } from '${path}';`);
 }
 
 
@@ -183,7 +183,7 @@ export const protoGenerateTsIndex=(ctx:ProtoContext,generator:ProtoIndexGenerato
     if(existing.trim()){
         const lines=existing.split('\n');
         for(let i=0;i<lines.length;i++){
-            if(generatorCommentReg.test(lines[i])){
+            if(generatorCommentReg.test(lines[i]??'')){
                 lines.splice(i,1);
                 i--;
             }

@@ -9,14 +9,15 @@ export const protoLabelOutputLines=(
 {
     let maxLength=0;
     for(let i=startIndex;i<end;i++){
-        if(lines[i].length>maxLength){
-            maxLength=lines[i].length;
+        const line=lines[i];
+        if(line && line.length>maxLength){
+            maxLength=line.length;
         }
     }
 
     maxLength+=4;
     for(let i=startIndex;i<end;i++){
-        lines[i]+=' '.repeat(maxLength-lines[i].length)+'// <<';
+        lines[i]+=' '.repeat(maxLength-(lines[i]?.length??0))+'// <<';
         if(i===startIndex){
             lines[i]+=' proto '+label
         }
@@ -59,10 +60,10 @@ export const protoMergeSourceCode=({
 
     for(let i=0;i<existingSections.length;i++){
         const section=existingSections[i];
-        if(!section.name){
+        if(!section?.name){
             continue;
         }
-        const match=oSections.find(s=>s.name===section.name);
+        const match=oSections.find(s=>s.name===section?.name);
         if(match){
             existingSections[i]=mergeSections?mergeSections(section,match):match;
         }
@@ -126,7 +127,7 @@ export const protoCreateCodeSections=(code:string[],{
         if(takeCommentPrefix && lastSection && section.name && !lastSection.name){
             let startCommentIndex:number|null=null;
             for(let i=lastSection.lines.length-1;i>=0;i--){
-                const line=lastSection.lines[i];
+                const line=lastSection.lines[i]??'';
                 if(!line.trim() || /^\s*\*/.test(line)){
                     continue;
                 }
@@ -153,7 +154,7 @@ export const protoCreateCodeSections=(code:string[],{
 
         if(match){
             let name=(
-                getName?.(match[sectionContentIndex])??
+                getName?.(match[sectionContentIndex]??'')??
                 nameReg?.exec(match[sectionContentIndex]?.trim()??'')?.[nameIndex]??
                 defaultName
             );
@@ -236,7 +237,7 @@ const defaultMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCo
 
     return {
         name:existing.name,
-        lines:Object.keys(map).map(k=>`import { ${map[k].join(', ')} } from '${k}';`),
+        lines:Object.keys(map).map(k=>`import { ${map[k]?.join(', ')} } from '${k}';`),
     }
 }
 const forceMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCodeSection):ProtoCodeSection=>{
@@ -248,7 +249,7 @@ const forceMergeTsImportsMerger=(existing:ProtoCodeSection,overwriting:ProtoCode
 
     return {
         name:existing.name,
-        lines:Object.keys(map).map(k=>`import { ${map[k].join(', ')} } from '${k}';`),
+        lines:Object.keys(map).map(k=>`import { ${map[k]?.join(', ')} } from '${k}';`),
     }
 }
 
@@ -260,13 +261,15 @@ const compareImportMaps=(a:Record<string,string[]>, b:Record<string,string[]>):b
         n++;
         const aAry=a[e];
         const bAry=b[e];
-        if(!bAry || aAry.length!==bAry.length){
+        if(!bAry || (aAry && aAry.length!==bAry.length)){
             return false;
         }
 
-        for(const s of aAry){
-            if(!bAry.includes(s)){
-                return false;
+        if(aAry){
+            for(const s of aAry){
+                if(!bAry.includes(s)){
+                    return false;
+                }
             }
         }
     }
@@ -277,6 +280,9 @@ const compareImportMaps=(a:Record<string,string[]>, b:Record<string,string[]>):b
 const mergeImportMaps=(a:Record<string,string[]>, b:Record<string,string[]>):void=>{
     for(const e in b){
         const bAry=b[e];
+        if(!bAry){
+            continue;
+        }
         const aAry=a[e];
         if(!aAry){
             a[e]=bAry;
@@ -297,12 +303,12 @@ const addImportsToMap=(code:string[],map:HashMap<string[]>)=>{
             continue;
         }
 
-        const packageName=match[2].trim();
+        const packageName=match[2]?.trim()??'';
         let pkg=map[packageName];
         if(!pkg){
             map[packageName]=pkg=[];
         }
-        const names=match[1].split(',');
+        const names=match[1]?.split(',')??[];
         for(const n of names){
             const name=n.trim();
             if(name && !pkg.includes(name)){
@@ -327,7 +333,7 @@ export const protoFileMapToOutput=(map:Record<string,string>,{
         outputs.push({
             ...outputDefaults,
             path:joinPaths(targetDir,name),
-            content:map[name],
+            content:map[name]??'',
         })
     }
     return outputs;

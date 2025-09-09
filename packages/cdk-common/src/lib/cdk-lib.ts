@@ -24,7 +24,7 @@ export const getCommonFnProps=(handlerFileName?:string):lambdaNodeJs.NodejsFunct
         entry:handlerFileName?(handlerFileName.includes('/')?
             handlerFileName:
             Path.join('src','handlers',handlerFileName)):undefined,
-        bundling:{minify:true,sourceMap:true,target:'es2019'},
+        bundling:{minify:true,sourceMap:true,target:'es2020'},
         handler:'handler',
         logRetention:logs.RetentionDays.ONE_WEEK,
         runtime:lambda.Runtime.NODEJS_18_X,
