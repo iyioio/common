@@ -1,4 +1,4 @@
-import { dupDeleteUndefined } from "./object";
+import { dupDeleteUndefined } from "./object.js";
 
 export enum LogLevel{
     none=0,

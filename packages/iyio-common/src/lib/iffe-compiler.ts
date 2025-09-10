@@ -1,4 +1,4 @@
-import { getErrorMessage } from "./error-lib";
+import { getErrorMessage } from "./error-lib.js";
 
 const exportReg=/(^|\n|\}|;)[ \t]*export[ \t]+((default|function|let|const)[ \t]+)?(\w+)/g;
 

@@ -1,5 +1,5 @@
 import { protoParseCliArgs } from "@iyio/protogen";
-import { runProtogenCliAsync } from "./runProtogenCliAsync";
+import { runProtogenCliAsync } from "./runProtogenCliAsync.js";
 
 const {config,args}=protoParseCliArgs(globalThis.process?.argv??[],2)
 

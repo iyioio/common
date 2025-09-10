@@ -1,6 +1,6 @@
 import { DisposeCallback } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { ProtogenCtrl } from "./ProtogenCtrl";
+import { ProtogenCtrl } from "./ProtogenCtrl.js";
 
 export class ProtoKeyListener
 {

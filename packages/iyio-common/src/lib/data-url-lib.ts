@@ -1,4 +1,4 @@
-import { base64Encode } from "./base64";
+import { base64Encode } from "./base64.js";
 
 export const base64UrlReg=/^data:[^;]{1,100};base64,/i;
 

@@ -1,9 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { baseLayoutGapProps, getObjKeyIntersection } from "@iyio/common";
 import { Fragment } from "react";
-import { ScrollView } from "../ScrollView";
-import { AutoLayoutSlot } from "./AutoLayoutSlot";
-import { AutoLayoutTypeProps } from "./auto-layout-lib";
+import { ScrollView } from "../ScrollView.js";
+import { AutoLayoutSlot } from "./AutoLayoutSlot.js";
+import { AutoLayoutTypeProps } from "./auto-layout-lib.js";
 
 export function AloSideBySideScrollRight({
     childAry,

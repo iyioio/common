@@ -1,5 +1,5 @@
-import { Evt } from "./Evt";
-import { ValueCondition } from "./value-condition-types";
+import { Evt } from "./Evt.js";
+import { ValueCondition } from "./value-condition-types.js";
 
 /**
  * Called by firing EvtTriggers. `key` and `type` can be used by the callback to help

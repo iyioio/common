@@ -1,4 +1,4 @@
-import { CancelToken } from "./CancelToken";
+import { CancelToken } from "./CancelToken.js";
 
 export class Lock
 {

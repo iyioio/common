@@ -1,13 +1,13 @@
 import { ZodSchema } from "zod";
-import { CancelToken } from "./CancelToken";
-import { delayAsync, unused } from "./common-lib";
-import { NoId, ValueRef } from "./common-types";
-import { DataTableDescription } from "./data-table";
-import { getDataTableId } from "./data-table-lib";
-import { NotImplementedError } from "./errors";
-import { deepCompare } from "./object";
-import { ISqlClient, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types";
-import { uuid } from "./uuid";
+import { CancelToken } from "./CancelToken.js";
+import { delayAsync, unused } from "./common-lib.js";
+import { NoId, ValueRef } from "./common-types.js";
+import { DataTableDescription } from "./data-table.js";
+import { getDataTableId } from "./data-table-lib.js";
+import { NotImplementedError } from "./errors.js";
+import { deepCompare } from "./object.js";
+import { ISqlClient, ISqlTransaction, RunSqlTransactionOptions, SqlResult } from "./sql-types.js";
+import { uuid } from "./uuid.js";
 
 export const getDefaultTable=():MockTable=>({
     key:'id',

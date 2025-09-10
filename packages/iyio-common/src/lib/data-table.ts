@@ -1,5 +1,5 @@
 import { ZodSchema } from "zod";
-import { ParamTypeDef } from "./scope-types";
+import { ParamTypeDef } from "./scope-types.js";
 
 export type DataTableKeyType='string'|'number';
 

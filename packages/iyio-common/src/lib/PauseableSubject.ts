@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
-import { aryRemoveItem } from "./array";
-import { DisposeCallback } from "./common-types";
-import { log } from "./log";
+import { aryRemoveItem } from "./array.js";
+import { DisposeCallback } from "./common-types.js";
+import { log } from "./log.js";
 
 /**
  * A BehaviorSubject that can have subscription updates paused.

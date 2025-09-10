@@ -1,10 +1,10 @@
 import { Scope } from "@iyio/common";
 import { AppProps } from "next/app";
 import { FunctionComponent, useCallback, useState } from "react";
-import { DefaultLayout, DefaultLayoutProps } from "./DefaultLayout";
-import { NextJsAppContainer, NextJsAppContainerProps } from "./NextJsAppContainer";
-import { NextJsStyleSheets } from "./NextJsStyleSheets";
-import { getRouteInfo } from "./next-route-helper";
+import { DefaultLayout, DefaultLayoutProps } from "./DefaultLayout.js";
+import { NextJsAppContainer, NextJsAppContainerProps } from "./NextJsAppContainer.js";
+import { NextJsStyleSheets } from "./NextJsStyleSheets.js";
+import { getRouteInfo } from "./next-route-helper.js";
 
 
 export interface NextJsAppProps<TLayoutProps=DefaultLayoutProps> extends NextJsAppContainerProps

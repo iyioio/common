@@ -1,5 +1,5 @@
-import { defineClient } from "./scope-lib";
-import { ISqlClient } from "./sql-types";
+import { defineClient } from "./scope-lib.js";
+import { ISqlClient } from "./sql-types.js";
 
 // SQL
 export const sqlClient=defineClient<ISqlClient>('sqlClient');

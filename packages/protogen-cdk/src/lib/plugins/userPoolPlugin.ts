@@ -1,7 +1,7 @@
 import { TriggerMap } from "@iyio/cdk-common";
 import { protoGetChildrenByNameOrUndefined, protoNodeChildrenToAccessRequests, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { userPoolCdkTemplate } from "./userPoolCdkTemplate";
+import { userPoolCdkTemplate } from "./userPoolCdkTemplate.js";
 
 const supportedTypes=['userPool'];
 

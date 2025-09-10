@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
 
 export const ProtogenContext=createContext<ProtogenCtrl|null>(null);
 

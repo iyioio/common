@@ -1,7 +1,7 @@
 import { FirstArg } from '@iyio/common';
 import { Suspense, lazy } from 'react';
 
-const CodeInput=lazy(()=>import('./CodeInput').then(v=>({default:v.CodeInput})));
+const CodeInput=lazy(()=>import('./CodeInput.js').then(v=>({default:v.CodeInput})));
 
 export function LazyCodeInput({
     lazyFallback,

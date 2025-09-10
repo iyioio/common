@@ -1,5 +1,5 @@
 import { ReadonlyObservableTypeDef, rootScope, Scope } from "@iyio/common";
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 export const useCurrent=<T>(current:ReadonlyObservableTypeDef<T>,scope:Scope=rootScope):T=>
 {

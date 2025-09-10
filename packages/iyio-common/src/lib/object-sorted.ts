@@ -1,5 +1,5 @@
-import { fsBase64Chars } from "./base64";
-import { strHashBase64 } from "./string-hashing";
+import { fsBase64Chars } from "./base64.js";
+import { strHashBase64 } from "./string-hashing.js";
 
 export const sortedObjSep="\u0001";
 export const sortedObjPrefix={

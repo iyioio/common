@@ -1,4 +1,4 @@
-import { aryMoveItems } from "./array";
+import { aryMoveItems } from "./array.js";
 
 export const objWatchAryRemove=(ary:any[],value:any,beforeRemove?:()=>void):boolean=>{
     const i=ary.indexOf(value);

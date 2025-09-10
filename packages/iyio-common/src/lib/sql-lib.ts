@@ -1,5 +1,5 @@
-import { DataTableColInfo } from "./data-table";
-import { safeParseNumber } from "./numbers";
+import { DataTableColInfo } from "./data-table.js";
+import { safeParseNumber } from "./numbers.js";
 
 const jsonPathReg=/^(\w+)\.([^:]+):(\w+)$/;
 const castTypes=[

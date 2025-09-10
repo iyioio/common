@@ -1,9 +1,9 @@
-export * from './lib/CodeInput';
-export * from './lib/CodeView';
-export * from './lib/LazyCodeInput';
-export * from './lib/LazyCodeView';
-export * from './lib/grammar/atDotCss';
-export * from './lib/grammar/convo';
-export * from './lib/grammar/mdx';
-export * from './lib/shiki';
+export * from './lib/CodeInput.js';
+export * from './lib/CodeView.js';
+export * from './lib/LazyCodeInput.js';
+export * from './lib/LazyCodeView.js';
+export * from './lib/grammar/atDotCss.js';
+export * from './lib/grammar/convo.js';
+export * from './lib/grammar/mdx.js';
+export * from './lib/shiki.js';
 

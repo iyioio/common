@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useCreateHookCtrl, useHookCtrl } from "./hook-lib";
-import { HookCallback, HookCallbackWithCleanup } from "./hook-types";
+import { useCreateHookCtrl, useHookCtrl } from "./hook-lib.js";
+import { HookCallback, HookCallbackWithCleanup } from "./hook-types.js";
 
 export interface HookProps
 {

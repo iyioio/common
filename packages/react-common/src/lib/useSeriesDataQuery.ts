@@ -1,6 +1,6 @@
 import { createSeriesQuery, deepCompare, FuncColumn, Query, queryCtrlFactory, Series, SeriesData, SeriesDataQuery } from "@iyio/common";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 interface QueryState
 {

@@ -1,6 +1,6 @@
 import { CryptoMethodsProvider, HttpFetchers, ScopeRegistration } from "@iyio/common";
-import { HttpNodeFetcher } from "./HttpNodeFetcher";
-import { SyncConfigParams } from "./SyncConfigParams";
+import { HttpNodeFetcher } from "./HttpNodeFetcher.js";
+import { SyncConfigParams } from "./SyncConfigParams.js";
 
 export const nodeCommonModule=(reg:ScopeRegistration)=>{
     reg.addParams(new SyncConfigParams().populateEnv(true));

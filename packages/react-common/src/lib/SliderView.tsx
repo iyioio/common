@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, baseLayoutPaddingProps, takeObjKeyIntersection } from "@iyio/common";
 import { CSSProperties, Children, useState } from "react";
-import { useSwipe } from "./useSwipe";
+import { useSwipe } from "./useSwipe.js";
 
 export interface SliderViewProps
 {

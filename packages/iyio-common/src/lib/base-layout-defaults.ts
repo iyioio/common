@@ -1,5 +1,5 @@
-import { BaseLayoutBreakpointOptions } from "./base-layout-generator";
-import { BaseLayoutBreakpointOptionsDefaults, FontFace } from "./base-layout-generator-types";
+import { BaseLayoutBreakpointOptions } from "./base-layout-generator.js";
+import { BaseLayoutBreakpointOptionsDefaults, FontFace } from "./base-layout-generator-types.js";
 
 const defaultFontFaceDefault:FontFace={
     family:'Helvetica Neue, Helvetica, Arial, sans-serif',

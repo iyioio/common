@@ -1,8 +1,8 @@
 import { BehaviorSubject } from "rxjs";
-import { DisposeCallback, HashMap } from "./common-types";
-import { queryParamsToObject } from "./object";
-import { ReadonlySubject } from "./rxjs-types";
-import { getUriHost, getUriProtocol } from "./uri";
+import { DisposeCallback, HashMap } from "./common-types.js";
+import { queryParamsToObject } from "./object.js";
+import { ReadonlySubject } from "./rxjs-types.js";
+import { getUriHost, getUriProtocol } from "./uri.js";
 
 export const removeOnUiReadyClassName='iyio-removeOnUiReady';
 export const removeOnUiReadyDelayedClassName='iyio-removeOnUiReadyDelayed';

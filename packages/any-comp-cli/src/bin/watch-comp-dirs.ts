@@ -1,5 +1,5 @@
 import { parseCliArgsT, starStringToRegex } from "@iyio/common";
-import { AnyCompWatcher, defaultAcCompIgnore } from "../lib/AnyCompWatcher";
+import { AnyCompWatcher, defaultAcCompIgnore } from "../lib/AnyCompWatcher.js";
 
 
 interface Args

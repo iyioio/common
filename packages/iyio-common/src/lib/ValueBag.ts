@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { ReadonlySubject } from "./rxjs-types";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export class ValueBag{
 

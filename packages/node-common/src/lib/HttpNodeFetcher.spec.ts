@@ -1,6 +1,6 @@
 import { createScope, emptyFunction, httpClient } from "@iyio/common";
 import { createServer } from 'node:http';
-import { nodeCommonModule } from './_modules.node-common';
+import { nodeCommonModule } from './_modules.node-common.js';
 
 interface OkInterface
 {

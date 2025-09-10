@@ -1,4 +1,4 @@
-import { MarkdownImageParsingItem } from "./markdown-types";
+import { MarkdownImageParsingItem } from "./markdown-types.js";
 
 const imageReg=/!\[([^\]]*)\]\(([^\)]*)\)/gs;
 const imageProtoReg=/!\[([^\]]*)\]\((\w+:\/\/.*?|data:\w+\/\w+;\w+,[^\)]*)\)/gs;

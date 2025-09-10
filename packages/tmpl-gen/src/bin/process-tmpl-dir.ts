@@ -1,6 +1,6 @@
 import { asArray, joinPaths, parseCliArgsT } from "@iyio/common";
 import { readFile, readdir, stat, writeFile } from "fs/promises";
-import { GenerateObjectFileSystemTemplateOptions, GenerateObjectFileSystemTemplateOptionsScheme, evalTmplLines, generateObjectFileSystemTemplateAsync, writeTmplAsync } from "../lib/templateGenerator";
+import { GenerateObjectFileSystemTemplateOptions, GenerateObjectFileSystemTemplateOptionsScheme, evalTmplLines, generateObjectFileSystemTemplateAsync, writeTmplAsync } from "../lib/templateGenerator.js";
 
 interface TemplateItem extends Omit<GenerateObjectFileSystemTemplateOptions,'output'>
 {
@@ -20,7 +20,7 @@ const args=parseCliArgsT<Args>({
     args:process.argv,
     startIndex:2,
     converter:{
-        templateDir:args=>args[0],
+        templateDir:args=>args[0]??'',
         template:args=>args[0],
         invoke:args=>args[0],
         out:args=>args[0],

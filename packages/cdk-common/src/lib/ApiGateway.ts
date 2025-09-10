@@ -6,8 +6,8 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sns from "aws-cdk-lib/aws-sns";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { ApiRoute, ApiRouteTarget, IApiRouter } from "./cdk-types";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { ApiRoute, ApiRouteTarget, IApiRouter } from "./cdk-types.js";
 
 export interface DomainNameOptionsWithOptionalCert extends Omit<ag.DomainNameOptions,'certificate'>
 {

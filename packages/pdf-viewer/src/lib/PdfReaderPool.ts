@@ -1,5 +1,5 @@
 import { aryRemoveFirst } from "@iyio/common";
-import { PdfReader } from "./PdfReader";
+import { PdfReader } from "./PdfReader.js";
 
 let defaultPool:PdfReaderPool|null=null;
 export const pdfReaderPool=()=>{

@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { CodeParsingError } from "@iyio/common";
-import { dt } from "./lib-design-tokens";
+import { dt } from "./lib-design-tokens.js";
 
 const isLineError=(line:number,errors:(CodeParsingError|number)[]):boolean=>{
     for(let i=0;i<errors.length;i++){

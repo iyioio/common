@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { CSSProperties } from "react";
-import { View, ViewProps } from "../View";
+import { View, ViewProps } from "../View.js";
 
 export interface AutoLayoutSlotProps
 {

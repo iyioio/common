@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subscription } from "rxjs";
-import { IProgress, ProgressSummary } from "./progress-types";
+import { IProgress, ProgressSummary } from "./progress-types.js";
 
 let nextId=1;
 

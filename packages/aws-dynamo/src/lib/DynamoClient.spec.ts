@@ -1,9 +1,9 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
 import { createScope, DataTableDescription, EnvParams, generateRandomTestStoreItem, parseConfigBool, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
 import { z } from "zod";
-import { testDynamoDbTableParam } from './dynamo-test-lib';
-import { createFilterExpression, FilterEntity } from "./dynamo-types";
-import { DynamoClient } from './DynamoClient';
+import { testDynamoDbTableParam } from './dynamo-test-lib.js';
+import { createFilterExpression, FilterEntity } from "./dynamo-types.js";
+import { DynamoClient } from './DynamoClient.js';
 
 
 

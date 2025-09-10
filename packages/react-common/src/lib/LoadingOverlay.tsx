@@ -1,9 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { cn } from "@iyio/common";
 import { CSSProperties } from "react";
-import { LoadingIndicator } from "./LoadingIndicator";
-import { Text } from './Text';
-import { useDelayedValue } from "./useDelayedValue";
+import { LoadingIndicator } from "./LoadingIndicator.js";
+import { Text } from './Text.js';
+import { useDelayedValue } from "./useDelayedValue.js";
 
 interface LoadingOverlayProps
 {

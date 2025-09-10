@@ -6,8 +6,8 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as kms from "aws-cdk-lib/aws-kms";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
-import { ManagedProps, getDefaultManagedProps } from './ManagedProps';
-import { AccessGranter, AccessRequest, IAccessRequestGroup } from './cdk-types';
+import { ManagedProps, getDefaultManagedProps } from './ManagedProps.js';
+import { AccessGranter, AccessRequest, IAccessRequestGroup } from './cdk-types.js';
 
 export type TriggerMap={
     [prop in keyof cognito.UserPoolTriggers]:string|lambda.IFunction;

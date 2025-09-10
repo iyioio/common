@@ -1,6 +1,6 @@
 import { AwsAuthProviders } from "@iyio/aws";
 import { AuthProviders, authService, BaseUser, createScope, MemoryStore, Scope, ScopeModule, shortUuid, storeRoot, uuid } from "@iyio/common";
-import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider";
+import { CognitoAuthProvider, CognitoAuthProviderConfig } from "./CognitoAuthProvider.js";
 
 export const useTempCognitoUser=async (module:ScopeModule,work:(scope:Scope,user:BaseUser,config:CognitoAuthProviderConfig)=>Promise<void>)=>{
 

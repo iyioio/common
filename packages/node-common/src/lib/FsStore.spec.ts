@@ -1,5 +1,5 @@
 import { createScope, testMountedStoreAsync, testStorePutGetDeleteAsync, testStoreWatchAsync } from "@iyio/common";
-import { FsStore } from './FsStore';
+import { FsStore } from './FsStore.js';
 
 const watchDelay=300;
 

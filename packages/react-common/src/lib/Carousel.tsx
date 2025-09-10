@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutOuterProps, BaseLayoutProps, bcn, cn, strFirstToUpper } from "@iyio/common";
 import { Children, useCallback, useEffect, useRef, useState } from "react";
-import { BasicIcon } from "./icon/BasicIcon";
-import { SwipeDirection, useSwipe } from "./useSwipe";
+import { BasicIcon } from "./icon/BasicIcon.js";
+import { SwipeDirection, useSwipe } from "./useSwipe.js";
 
 export interface CarouselItem
 {

@@ -1,5 +1,5 @@
 import { BaseStore, CancelToken, StoreKeyScope } from "@iyio/common";
-import { S3Client } from "./S3Client";
+import { S3Client } from "./S3Client.js";
 
 
 

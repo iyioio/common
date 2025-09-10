@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { allDesignTokenVariations, defaultDesignTokenVariation, DesignTokens, designTokenValues, DesignTokenVariation } from "./tokens";
+import { allDesignTokenVariations, defaultDesignTokenVariation, DesignTokens, designTokenValues, DesignTokenVariation } from "./tokens.js";
 
 
 export const designVariationSubject=new BehaviorSubject<DesignTokenVariation>(defaultDesignTokenVariation);

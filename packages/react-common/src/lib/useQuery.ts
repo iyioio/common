@@ -1,6 +1,6 @@
 import { Query, queryClient } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { useDeepCompareItem } from "./useCompareItem";
+import { useDeepCompareItem } from "./useCompareItem.js";
 
 const queryCache:Record<string,Promise<any[]>>={};
 

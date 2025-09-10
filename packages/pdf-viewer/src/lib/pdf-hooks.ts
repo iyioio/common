@@ -3,9 +3,9 @@ import { VfsItem } from "@iyio/vfs";
 import { PDFDocumentProxy, PDFPageProxy, PageViewport, PixelsPerInch } from "pdfjs-dist";
 import type { EventBus, PDFPageView } from "pdfjs-dist/web/pdf_viewer";
 import { useEffect, useState } from "react";
-import { PdfReader } from "./PdfReader";
-import { pdfReaderPool } from "./PdfReaderPool";
-import { getPdfSource } from "./pdf-lib";
+import { PdfReader } from "./PdfReader.js";
+import { pdfReaderPool } from "./PdfReaderPool.js";
+import { getPdfSource } from "./pdf-lib.js";
 
 export type PdfViewerLib=
 {

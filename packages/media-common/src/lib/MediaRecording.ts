@@ -1,6 +1,6 @@
 import { PromiseSource, ReadonlySubject, asArray, createPromiseSource, delayAsync } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { MediaRecordingResult } from "./media-types";
+import { MediaRecordingResult } from "./media-types.js";
 
 export const defaultMediaRecordingAudioKBPerSecond=2;
 export const defaultMediaRecordingVideoKBPerSecond=50;

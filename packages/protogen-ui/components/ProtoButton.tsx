@@ -1,7 +1,7 @@
 import { cn } from "@iyio/common";
 import { ButtonBase, ButtonBaseProps } from "@iyio/react-common";
-import { dt } from "../lib/lib-design-tokens";
-import { UiState } from "../lib/protogen-ui-lib";
+import { dt } from "../lib/lib-design-tokens.js";
+import { UiState } from "../lib/protogen-ui-lib.js";
 
 interface ProtoButtonProps extends ButtonBaseProps
 {

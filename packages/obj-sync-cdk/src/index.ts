@@ -1,1 +1,1 @@
-export * from './lib/ObjSyncConstruct';
+export * from './lib/ObjSyncConstruct.js';

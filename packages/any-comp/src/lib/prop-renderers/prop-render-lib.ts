@@ -1,5 +1,5 @@
-import { AnyCompViewCtrl } from "../AnyCompViewCtrl";
-import { AcProp } from "../any-comp-types";
+import { AnyCompViewCtrl } from "../AnyCompViewCtrl.js";
+import { AcProp } from "../any-comp-types.js";
 
 export const getBaseLayoutInfo=(
     ctrl:AnyCompViewCtrl,

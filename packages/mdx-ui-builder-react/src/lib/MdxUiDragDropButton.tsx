@@ -2,7 +2,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps } from "@iyio/common";
 import { MdxUiDragDropSource, mdxUiDragDropIdAtt } from "@iyio/mdx-ui-builder";
 import { useId, useMemo, useRef } from "react";
-import { useOptionalMdxUiBuilder } from "./mdx-ui-builder-react-lib";
+import { useOptionalMdxUiBuilder } from "./mdx-ui-builder-react-lib.js";
 
 export interface MdxUiDragDropButtonProps
 {

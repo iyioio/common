@@ -1,5 +1,5 @@
-import { ProtoExpression } from "./protogen-expression-types";
-import { ProtoTypeInfo } from "./protogen-types";
+import { ProtoExpression } from "./protogen-expression-types.js";
+import { ProtoTypeInfo } from "./protogen-types.js";
 
 export interface ProtoAction
 {

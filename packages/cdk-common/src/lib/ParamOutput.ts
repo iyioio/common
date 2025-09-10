@@ -1,8 +1,8 @@
 import { ParamTypeDef, envNameToName, strToUpperSnakeCase } from "@iyio/common";
 import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { JsonLambdaLayer } from "./JsonLambdaLayer";
-import { EnvVarTarget, IParamOutputConsumer, ParamType } from "./cdk-types";
+import { JsonLambdaLayer } from "./JsonLambdaLayer.js";
+import { EnvVarTarget, IParamOutputConsumer, ParamType } from "./cdk-types.js";
 
 export interface ParamOutputOptions
 {

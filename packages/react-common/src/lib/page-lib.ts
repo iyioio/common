@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { useIncrementSubject } from "./rxjs-hooks";
+import { useIncrementSubject } from "./rxjs-hooks.js";
 
 export const commonPagePropsSubject=new BehaviorSubject<any>(undefined);
 

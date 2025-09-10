@@ -1,6 +1,6 @@
 import { Observable, Subject, Subscription } from "rxjs";
-import { DisposeCallback } from "./common-types";
-import { isNonClassInstanceObject } from "./object";
+import { DisposeCallback } from "./common-types.js";
+import { isNonClassInstanceObject } from "./object.js";
 
 export type ProxyObjectChangeType='set'|'delete';
 

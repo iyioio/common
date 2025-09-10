@@ -1,4 +1,4 @@
-import { uint32ArrayToNumberArray } from "./array";
+import { uint32ArrayToNumberArray } from "./array.js";
 
 describe('array',()=>{
 

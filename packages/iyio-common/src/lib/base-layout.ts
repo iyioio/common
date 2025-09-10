@@ -1,7 +1,7 @@
-import { isServerSide } from "./common-lib";
-import { HashMap } from "./common-types";
-import { ClassNameValue, cn } from "./css";
-import { DirectionalBreakpoint, DirectionalBreakpointAlias, allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases } from "./window-size-lib";
+import { isServerSide } from "./common-lib.js";
+import { HashMap } from "./common-types.js";
+import { ClassNameValue, cn } from "./css.js";
+import { DirectionalBreakpoint, DirectionalBreakpointAlias, allDirectionalBreakpointAliases, allDirectionalBreakpoints, currentDirectionalBreakpointAliases } from "./window-size-lib.js";
 
 // todo - add:
 // aspect ratio

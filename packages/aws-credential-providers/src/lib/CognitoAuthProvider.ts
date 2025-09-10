@@ -3,7 +3,7 @@ import { Credentials, Provider } from "@aws-sdk/types";
 import { AwsAuthProvider, awsRegionParam } from '@iyio/aws';
 import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, BaseUser, BaseUserOptions, BaseUserUpdate, FactoryTypeDef, HashMap, PasswordResetResult, ReadonlySubject, Scope, UserAuthProviderData, UserFactory, UserFactoryCallback, authServicePopupOAuthSignOutMessageId, currentBaseUser, getPopupWindowMessageAsync, getUriProtocol, httpClient, parseConfigBool, parseJwt, promiseFromErrorResultCallback } from '@iyio/common';
 import { AuthenticationDetails, CognitoAccessToken, CognitoIdToken, CognitoRefreshToken, CognitoUser, CognitoUserAttribute, CognitoUserPool, CognitoUserSession, IAuthenticationCallback, ICognitoUserAttributeData, ICognitoUserPoolData } from 'amazon-cognito-identity-js';
-import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoOAuthRedirectUriParam, cognitoOAuthScopesParams, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers';
+import { cognitoDomainPrefixParam, cognitoIdentityPoolIdParam, cognitoOAuthRedirectUriParam, cognitoOAuthScopesParams, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam, disableCognitoUnauthenticatedParam } from './_types.aws-credential-providers.js';
 
 const trackIssuedCreds=parseConfigBool(process.env['NX_TRACK_COGNITO_ISSUED_CREDS']??process.env['NX_PUBLIC_TRACK_COGNITO_ISSUED_CREDS']);
 

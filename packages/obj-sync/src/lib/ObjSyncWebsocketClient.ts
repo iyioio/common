@@ -1,7 +1,7 @@
 import { IWebSocket, Scope, WebSocketFactory, webSocketFactory } from "@iyio/common";
-import { ObjSyncClient, ObjSyncClientOptions } from "./ObjSyncClient";
-import { ObjSyncClientCommand, ObjSyncRemoteCommand } from "./obj-sync-types";
-import { objSyncEndpointParam } from "./obj-sync.deps";
+import { ObjSyncClient, ObjSyncClientOptions } from "./ObjSyncClient.js";
+import { ObjSyncClientCommand, ObjSyncRemoteCommand } from "./obj-sync-types.js";
+import { objSyncEndpointParam } from "./obj-sync.deps.js";
 export interface ObjSyncWebsocketClientOptions
 {
     endpoint:string;

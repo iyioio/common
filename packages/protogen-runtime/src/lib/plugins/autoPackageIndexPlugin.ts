@@ -1,7 +1,7 @@
 import { getDirectoryName } from "@iyio/common";
 import { protoGenerateTsIndex, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { nxLibraryTemplate } from "./nxLibraryTemplate";
+import { nxLibraryTemplate } from "./nxLibraryTemplate.js";
 
 const AutoPackageIndexPluginConfig=z.object(
 {

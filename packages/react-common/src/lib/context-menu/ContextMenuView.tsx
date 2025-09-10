@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, ContextMenuCtrl } from "@iyio/common";
 import { CSSProperties, useEffect } from "react";
-import { UseContextMenuProps, useBaseContextMenu } from "./context-menu-lib";
+import { UseContextMenuProps, useBaseContextMenu } from "./context-menu-lib.js";
 
 export interface ContextMenuViewProps
 {

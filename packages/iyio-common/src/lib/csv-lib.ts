@@ -1,5 +1,5 @@
-import { Csv, CsvRow } from "./csv-types";
-import { getValueByPath } from "./object";
+import { Csv, CsvRow } from "./csv-types.js";
+import { getValueByPath } from "./object.js";
 
 export const toCsv=(rows:any[],maxDepth=2,head?:string[]):string=>{
     return toCsvLines(rows,maxDepth,head).join('\n');

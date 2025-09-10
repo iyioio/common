@@ -8,8 +8,8 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from "constructs";
 import { existsSync } from "fs";
 import * as Path from "path";
-import { ManagedProps } from "./ManagedProps";
-import { getDefaultVpc } from "./cdk-lib";
+import { ManagedProps } from "./ManagedProps.js";
+import { getDefaultVpc } from "./cdk-lib.js";
 
 export type NodeFnProps=Partial<Omit<lambdaNodeJs.NodejsFunctionProps,'vpc'>> & AdditionalFuncOptions;
 

@@ -1,5 +1,5 @@
-import { ProxyChangeDetector, ProxyObjectChangeEvt } from './ProxyChangeDetector';
-import { asType } from './common-lib';
+import { ProxyChangeDetector, ProxyObjectChangeEvt } from './ProxyChangeDetector.js';
+import { asType } from './common-lib.js';
 
 describe('ProxyChangeDetector',()=>{
 

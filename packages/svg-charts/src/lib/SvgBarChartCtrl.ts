@@ -1,7 +1,7 @@
 import { aryRemoveItem, cn, Sides } from "@iyio/common";
-import { classNamePrefix, toSafeSvgAttValue } from "./svg-charts-lib";
-import { SvgChartCtrlOptions } from "./svg-charts-types";
-import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl";
+import { classNamePrefix, toSafeSvgAttValue } from "./svg-charts-lib.js";
+import { SvgChartCtrlOptions } from "./svg-charts-types.js";
+import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl.js";
 
 interface Bar
 {
@@ -31,6 +31,9 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
 
         for(let i=0;i<this.data.series.length;i++){
             const data=this.data.series[i];
+            if(!data){
+                continue;
+            }
             if(this.lines.length<=i){
                 const group=document.createElementNS('http://www.w3.org/2000/svg','g');
                 const classes={
@@ -52,8 +55,11 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
 
     }
 
-    private updateBar(bar:Bar)
+    private updateBar(bar:Bar|undefined)
     {
+        if(!bar){
+            return;
+        }
         const style=this.getSeriesStyle(bar.index);
 
         const count=(this.data.series[0]?.length??0)-1;
@@ -62,7 +68,7 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
 
 
         while(bar.group.children.length>bar.data.length){
-            bar.group.children[bar.group.children.length-1].remove();
+            bar.group.children[bar.group.children.length-1]?.remove();
         }
 
         for(let i=0;i<bar.data.length;i++){
@@ -74,7 +80,7 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
                 bar.group.appendChild(rect);
             }
 
-            const v=bar.data[i];
+            const v=bar.data[i]??0;
             const x=dist*i;
             const y=height-((v-min)/diff*height);
             rect.setAttribute('x',toSafeSvgAttValue((x-style.thickness/2)));
@@ -85,7 +91,10 @@ export class SvgBarChartCtrl extends SvgBaseChartCtrl
         }
     }
 
-    private removeLine(line:Bar){
+    private removeLine(line:Bar|undefined){
+        if(!line){
+            return;
+        }
         line.group.remove();
         aryRemoveItem(this.lines,line);
     }

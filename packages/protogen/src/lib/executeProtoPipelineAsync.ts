@@ -1,5 +1,5 @@
-import { protoParseConfig } from "./protogen-pipeline";
-import { ProtoContext, ProtoPipeline, ProtoPipelineConfigurablePlugin, ProtoPipelinePlugin, ProtoStage } from "./protogen-pipeline-types";
+import { protoParseConfig } from "./protogen-pipeline.js";
+import { ProtoContext, ProtoPipeline, ProtoPipelineConfigurablePlugin, ProtoPipelinePlugin, ProtoStage } from "./protogen-pipeline-types.js";
 
 const getConfig=(ctx:ProtoContext,plugin:ProtoPipelinePlugin):any=>{
     const configScheme=(plugin as ProtoPipelineConfigurablePlugin<any,any>).configScheme;

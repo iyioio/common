@@ -2,8 +2,8 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps } from "@iyio/common";
 import { View, useCreateDirectionInputCtrl, useDirectionCount, useDirectionIndex, useDirectionIndexRequest, useDirectionInput, useElementSize, useSubject, useSwipe } from "@iyio/react-common";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ViewportCtrl } from "./ViewportCtrl";
-import { ViewportCtrlReactContext } from "./viewport-lib";
+import { ViewportCtrl } from "./ViewportCtrl.js";
+import { ViewportCtrlReactContext } from "./viewport-lib.js";
 
 export interface ViewportProps
 {

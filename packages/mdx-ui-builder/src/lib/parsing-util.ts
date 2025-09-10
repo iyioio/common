@@ -1,6 +1,6 @@
 import { deepClone } from "@iyio/common";
-import { compileSync } from "./_compile";
-import { MdxUiAtt, MdxUiNode } from "./mdx-ui-builder-types";
+import { compileSync } from "./_compile.js";
+import { MdxUiAtt, MdxUiNode } from "./mdx-ui-builder-types.js";
 
 const cache:Record<string,MdxUiNode>={};
 

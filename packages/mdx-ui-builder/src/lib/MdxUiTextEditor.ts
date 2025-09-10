@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { DisposeContainer, InternalOptions, snakeCaseToCamelCase } from "@iyio/common";
 import TurndownService from 'turndown';
-import { removeMdxUiPrefixClassName } from "./mdx-ui-builder-lib";
-import { MdxUiNode, MdxUiSelectionDirection, MdxUiSelectionItem } from "./mdx-ui-builder-types";
+import { removeMdxUiPrefixClassName } from "./mdx-ui-builder-lib.js";
+import { MdxUiNode, MdxUiSelectionDirection, MdxUiSelectionItem } from "./mdx-ui-builder-types.js";
 
 
 let td:TurndownService|undefined;

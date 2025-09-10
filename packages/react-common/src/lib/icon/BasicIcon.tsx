@@ -1,5 +1,5 @@
 import { baseLayoutCn, BaseLayoutOuterProps } from '@iyio/common';
-import { iconSources } from './icon-source';
+import { iconSources } from './icon-source.js';
 
 export type BasicIconType=keyof typeof iconSources;
 

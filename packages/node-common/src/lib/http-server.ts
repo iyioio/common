@@ -1,6 +1,6 @@
 import { createHttpRouter } from "@iyio/node-common";
 import { Server, createServer } from "http";
-import { HttpRoute, defaultHttpServerPort } from "./http-server-lib";
+import { HttpRoute, defaultHttpServerPort } from "./http-server-lib.js";
 
 const defaultCorsHeaders:Record<string,string>={
     "Access-Control-Allow-Origin":"*",

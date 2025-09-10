@@ -3,13 +3,13 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from 'constructs';
-import { AccessManager } from "./AccessManager";
-import { BridgeEvent } from './BridgeEvent';
-import { ManagedProps } from './ManagedProps';
-import { ParamOutput, ParamOutputOptions } from "./ParamOutput";
-import { setDefaultVpc, setTmpCdkDir } from './cdk-lib';
-import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from './cdk-types';
-import { setDefaultClusterProps } from './cluster-lib';
+import { AccessManager } from "./AccessManager.js";
+import { BridgeEvent } from './BridgeEvent.js';
+import { ManagedProps } from './ManagedProps.js';
+import { ParamOutput, ParamOutputOptions } from "./ParamOutput.js";
+import { setDefaultVpc, setTmpCdkDir } from './cdk-lib.js';
+import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from './cdk-types.js';
+import { setDefaultClusterProps } from './cluster-lib.js';
 
 export interface ManagedStackProps extends cdk.StackProps, ParamOutputOptions
 {

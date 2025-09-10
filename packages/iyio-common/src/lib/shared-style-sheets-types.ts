@@ -1,4 +1,4 @@
-import { StyleSheetOrder } from "./css-order";
+import { StyleSheetOrder } from "./css-order.js";
 
 export interface SharedStyleSheet
 {

@@ -1,2 +1,2 @@
-export * from './lib/AnyCompWatcher';
+export * from './lib/AnyCompWatcher.js';
 

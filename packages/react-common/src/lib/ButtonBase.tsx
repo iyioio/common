@@ -1,6 +1,6 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, UiActionItem, uiRouterService } from "@iyio/common";
 import { createElement, CSSProperties, DragEventHandler, KeyboardEvent, MouseEvent, MouseEventHandler } from "react";
-import { getReactChildString } from "./react-util";
+import { getReactChildString } from "./react-util.js";
 
 export interface ButtonBaseProps extends BaseLayoutOuterProps
 {

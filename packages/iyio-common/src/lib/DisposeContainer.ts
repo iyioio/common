@@ -1,4 +1,4 @@
-import { DisposeCallback, IDisposable, IOpDisposable, ISubscription } from "./common-types";
+import { DisposeCallback, IDisposable, IOpDisposable, ISubscription } from "./common-types.js";
 
 export class DisposeContainer implements IDisposable
 {

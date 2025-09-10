@@ -1,7 +1,7 @@
 import { safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { AiCompletionInfo, aiCompletionCdkTemplate } from "./aiCompletionCdkTemplate";
+import { AiCompletionInfo, aiCompletionCdkTemplate } from "./aiCompletionCdkTemplate.js";
 
 const supportedTypes=['aiCompletion'];
 

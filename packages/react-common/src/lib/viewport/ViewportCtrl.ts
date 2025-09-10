@@ -1,6 +1,6 @@
 import { ReadonlySubject, removeBehaviorSubjectAryValue } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
-import { SurfaceCtrl } from "./SurfaceCtrl";
+import { SurfaceCtrl } from "./SurfaceCtrl.js";
 
 export class ViewportCtrl
 {

@@ -1,6 +1,6 @@
 import { addQueryCondition, deepClone, deepCompare, Query, QueryConditionOrGroup, queryCtrlFactory, SeriesData } from "@iyio/common";
 import { useEffect, useMemo, useRef } from "react";
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 interface QueryState
 {

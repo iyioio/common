@@ -1,7 +1,7 @@
 import { FirstArg } from '@iyio/common';
 import { Suspense, lazy } from 'react';
 
-const CodeView=lazy(()=>import('./CodeView').then(v=>({default:v.CodeView})));
+const CodeView=lazy(()=>import('./CodeView.js').then(v=>({default:v.CodeView})));
 
 export function LazyCodeView({
     lazyFallback,

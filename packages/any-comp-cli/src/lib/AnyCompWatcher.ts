@@ -4,7 +4,7 @@ import { triggerNodeBreakpoint } from '@iyio/node-common';
 import { access, mkdir, readFile, readdir, stat, watch, writeFile } from 'fs/promises';
 import { basename, join } from 'path';
 import { Identifier, JSDoc, JSDocComment, Node, NodeArray, ScriptKind, ScriptTarget, SyntaxKind, TypeReferenceNode, createSourceFile, isFunctionDeclaration, isIntersectionTypeNode, isNumericLiteral, isStringLiteralLike, isTypeReferenceNode, isUnionTypeNode } from 'typescript';
-import { getAcPropsAsync } from './reflection-lib';
+import { getAcPropsAsync } from './reflection-lib.js';
 
 const compBodyPlaceholder='______COMP_BODY________';
 

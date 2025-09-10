@@ -1,8 +1,8 @@
 import { cn } from "@iyio/common";
 import { usePanZoomCtrl, useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import NodeView from "./NodeView";
-import { useProtogenCtrl } from "./lib-builder-components";
+import NodeView from "./NodeView.js";
+import { useProtogenCtrl } from "./lib-builder-components.js";
 
 const svgSpan=6000;
 

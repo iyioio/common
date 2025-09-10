@@ -1,4 +1,4 @@
-import { StringOrEmpty } from "./common-types";
+import { StringOrEmpty } from "./common-types.js";
 
 const bsReg=/\\/g;
 const doubleSlashReg=/\/{2,}/g;

@@ -1,7 +1,7 @@
 
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { ListPointer, ValuePointer } from "./pointers";
-import { ReadonlySubject } from "./rxjs-types";
+import { ListPointer, ValuePointer } from "./pointers.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export class SharedValuePointer<T=any> implements ValuePointer<T>
 {

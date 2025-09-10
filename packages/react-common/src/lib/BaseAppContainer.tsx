@@ -1,12 +1,12 @@
 import { GoogleTagManagerConfig, HashMap, initBaseLayout, initRootScope, isServerSide, rootScope, Scope, ScopeRegistration } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
-import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet";
-import { useRouteRedirectFallback } from "./common-hooks";
-import { LockScreenRenderer } from "./LockScreenRenderer";
-import { PortalRenderer } from "./PortalRenderer";
-import { useDomSharedStyleSheets } from "./useDomSharedStyleSheets";
-import { useGoogleTagManager } from "./useGoogleTagManager";
-import { useUiReady } from "./useUiReady";
+import { BaseLayoutStyleSheet, BaseLayoutStyleSheetProps } from "./BaseLayoutStyleSheet.js";
+import { useRouteRedirectFallback } from "./common-hooks.js";
+import { LockScreenRenderer } from "./LockScreenRenderer.js";
+import { PortalRenderer } from "./PortalRenderer.js";
+import { useDomSharedStyleSheets } from "./useDomSharedStyleSheets.js";
+import { useGoogleTagManager } from "./useGoogleTagManager.js";
+import { useUiReady } from "./useUiReady.js";
 
 export interface BaseAppContainerProps
 {

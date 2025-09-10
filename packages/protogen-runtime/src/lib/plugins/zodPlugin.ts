@@ -1,7 +1,7 @@
 import { AliasLookup, asArray, getObjKeyCount, joinPaths } from "@iyio/common";
 import { ProtoNode, ProtoOutput, ProtoPipelineConfigurablePlugin, getProtoAutoDeleteComment, getProtoPluginPackAndPath, protoChildrenToArray, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoGetFullNodeComment, protoGetFullNodeTsComment, protoTsBuiltTypes, protoTsNumTypes, protoTsTypeMap } from "@iyio/protogen";
 import { z } from "zod";
-import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig";
+import { SharedTsPluginConfigScheme, getTsSchemeName } from "../sharedTsConfig.js";
 
 
 

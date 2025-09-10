@@ -1,7 +1,7 @@
 import { cn } from "@iyio/common";
 import { useEffect, useMemo, useState } from "react";
-import { Image, ImageProps } from "./Image";
-import { UseLazyRenderOptions, useLazyRender } from "./useLazyRender";
+import { Image, ImageProps } from "./Image.js";
+import { UseLazyRenderOptions, useLazyRender } from "./useLazyRender.js";
 
 const placeholderUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 

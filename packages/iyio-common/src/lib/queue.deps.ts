@@ -1,6 +1,6 @@
-import { QueueService } from "./QueueService";
-import { IQueueClient } from "./queue-types";
-import { defineProvider, defineService } from "./scope-lib";
+import { QueueService } from "./QueueService.js";
+import { IQueueClient } from "./queue-types.js";
+import { defineProvider, defineService } from "./scope-lib.js";
 
 export const queueClientProviders=defineProvider<IQueueClient>('queueClientProviders');
 

@@ -1,15 +1,15 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
-import { aiCompletionPlugin } from "./plugins/aiCompletionPlugin";
-import { apiPlugin } from "./plugins/api";
-import { bucketPlugin } from "./plugins/bucketPlugin";
-import { containerPlugin } from "./plugins/container";
-import { nextJsAppPlugin } from "./plugins/nextJsAppPlugin";
-import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin";
-import { queuePlugin } from "./plugins/queuePlugin";
-import { secretPlugin } from "./plugins/secretPlugin";
-import { serverFnPlugin } from "./plugins/serverFnPlugin";
-import { sqlClusterPlugin } from "./plugins/sqlClusterPlugin";
-import { userPoolPlugin } from "./plugins/userPoolPlugin";
+import { aiCompletionPlugin } from "./plugins/aiCompletionPlugin.js";
+import { apiPlugin } from "./plugins/api.js";
+import { bucketPlugin } from "./plugins/bucketPlugin.js";
+import { containerPlugin } from "./plugins/container.js";
+import { nextJsAppPlugin } from "./plugins/nextJsAppPlugin.js";
+import { nextJsPagePlugin } from "./plugins/nextJsPagePlugin.js";
+import { queuePlugin } from "./plugins/queuePlugin.js";
+import { secretPlugin } from "./plugins/secretPlugin.js";
+import { serverFnPlugin } from "./plugins/serverFnPlugin.js";
+import { sqlClusterPlugin } from "./plugins/sqlClusterPlugin.js";
+import { userPoolPlugin } from "./plugins/userPoolPlugin.js";
 
 export const getCdkProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
     return [

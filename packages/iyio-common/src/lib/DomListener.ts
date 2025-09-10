@@ -1,5 +1,5 @@
-import { EvtHandleTrigger, createEvtTrigger } from "./EventHandler";
-import { DomKeyEvt } from "./dom-listener-types";
+import { EvtHandleTrigger, createEvtTrigger } from "./EventHandler.js";
+import { DomKeyEvt } from "./dom-listener-types.js";
 
 export class DomListener
 {

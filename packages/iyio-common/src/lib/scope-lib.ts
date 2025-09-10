@@ -1,13 +1,13 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { CancelToken } from "./CancelToken";
-import { createPromiseSource } from "./PromiseSource";
-import { ScopedSetter, Setter, createScopedSetter, isScopedSetter, isSetterOrScopedSetter } from "./Setter";
-import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
-import { asArray } from "./array";
-import { FunctionLoopControl, continueFunction, parseConfigBool, shouldBreakFunction } from "./common-lib";
-import { AnyAsyncFunction, AnyFunction, HashMap, SymHashMap } from "./common-types";
-import { ScopeInitedError, TypeProviderNotFoundError } from "./errors";
-import { CallableTypeDef, ClientTypeDef, FactoryTypeDef, FluentProviderType, FluentTypeProvider, GeneratorTypeDef, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types";
+import { CancelToken } from "./CancelToken.js";
+import { createPromiseSource } from "./PromiseSource.js";
+import { ScopedSetter, Setter, createScopedSetter, isScopedSetter, isSetterOrScopedSetter } from "./Setter.js";
+import { ScopeReset, TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common.js";
+import { asArray } from "./array.js";
+import { FunctionLoopControl, continueFunction, parseConfigBool, shouldBreakFunction } from "./common-lib.js";
+import { AnyAsyncFunction, AnyFunction, HashMap, SymHashMap } from "./common-types.js";
+import { ScopeInitedError, TypeProviderNotFoundError } from "./errors.js";
+import { CallableTypeDef, ClientTypeDef, FactoryTypeDef, FluentProviderType, FluentTypeProvider, GeneratorTypeDef, ObservableTypeDef, ParamProvider, ParamTypeDef, ProviderTypeDef, ReadonlyObservableTypeDef, Scope, ScopeModule, ScopeModuleLifecycle, ScopeRegistration, ServiceTypeDef, TypeDef, TypeProvider, TypeProviderOptions } from "./scope-types.js";
 
 const ScopeDefineType=Symbol('ScopeDefineType');
 const ScopeDefineCallableType=Symbol('ScopeDefineCallableType');

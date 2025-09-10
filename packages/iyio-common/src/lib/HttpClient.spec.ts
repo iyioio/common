@@ -1,6 +1,6 @@
-import { apiBaseUrlParam } from "./http.deps";
-import { HttpClient } from "./HttpClient";
-import { createScope } from "./scope-lib";
+import { apiBaseUrlParam } from "./http.deps.js";
+import { HttpClient } from "./HttpClient.js";
+import { createScope } from "./scope-lib.js";
 
 describe('HttpClient',()=>{
 

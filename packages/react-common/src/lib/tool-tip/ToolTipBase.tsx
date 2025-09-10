@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, ViewProps } from "../View";
-import { ToolTipAlignment, useToolTip } from "./tool-tip-lib";
+import { View, ViewProps } from "../View.js";
+import { ToolTipAlignment, useToolTip } from "./tool-tip-lib.js";
 
 export interface ToolTipBaseProps extends ViewProps
 {

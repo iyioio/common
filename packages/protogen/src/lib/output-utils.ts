@@ -1,5 +1,5 @@
 import { HashMap, getObjKeyCount, joinPaths, mergeObjs } from "@iyio/common";
-import { ProtoOutput } from "./protogen-pipeline-types";
+import { ProtoOutput } from "./protogen-pipeline-types.js";
 
 export const protoLabelOutputLines=(
     lines:string[],

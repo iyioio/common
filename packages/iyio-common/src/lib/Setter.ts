@@ -1,5 +1,5 @@
 import { Subject } from "rxjs/internal/Subject";
-import { Scope } from "./scope-types";
+import { Scope } from "./scope-types.js";
 
 const isSetterFlag=Symbol('isSetterFlag');
 const isScopedSetterFlag=Symbol('isSetterFlag');

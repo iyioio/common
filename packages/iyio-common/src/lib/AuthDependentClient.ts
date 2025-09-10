@@ -1,4 +1,4 @@
-import { ValueCache } from "./ValueCache";
+import { ValueCache } from "./ValueCache.js";
 
 /**
  * Represents a client object that wraps a lower level client that is auth dependent.

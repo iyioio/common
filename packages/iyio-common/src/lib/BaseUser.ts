@@ -1,9 +1,9 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { DisposeContainer } from "./DisposeContainer";
-import { AuthProvider, UserAuthProviderData } from "./auth-types";
-import { IDisposable, IInit, SymStrHashMap } from "./common-types";
-import { deepCompare } from "./object";
-import { ReadonlySubject } from "./rxjs-types";
+import { DisposeContainer } from "./DisposeContainer.js";
+import { AuthProvider, UserAuthProviderData } from "./auth-types.js";
+import { IDisposable, IInit, SymStrHashMap } from "./common-types.js";
+import { deepCompare } from "./object.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export interface BaseUserOptions
 {

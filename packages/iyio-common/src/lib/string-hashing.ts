@@ -1,4 +1,4 @@
-import { base64EncodeUint32Array, defaultBase64Chars, fsBase64Chars } from "./base64";
+import { base64EncodeUint32Array, defaultBase64Chars, fsBase64Chars } from "./base64.js";
 
 export const strHash=(str:string):number=>{
     if(!str){

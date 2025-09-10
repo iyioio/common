@@ -1,5 +1,5 @@
-import { escapeHtml } from "./html";
-import { MarkdownLine, MarkdownNode, MarkdownOutputFormat, MarkdownOutputOptions } from "./markdown-types";
+import { escapeHtml } from "./html.js";
+import { MarkdownLine, MarkdownNode, MarkdownOutputFormat, MarkdownOutputOptions } from "./markdown-types.js";
 
 export const markdownLinesToString=(format:MarkdownOutputFormat|MarkdownOutputOptions,lines:MarkdownLine[]):string=>{
     const out:string[]=[];

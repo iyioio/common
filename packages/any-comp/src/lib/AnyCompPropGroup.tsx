@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { AcProp } from "./any-comp-types";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { AcProp } from "./any-comp-types.js";
 
 export interface AnyCompPropGroupProps
 {

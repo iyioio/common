@@ -1,10 +1,10 @@
-import { BaseStore } from "./BaseStore";
-import { CancelToken } from "./CancelToken";
-import { delayAsync } from "./common-lib";
-import { HashMap } from "./common-types";
-import { ValuePointer } from "./pointers";
-import { SharedValuePointer } from "./shared-pointers";
-import { StoreKeyScope, StoreOp } from "./store-types";
+import { BaseStore } from "./BaseStore.js";
+import { CancelToken } from "./CancelToken.js";
+import { delayAsync } from "./common-lib.js";
+import { HashMap } from "./common-types.js";
+import { ValuePointer } from "./pointers.js";
+import { SharedValuePointer } from "./shared-pointers.js";
+import { StoreKeyScope, StoreOp } from "./store-types.js";
 
 export interface MemoryStoreOptions extends StoreKeyScope
 {

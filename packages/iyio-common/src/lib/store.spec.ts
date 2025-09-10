@@ -1,9 +1,9 @@
-import { JsonMemoryStore } from './JsonStore';
-import { MemoryStore } from './MemoryStore';
-import { RouterStore } from './RouterStore';
-import { createScope } from './scope-lib';
-import { testMountedStoreAsync, testStorePutGetDeleteAsync, testStoreWatchAsync } from './store-test-lib';
-import { uuid } from './uuid';
+import { JsonMemoryStore } from './JsonStore.js';
+import { MemoryStore } from './MemoryStore.js';
+import { RouterStore } from './RouterStore.js';
+import { createScope } from './scope-lib.js';
+import { testMountedStoreAsync, testStorePutGetDeleteAsync, testStoreWatchAsync } from './store-test-lib.js';
+import { uuid } from './uuid.js';
 
 
 const createMemoryStore=()=>new MemoryStore({cloneValues:true});

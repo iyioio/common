@@ -1,1 +1,1 @@
-export * from './lib/templateGenerator';
+export * from './lib/templateGenerator.js';

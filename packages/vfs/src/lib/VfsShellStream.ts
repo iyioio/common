@@ -1,7 +1,7 @@
 import { createPromiseSource, delayAsync, shortUuid } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { VfsCtrl } from "./VfsCtrl";
-import { VfsShellCommand } from "./vfs-types";
+import { VfsCtrl } from "./VfsCtrl.js";
+import { VfsShellCommand } from "./vfs-types.js";
 
 export class VfsShellStream
 {

@@ -1,7 +1,7 @@
-import { Evt } from "./Evt";
-import { EvtTrigger, EvtTriggerCallback } from "./EvtTrigger";
-import { getValueByPath, setValueByPath } from "./object";
-import { testValueCondition } from "./value-condition-lib";
+import { Evt } from "./Evt.js";
+import { EvtTrigger, EvtTriggerCallback } from "./EvtTrigger.js";
+import { getValueByPath, setValueByPath } from "./object.js";
+import { testValueCondition } from "./value-condition-lib.js";
 
 export interface EvtTriggerPair
 {

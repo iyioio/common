@@ -1,10 +1,10 @@
-import { HashMap } from "./common-types";
-import { defaultHttpClientMaxRetries } from "./http-lib";
-import { HttpFetcher, HttpRequestSigner } from "./http-types";
-import { HttpClient } from "./HttpClient";
-import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
-import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineProvider, defineStringParam } from "./scope-lib";
-import { stringToHashMap } from "./string-converters";
+import { HashMap } from "./common-types.js";
+import { defaultHttpClientMaxRetries } from "./http-lib.js";
+import { HttpFetcher, HttpRequestSigner } from "./http-types.js";
+import { HttpClient } from "./HttpClient.js";
+import { HttpDefaultFetcher } from "./HttpDefaultFetcher.js";
+import { defineBoolParam, defineClient, defineNumberParam, defineParam, defineProvider, defineStringParam } from "./scope-lib.js";
+import { stringToHashMap } from "./string-converters.js";
 
 export const apiBaseUrlParam=defineStringParam('apiBaseUrl');
 

@@ -1,9 +1,9 @@
 import { BaseLayoutOuterProps } from '@iyio/common';
 import { Text } from '@iyio/react-common';
 import { lazy, Suspense } from 'react';
-import type { PdfViewProps } from './PdfView';
+import type { PdfViewProps } from './PdfView.js';
 
-const PdfView = lazy(() => import('./PdfView').then(v=>({default:v.PdfView})));
+const PdfView = lazy(() => import('./PdfView.js').then(v=>({default:v.PdfView})));
 
 export function LazyPdfView(props:PdfViewProps & BaseLayoutOuterProps){
 

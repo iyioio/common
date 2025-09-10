@@ -2,7 +2,7 @@ import { S3Client as AwsS3Client, DeleteObjectCommand, GetObjectCommand, GetObje
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { AuthDependentClient, BinaryStoreValue, CancelToken, IWithStoreAdapter, Scope, ValueCache, authService } from "@iyio/common";
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
-import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter";
+import { S3StoreAdapter, S3StoreAdapterOptions } from "./S3StoreAdapter.js";
 
 
 

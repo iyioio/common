@@ -1,12 +1,12 @@
-import { delayAsync } from './common-lib';
-import { HashMap } from "./common-types";
-import { deepCompare } from './object';
-import { StoreRoute } from "./RouterStore";
-import { defineBoolParam } from './scope-lib';
-import { Scope } from './scope-types';
-import { IStore } from './store-types';
-import { storeRoot } from './store.deps';
-import { shortUuid, uuid } from "./uuid";
+import { delayAsync } from './common-lib.js';
+import { HashMap } from "./common-types.js";
+import { deepCompare } from './object.js';
+import { StoreRoute } from "./RouterStore.js";
+import { defineBoolParam } from './scope-lib.js';
+import { Scope } from './scope-types.js';
+import { IStore } from './store-types.js';
+import { storeRoot } from './store.deps.js';
+import { shortUuid, uuid } from "./uuid.js";
 
 const keepTestStoreItemsParam=defineBoolParam('keepTestStoreItems',false);
 

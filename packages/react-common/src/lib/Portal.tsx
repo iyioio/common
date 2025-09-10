@@ -1,4 +1,4 @@
-import { PortalProps, usePortal } from "./portal-lib";
+import { PortalProps, usePortal } from "./portal-lib.js";
 
 /**
  * @acIgnore

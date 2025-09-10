@@ -1,4 +1,4 @@
-import { base64UrlReg } from "./data-url-lib";
+import { base64UrlReg } from "./data-url-lib.js";
 
 export const readBlobAsync=(blob:Blob,initReader:(reader:FileReader,blob:Blob)=>void):Promise<ArrayBuffer|string|undefined>=>{
     return new Promise<ArrayBuffer|string|undefined>((resolve,reject)=>{

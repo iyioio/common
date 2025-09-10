@@ -1,4 +1,4 @@
-import { CryptoMethods } from "./crypto-bytes-types";
-import { defineProvider } from "./scope-lib";
+import { CryptoMethods } from "./crypto-bytes-types.js";
+import { defineProvider } from "./scope-lib.js";
 
 export const CryptoMethodsProvider=defineProvider<CryptoMethods>('CryptoMethods');

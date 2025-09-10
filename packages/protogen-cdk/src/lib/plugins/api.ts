@@ -1,7 +1,7 @@
 import { HttpMethod, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoAddContextParam, protoChildrenToStringArrayOrUndefined, protoGetChildrenByNameOrUndefined, protoGetParamName } from "@iyio/protogen";
 import { z } from "zod";
-import { ApiInfoTemplate, apiCdkTemplate } from "./apiCdkTemplate";
+import { ApiInfoTemplate, apiCdkTemplate } from "./apiCdkTemplate.js";
 
 const supportedTypes=['api'];
 

@@ -1,6 +1,6 @@
-import { getHttpParamsAsync } from "./getHttpParamsAsync";
-import { ScopeModulePriorities } from "./scope-lib";
-import { ScopeRegistration } from "./scope-types";
+import { getHttpParamsAsync } from "./getHttpParamsAsync.js";
+import { ScopeModulePriorities } from "./scope-lib.js";
+import { ScopeRegistration } from "./scope-types.js";
 
 export const httpParamsModule=(reg:ScopeRegistration)=>{
     reg.use({

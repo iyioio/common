@@ -1,6 +1,6 @@
 import { HashMap, uuid } from "@iyio/common";
 import { ProtoPipeline, ProtoPipelineConfig, defaultProtoLibStyle, executeTGenPipelineAsync, protoGetStageFromName } from "@iyio/protogen";
-import { getDefaultProtoPipelinePlugins } from "./default-plugins";
+import { getDefaultProtoPipelinePlugins } from "./default-plugins.js";
 
 export interface RunProtogenCliAsyncOptions
 {

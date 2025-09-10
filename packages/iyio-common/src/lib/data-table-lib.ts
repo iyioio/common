@@ -1,6 +1,6 @@
 import { ZodRawShape, ZodSchema } from "zod";
-import { DataTableColInfo, DataTableDescription } from "./data-table";
-import { valueIsZodObject, valueIsZodType } from "./zod-helpers";
+import { DataTableColInfo, DataTableDescription } from "./data-table.js";
+import { valueIsZodObject, valueIsZodType } from "./zod-helpers.js";
 
 export const getDataTableShape=(table:DataTableDescription):ZodRawShape|undefined=>{
 

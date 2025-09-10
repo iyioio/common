@@ -1,7 +1,7 @@
-import { continueFunction } from "./common-lib";
-import { IQueueClient, QueueMessageCollection, QueuePullRequest, QueuePushRequest, QueuePushResult } from "./queue-types";
-import { queueClientProviders } from "./queue.deps";
-import { ProviderTypeDef, Scope } from "./scope-types";
+import { continueFunction } from "./common-lib.js";
+import { IQueueClient, QueueMessageCollection, QueuePullRequest, QueuePushRequest, QueuePushResult } from "./queue-types.js";
+import { queueClientProviders } from "./queue.deps.js";
+import { ProviderTypeDef, Scope } from "./scope-types.js";
 
 export interface QueueServiceOptions
 {

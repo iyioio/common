@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { UiLock, UiLockContainer } from "./ui-lock-types";
+import { UiLock, UiLockContainer } from "./ui-lock-types.js";
 
 let nextId=1;
 export function getNextUiLockId(){

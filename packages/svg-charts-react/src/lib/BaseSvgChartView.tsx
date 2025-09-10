@@ -2,7 +2,7 @@ import { BaseLayoutOuterProps, bcn, deepCompare } from "@iyio/common";
 import { useAlphaId } from "@iyio/react-common";
 import { SvgBaseChartCtrl, SvgChartCtrlOptions } from "@iyio/svg-charts";
 import { CSSProperties, useEffect, useRef, useState } from "react";
-import { SvgChartOverlay } from "./SvgChartOverlay";
+import { SvgChartOverlay } from "./SvgChartOverlay.js";
 
 export interface BaseSvgChartViewProps extends BaseLayoutOuterProps
 {

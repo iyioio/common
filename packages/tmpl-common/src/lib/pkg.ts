@@ -102,7 +102,7 @@ export default {
 }
 `,
 "src/index.ts":
-/*ts*/`export * from './lib/pkg';
+/*ts*/`export * from './lib/pkg.js';
 
 `,
 "src/lib/pkg.ts":

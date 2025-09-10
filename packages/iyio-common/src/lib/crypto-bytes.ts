@@ -1,8 +1,8 @@
-import { uint32ArrayToNumberArray } from "./array";
-import { base64EncodeAry, fsBase64Chars } from "./base64";
-import { CryptoMethods } from "./crypto-bytes-types";
-import { CryptoMethodsProvider } from "./crypto-bytes.deps";
-import { shortUuid } from "./uuid";
+import { uint32ArrayToNumberArray } from "./array.js";
+import { base64EncodeAry, fsBase64Chars } from "./base64.js";
+import { CryptoMethods } from "./crypto-bytes-types.js";
+import { CryptoMethodsProvider } from "./crypto-bytes.deps.js";
+import { shortUuid } from "./uuid.js";
 
 let triedNode=false;
 let nodeCy:CryptoMethods|undefined=undefined;

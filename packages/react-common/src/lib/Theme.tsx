@@ -1,6 +1,6 @@
 import { cn } from "@iyio/common";
 import { createContext, useContext } from "react";
-import { View, ViewProps } from "./View";
+import { View, ViewProps } from "./View.js";
 
 export const defaultTheme='default-theme';
 

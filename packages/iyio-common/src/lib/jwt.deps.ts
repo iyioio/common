@@ -1,5 +1,5 @@
-import type { JwtProvider, JwtValidator } from "./jwt";
-import { defineProvider } from "./scope-lib";
+import type { JwtProvider, JwtValidator } from "./jwt.js";
+import { defineProvider } from "./scope-lib.js";
 
 export const JwtProviders=defineProvider<JwtProvider>('JwtProviders');
 

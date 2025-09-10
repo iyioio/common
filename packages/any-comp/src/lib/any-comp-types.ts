@@ -1,4 +1,4 @@
-import type { AnyCompViewCtrl } from "./AnyCompViewCtrl";
+import type { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
 
 export interface AcComp
 {

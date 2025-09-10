@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Point } from "@iyio/common";
 import { UIEvent, useEffect, useRef, useState } from "react";
-import { View, ViewProps } from "./View";
-import { useElementSize } from "./useElementSize";
+import { View, ViewProps } from "./View.js";
+import { useElementSize } from "./useElementSize.js";
 
 
 const scrollHistoryStoreKey='iyio.ScrollView.scrollHistory.';

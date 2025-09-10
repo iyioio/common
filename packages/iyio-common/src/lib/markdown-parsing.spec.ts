@@ -1,5 +1,5 @@
-import { objectToMarkdown, objectToMarkdownBuffer, parseMarkdownImages } from './markdown-parsing';
-import { MarkdownImageParsingItem } from './markdown-types';
+import { objectToMarkdown, objectToMarkdownBuffer, parseMarkdownImages } from './markdown-parsing.js';
+import { MarkdownImageParsingItem } from './markdown-types.js';
 
 describe('markdown-parsing',()=>{
 

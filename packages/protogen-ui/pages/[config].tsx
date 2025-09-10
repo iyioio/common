@@ -2,7 +2,7 @@ import { useRouteQuery } from "@iyio/react-common";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 
-const ProtogenView=dynamic(()=>import('../components/ProtogenView'),{ssr:false});
+const ProtogenView=dynamic(()=>import('../components/ProtogenView.js'),{ssr:false});
 
 export default function Config()
 {

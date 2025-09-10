@@ -1,7 +1,7 @@
 import { DeleteMessageBatchCommand, DeleteMessageCommand, ReceiveMessageCommand, SQSClient, SQSClientConfig, SendMessageCommand, SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
 import { AuthDependentClient, IQueueClient, QueueMessage, QueueMessageCollection, QueuePullRequest, QueuePushRequest, QueuePushResult, Scope, ValueCache, authService } from "@iyio/common";
-import { getSqsUrl } from "./sqs-lib";
+import { getSqsUrl } from "./sqs-lib.js";
 
 export class SqsQueueClient extends AuthDependentClient<SQSClient> implements IQueueClient
 {

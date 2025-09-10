@@ -1,8 +1,8 @@
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
-import { IEventTarget } from "./cdk-types";
+import { ManagedProps } from "./ManagedProps.js";
+import { IEventTarget } from "./cdk-types.js";
 
 export interface BridgeEventProps
 {

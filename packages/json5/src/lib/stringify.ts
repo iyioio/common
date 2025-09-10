@@ -1,5 +1,5 @@
-import { Json5Reviver, StringifyOptions } from "./json5-types";
-import * as util from './util';
+import { Json5Reviver, StringifyOptions } from "./json5-types.js";
+import * as util from './util.js';
 
 /**
  * Converts a JavaScript value to a JSON5 string.

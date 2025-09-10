@@ -1,9 +1,9 @@
 import { DisposeCallback, getSubstringCount, Point, ReadonlySubject, Rect, shortUuid } from "@iyio/common";
 import { protoAddChild, ProtoAddressMap, protoClearRevLinks, protoGetLayout, protoGetPosScale, ProtoLayout, protoMarkdownGetIndent, protoMarkdownParseNodes, protoMarkdownRenderer, ProtoNode, ProtoParsingResult, protoParsingResultFromNode, ProtoPosScale, protoRenderLines, protoSetNodeCtrl, protoSetPosScale, protoUpdateLayouts, protoUpdateLinks } from "@iyio/protogen";
 import { BehaviorSubject, combineLatest } from "rxjs";
-import { dt } from "./lib-design-tokens";
-import { getElemProtoLayout } from "./protogen-ui-lib";
-import { ProtogenCtrl } from "./ProtogenCtrl";
+import { dt } from "./lib-design-tokens.js";
+import { getElemProtoLayout } from "./protogen-ui-lib.js";
+import { ProtogenCtrl } from "./ProtogenCtrl.js";
 
 export class NodeCtrl
 {

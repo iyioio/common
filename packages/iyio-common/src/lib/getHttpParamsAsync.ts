@@ -1,8 +1,8 @@
-import { paramsCheckParam } from "./common-params";
-import { HashMap } from "./common-types";
-import { httpClient } from "./http.deps";
-import { createScope } from "./scope-lib";
-import { ParamTypeDef } from "./scope-types";
+import { paramsCheckParam } from "./common-params.js";
+import { HashMap } from "./common-types.js";
+import { httpClient } from "./http.deps.js";
+import { createScope } from "./scope-lib.js";
+import { ParamTypeDef } from "./scope-types.js";
 
 export interface GetHttpParamsOptions
 {

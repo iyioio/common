@@ -1,5 +1,5 @@
 import { CancelToken, DisposeCallback, Evt, EvtTrigger } from "@iyio/common";
-import type { VfsMntCtrl } from "./VfsMntCtrl";
+import type { VfsMntCtrl } from "./VfsMntCtrl.js";
 
 export interface VfsConfig
 {

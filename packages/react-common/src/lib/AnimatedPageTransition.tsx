@@ -1,10 +1,10 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { cn, css, RouteInfo } from "@iyio/common";
 import { useInsertionEffect } from "react";
-import { disablePageClipSubject } from "./page-lib";
-import { PageTransition } from "./PageTransition";
-import { PageTransitionOptions } from "./PageTransitionOptions";
-import { useSubject } from "./rxjs-hooks";
+import { disablePageClipSubject } from "./page-lib.js";
+import { PageTransition } from "./PageTransition.js";
+import { PageTransitionOptions } from "./PageTransitionOptions.js";
+import { useSubject } from "./rxjs-hooks.js";
 
 export const defaultAnimatedPageTransitionKeyframes=css`
     @keyframes PageTransitionEnter

@@ -1,7 +1,7 @@
 import { ZodSchema } from "zod";
-import { CancelToken } from "./CancelToken";
-import { createPromiseSource } from "./PromiseSource";
-import { readBlobAsStringAsync } from "./file-reader";
+import { CancelToken } from "./CancelToken.js";
+import { createPromiseSource } from "./PromiseSource.js";
+import { readBlobAsStringAsync } from "./file-reader.js";
 
 export interface BrowseFileOptions
 {

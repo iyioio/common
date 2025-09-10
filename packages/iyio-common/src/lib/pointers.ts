@@ -1,5 +1,5 @@
-import { IDisposable } from "./common-types";
-import { ReadonlySubject } from "./rxjs-types";
+import { IDisposable } from "./common-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export interface ValuePointer<T=any> extends IDisposable
 {

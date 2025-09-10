@@ -3,7 +3,7 @@ import { MdxUiComponentCache, getDefaultMdxUiComponentCache } from "@iyio/mdx-ui
 import { VfsItem } from "@iyio/vfs";
 import { useVfsString } from "@iyio/vfs-react";
 import { useEffect, useState } from "react";
-import { MdxUiBuilderView, MdxUiBuilderViewProps } from "./MdxUiBuilderView";
+import { MdxUiBuilderView, MdxUiBuilderViewProps } from "./MdxUiBuilderView.js";
 
 export interface MdxViewProps extends MdxUiBuilderViewProps
 {

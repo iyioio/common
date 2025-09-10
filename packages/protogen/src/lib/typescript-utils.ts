@@ -1,6 +1,6 @@
 import { getPathNoExt, HashMap } from "@iyio/common";
-import { ProtoContext, ProtoIndexGenerator, ProtoOutput } from "./protogen-pipeline-types";
-import { ProtoNode } from "./protogen-types";
+import { ProtoContext, ProtoIndexGenerator, ProtoOutput } from "./protogen-pipeline-types.js";
+import { ProtoNode } from "./protogen-types.js";
 
 export const protoTsTypeMap:HashMap<string>={
     'int':'number',

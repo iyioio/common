@@ -1,4 +1,4 @@
-import { getFileExt } from "./fs";
+import { getFileExt } from "./fs.js";
 
 const defaultContentType='application/octet-stream';
 

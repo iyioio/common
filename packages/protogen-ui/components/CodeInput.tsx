@@ -1,9 +1,9 @@
 import { baseLayoutCn, BaseLayoutOuterProps, cn, escapeHtml } from '@iyio/common';
 import hljs from 'highlight.js';
 import { KeyboardEvent, useCallback, useEffect, useState } from "react";
-import { dt } from '../lib/lib-design-tokens';
-import { registerGrammars } from '../lib/registerGrammars';
-import { CodeLanguage } from './code-lib';
+import { dt } from '../lib/lib-design-tokens.js';
+import { registerGrammars } from '../lib/registerGrammars.js';
+import { CodeLanguage } from './code-lib.js';
 import "./code-style";
 
 export const defaultCodeLineStartReg=/^(\s*)/;

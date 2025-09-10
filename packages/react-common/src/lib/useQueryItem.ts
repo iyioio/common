@@ -1,6 +1,6 @@
 import { Query, deepClone, queryClient } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { useDeepCompareItem } from "./useCompareItem";
+import { useDeepCompareItem } from "./useCompareItem.js";
 
 export const useQueryItem=<T>(query:Query|null|undefined,refresh?:number):T|undefined=>{
 

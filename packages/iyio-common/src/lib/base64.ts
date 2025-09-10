@@ -5,7 +5,7 @@
 *
 **/
 
-import { uint32ArrayToNumberArray } from "./array";
+import { uint32ArrayToNumberArray } from "./array.js";
 
 export const defaultBase64Chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 // the ending (=) is not required since it is only used for padding

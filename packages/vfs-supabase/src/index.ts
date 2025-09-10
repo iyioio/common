@@ -1,4 +1,4 @@
-export * from './lib/VfsSupabaseMntCtrl';
-export * from './lib/vfs-supabase.deps';
-export * from './lib/vfs-supabase.module';
+export * from './lib/VfsSupabaseMntCtrl.js';
+export * from './lib/vfs-supabase.deps.js';
+export * from './lib/vfs-supabase.module.js';
 

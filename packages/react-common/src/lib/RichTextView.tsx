@@ -1,7 +1,7 @@
 import { BaseLayoutProps, bcn } from "@iyio/common";
 import { RTxtDoc, RTxtEditor, RTxtRenderOptions, RTxtRenderer } from '@iyio/rtxt';
 import { useEffect, useRef, useState } from 'react';
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 let _editor:RTxtEditor|null=null;
 const getEditor=(rendererOptions?:RTxtRenderOptions):RTxtEditor=>{

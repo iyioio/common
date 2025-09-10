@@ -1,7 +1,7 @@
 import { CliArgsAliasMap, CliArgsConverter, HashMap } from "@iyio/common";
 import { ZodSchema, z } from "zod";
-import { ProtoSourceCodeMerger } from "./output-utils";
-import { ProtoCallable, ProtoNode } from "./protogen-types";
+import { ProtoSourceCodeMerger } from "./output-utils.js";
+import { ProtoCallable, ProtoNode } from "./protogen-types.js";
 
 export type ProtoStage='init'|'input'|'preprocess'|'parse'|'generate'|'output';
 

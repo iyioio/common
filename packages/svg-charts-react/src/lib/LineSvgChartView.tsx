@@ -1,5 +1,5 @@
 import { SvgChartCtrlOptions, SvgLineChartCtrl } from "@iyio/svg-charts";
-import { BaseSvgChartView, BaseSvgChartViewProps } from "./BaseSvgChartView";
+import { BaseSvgChartView, BaseSvgChartViewProps } from "./BaseSvgChartView.js";
 
 const createChart=(svg:SVGSVGElement,options:Partial<SvgChartCtrlOptions>)=>new SvgLineChartCtrl(options,svg);
 

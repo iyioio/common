@@ -2,12 +2,12 @@ import { delayAsync, Point, ReadonlySubject, uuid } from "@iyio/common";
 import { ProtoAddressMap, protoGetNodeAtPath, ProtoLayout, protoMarkdownParseNodes, ProtoNode, ProtoPosScale } from "@iyio/protogen";
 import { PanZoomCtrl } from "@iyio/react-common";
 import { BehaviorSubject } from "rxjs";
-import { Assistant } from "../components/Assistant";
-import { CommandLineInterface } from "./CommandLineInterface";
-import { LineCtrl } from "./LineCtrl";
-import { NodeCtrl } from "./NodeCtrl";
-import { ProtoAnchor, ProtoUiLengthStyle, SaveRequest } from "./protogen-ui-lib";
-import { ProtoKeyListener } from "./ProtoKeyListener";
+import { Assistant } from "../components/Assistant.js";
+import { CommandLineInterface } from "./CommandLineInterface.js";
+import { LineCtrl } from "./LineCtrl.js";
+import { NodeCtrl } from "./NodeCtrl.js";
+import { ProtoAnchor, ProtoUiLengthStyle, SaveRequest } from "./protogen-ui-lib.js";
+import { ProtoKeyListener } from "./ProtoKeyListener.js";
 
 export class ProtogenCtrl
 {

@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
-import { Api, ApiProps } from "./Api";
-import { ManagedProps } from "./ManagedProps";
+import { Api, ApiProps } from "./Api.js";
+import { ManagedProps } from "./ManagedProps.js";
 
 export interface ApiInfo extends ApiProps
 {

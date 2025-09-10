@@ -1,7 +1,7 @@
 import { CancelToken, defineNumberParam, defineStringParam, delayAsync, HashMap, JsonStore, JsonStoreOptions, Scope, ValuePointer } from "@iyio/common";
 import { mkdir, readFile, unlink, watch, writeFile } from 'node:fs/promises';
 import { join } from "node:path";
-import { pathExistsAsync } from "./fs";
+import { pathExistsAsync } from "./fs.js";
 
 export const defaultFsStoreDataDir='fs-store-data';
 
@@ -142,7 +142,9 @@ export class FsStore<T=any> extends JsonStore<T>
                         debounceMap[key]=0;
                     }
 
-                    const updateId=++debounceMap[key];
+                    const u=(debounceMap[key]??0)+1;
+                    debounceMap[key]=u;
+                    const updateId=u;
 
                     setTimeout(async ()=>{
                         if(!this.pointers[key] || this.isDisposed || debounceMap[key]!==updateId){

@@ -1,4 +1,4 @@
-import { escapeSqlValue, splitSqlStatements } from "./sql-lib"
+import { escapeSqlValue, splitSqlStatements } from "./sql-lib.js"
 
 
 describe('sql-lib',()=>{

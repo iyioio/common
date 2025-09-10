@@ -1,5 +1,5 @@
 import { Rect } from "@iyio/common";
-import { ChartData } from "./svg-charts-types";
+import { ChartData } from "./svg-charts-types.js";
 
 export const classNamePrefix='svg-charts-';
 

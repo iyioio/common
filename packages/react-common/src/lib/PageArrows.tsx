@@ -1,11 +1,11 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutOuterProps, domListener } from "@iyio/common";
 import { useEffect, useRef } from "react";
-import { SlimButton } from "./SlimButton";
-import { Text } from "./Text";
-import { useDirectionCount, useDirectionIndex, useDirectionInputCtrl } from "./direction-input/direction-input-lib";
-import { BasicIcon } from "./icon/BasicIcon";
-import { useSwipe } from "./useSwipe";
+import { SlimButton } from "./SlimButton.js";
+import { Text } from "./Text.js";
+import { useDirectionCount, useDirectionIndex, useDirectionInputCtrl } from "./direction-input/direction-input-lib.js";
+import { BasicIcon } from "./icon/BasicIcon.js";
+import { useSwipe } from "./useSwipe.js";
 
 export interface PageArrowsProps
 {

@@ -1,10 +1,10 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { CancelToken } from "./CancelToken";
-import { FunctionLoopControl } from "./common-lib";
-import { AnyFunction, HashMap, OpValueContainer } from "./common-types";
-import { ReadonlySubject } from "./rxjs-types";
-import { ScopedSetter, Setter } from "./Setter";
-import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common";
+import { CancelToken } from "./CancelToken.js";
+import { FunctionLoopControl } from "./common-lib.js";
+import { AnyFunction, HashMap, OpValueContainer } from "./common-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
+import { ScopedSetter, Setter } from "./Setter.js";
+import { TypeDefDefaultValue, TypeDefStaticValue } from "./_internal.common.js";
 
 
 export interface CallableTypeDef<T> extends TypeDef<T>

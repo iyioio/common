@@ -1,10 +1,10 @@
 import { ReadonlySubject, deepClone, escapeHtml } from '@iyio/common';
 import { BehaviorSubject } from 'rxjs';
-import { getDefaultRTxtNodeDescriptors } from "./rtxt-descriptors";
-import { getTextNode } from './rtxt-internal';
-import { convertRTxtDocToSingleCharNodes, getRTxtLineNodes, minifyRTxtDoc } from './rtxt-lib';
-import { insertRTxtViewerStyleSheet } from './rtxt-style-renderer';
-import { RTxtDescriptor, RTxtDoc, RTxtNode, RTxtRenderOptions, RTxtStyleProvider, defaultRTxtChangeDelayMs, defaultRTxtClassNamePrefix, defaultRTxtDocClassName, defaultRTxtLineElem, defaultRTxtNodeType, rTxtAttPrefix, rTxtDocAtt, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtNodeAtt, rTxtTypeAtt } from "./rtxt-types";
+import { getDefaultRTxtNodeDescriptors } from "./rtxt-descriptors.js";
+import { getTextNode } from './rtxt-internal.js';
+import { convertRTxtDocToSingleCharNodes, getRTxtLineNodes, minifyRTxtDoc } from './rtxt-lib.js';
+import { insertRTxtViewerStyleSheet } from './rtxt-style-renderer.js';
+import { RTxtDescriptor, RTxtDoc, RTxtNode, RTxtRenderOptions, RTxtStyleProvider, defaultRTxtChangeDelayMs, defaultRTxtClassNamePrefix, defaultRTxtDocClassName, defaultRTxtLineElem, defaultRTxtNodeType, rTxtAttPrefix, rTxtDocAtt, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtNodeAtt, rTxtTypeAtt } from "./rtxt-types.js";
 
 export class RTxtRenderer
 {

@@ -1,6 +1,6 @@
 import { DataTableDescription, DataTableIndex } from '@iyio/common';
-import { ObjSyncClientConnection, ObjSyncClientConnectionScheme, ObjSyncObjState, ObjSyncObjStateScheme } from "./obj-sync-types";
-import { objSyncClientConnectionTableParam, objSyncObjStateTableParam } from "./obj-sync.deps";
+import { ObjSyncClientConnection, ObjSyncClientConnectionScheme, ObjSyncObjState, ObjSyncObjStateScheme } from "./obj-sync-types.js";
+import { objSyncClientConnectionTableParam, objSyncObjStateTableParam } from "./obj-sync.deps.js";
 
 export const ObjSyncConnectionTable:DataTableDescription<ObjSyncClientConnection>={
     name:"ObjSyncConnection",

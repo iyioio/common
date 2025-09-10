@@ -3,11 +3,11 @@ import { BaseLayoutOuterProps, cn } from "@iyio/common";
 import { LoadingDots, PageArrows, PanZoomControls, PanZoomView, Text, View, useDelayedValue, useElementSize } from "@iyio/react-common";
 import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
-// import { CheckboxLabel } from "../CheckboxLabel";
-// import { PageArrows } from "../PageArrows";
+// import { CheckboxLabel } from "../CheckboxLabel.js";
+// import { PageArrows } from "../PageArrows.js";
 import { VfsItem } from "@iyio/vfs";
-import { PdfReader } from "./PdfReader";
-import { usePdfPage } from "./pdf-hooks";
+import { PdfReader } from "./PdfReader.js";
+import { usePdfPage } from "./pdf-hooks.js";
 
 const ignoreElems=[
     'p','li','ul','ol','blockquote','pre','table','th','tr','td',

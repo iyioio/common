@@ -1,7 +1,7 @@
 import { atDotCss } from '@iyio/at-dot-css';
 import { cn } from '@iyio/common';
 import { useEffect, useState } from 'react';
-import { useShiki } from './shiki';
+import { useShiki } from './shiki.js';
 
 interface CodeViewProps
 {

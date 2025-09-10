@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { useSubject, View } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
-import { ProtoButton } from "./ProtoButton";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
+import { ProtoButton } from "./ProtoButton.js";
 
 interface ProtogenOutputViewProps
 {

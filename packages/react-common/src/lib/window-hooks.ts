@@ -1,6 +1,6 @@
 import { BreakpointDetails, BreakpointWatcher, getDefaultBreakpointWatcher, getWindowSize, Size } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 export const useWindowSize=():Size=>{
 

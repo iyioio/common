@@ -1,7 +1,7 @@
-export * from './lib/ObjSyncBroadcastChannelClient';
-export * from './lib/ObjSyncClient';
-export * from './lib/ObjSyncWebsocketClient';
-export * from './lib/obj-sync-tables';
-export * from './lib/obj-sync-types';
-export * from './lib/obj-sync.deps';
+export * from './lib/ObjSyncBroadcastChannelClient.js';
+export * from './lib/ObjSyncClient.js';
+export * from './lib/ObjSyncWebsocketClient.js';
+export * from './lib/obj-sync-tables.js';
+export * from './lib/obj-sync-types.js';
+export * from './lib/obj-sync.deps.js';
 

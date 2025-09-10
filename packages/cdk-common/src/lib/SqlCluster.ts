@@ -7,9 +7,9 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as secrets from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { SqlDbMigrator, SqlDbMigratorOptions } from "./SqlDbMigrator";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { SqlDbMigrator, SqlDbMigratorOptions } from "./SqlDbMigrator.js";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types.js";
 
 const DATA_API_ACTIONS = [
     'rds-data:BatchExecuteStatement',

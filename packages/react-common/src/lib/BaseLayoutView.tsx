@@ -1,6 +1,6 @@
 import { BaseLayoutProps, bcn } from "@iyio/common";
-import { BaseLayoutStyleSheet } from "./BaseLayoutStyleSheet";
-import { useDomSharedStyleSheets } from "./useDomSharedStyleSheets";
+import { BaseLayoutStyleSheet } from "./BaseLayoutStyleSheet.js";
+import { useDomSharedStyleSheets } from "./useDomSharedStyleSheets.js";
 
 export interface BaseLayoutViewProps
 {

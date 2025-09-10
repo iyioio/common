@@ -174,7 +174,7 @@ export const generateFileLiteralStringAsync=async (path:string,output:string[],n
     lines[0]=prefix+lines[0];
     lines[lines.length-1]+=suffix;
     for(let i=0;i<lines.length;i++){
-        output.push(lines[i]);
+        output.push(lines[i]??'');
     }
 }
 
@@ -229,10 +229,10 @@ export const writeTmplAsync=async ({
             const path=joinPaths(outDir,e);
             const dir=getDirectoryName(path);
             const content=files[e];
-            console.info(`${path} - ${Math.ceil(content.length/1000)}KB`)
+            console.info(`${path} - ${Math.ceil((content??'').length/1000)}KB`)
             if(!dryRun){
                 await mkdir(dir,{recursive:true});
-                await writeFile(path,content);
+                await writeFile(path,content??'');
             }
         })())
     }

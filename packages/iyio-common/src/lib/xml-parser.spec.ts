@@ -1,4 +1,4 @@
-import { parseXml, xmlTextNodeName } from "./xml-parser";
+import { parseXml, xmlTextNodeName } from "./xml-parser.js";
 
 describe('xml-parser',()=>{
 

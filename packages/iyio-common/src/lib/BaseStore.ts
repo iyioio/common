@@ -1,7 +1,7 @@
-import { HashMap } from "./common-types";
-import { getObjKeyCount } from "./object";
-import { SharedValuePointer } from "./shared-pointers";
-import { IStore, StoreKeyScope } from "./store-types";
+import { HashMap } from "./common-types.js";
+import { getObjKeyCount } from "./object.js";
+import { SharedValuePointer } from "./shared-pointers.js";
+import { IStore, StoreKeyScope } from "./store-types.js";
 
 export abstract class BaseStore<T> implements IStore<T>
 {

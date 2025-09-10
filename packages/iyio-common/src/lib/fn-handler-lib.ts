@@ -1,15 +1,15 @@
 import { ZodSchema } from 'zod';
-import { getErrorMessage } from './error-lib';
-import { BadRequestError, BaseError } from './errors';
-import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types';
-import { FnEventTransformers } from './fn-handler.deps';
-import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse, createHttpStringResponse } from './http-server-lib';
-import { HttpResponseOptions } from './http-server-types';
-import { HttpMethod } from './http-types';
-import { parseJwt } from './jwt';
-import { validateJwt } from './jwt-lib';
-import { getObjKeyCount, queryParamsToObjectJson } from './object';
-import { isZodArray, valueIsZodBoolean, valueIsZodNumber, valueIsZodObject, valueIsZodString, zodCoerceObject } from './zod-helpers';
+import { getErrorMessage } from './error-lib.js';
+import { BadRequestError, BaseError } from './errors.js';
+import { FnBaseHandlerOptions, FnEvent, FnHandler, FnHandlerOptions, RawFnFlag, RawFnResult, createFnError, isFnInvokeEvent } from './fn-handler-types.js';
+import { FnEventTransformers } from './fn-handler.deps.js';
+import { createHttpBadRequestResponse, createHttpErrorResponse, createHttpJsonResponse, createHttpNoContentResponse, createHttpNotFoundResponse, createHttpStringResponse } from './http-server-lib.js';
+import { HttpResponseOptions } from './http-server-types.js';
+import { HttpMethod } from './http-types.js';
+import { parseJwt } from './jwt.js';
+import { validateJwt } from './jwt-lib.js';
+import { getObjKeyCount, queryParamsToObjectJson } from './object.js';
+import { isZodArray, valueIsZodBoolean, valueIsZodNumber, valueIsZodObject, valueIsZodString, zodCoerceObject } from './zod-helpers.js';
 
 export const fnHandler=async (options:FnHandlerOptions)=>{
 

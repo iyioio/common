@@ -1,4 +1,4 @@
-import { HashMap } from "./common-types";
+import { HashMap } from "./common-types.js";
 
 export type KeyComparer=(key:string,depth:number,a:any,b:any,state:any)=>boolean|undefined;
 

@@ -4,7 +4,7 @@ import { protoAddContextParam, protoGetChildrenByName, protoGetParamName, ProtoP
 import { RemovalPolicy } from "aws-cdk-lib";
 import { DeduplicationScope, FifoThroughputLimit, QueueEncryption } from "aws-cdk-lib/aws-sqs";
 import { z } from "zod";
-import { queueCdkTemplate, QueueInfoTemplate } from "./queueCdkTemplate";
+import { queueCdkTemplate, QueueInfoTemplate } from "./queueCdkTemplate.js";
 
 const supportedTypes=['queue'];
 

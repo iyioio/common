@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { HookCtrl } from "./HookCtrl";
+import { HookCtrl } from "./HookCtrl.js";
 
 export const HookCtrlReactContext=createContext<HookCtrl|null>(null);
 

@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Fragment } from "react";
-import { AutoLayoutSlot } from "./AutoLayoutSlot";
-import { AutoLayoutTypeProps } from "./auto-layout-lib";
+import { AutoLayoutSlot } from "./AutoLayoutSlot.js";
+import { AutoLayoutTypeProps } from "./auto-layout-lib.js";
 
 export function Alo2x3({
     childAry,

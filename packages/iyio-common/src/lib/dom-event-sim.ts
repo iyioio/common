@@ -1,4 +1,4 @@
-import { delayAsync } from "./common-lib";
+import { delayAsync } from "./common-lib.js";
 
 export interface MouseEventSimOptions
 {

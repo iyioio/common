@@ -1,11 +1,11 @@
 import { TimeInterval, deepCompare } from '@iyio/common';
 import { z } from 'zod';
-import { ProtoExpressionEngine } from './ProtoExpressionEngine';
-import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown";
-import { MaxProtoExpressionEvalCountError, parseProtoExpression } from "./protogen-expression-lib";
-import { ProtoEvalResult, ProtoEvalState, ProtoExpression, ProtoExpressionEngineOptions } from "./protogen-expression-types";
-import { protoGetChildren } from './protogen-node';
-import { InvalidProtoCallableArgsError, ProtoCallable } from './protogen-types';
+import { ProtoExpressionEngine } from './ProtoExpressionEngine.js';
+import { protoMarkdownParseNodes, removeProtoMarkdownBaseIndent } from "./markdown.js";
+import { MaxProtoExpressionEvalCountError, parseProtoExpression } from "./protogen-expression-lib.js";
+import { ProtoEvalResult, ProtoEvalState, ProtoExpression, ProtoExpressionEngineOptions } from "./protogen-expression-types.js";
+import { protoGetChildren } from './protogen-node.js';
+import { InvalidProtoCallableArgsError, ProtoCallable } from './protogen-types.js';
 
 const parseExp=(md:string,log?:string):ProtoExpression=>{
     const {rootNodes}=protoMarkdownParseNodes(removeProtoMarkdownBaseIndent(md));

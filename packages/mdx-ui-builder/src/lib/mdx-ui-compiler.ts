@@ -1,8 +1,8 @@
 import { aryRemoveItem, deepClone, strHashBase64Fs } from "@iyio/common";
-import { compileAsync, loadMdxJsAsync } from "./_compile";
-import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, getMdxUiNodeText, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib";
-import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types";
-import { getWrapper, wrapClassName } from "./parsing-util";
+import { compileAsync, loadMdxJsAsync } from "./_compile.js";
+import { defaultMdxUiClassNamePrefix, defaultMdxUidDeconstructProps, getMdxUiNodeText, isMdxUiNodeOpen, isMdxUiNodeTextEditable } from "./mdx-ui-builder-lib.js";
+import { MdxUiAtt, MdxUiCompileOptions, MdxUiCompileResult, MdxUiImportReplacement, MdxUiNode, MdxUiNodeMetadata, MdxUiSourceCodeRef } from "./mdx-ui-builder-types.js";
+import { getWrapper, wrapClassName } from "./parsing-util.js";
 
 
 export const compileMdxUiAsync=async (code:string,{

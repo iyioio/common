@@ -1,8 +1,8 @@
-import { DisposeCallback, RecursiveKeyOf } from "./common-types";
-import { objWatchAryMove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { getObjWatcher, isObjWatcherExplicitFilterMatch, stopWatchingObj, wDeleteProp, wSetProp } from "./obj-watch-lib";
-import { ObjRecursiveListener, ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchFilter, ObjWatchFilterValue, ObjWatchListener, PathListenerOptions, PathWatchOptions, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
-import { deepCompare, getValueByAryPath, getValueByReverseAryPath, isNonClassInstanceObject } from "./object";
+import { DisposeCallback, RecursiveKeyOf } from "./common-types.js";
+import { objWatchAryMove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal.js";
+import { getObjWatcher, isObjWatcherExplicitFilterMatch, stopWatchingObj, wDeleteProp, wSetProp } from "./obj-watch-lib.js";
+import { ObjRecursiveListener, ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchFilter, ObjWatchFilterValue, ObjWatchListener, PathListenerOptions, PathWatchOptions, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types.js";
+import { deepCompare, getValueByAryPath, getValueByReverseAryPath, isNonClassInstanceObject } from "./object.js";
 
 
 let nextId=1;

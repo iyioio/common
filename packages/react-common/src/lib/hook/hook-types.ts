@@ -1,5 +1,5 @@
 import { DisposeCallback } from "@iyio/common";
-import { HookCtrl } from "./HookCtrl";
+import { HookCtrl } from "./HookCtrl.js";
 
 export type HookCallback=(state:Record<string,any>,ctrl:HookCtrl)=>void;
 

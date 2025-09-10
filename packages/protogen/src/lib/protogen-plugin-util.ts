@@ -1,6 +1,6 @@
 import { AccessRequestDescription, CommonAccessType, HashMap, PassiveAccessGrantDescription, aryRemoveItem, iamPolicyGrantName, joinPaths, strFirstToLower } from "@iyio/common";
-import { ProtoLibStyle, ProtoParamType } from "./protogen-pipeline-types";
-import { ProtoNode } from "./protogen-types";
+import { ProtoLibStyle, ProtoParamType } from "./protogen-pipeline-types.js";
+import { ProtoNode } from "./protogen-types.js";
 
 export interface ProtoPluginPackagePath
 {

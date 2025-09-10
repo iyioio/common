@@ -4,7 +4,7 @@ import { createUpdateExpression, dynamoClient } from "@iyio/aws-dynamo";
 import { EnvParams, ObjMirror, ScopeModule, initRootScope, unused } from "@iyio/common";
 import { nodeCommonModule } from "@iyio/node-common";
 import { ObjSyncClientCommand, ObjSyncClientConnection, ObjSyncConnectionTable, ObjSyncConnectionTableIndexMap, ObjSyncObjState, ObjSyncObjStateTable, ObjSyncRecursiveObjWatchEvt, ObjSyncRemoteCommand, objSyncAutoMergeLogLengthParam } from "@iyio/obj-sync";
-import { invokeObjSyncCreateDefaultStateFn, invokeObjSyncTransformClientConnectionFn } from "./obj-sync-cdk-fn-clients";
+import { invokeObjSyncCreateDefaultStateFn, invokeObjSyncTransformClientConnectionFn } from "./obj-sync-cdk-fn-clients.js";
 
 let _apiClient:ApiGatewayManagementApiClient|null=null;
 const getApiClient=()=>{

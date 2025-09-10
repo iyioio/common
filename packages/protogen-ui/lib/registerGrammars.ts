@@ -1,5 +1,5 @@
 import hljs from "highlight.js";
-import { pMarkdown } from "./protogen-grammar";
+import { pMarkdown } from "./protogen-grammar.js";
 
 let registered=false;
 

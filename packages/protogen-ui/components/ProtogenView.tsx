@@ -1,10 +1,10 @@
 import { DragTarget, PanZoomCtrl, PanZoomView } from "@iyio/react-common";
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
-import Canvas from "./Canvas";
-import { ProtogenOutputView } from "./ProtogenOutputView";
-import { ProtogenToolbar } from "./ProtogenToolbar";
-import { ProtogenContext } from "./lib-builder-components";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
+import Canvas from "./Canvas.js";
+import { ProtogenOutputView } from "./ProtogenOutputView.js";
+import { ProtogenToolbar } from "./ProtogenToolbar.js";
+import { ProtogenContext } from "./lib-builder-components.js";
 
 interface ProtogenViewProps
 {

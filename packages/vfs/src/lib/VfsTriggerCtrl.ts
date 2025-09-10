@@ -1,8 +1,8 @@
 import { DisposeContainer, Evt, EvtQueue, getDirectoryName, isEvtTriggerMatch, joinPaths, transformTriggerToEvent, tryCallEvtTriggerCallback } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { VfsCtrl } from "./VfsCtrl";
-import { autoFormatVfsTriggers, vfsDefaultConfigFileName as defaultVfsConfigFileName, mergeVfsLocalFsConfig, vfsTopic } from "./vfs-lib";
-import { VfsConfig, VfsItemChangeEvt, VfsLocalFsConfig, VfsTrigger } from "./vfs-types";
+import { VfsCtrl } from "./VfsCtrl.js";
+import { autoFormatVfsTriggers, vfsDefaultConfigFileName as defaultVfsConfigFileName, mergeVfsLocalFsConfig, vfsTopic } from "./vfs-lib.js";
+import { VfsConfig, VfsItemChangeEvt, VfsLocalFsConfig, VfsTrigger } from "./vfs-types.js";
 
 export interface VfsTriggerCtrlOptionsBase
 {

@@ -1,7 +1,7 @@
 import { ReadonlySubject } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { AcComp, AcProp, AcTaggedPropRenderer, AnyCompSaveState } from "./any-comp-types";
-import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers";
+import { AcComp, AcProp, AcTaggedPropRenderer, AnyCompSaveState } from "./any-comp-types.js";
+import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers.js";
 
 export class AnyCompViewCtrl
 {

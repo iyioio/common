@@ -1,5 +1,5 @@
 import { chmod, writeFile } from "fs/promises";
-import { executeProtoPluginAsync } from "../protogen-runtime";
+import { executeProtoPluginAsync } from "../protogen-runtime.js";
 
 executeProtoPluginAsync({
     generate:async ctx=>{

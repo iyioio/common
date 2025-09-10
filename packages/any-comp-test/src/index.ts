@@ -1,2 +1,2 @@
-export * from './lib/TestCompA';
+export * from './lib/TestCompA.js';
 

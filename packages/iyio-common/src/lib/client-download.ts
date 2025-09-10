@@ -1,4 +1,4 @@
-import { isServerSide } from "./common-lib";
+import { isServerSide } from "./common-lib.js";
 
 export const downloadBlob=(name:string, blob:Blob)=>{
     if(isServerSide){

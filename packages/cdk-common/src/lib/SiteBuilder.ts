@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { StaticWebSite, StaticWebSiteProps } from "./StaticWebSite";
-import { isCdkEnvPatternMatch } from "./cdk-lib";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { StaticWebSite, StaticWebSiteProps } from "./StaticWebSite.js";
+import { isCdkEnvPatternMatch } from "./cdk-lib.js";
 
 export interface SiteBuilderProps
 {

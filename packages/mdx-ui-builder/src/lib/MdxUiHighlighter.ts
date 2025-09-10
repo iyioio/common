@@ -1,9 +1,9 @@
 import { atDotCss } from '@iyio/at-dot-css';
 import { DisposeCallback, DisposeContainer, InternalOptions, Point, ReadonlySubject, Rect, aryRemoveItem } from "@iyio/common";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { MdxUiBuilder } from './MdxUiBuilder';
-import { defaultMdxUiClassNamePrefix, getMdxUiPrefixClassName } from './mdx-ui-builder-lib';
-import { MdxUiSelectionEvt } from './mdx-ui-builder-types';
+import { MdxUiBuilder } from './MdxUiBuilder.js';
+import { defaultMdxUiClassNamePrefix, getMdxUiPrefixClassName } from './mdx-ui-builder-lib.js';
+import { MdxUiSelectionEvt } from './mdx-ui-builder-types.js';
 
 export interface MdxUiHighlighterOptions
 {

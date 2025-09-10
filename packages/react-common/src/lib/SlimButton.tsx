@@ -1,5 +1,5 @@
 import { BaseLayoutProps } from '@iyio/common';
-import { ButtonBase, ButtonBaseProps } from "./ButtonBase";
+import { ButtonBase, ButtonBaseProps } from "./ButtonBase.js";
 
 export type SlimButtonProps = ButtonBaseProps & BaseLayoutProps & {unstyled?:boolean};
 

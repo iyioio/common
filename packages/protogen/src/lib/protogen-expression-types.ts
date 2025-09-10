@@ -1,5 +1,5 @@
 import { CancelToken, TimeInterval } from "@iyio/common";
-import { ProtoCallable, ProtoNode } from "./protogen-types";
+import { ProtoCallable, ProtoNode } from "./protogen-types.js";
 
 /**
  * A ProtoExpression is a representation of a ProtoNode that returns a value when evaluated.

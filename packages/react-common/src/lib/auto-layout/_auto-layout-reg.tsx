@@ -1,19 +1,19 @@
 import { AutoLayoutType, BaseLayoutProps } from "@iyio/common";
-import { Alo2x3, Alo2x3Style } from "./Alo2x3";
-import { Alo3x2, Alo3x2Style } from "./Alo3x2";
-import { Alo3x3, Alo3x3Style } from "./Alo3x3";
-import { AloAutoGrid, AloAutoGridStyle, getAloAutoGridStyleVars } from "./AloAutoGrid";
-import { AloQuad, AloQuadStyle } from "./AloQuad";
-import { AloSideBy, AloSideByStyle } from "./AloSideBy";
-import { AloSideBySideScrollLeft, AloSideBySideScrollLeftStyle } from "./AloSideBySideScrollLeft";
-import { AloSideBySideScrollRight, AloSideBySideScrollRightStyle } from "./AloSideBySideScrollRight";
-import { AloTopBottom, AloTopBottomStyle } from "./AloTopBottom";
-import { AloTriBottom, AloTriBottomStyle } from "./AloTriBottom";
-import { AloTriLeft, AloTriLeftStyle } from "./AloTriLeft";
-import { AloTriRight, AloTriRightStyle } from "./AloTriRight";
-import { AloTriTop, AloTriTopStyle } from "./AloTriTop";
-import { AutoLayoutCtrl } from "./AutoLayoutCtrl";
-import { AutoLayoutCompInfo, AutoLayoutSlotOptions, AutoLayoutTypeProps } from "./auto-layout-lib";
+import { Alo2x3, Alo2x3Style } from "./Alo2x3.js";
+import { Alo3x2, Alo3x2Style } from "./Alo3x2.js";
+import { Alo3x3, Alo3x3Style } from "./Alo3x3.js";
+import { AloAutoGrid, AloAutoGridStyle, getAloAutoGridStyleVars } from "./AloAutoGrid.js";
+import { AloQuad, AloQuadStyle } from "./AloQuad.js";
+import { AloSideBy, AloSideByStyle } from "./AloSideBy.js";
+import { AloSideBySideScrollLeft, AloSideBySideScrollLeftStyle } from "./AloSideBySideScrollLeft.js";
+import { AloSideBySideScrollRight, AloSideBySideScrollRightStyle } from "./AloSideBySideScrollRight.js";
+import { AloTopBottom, AloTopBottomStyle } from "./AloTopBottom.js";
+import { AloTriBottom, AloTriBottomStyle } from "./AloTriBottom.js";
+import { AloTriLeft, AloTriLeftStyle } from "./AloTriLeft.js";
+import { AloTriRight, AloTriRightStyle } from "./AloTriRight.js";
+import { AloTriTop, AloTriTopStyle } from "./AloTriTop.js";
+import { AutoLayoutCtrl } from "./AutoLayoutCtrl.js";
+import { AutoLayoutCompInfo, AutoLayoutSlotOptions, AutoLayoutTypeProps } from "./auto-layout-lib.js";
 
 export const getAutoLayoutTypeComp=(
     type:AutoLayoutType,

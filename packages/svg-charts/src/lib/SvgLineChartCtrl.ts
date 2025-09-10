@@ -1,8 +1,8 @@
 import { aryRemoveItem, cn, formatNumberWithBases } from "@iyio/common";
-import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl";
-import { findPathIntersections } from "./path-intersection";
-import { classNamePrefix } from "./svg-charts-lib";
-import { ChartIntersection, SvgChartCtrlOptions } from "./svg-charts-types";
+import { SvgBaseChartCtrl } from "./SvgBaseChartCtrl.js";
+import { findPathIntersections } from "./path-intersection.js";
+import { classNamePrefix } from "./svg-charts-lib.js";
+import { ChartIntersection, SvgChartCtrlOptions } from "./svg-charts-types.js";
 
 interface Line
 {
@@ -34,7 +34,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
 
         this.hoverPath.classList.add('svg-charts-value-line');
         this.hoverPath.style.visibility='hidden';
-        this.svg.insertBefore(this.hoverPath,this.svg.childNodes[0]);
+        this.svg.insertBefore(this.hoverPath,this.svg.childNodes[0]??null);
 
         if(!skipRender){
             this.render();
@@ -83,11 +83,11 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
             if (this.options.enableSnapping) {
                 const nearestIndex = this.findNearestDataPointIndex(x, line.data);
                 const nearestX = (ro.width / (line.data.length - 1)) * nearestIndex;
-                
-                const value = line.data[nearestIndex];
+
+                const value = line.data[nearestIndex]??0;
 
                 const y = ro.diff === 0
-                    ? ro.canvasHeight / 2 
+                    ? ro.canvasHeight / 2
                     : ro.canvasHeight - ((value - ro.min) / ro.diff * ro.canvasHeight);
 
                 line.dot.setAttribute('cx', nearestX.toString());
@@ -107,7 +107,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                     y,
                     clientX: rect.x + ro.left + nearestX,
                     clientY: rect.y + ro.top + y,
-                    value: line.data[nearestIndex],
+                    value: line.data[nearestIndex]??0,
                     valueClass: line.dot.getAttribute('class') ?? '',
                     timestamp: timestamp
                 });
@@ -115,7 +115,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                             //console.log(line.path.getAttribute('d'),this.debugPath.getAttribute('d'))
             const inter=findPathIntersections(line.path.getAttribute('d')??'',this.hoverPath.getAttribute('d')??'',false);
             if(inter?.length){
-                const {x,y}=inter[0];
+                const {x,y}=inter[0]??{x:0,y:0};
                 const offset=10;
 
                 line.dot.setAttribute('cx',x.toString());
@@ -162,7 +162,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         }
 
         for(let i=0;i<this.data.series.length;i++){
-            const data=this.data.series[i];
+            const data=this.data.series[i]??[];
             if(this.lines.length<=i){
                 const group=document.createElementNS('http://www.w3.org/2000/svg','g');
                 const path=document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -198,15 +198,21 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
                 this.canvas.appendChild(group);
                 this.lines.push(line);
             }else{
-                this.lines[i].data=data;
+                const d=this.lines[i];
+                if(d){
+                    d.data=data;
+                }
             }
             this.updateLine(this.lines[i]);
         }
 
     }
 
-    private updateLine(line:Line)
+    private updateLine(line:Line|undefined)
     {
+        if(!line){
+            return;
+        }
         const style=this.getSeriesStyle(line.index);
 
         const count=(this.data.series[0]?.length??0)-1;
@@ -223,7 +229,7 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
 
         for(let i=0;i<line.data.length;i++){
 
-            const v=line.data[i];
+            const v=line.data[i]??0;
             const x=dist*i;
             const y=height-((v-min)/diff*height);
             if(i===0){
@@ -244,7 +250,10 @@ export class SvgLineChartCtrl extends SvgBaseChartCtrl
         line.fillPath.setAttribute('d',strPoints.join(' '));
     }
 
-    private removeLine(line:Line){
+    private removeLine(line:Line|undefined){
+        if(!line){
+            return;
+        }
         line.group.remove();
         aryRemoveItem(this.lines,line);
     }

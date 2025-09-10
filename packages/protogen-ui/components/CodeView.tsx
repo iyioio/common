@@ -1,7 +1,7 @@
 import hljs from 'highlight.js';
 import { useEffect, useMemo } from "react";
-import { registerGrammars } from '../lib/registerGrammars';
-import { CodeLanguage } from './code-lib';
+import { registerGrammars } from '../lib/registerGrammars.js';
+import { CodeLanguage } from './code-lib.js';
 import "./code-style";
 
 interface CodeViewProps

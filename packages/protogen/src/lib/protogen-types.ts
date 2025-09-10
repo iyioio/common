@@ -1,6 +1,6 @@
 import { HashMap, Point } from "@iyio/common";
 import { ZodError, ZodSchema } from "zod";
-import { ProtoPipelineConfig } from "./protogen-pipeline-types";
+import { ProtoPipelineConfig } from "./protogen-pipeline-types.js";
 
 export interface ProtoConfig
 {

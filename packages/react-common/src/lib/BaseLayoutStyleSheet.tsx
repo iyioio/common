@@ -1,6 +1,6 @@
 import { BaseLayoutCssOptions, baseLayoutIncrementalMap, currentBreakpoints, generateBaseLayoutCss, isServerSide, styleSheetRenderer } from '@iyio/common';
 import { useMemo } from 'react';
-import { useSubject } from './rxjs-hooks';
+import { useSubject } from './rxjs-hooks.js';
 
 const sheetId=`iyio-common-BaseLayout`;
 

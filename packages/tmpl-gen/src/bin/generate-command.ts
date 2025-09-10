@@ -1,7 +1,7 @@
 import { parseCliArgsT } from "@iyio/common";
 import { nodeCopyToClipboard } from "@iyio/node-common";
 import { writeFile } from "fs/promises";
-import { GenerateObjectFileSystemTemplateOptions, generateObjectFileSystemTemplateAsync } from "../lib/templateGenerator";
+import { GenerateObjectFileSystemTemplateOptions, generateObjectFileSystemTemplateAsync } from "../lib/templateGenerator.js";
 
 interface Args extends Omit<GenerateObjectFileSystemTemplateOptions,'output'>
 {
@@ -13,7 +13,7 @@ const args=parseCliArgsT<Args>({
     args:process.argv,
     startIndex:2,
     converter:{
-        sourceDir:args=>args[0],
+        sourceDir:args=>args[0]??'',
         baseName:args=>args[0],
         ignore:args=>args,
         recursive:args=>args.length===0 || Boolean(args[0]??'false'),

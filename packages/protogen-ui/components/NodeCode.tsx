@@ -1,7 +1,7 @@
 import { useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { NodeCtrl } from "../lib/NodeCtrl";
-import { CodeInput } from "./CodeInput";
+import { NodeCtrl } from "../lib/NodeCtrl.js";
+import { CodeInput } from "./CodeInput.js";
 
 interface NodeCodeProps
 {

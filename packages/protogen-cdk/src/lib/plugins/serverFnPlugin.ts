@@ -2,7 +2,7 @@ import { SiteContentSourceDescription } from "@iyio/cdk-common";
 import { getSubstringCount, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, addPackageInfoToProtoType, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildrenByName, protoIsTsBuiltType, protoLabelOutputLines, protoNodeChildrenToAccessRequests, protoNodeChildrenToGrantAccessRequests, protoPrependTsImports } from "@iyio/protogen";
 import { z } from "zod";
-import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate";
+import { FnInfoTemplate, serverFnCdkTemplate } from "./serverFnCdkTemplate.js";
 
 const supportedTypes=['serverFn'];
 

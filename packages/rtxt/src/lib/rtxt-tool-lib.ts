@@ -1,5 +1,5 @@
-import type { RTxtEditor } from "./RTxtEditor";
-import { selectRTxtSelection } from "./rtxt-lib";
+import type { RTxtEditor } from "./RTxtEditor.js";
+import { selectRTxtSelection } from "./rtxt-lib.js";
 
 export interface CreateRTxtToolButtonOptions
 {

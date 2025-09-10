@@ -1,10 +1,10 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { CancelToken } from './CancelToken';
-import { createScopedSetter } from './Setter';
-import { ScopeReset } from './_internal.common';
-import { delayAsync } from './common-lib';
-import { createScope, defineBoolParam, defineCallableType, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib';
-import { Scope, ScopeRegistration } from './scope-types';
+import { CancelToken } from './CancelToken.js';
+import { createScopedSetter } from './Setter.js';
+import { ScopeReset } from './_internal.common.js';
+import { delayAsync } from './common-lib.js';
+import { createScope, defineBoolParam, defineCallableType, defineNumberParam, defineObservable, defineParam, defineReadonlyObservable, defineService, defineStringParam, defineType, initRootScope, rootScope } from './scope-lib.js';
+import { Scope, ScopeRegistration } from './scope-types.js';
 
 
 type Speed='fast'|'slow';

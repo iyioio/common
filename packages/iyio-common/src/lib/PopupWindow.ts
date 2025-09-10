@@ -1,6 +1,6 @@
-import { CancelToken } from "./CancelToken";
-import { queryParamsToObject } from "./object";
-import { uuid } from "./uuid";
+import { CancelToken } from "./CancelToken.js";
+import { queryParamsToObject } from "./object.js";
+import { uuid } from "./uuid.js";
 
 export const popupWindowMessagePrefix='<PopupWindow>:';
 

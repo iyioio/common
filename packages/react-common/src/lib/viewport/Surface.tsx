@@ -1,11 +1,11 @@
 import { BaseLayoutInnerProps } from "@iyio/common";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView } from "../ScrollView";
-import { View } from "../View";
-import { useSubject } from "../rxjs-hooks";
-import { SurfaceCtrl } from "./SurfaceCtrl";
-import { viewportStyle } from "./Viewport";
-import { SurfaceCtrlReactContext, useViewportCtrl } from "./viewport-lib";
+import { ScrollView } from "../ScrollView.js";
+import { View } from "../View.js";
+import { useSubject } from "../rxjs-hooks.js";
+import { SurfaceCtrl } from "./SurfaceCtrl.js";
+import { viewportStyle } from "./Viewport.js";
+import { SurfaceCtrlReactContext, useViewportCtrl } from "./viewport-lib.js";
 
 export interface SurfaceProps
 {

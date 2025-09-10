@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
-import { PanZoomCtrl } from "./PanZoomView";
-import { SlimButton } from "./SlimButton";
+import { PanZoomCtrl } from "./PanZoomView.js";
+import { SlimButton } from "./SlimButton.js";
 
 export interface PanZoomControlsProps
 {

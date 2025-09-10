@@ -1,6 +1,6 @@
 import { Size } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { useIntersectionObserver } from "./useIntersectionObserver";
+import { useIntersectionObserver } from "./useIntersectionObserver.js";
 
 export interface UseLazyRenderOptions
 {

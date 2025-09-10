@@ -1,6 +1,6 @@
 import { parseJson5 } from '@iyio/json5';
 import { Statement } from 'estree-jsx';
-import { MdxUiAtt, MdxUiCachedComponent, MdxUiDeconstructProp, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types";
+import { MdxUiAtt, MdxUiCachedComponent, MdxUiDeconstructProp, MdxUiNode, MdxUiSelection, MdxUiSelectionItem, MdxUiSourceCodeRef, MdxUiSourceMap, MdxUiSrcStartEnd } from "./mdx-ui-builder-types.js";
 
 export const defaultMdxUiClassNamePrefix='mdx-ui-builder-node-';
 

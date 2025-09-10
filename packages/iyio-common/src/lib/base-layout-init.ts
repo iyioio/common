@@ -1,5 +1,5 @@
-import { BaseLayoutCssOptions } from "./base-layout-generator-types";
-import { currentBreakpoints } from "./window-size-lib";
+import { BaseLayoutCssOptions } from "./base-layout-generator-types.js";
+import { currentBreakpoints } from "./window-size-lib.js";
 
 let baseLayoutInited=false;
 

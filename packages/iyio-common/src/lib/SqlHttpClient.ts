@@ -1,9 +1,9 @@
-import { httpClient } from "./http.deps";
-import { HttpClient } from "./HttpClient";
-import { defineStringParam } from "./scope-lib";
-import { Scope } from "./scope-types";
-import { ISqlTransaction, SqlExecCommand, SqlResult, SqlTransactionStatus } from "./sql-types";
-import { SqlBaseClient } from "./SqlBaseClient";
+import { httpClient } from "./http.deps.js";
+import { HttpClient } from "./HttpClient.js";
+import { defineStringParam } from "./scope-lib.js";
+import { Scope } from "./scope-types.js";
+import { ISqlTransaction, SqlExecCommand, SqlResult, SqlTransactionStatus } from "./sql-types.js";
+import { SqlBaseClient } from "./SqlBaseClient.js";
 
 export const sqlHttpClientUrlParam=defineStringParam('sqlHttpClientUrl');
 

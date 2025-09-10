@@ -2,7 +2,7 @@ import { SqlMigration } from '@iyio/common';
 import { CustomResource, Duration, Stack } from 'aws-cdk-lib';
 import * as cr from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
-import { NodeFn } from './NodeFn';
+import { NodeFn } from './NodeFn.js';
 
 
 export interface SqlDbMigratorOptions {

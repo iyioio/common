@@ -1,9 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { SlimButton } from "@iyio/react-common";
 import { useEffect, useRef, useState } from "react";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { acStyle } from "./any-comp-style";
-import { AcProp } from "./any-comp-types";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { acStyle } from "./any-comp-style.js";
+import { AcProp } from "./any-comp-types.js";
 
 
 const allNormalInputTypes=['string','number','boolean'] as const;

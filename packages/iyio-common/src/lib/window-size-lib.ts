@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { Subscription } from "rxjs/internal/Subscription";
-import { IDisposable, Size } from "./common-types";
-import { ReadonlySubject } from "./rxjs-types";
+import { IDisposable, Size } from "./common-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export const fallbackWindowWidth=1280;
 export const fallbackWindowHeight=720;

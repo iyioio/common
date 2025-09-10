@@ -1,7 +1,7 @@
 import { AttributeValue, QueryCommandInput, ScanCommandInput, UpdateItemInput } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 import { deleteUndefined, getObjKeyCount } from "@iyio/common";
-import { ExtendedItemUpdateOptions, ItemPatch, QueryMatchTableOptions, ScanMatchTableOptions, isFilterExpression, isUpdateExpression } from "./dynamo-types";
+import { ExtendedItemUpdateOptions, ItemPatch, QueryMatchTableOptions, ScanMatchTableOptions, isFilterExpression, isUpdateExpression } from "./dynamo-types.js";
 
 
 export function createItemUpdateInputOrNull<T>(

@@ -9,11 +9,11 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { getDefaultVpc } from './cdk-lib';
-import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget } from './cdk-types';
-import { requireDefaultCluster } from './cluster-lib';
-import { defaultContainerIgnoreOverrides, getCdkContainerIgnorePaths } from './getCdkContainerIgnorePaths';
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { getDefaultVpc } from './cdk-lib.js';
+import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget } from './cdk-types.js';
+import { requireDefaultCluster } from './cluster-lib.js';
+import { defaultContainerIgnoreOverrides, getCdkContainerIgnorePaths } from './getCdkContainerIgnorePaths.js';
 
 export interface ContainerProps
 {

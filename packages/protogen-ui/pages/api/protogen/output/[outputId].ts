@@ -1,6 +1,6 @@
 import { arySingle } from '@iyio/common';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getApiOutput } from '../../../../lib/protogen-api-lib';
+import { getApiOutput } from '../../../../lib/protogen-api-lib.js';
 
 export default async function protogenApiHandler (req: NextApiRequest, res: NextApiResponse)
 {

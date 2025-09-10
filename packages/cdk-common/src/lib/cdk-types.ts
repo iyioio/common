@@ -13,13 +13,13 @@ import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
-import type { BridgeEvent } from "./BridgeEvent";
-import type { Container } from "./Container";
-import type { ManagedProps } from "./ManagedProps";
-import type { ParamOutput } from "./ParamOutput";
-import type { SqlCluster } from "./SqlCluster";
-import type { StaticWebSite } from "./StaticWebSite";
-import type { UserPoolBuilder } from "./UserPoolBuilder";
+import type { BridgeEvent } from "./BridgeEvent.js";
+import type { Container } from "./Container.js";
+import type { ManagedProps } from "./ManagedProps.js";
+import type { ParamOutput } from "./ParamOutput.js";
+import type { SqlCluster } from "./SqlCluster.js";
+import type { StaticWebSite } from "./StaticWebSite.js";
+import type { UserPoolBuilder } from "./UserPoolBuilder.js";
 
 export interface IParamOutputConsumer
 {

@@ -1,5 +1,5 @@
-import { defineFactory } from "./scope-lib";
-import { WebSocketFactory } from "./ws";
+import { defineFactory } from "./scope-lib.js";
+import { WebSocketFactory } from "./ws.js";
 
 export const webSocketFactory=defineFactory<WebSocketFactory>(
     'webSocketFactory',

@@ -1,2 +1,2 @@
-export * from './lib/pkg';
+export * from './lib/pkg.js';
 

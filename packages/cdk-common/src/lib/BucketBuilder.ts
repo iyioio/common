@@ -6,10 +6,10 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import * as s3Notifications from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { isCdkEnvPatternMatch } from "./cdk-lib";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
-import { createBucket } from "./createBucket";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { isCdkEnvPatternMatch } from "./cdk-lib.js";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types.js";
+import { createBucket } from "./createBucket.js";
 
 export interface BucketBuilderProps
 {

@@ -1,5 +1,5 @@
-export * from './lib/JSON5';
-export * from './lib/json5-types';
-export * from './lib/parse';
-export * from './lib/stringify';
+export * from './lib/JSON5.js';
+export * from './lib/json5-types.js';
+export * from './lib/parse.js';
+export * from './lib/stringify.js';
 

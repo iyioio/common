@@ -1,6 +1,6 @@
 import { BehaviorSubject } from "rxjs";
-import { Size } from "./common-types";
-import { ReadonlySubject } from "./rxjs-types";
+import { Size } from "./common-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export class ElementSizeObserver
 {

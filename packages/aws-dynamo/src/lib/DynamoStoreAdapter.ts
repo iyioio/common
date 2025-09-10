@@ -1,5 +1,5 @@
 import { BaseStore, convertStorePathToSqlPathInfo, CreateStoreValueResult, InvalidStoreKeyError, joinPaths, SqlPathInfo, StoreKeyScope } from "@iyio/common";
-import { DynamoClient } from "./DynamoClient";
+import { DynamoClient } from "./DynamoClient.js";
 
 
 

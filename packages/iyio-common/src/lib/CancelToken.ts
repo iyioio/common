@@ -1,6 +1,6 @@
-import { aryRemoveItem } from "./array";
-import { DisposeCallback } from "./common-types";
-import { CanceledError } from "./errors";
+import { aryRemoveItem } from "./array.js";
+import { DisposeCallback } from "./common-types.js";
+import { CanceledError } from "./errors.js";
 
 export class CancelToken
 {

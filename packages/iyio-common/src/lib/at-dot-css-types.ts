@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AllBaseLayoutProps } from "./base-layout";
-import { ClassNameValue } from "./css";
-import type { StyleSheetOrder } from "./css-order";
-import { Trim, UnionToIntersection, WhiteSpace } from "./typescript-util-types";
+import { AllBaseLayoutProps } from "./base-layout.js";
+import { ClassNameValue } from "./css.js";
+import type { StyleSheetOrder } from "./css-order.js";
+import { Trim, UnionToIntersection, WhiteSpace } from "./typescript-util-types.js";
 
 
 

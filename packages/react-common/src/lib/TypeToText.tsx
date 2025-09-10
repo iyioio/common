@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Text, TextProps } from "./Text";
+import { Text, TextProps } from "./Text.js";
 
 export interface TypeToTextProps extends Omit<TextProps,'children'>
 {

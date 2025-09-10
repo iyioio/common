@@ -1,4 +1,4 @@
-import { atDotCss, getAtDotCtrl } from './at-dot-css';
+import { atDotCss, getAtDotCtrl } from './at-dot-css.js';
 
 const st={
     color:'red'

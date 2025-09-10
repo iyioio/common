@@ -1,4 +1,4 @@
-import { LazyImage, LazyImageProps } from "./LazyImage";
+import { LazyImage, LazyImageProps } from "./LazyImage.js";
 
 export interface AdvImageProps extends Omit<LazyImageProps,'notLazy'>
 {

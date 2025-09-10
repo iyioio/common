@@ -1,5 +1,5 @@
 import { parseCliArgsT } from "@iyio/common";
-import { ProtoCliAliases, ProtoPipelineConfigCliConverter } from "./protogen-pipeline-types";
+import { ProtoCliAliases, ProtoPipelineConfigCliConverter } from "./protogen-pipeline-types.js";
 
 export const protoCliFlags={
     input:'-i',

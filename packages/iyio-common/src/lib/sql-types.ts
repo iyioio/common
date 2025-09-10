@@ -1,7 +1,7 @@
 import { ZodSchema } from "zod";
-import { CancelToken } from "./CancelToken";
-import { NoId, ValueRef } from "./common-types";
-import { DataTableDescription } from "./data-table";
+import { CancelToken } from "./CancelToken.js";
+import { NoId, ValueRef } from "./common-types.js";
+import { DataTableDescription } from "./data-table.js";
 
 export interface SqlRequest
 {

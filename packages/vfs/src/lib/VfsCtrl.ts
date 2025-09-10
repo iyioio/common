@@ -1,11 +1,11 @@
 import { CancelToken, DisposeCallback, DisposeContainer, EvtQueue, UnauthorizedError, ValueRef, deepClone, getUriProtocol, joinPaths, minuteMs } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { VfsMntCtrl } from "./VfsMntCtrl";
-import { VfsShellStream } from "./VfsShellStream";
-import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl";
-import { vfsMntPtProvider } from "./vfs-deps";
-import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, testVfsFilter, vfsTopic } from "./vfs-lib";
-import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
+import { VfsMntCtrl } from "./VfsMntCtrl.js";
+import { VfsShellStream } from "./VfsShellStream.js";
+import { VfsTriggerCtrl, VfsTriggerCtrlOptionsBase } from "./VfsTriggerCtrl.js";
+import { vfsMntPtProvider } from "./vfs-deps.js";
+import { createNotFoundVfsDirReadResult, getVfsSourceUrl, normalizeVfsPath, sortVfsMntPt, testVfsFilter, vfsTopic } from "./vfs-lib.js";
+import { VfsConfig, VfsDirReadOptions, VfsDirReadRecursiveOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsMntPtProviderConfig, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types.js";
 
 export interface VfsCtrlOptions
 {

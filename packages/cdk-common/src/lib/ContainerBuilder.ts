@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
-import { Container, ContainerProps } from "./Container";
-import { ManagedProps } from "./ManagedProps";
+import { Container, ContainerProps } from "./Container.js";
+import { ManagedProps } from "./ManagedProps.js";
 
 export interface ContainerInfo extends ContainerProps
 {

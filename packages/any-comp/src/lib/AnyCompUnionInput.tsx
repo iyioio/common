@@ -1,11 +1,11 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { useAlphaId } from "@iyio/react-common";
-import { AnyCompInputShell } from "./AnyCompInputShell";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { acTags, parseAcBoolLabel } from "./any-comp-lib";
-import { useUpdateOnAnyCompPropChange } from "./any-comp-react-lib";
-import { acStyle } from "./any-comp-style";
-import { AcProp, AnyCompBoolLabels } from "./any-comp-types";
+import { AnyCompInputShell } from "./AnyCompInputShell.js";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { acTags, parseAcBoolLabel } from "./any-comp-lib.js";
+import { useUpdateOnAnyCompPropChange } from "./any-comp-react-lib.js";
+import { acStyle } from "./any-comp-style.js";
+import { AcProp, AnyCompBoolLabels } from "./any-comp-types.js";
 
 export interface AnyCompUnionInputProps
 {

@@ -1,7 +1,7 @@
-import { AllBaseLayoutProps, BaseLayoutAnimationProps, baseLayoutVarPrefix } from "./base-layout";
-import { getBaseLayoutDefaults } from "./base-layout-defaults";
-import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions, FontFace } from "./base-layout-generator-types";
-import { currentBreakpoints } from "./window-size-lib";
+import { AllBaseLayoutProps, BaseLayoutAnimationProps, baseLayoutVarPrefix } from "./base-layout.js";
+import { getBaseLayoutDefaults } from "./base-layout-defaults.js";
+import { BaseLayoutCssGenerationOptions, BaseLayoutCssOptions, FontFace } from "./base-layout-generator-types.js";
+import { currentBreakpoints } from "./window-size-lib.js";
 
 const pf=baseLayoutVarPrefix;
 

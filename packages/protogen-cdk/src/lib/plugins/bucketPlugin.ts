@@ -1,7 +1,7 @@
 import { protoAddContextParam, protoGetChildrenByName, protoGetParamName, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { parseProtoEventDestinations } from "../protogen-cdk-lib";
-import { bucketCdkTemplate, BucketInfoTemplate } from "./bucketCdkTemplate";
+import { parseProtoEventDestinations } from "../protogen-cdk-lib.js";
+import { bucketCdkTemplate, BucketInfoTemplate } from "./bucketCdkTemplate.js";
 
 const supportedTypes=['bucket'];
 

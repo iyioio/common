@@ -1,15 +1,15 @@
-import { HttpDefaultFetcher } from "./HttpDefaultFetcher";
-import { delayAsync, unused } from "./common-lib";
-import { HashMap } from "./common-types";
-import { BaseError, HttpBaseUrlPrefixNotFoundError } from "./errors";
-import { encodeURIFormBody } from "./http-lib";
-import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types";
-import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps";
-import { JwtProvider } from "./jwt";
-import { JwtProviders } from "./jwt.deps";
-import { deleteUndefined, deleteUndefinedOrNull } from "./object";
-import { Scope, TypeDef } from "./scope-types";
-import { getUriProtocol } from "./uri";
+import { HttpDefaultFetcher } from "./HttpDefaultFetcher.js";
+import { delayAsync, unused } from "./common-lib.js";
+import { HashMap } from "./common-types.js";
+import { BaseError, HttpBaseUrlPrefixNotFoundError } from "./errors.js";
+import { encodeURIFormBody } from "./http-lib.js";
+import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types.js";
+import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps.js";
+import { JwtProvider } from "./jwt.js";
+import { JwtProviders } from "./jwt.deps.js";
+import { deleteUndefined, deleteUndefinedOrNull } from "./object.js";
+import { Scope, TypeDef } from "./scope-types.js";
+import { getUriProtocol } from "./uri.js";
 
 /**
  * Options for configuring requests sent by the HttpClient class

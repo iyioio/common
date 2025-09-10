@@ -1,4 +1,4 @@
-export * from './lib/BarSvgChartView';
-export * from './lib/BaseSvgChartView';
-export * from './lib/LineSvgChartView';
+export * from './lib/BarSvgChartView.js';
+export * from './lib/BaseSvgChartView.js';
+export * from './lib/LineSvgChartView.js';
 

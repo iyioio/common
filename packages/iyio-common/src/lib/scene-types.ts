@@ -1,5 +1,5 @@
 import { ZodSchema } from "zod";
-import { OptionalId } from "./common-types";
+import { OptionalId } from "./common-types.js";
 
 export interface ScenePartial
 {

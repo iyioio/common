@@ -1,5 +1,5 @@
-import type { BaseUser } from "./BaseUser";
-import { createSetter } from "./Setter";
+import type { BaseUser } from "./BaseUser.js";
+import { createSetter } from "./Setter.js";
 
 export const TypeDefStaticValue=Symbol('TypeDefStaticValue');
 export const TypeDefDefaultValue=Symbol('TypeDefDefaultValue');

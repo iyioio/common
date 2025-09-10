@@ -1,6 +1,6 @@
-import { deepCompare, getValueByPath } from "./object";
-import { starStringTest } from "./regex-lib";
-import { ValueCondition, isValueConditionGroup } from "./value-condition-types";
+import { deepCompare, getValueByPath } from "./object.js";
+import { starStringTest } from "./regex-lib.js";
+import { ValueCondition, isValueConditionGroup } from "./value-condition-types.js";
 
 export const testValueCondition=(condition:ValueCondition,value:any):boolean=>{
 

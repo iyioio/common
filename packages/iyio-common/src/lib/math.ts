@@ -1,4 +1,4 @@
-import { Point, Rect, Sides } from "./common-types";
+import { Point, Rect, Sides } from "./common-types.js";
 
 export const getDistanceBetweenPoints=(p1:Point,p2:Point):number=>{
 

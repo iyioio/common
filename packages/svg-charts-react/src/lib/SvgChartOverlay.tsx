@@ -32,7 +32,7 @@ export function SvgChartOverlay({
             }
 
 
-            const x=v[0].clientX;
+            const x=v[0]?.clientX??0;
             const y=v.reduce((p,c)=>Math.min(p,c.clientY),Number.MAX_VALUE);
 
             elem.style.display='flex';

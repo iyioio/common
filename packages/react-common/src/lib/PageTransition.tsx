@@ -1,6 +1,6 @@
 import { cn, getObjKeyCount, HashMap, isServerSide, RouteInfo } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
-import { RouteCtx } from "./useRoute";
+import { RouteCtx } from "./useRoute.js";
 
 let childId=0;
 let firstKey:string|null=null;

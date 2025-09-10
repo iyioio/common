@@ -1,4 +1,4 @@
-import { strHashBase64 } from './string-hashing';
+import { strHashBase64 } from './string-hashing.js';
 
 describe('string-hashing',()=>{
 

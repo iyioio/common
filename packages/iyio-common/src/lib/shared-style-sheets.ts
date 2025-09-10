@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { SharedStyleSheet } from "./shared-style-sheets-types";
+import { SharedStyleSheet } from "./shared-style-sheets-types.js";
 
 export const sharedStyleSheets:SharedStyleSheet[]=[];
 

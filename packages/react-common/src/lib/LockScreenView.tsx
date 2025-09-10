@@ -2,15 +2,15 @@ import { atDotCss } from '@iyio/at-dot-css';
 import { UiLock, cn } from '@iyio/common';
 import { useEffect, useMemo, useState } from 'react';
 import { BehaviorSubject } from 'rxjs';
-import { JsonView } from './JsonView';
-import { LoadingIndicator } from './LoadingIndicator';
-import { Portal } from './Portal';
-import { ProgressBar } from './ProgressBar';
-import { SlimButton } from './SlimButton';
-import { Text } from './Text';
-import { View } from './View';
-import { BasicIcon } from './icon/BasicIcon';
-import { useSubject } from './rxjs-hooks';
+import { JsonView } from './JsonView.js';
+import { LoadingIndicator } from './LoadingIndicator.js';
+import { Portal } from './Portal.js';
+import { ProgressBar } from './ProgressBar.js';
+import { SlimButton } from './SlimButton.js';
+import { Text } from './Text.js';
+import { View } from './View.js';
+import { BasicIcon } from './icon/BasicIcon.js';
+import { useSubject } from './rxjs-hooks.js';
 
 interface LockScreenViewProps
 {

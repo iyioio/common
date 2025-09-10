@@ -2,8 +2,8 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, bcn, cn, isServerSide, uiReadyDelayedSubject, uiReadySubject } from "@iyio/common";
 import { CSSProperties, useEffect, useInsertionEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
-import { PageContext, PageCtx, commonPagePropsSubject, disablePageClipSubject, pageScrollPositionSubject } from "./page-lib";
-import { useSubject } from "./rxjs-hooks";
+import { PageContext, PageCtx, commonPagePropsSubject, disablePageClipSubject, pageScrollPositionSubject } from "./page-lib.js";
+import { useSubject } from "./rxjs-hooks.js";
 
 export interface BasePageProps<T=any> extends BaseLayoutProps
 {

@@ -1,12 +1,12 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { ErrorBoundary, ScrollView, SlimButton, Text, View, useSubject } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { AnyComp } from "./AnyComp";
-import { AnyCompPropsView } from "./AnyCompPropsView";
-import { useCreateAnyCompViewCtrl } from "./any-comp-react-lib";
-import { acStyle } from "./any-comp-style";
-import { AcComp, AcTaggedPropRenderer } from "./any-comp-types";
-import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers";
+import { AnyComp } from "./AnyComp.js";
+import { AnyCompPropsView } from "./AnyCompPropsView.js";
+import { useCreateAnyCompViewCtrl } from "./any-comp-react-lib.js";
+import { acStyle } from "./any-comp-style.js";
+import { AcComp, AcTaggedPropRenderer } from "./any-comp-types.js";
+import { defaultAcPropRenderers } from "./prop-renderers/_default-prop-renderers.js";
 
 
 export interface AnyCompContainerProps

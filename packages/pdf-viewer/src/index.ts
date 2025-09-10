@@ -1,8 +1,8 @@
-export * from './lib/LazyPdfView';
-export * from './lib/PdfReader';
-export * from './lib/PdfReaderPool';
-export * from './lib/PdfView';
-export * from './lib/pdf-hooks';
-export * from './lib/pdf-lib';
-export * from './lib/pdf-snapshot';
+export * from './lib/LazyPdfView.js';
+export * from './lib/PdfReader.js';
+export * from './lib/PdfReaderPool.js';
+export * from './lib/PdfView.js';
+export * from './lib/pdf-hooks.js';
+export * from './lib/pdf-lib.js';
+export * from './lib/pdf-snapshot.js';
 

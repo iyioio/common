@@ -1,5 +1,5 @@
 import { useSubject } from "@iyio/react-common";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
 
 
 export interface AnyCompProps

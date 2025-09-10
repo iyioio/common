@@ -2,7 +2,7 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { base64UrlReg, createBase64DataUrl, domListener, dupDeleteUndefined, isDomNodeDescendantOf, MutableRef, Point, Sides } from "@iyio/common";
 import { createContext, MouseEvent, TouchEvent, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject } from "rxjs";
-import { PanZoomControls } from "./PanZoomControls";
+import { PanZoomControls } from "./PanZoomControls.js";
 
 export type PanZoomDragElem=HTMLElement|SVGElement;
 

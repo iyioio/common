@@ -1,8 +1,8 @@
 import { HttpClient, NotFoundError, getObjKeyCount, httpClient, joinPaths, objectToQueryParamsJson } from "@iyio/common";
-import { VfsCtrl } from "./VfsCtrl";
-import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
-import { vfsMntTypes } from "./vfs-lib";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType } from "./vfs-types";
+import { VfsCtrl } from "./VfsCtrl.js";
+import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl.js";
+import { vfsMntTypes } from "./vfs-lib.js";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType } from "./vfs-types.js";
 
 export interface VfsHttpProxyMntCtrlOptions extends VfsMntCtrlOptions
 {

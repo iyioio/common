@@ -1,8 +1,8 @@
-import { CancelToken } from "./CancelToken";
-import { IOpDisposable } from "./common-types";
-import { ListPointer, ValuePointer } from "./pointers";
-import { Query } from "./query-types";
-import { TypeDef } from "./scope-types";
+import { CancelToken } from "./CancelToken.js";
+import { IOpDisposable } from "./common-types.js";
+import { ListPointer, ValuePointer } from "./pointers.js";
+import { Query } from "./query-types.js";
+import { TypeDef } from "./scope-types.js";
 
 
 export type StoreOp='get'|'put'|'patch'|'create'|'delete'|'query'|'watch'|'watchQuery';

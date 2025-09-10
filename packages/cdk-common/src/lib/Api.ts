@@ -4,10 +4,10 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as elbv2Targets from "aws-cdk-lib/aws-elasticloadbalancingv2-targets";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { getDefaultVpc } from "./cdk-lib";
-import { ApiRoute, ApiRouteTarget, IApiRouter } from "./cdk-types";
-import { CorsOptions, createCorsFn } from "./cors-fn";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { getDefaultVpc } from "./cdk-lib.js";
+import { ApiRoute, ApiRouteTarget, IApiRouter } from "./cdk-types.js";
+import { CorsOptions, createCorsFn } from "./cors-fn.js";
 
 export interface ApiProps
 {

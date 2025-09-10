@@ -1,6 +1,6 @@
 import { EnvParams, createScope, deepCompare, delayAsync, secondMs, shortUuid, wAryMove, wAryPush, wSetProp } from '@iyio/common';
 import { nodeWsModule } from '@iyio/node-common';
-import { ObjSyncWebsocketClient } from './ObjSyncWebsocketClient';
+import { ObjSyncWebsocketClient } from './ObjSyncWebsocketClient.js';
 
 const testTimeout=secondMs*30;
 

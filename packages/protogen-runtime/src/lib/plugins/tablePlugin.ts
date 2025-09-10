@@ -1,8 +1,8 @@
 import { ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { generateProtoTable } from "../protogen-table-generator";
-import { SharedTsPluginConfigScheme } from "../sharedTsConfig";
-import { tableCdkTemplate } from "./tableCdkTemplate";
+import { generateProtoTable } from "../protogen-table-generator.js";
+import { SharedTsPluginConfigScheme } from "../sharedTsConfig.js";
+import { tableCdkTemplate } from "./tableCdkTemplate.js";
 
 const TablePluginConfig=z.object(
 {

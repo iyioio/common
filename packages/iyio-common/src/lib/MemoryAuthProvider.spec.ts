@@ -1,11 +1,11 @@
-import { AuthRegisterStatus } from "./auth-types";
-import { AuthProviders, authService, currentBaseUser } from "./auth.deps";
-import { MemoryAuthProvider } from './MemoryAuthProvider';
-import { MemoryStore } from "./MemoryStore";
-import { createScope } from "./scope-lib";
-import { Scope } from "./scope-types";
-import { storeRoot } from "./store.deps";
-import { shortUuid } from "./uuid";
+import { AuthRegisterStatus } from "./auth-types.js";
+import { AuthProviders, authService, currentBaseUser } from "./auth.deps.js";
+import { MemoryAuthProvider } from './MemoryAuthProvider.js';
+import { MemoryStore } from "./MemoryStore.js";
+import { createScope } from "./scope-lib.js";
+import { Scope } from "./scope-types.js";
+import { storeRoot } from "./store.deps.js";
+import { shortUuid } from "./uuid.js";
 
 describe('MemoryAuthProvider',()=>{
 

@@ -1,5 +1,5 @@
-import { nameToEnvName } from "./common-lib";
-import { ParamProvider } from "./scope-types";
+import { nameToEnvName } from "./common-lib.js";
+import { ParamProvider } from "./scope-types.js";
 
 export class EnvParams implements ParamProvider
 {

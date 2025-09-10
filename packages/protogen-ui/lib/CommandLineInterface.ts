@@ -1,5 +1,5 @@
 import { ConsoleEntry, addConsoleListener, delayAsync, removeConsoleListener } from "@iyio/common";
-import { ProtogenCtrl } from "./ProtogenCtrl";
+import { ProtogenCtrl } from "./ProtogenCtrl.js";
 
 const cliKey='protogen-cli-history';
 const maxHistory=1000;

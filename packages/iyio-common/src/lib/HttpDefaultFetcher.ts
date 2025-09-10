@@ -1,4 +1,4 @@
-import { BaseHttpRequest, HttpFetcher } from "./http-types";
+import { BaseHttpRequest, HttpFetcher } from "./http-types.js";
 
 export class HttpDefaultFetcher implements HttpFetcher
 {

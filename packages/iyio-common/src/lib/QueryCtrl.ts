@@ -1,19 +1,19 @@
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { Subscription } from "rxjs/internal/Subscription";
-import { queryRecordStorePathParam } from "./QueryCtrl.deps";
-import { downloadObject } from "./client-download";
-import { unused } from "./common-lib";
-import { joinPaths } from "./fs";
-import { deepClone, deepCompare, objGetFirstValue } from "./object";
-import { defaultQueryRecordStorePath } from "./query-ctrl-lib";
-import { sortStaticQuery } from "./query-static-operators";
-import { Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator, isBaseQueryRecord, isQuery, isQueryWithData } from "./query-types";
-import { queryClient } from "./query.deps";
-import { ReadonlySubject } from "./rxjs-types";
-import { Scope } from "./scope-types";
-import { buildQuery } from "./sql-query-builder";
-import { IStore } from "./store-types";
-import { storeRoot } from "./store.deps";
+import { queryRecordStorePathParam } from "./QueryCtrl.deps.js";
+import { downloadObject } from "./client-download.js";
+import { unused } from "./common-lib.js";
+import { joinPaths } from "./fs.js";
+import { deepClone, deepCompare, objGetFirstValue } from "./object.js";
+import { defaultQueryRecordStorePath } from "./query-ctrl-lib.js";
+import { sortStaticQuery } from "./query-static-operators.js";
+import { Query, QueryOptions, QueryOrQueryWithData, StaticQueryOperator, isBaseQueryRecord, isQuery, isQueryWithData } from "./query-types.js";
+import { queryClient } from "./query.deps.js";
+import { ReadonlySubject } from "./rxjs-types.js";
+import { Scope } from "./scope-types.js";
+import { buildQuery } from "./sql-query-builder.js";
+import { IStore } from "./store-types.js";
+import { storeRoot } from "./store.deps.js";
 
 const cloneMaxDepth=100;
 

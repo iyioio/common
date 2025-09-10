@@ -3,9 +3,9 @@ import { Duration } from "aws-cdk-lib";
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { isCdkEnvPatternMatch } from "./cdk-lib";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { isCdkEnvPatternMatch } from "./cdk-lib.js";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types.js";
 
 export interface QueueBuilderProps
 {

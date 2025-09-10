@@ -1,10 +1,10 @@
-import { CancelToken } from "./CancelToken";
-import { DisposedError, UnsupportedError } from "./errors";
-import { ListPointer, ValuePointer } from "./pointers";
-import { Query } from "./query-types";
-import { Scope } from "./scope-types";
-import { isStoreScopeMatch } from "./store-lib";
-import { CreateStoreValueResult, isIWithStoreAdapter, IStore, IWithStoreAdapter, StoreMatch, StoreOp, StoreOpMethods, StoreProvider } from "./store-types";
+import { CancelToken } from "./CancelToken.js";
+import { DisposedError, UnsupportedError } from "./errors.js";
+import { ListPointer, ValuePointer } from "./pointers.js";
+import { Query } from "./query-types.js";
+import { Scope } from "./scope-types.js";
+import { isStoreScopeMatch } from "./store-lib.js";
+import { CreateStoreValueResult, isIWithStoreAdapter, IStore, IWithStoreAdapter, StoreMatch, StoreOp, StoreOpMethods, StoreProvider } from "./store-types.js";
 
 export interface StoreRoute
 {

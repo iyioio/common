@@ -1,7 +1,7 @@
 import { DisposeContainer, UnsupportedError, getUriProtocol, joinPaths, removeUriProtocol } from "@iyio/common";
 import { Observable, Subject } from "rxjs";
-import { VfsCtrl } from "./VfsCtrl";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types";
+import { VfsCtrl } from "./VfsCtrl.js";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeEvt, VfsItemGetOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions } from "./vfs-types.js";
 
 export interface VfsMntCtrlOptionsBase
 {

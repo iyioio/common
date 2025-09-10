@@ -1,8 +1,8 @@
 import { NotFoundError, UnsupportedError, asArray, getContentType, getFileName } from "@iyio/common";
-import { VfsCtrl } from "./VfsCtrl";
-import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl";
-import { createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes } from "./vfs-lib";
-import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt } from "./vfs-types";
+import { VfsCtrl } from "./VfsCtrl.js";
+import { VfsMntCtrl, VfsMntCtrlOptions } from "./VfsMntCtrl.js";
+import { createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testVfsFilter, vfsMntTypes } from "./vfs-lib.js";
+import { VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemGetOptions, VfsMntPt } from "./vfs-types.js";
 
 export const defaultVfsIndexDbDbName='vfsFileSystem';
 

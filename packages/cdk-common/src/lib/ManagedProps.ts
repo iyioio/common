@@ -1,8 +1,8 @@
 import * as iam from "aws-cdk-lib/aws-iam";
-import { AccessManager } from "./AccessManager";
-import { BridgeEvent } from "./BridgeEvent";
-import { ParamOutput } from "./ParamOutput";
-import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from "./cdk-types";
+import { AccessManager } from "./AccessManager.js";
+import { BridgeEvent } from "./BridgeEvent.js";
+import { ParamOutput } from "./ParamOutput.js";
+import { ApiRouteTarget, IEventTarget, IHasUserPool, NamedBucket, NamedFn, NamedQueue, NamedResource, SiteContentSource } from "./cdk-types.js";
 
 export interface ManagedProps
 {

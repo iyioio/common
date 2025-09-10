@@ -1,4 +1,4 @@
-import { HashMap } from "./common-types";
+import { HashMap } from "./common-types.js";
 
 export const stringToHashMap=(str:string):HashMap<string>=>{
     const hashMap:HashMap<string>={}

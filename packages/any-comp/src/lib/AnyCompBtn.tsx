@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { ButtonBase, ButtonBaseProps } from "@iyio/react-common";
-import { AnyCompIcon, AnyCompIconType } from "./AnyCompIcon";
-import { acStyle } from "./any-comp-style";
+import { AnyCompIcon, AnyCompIconType } from "./AnyCompIcon.js";
+import { acStyle } from "./any-comp-style.js";
 
 export interface AnyCompBtnProps extends ButtonBaseProps
 {

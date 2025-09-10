@@ -2,12 +2,12 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { asArrayOrEmpty } from "@iyio/common";
 import { useSubject } from "@iyio/react-common";
 import { Fragment, useMemo } from "react";
-import { AnyCompExtraPropsInput } from "./AnyCompExtraPropsInput";
-import { AnyCompPropInput } from "./AnyCompPropInput";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { acTags } from "./any-comp-lib";
-import { acStyle } from "./any-comp-style";
-import { AcProp, AcTaggedPropRenderer } from "./any-comp-types";
+import { AnyCompExtraPropsInput } from "./AnyCompExtraPropsInput.js";
+import { AnyCompPropInput } from "./AnyCompPropInput.js";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { acTags } from "./any-comp-lib.js";
+import { acStyle } from "./any-comp-style.js";
+import { AcProp, AcTaggedPropRenderer } from "./any-comp-types.js";
 
 export interface AnyCompPropsViewProps
 {

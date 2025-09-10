@@ -1,29 +1,37 @@
 {
-    "compileOnSave": false,
     "compilerOptions": {
         "rootDir": ".",
         "sourceMap": true,
-        "declaration": false,
-        "moduleResolution": "node",
+        "declaration": true,
+        "moduleResolution": "nodenext",
+        "jsx": "react-jsx",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "forceConsistentCasingInFileNames": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "preserveSymlinks": true,
+        "strict": true,
         "importHelpers": true,
         "target": "es2020",
-        "module": "esnext",
+        "module": "nodenext",
         "lib": ["es2020", "dom"],
+        "types": ["node"],
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "esModuleInterop":true,
         "baseUrl": ".",
+        "outDir": "./dist",
         "paths": {
             "@iyio/at-dot-css": ["packages/at-dot-css/src/index.ts"],
             "@iyio/any-comp": ["packages/any-comp/src/index.ts"],
             "@iyio/any-comp-cli": ["packages/any-comp-cli/src/index.ts"],
             "@iyio/aws": ["packages/aws/src/index.ts"],
             "@iyio/aws-secrets": ["packages/aws-secrets/src/index.ts"],
-            "@iyio/aws-credential-providers": [
-                "packages/aws-credential-providers/src/index.ts"
-            ],
+            "@iyio/aws-credential-providers": ["packages/aws-credential-providers/src/index.ts"],
             "@iyio/aws-dynamo": ["packages/aws-dynamo/src/index.ts"],
             "@iyio/aws-lambda": ["packages/aws-lambda/src/index.ts"],
             "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
@@ -43,17 +51,11 @@
             "@iyio/node-common": ["packages/node-common/src/index.ts"],
             "@iyio/nx-common": ["packages/nx-common/src/index.ts"],
             "@iyio/protogen": ["packages/protogen/src/index.ts"],
-            "@iyio/protogen-runtime": [
-                "packages/protogen-runtime/src/index.ts"
-            ],
-            "@iyio/protogen-cdk": [
-                "packages/protogen-cdk/src/index.ts"
-            ],
+            "@iyio/protogen-runtime": ["packages/protogen-runtime/src/index.ts"],
+            "@iyio/protogen-cdk": ["packages/protogen-cdk/src/index.ts"],
             "@iyio/react-common": ["packages/react-common/src/index.ts"],
             "@iyio/svg-charts": ["packages/svg-charts/src/index.ts"],
-            "@iyio/svg-charts-react": [
-                "packages/svg-charts-react/src/index.ts"
-            ],
+            "@iyio/svg-charts-react": ["packages/svg-charts-react/src/index.ts"],
             "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"],
             "@iyio/pdf-viewer": ["packages/pdf-viewer/src/index.ts"],
             "@iyio/syn-taxi": ["packages/syn-taxi/src/index.ts"],

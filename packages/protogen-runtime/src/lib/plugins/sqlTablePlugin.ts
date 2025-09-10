@@ -1,7 +1,7 @@
 import { joinPaths } from "@iyio/common";
 import { ProtoNode, ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { generateProtoTable } from "../protogen-table-generator";
+import { generateProtoTable } from "../protogen-table-generator.js";
 
 const SqlTableConfig=z.object(
 {

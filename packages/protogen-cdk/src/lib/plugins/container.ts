@@ -2,7 +2,7 @@ import { defaultContainerIgnoreOverrides } from "@iyio/cdk-common";
 import { getDirectoryName, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoAddContextParam, protoChildrenToStringRecordOrUndefined, protoGetParamName, protoNodeChildrenToAccessRequests, protoNodeChildrenToGrantAccessRequests } from "@iyio/protogen";
 import { z } from "zod";
-import { ContainerInfoTemplate, containerCdkTemplate } from "./containerCdkTemplate";
+import { ContainerInfoTemplate, containerCdkTemplate } from "./containerCdkTemplate.js";
 
 const supportedTypes=['container'];
 

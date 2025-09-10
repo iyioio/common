@@ -1,5 +1,5 @@
-import { HashMap } from "./common-types";
-import { BaseHttpRequest } from "./http-types";
+import { HashMap } from "./common-types.js";
+import { BaseHttpRequest } from "./http-types.js";
 
 export type RouteHandler=(request:BaseHttpRequest,body:any,sourceEvent:HttpRequestEventVariations)=>Promise<any>|any;
 

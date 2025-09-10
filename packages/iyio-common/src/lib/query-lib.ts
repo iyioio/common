@@ -1,6 +1,6 @@
-import { wSetProp } from "./obj-watch-lib";
-import { deepClone } from "./object";
-import { isQueryCondition, isQueryGroupCondition, Query, QueryConditionOrGroup, QueryGroupConditionOp, QueryValue } from "./query-types";
+import { wSetProp } from "./obj-watch-lib.js";
+import { deepClone } from "./object.js";
+import { isQueryCondition, isQueryGroupCondition, Query, QueryConditionOrGroup, QueryGroupConditionOp, QueryValue } from "./query-types.js";
 
 /**
  * Applies any shorthand properties to the query. By default a new query object is created if any

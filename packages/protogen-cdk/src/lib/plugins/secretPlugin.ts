@@ -1,8 +1,8 @@
 import { strFirstToLower } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoAddContextParam } from "@iyio/protogen";
 import { z } from "zod";
-import { SecretInfoTemplate, secretCdkTemplate } from "./secretCdkTemplate";
-//import { secretCdkTemplate } from "./secretCdkTemplate";
+import { SecretInfoTemplate, secretCdkTemplate } from "./secretCdkTemplate.js";
+//import { secretCdkTemplate } from "./secretCdkTemplate.js";
 
 const supportedTypes=['secret'];
 

@@ -1,6 +1,6 @@
 import { allBaseLayoutFlagProps, FirstArg } from '@iyio/common';
 import { createElement } from 'react';
-import { BaseAppContainer } from './BaseAppContainer';
+import { BaseAppContainer } from './BaseAppContainer.js';
 
 export interface CreateStoryOptions
 {

@@ -1,9 +1,9 @@
 import { ParamTypeDef } from "@iyio/common";
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { isCdkEnvPatternMatch } from "./cdk-lib";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { isCdkEnvPatternMatch } from "./cdk-lib.js";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types.js";
 
 export interface SecretBuilderProps
 {

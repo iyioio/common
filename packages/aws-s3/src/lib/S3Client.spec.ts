@@ -1,6 +1,6 @@
 import { useTempCognitoUser } from "@iyio/aws-credential-providers";
 import { createScope, EnvParams, Scope, shortUuid, testMountedStoreAsync, uuid } from "@iyio/common";
-import { S3Client } from './S3Client';
+import { S3Client } from './S3Client.js';
 
 describe('S3Store', () => {
 

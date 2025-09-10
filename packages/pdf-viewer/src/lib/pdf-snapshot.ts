@@ -1,5 +1,5 @@
 import { Lock } from "@iyio/common";
-import { pdfReaderPool } from "./PdfReaderPool";
+import { pdfReaderPool } from "./PdfReaderPool.js";
 
 const runLock=new Lock(1);
 

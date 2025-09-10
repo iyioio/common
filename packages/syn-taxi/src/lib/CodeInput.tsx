@@ -2,9 +2,9 @@ import { atDotCss } from '@iyio/at-dot-css';
 import { BaseLayoutOuterProps, cn, CodeParser, CodeParsingError, CodeParsingResult, escapeHtml, getSubstringCount, strLineCount } from '@iyio/common';
 import { scrollViewContainerMinHeightCssVar } from '@iyio/react-common';
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { dt } from '../lib/lib-design-tokens';
-import { LineNumbers } from './LineNumbers';
-import { loadMdCodeBlocks, supportsMdCodeBlocks, useShiki } from './shiki';
+import { dt } from '../lib/lib-design-tokens.js';
+import { LineNumbers } from './LineNumbers.js';
+import { loadMdCodeBlocks, supportsMdCodeBlocks, useShiki } from './shiki.js';
 
 export const defaultCodeLineStartReg=/^(\s*)/;
 export const markdownCodeLineStartReg=/^(\s*-?\s*)/;

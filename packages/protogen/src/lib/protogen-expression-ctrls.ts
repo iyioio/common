@@ -1,6 +1,6 @@
 import { parseTimeInterval } from "@iyio/common";
-import { InvalidProtoExpressionSyntaxError, createProtoExpressionControlFlowResult, getDirectExpressionValue } from "./protogen-expression-lib";
-import { ProtoExpressionControlFlowResult, ProtoExpressionCtrl, ProtoExpressionCtrlType, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
+import { InvalidProtoExpressionSyntaxError, createProtoExpressionControlFlowResult, getDirectExpressionValue } from "./protogen-expression-lib.js";
+import { ProtoExpressionControlFlowResult, ProtoExpressionCtrl, ProtoExpressionCtrlType, isProtoExpressionControlFlowResult } from "./protogen-expression-types.js";
 
 export const getProtoExpressionCtrl=(type:ProtoExpressionCtrlType|ProtoExpressionCtrl|null|undefined):ProtoExpressionCtrl|undefined=>{
     if(!type){

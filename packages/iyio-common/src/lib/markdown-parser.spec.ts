@@ -1,6 +1,6 @@
-import { asType } from './common-lib';
-import { parseMarkdown } from './markdown-parser';
-import { MarkdownLineType, MarkdownParsingOptions } from './markdown-types';
+import { asType } from './common-lib.js';
+import { parseMarkdown } from './markdown-parser.js';
+import { MarkdownLineType, MarkdownParsingOptions } from './markdown-types.js';
 
 const parse=(md:string,options?:MarkdownParsingOptions)=>{
 

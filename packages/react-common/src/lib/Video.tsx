@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps } from "@iyio/common";
 import { CSSProperties, useEffect, useState } from "react";
-import { useLazyRender } from "./useLazyRender";
+import { useLazyRender } from "./useLazyRender.js";
 
 export interface VideoProps
 {

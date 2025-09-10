@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { SlimButton, Text } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { acStyle } from "./any-comp-style";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { acStyle } from "./any-comp-style.js";
 
 export interface AnyCompExtraPropsInputProps
 {

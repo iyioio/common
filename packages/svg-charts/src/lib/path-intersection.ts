@@ -250,12 +250,12 @@ function bezlen(x1:any, y1:any, x2:any, y2:any, x3:any, y3:any, x4:any, y4:any, 
   let sum = 0;
 
   for (let i = 0; i < n; i++) {
-    const ct = z2 * Tvalues[i] + z2,
+    const ct = z2 * (Tvalues[i]??0) + z2,
         xbase = base3(ct, x1, x2, x3, x4),
         ybase = base3(ct, y1, y2, y3, y4),
         comb = xbase * xbase + ybase * ybase;
 
-    sum += Cvalues[i] * math.sqrt(comb);
+    sum += (Cvalues[i]??0) * math.sqrt(comb);
   }
 
   return z2 * sum;
@@ -302,6 +302,8 @@ function intersectLines(x1:any, y1:any, x2:any, y2:any, x3:any, y3:any, x4:any, 
   return { x: px, y: py };
 }
 
+const defaultXyt={x:0,y:0,t:0}
+
 function fixError(number:any) {
   return Math.round(number * 100000000000) / 100000000000;
 }
@@ -340,10 +342,10 @@ function findBezierIntersections(bez1:any, bez2:any, justCount:any) {
   for (i = 0; i < n1; i++) {
 
     for (let j = 0; j < n2; j++) {
-      const di = dots1[i],
-          di1 = dots1[i + 1],
-          dj = dots2[j],
-          dj1 = dots2[j + 1],
+      const di = dots1[i]??defaultXyt,
+          di1 = dots1[i + 1]??defaultXyt,
+          dj = dots2[j]??defaultXyt,
+          dj1 = dots2[j + 1]??defaultXyt,
           ci = abs(di1.x - di.x) < .01 ? 'y' : 'x',
           cj = abs(dj1.x - dj.x) < .01 ? 'y' : 'x',
           is = intersectLines(di.x, di.y, di1.x, di1.y, dj.x, dj.y, dj1.x, dj1.y);
@@ -788,7 +790,7 @@ function curveBBox(x0:any, y0:any, x1:any, y1:any, x2:any, y2:any, x3:any, y3:an
   let mt;
 
   while (j--) {
-    t = tvalues[j];
+    t = tvalues[j]??0;
     mt = 1 - t;
     bounds[0][j] = (mt * mt * mt * x0) + (3 * mt * mt * t * x1) + (3 * mt * t * t * x2) + (t * t * t * x3);
     bounds[1][j] = (mt * mt * mt * y0) + (3 * mt * mt * t * y1) + (3 * mt * t * t * y2) + (t * t * t * y3);
@@ -923,7 +925,7 @@ function pathToCurve(path:any) {
     if (pfirst != 'C') // C is not saved yet, because it may be result of conversion
     {
       pathCommands[i] = pfirst; // Save current path command
-      i && (pathCommand = pathCommands[i - 1]); // Get previous path command pathCommand
+      i && (pathCommand = (pathCommands[i - 1]??'')); // Get previous path command pathCommand
     }
     curvedPath[i] = processPath(curvedPath[i], attrs, pathCommand); // Previous path command is inputted to processPath
 

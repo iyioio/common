@@ -1,8 +1,8 @@
-import { baseLayoutColorBaseProps, baseLayoutColorMappedProps } from "./base-layout";
-import { BaseLayoutBreakpointOptions } from "./base-layout-generator";
-import { HashMap } from "./common-types";
-import { RequiredRecursive } from "./typescript-util-types";
-import { Breakpoints } from "./window-size-lib";
+import { baseLayoutColorBaseProps, baseLayoutColorMappedProps } from "./base-layout.js";
+import { BaseLayoutBreakpointOptions } from "./base-layout-generator.js";
+import { HashMap } from "./common-types.js";
+import { RequiredRecursive } from "./typescript-util-types.js";
+import { Breakpoints } from "./window-size-lib.js";
 
 export interface BaseLayoutSpacings
 {

@@ -1,11 +1,11 @@
-import { aryRemoveFirst } from "./array";
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData, UserFactoryCallback } from "./auth-types";
-import { UserFactory } from "./auth.deps";
-import { BaseUser, BaseUserOptions } from "./BaseUser";
-import { delayAsync } from "./common-lib";
-import { HashMap } from "./common-types";
-import { FactoryTypeDef, Scope } from "./scope-types";
-import { shortUuid } from "./uuid";
+import { aryRemoveFirst } from "./array.js";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, UserAuthProviderData, UserFactoryCallback } from "./auth-types.js";
+import { UserFactory } from "./auth.deps.js";
+import { BaseUser, BaseUserOptions } from "./BaseUser.js";
+import { delayAsync } from "./common-lib.js";
+import { HashMap } from "./common-types.js";
+import { FactoryTypeDef, Scope } from "./scope-types.js";
+import { shortUuid } from "./uuid.js";
 
 interface MemoryUserRecord
 {

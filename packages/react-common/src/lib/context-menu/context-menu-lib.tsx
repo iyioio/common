@@ -1,9 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { ContextMenuCtrl, UiActionItem, camelCaseToSnakeCase } from "@iyio/common";
 import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
-import { Portal } from "../Portal";
-import { SlimButton, SlimButtonProps } from "../SlimButton";
-import { useSubject } from "../rxjs-hooks";
+import { Portal } from "../Portal.js";
+import { SlimButton, SlimButtonProps } from "../SlimButton.js";
+import { useSubject } from "../rxjs-hooks.js";
 
 export const defaultContextMenuTargetIdAttribute='data-context-menu-target-id';
 

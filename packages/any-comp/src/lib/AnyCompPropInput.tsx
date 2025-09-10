@@ -1,13 +1,13 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Text, useSubject } from "@iyio/react-common";
 import { useEffect, useRef, useState } from "react";
-import { AnyCompComment } from "./AnyCompComment";
-import { AnyCompJsonInput } from "./AnyCompJsonInput";
-import { AnyCompUnionInput } from "./AnyCompUnionInput";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { useUpdateOnAnyCompPropChange } from "./any-comp-react-lib";
-import { acStyle } from "./any-comp-style";
-import { AcProp } from "./any-comp-types";
+import { AnyCompComment } from "./AnyCompComment.js";
+import { AnyCompJsonInput } from "./AnyCompJsonInput.js";
+import { AnyCompUnionInput } from "./AnyCompUnionInput.js";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { useUpdateOnAnyCompPropChange } from "./any-comp-react-lib.js";
+import { acStyle } from "./any-comp-style.js";
+import { AcProp } from "./any-comp-types.js";
 
 
 export interface AnyCompPropInputProps

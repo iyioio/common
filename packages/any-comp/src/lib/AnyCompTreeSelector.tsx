@@ -2,8 +2,8 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { getDirectoryName } from "@iyio/common";
 import { ScrollView, SlimButton, Text } from "@iyio/react-common";
 import { Fragment, useState } from "react";
-import { acStyle } from "./any-comp-style";
-import { AcCompRegistry } from "./any-comp-types";
+import { acStyle } from "./any-comp-style.js";
+import { AcCompRegistry } from "./any-comp-types.js";
 
 export interface AnyCompTreeSelectorProps
 {

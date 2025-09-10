@@ -1,6 +1,6 @@
 import { ZodError, ZodSchema } from "zod";
-import { HttpResponseOptions } from "./http-server-types";
-import { HttpMethod } from "./http-types";
+import { HttpResponseOptions } from "./http-server-types.js";
+import { HttpMethod } from "./http-types.js";
 
 export const RawFnFlag=Symbol('RawFnFlag');
 

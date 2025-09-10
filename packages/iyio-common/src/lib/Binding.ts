@@ -1,7 +1,7 @@
-import { PathValue, RecursiveKeyOf } from "./common-types";
-import { wSetProp, watchObjAtPath } from "./obj-watch-lib";
-import { Watchable, WatchedPath } from "./obj-watch-types";
-import { getValueByAryPath, getValueByPath, getValueByReverseAryPath } from "./object";
+import { PathValue, RecursiveKeyOf } from "./common-types.js";
+import { wSetProp, watchObjAtPath } from "./obj-watch-lib.js";
+import { Watchable, WatchedPath } from "./obj-watch-types.js";
+import { getValueByAryPath, getValueByPath, getValueByReverseAryPath } from "./object.js";
 
 interface BindingOptions<
     Src extends Watchable,

@@ -1,6 +1,6 @@
 import { removeOnUiReadyClassName, removeOnUiReadyDelayedClassName, uiReadyClassName, uiReadyDelayedClassName, uiReadyDelayedSubject, uiReadySubject } from "@iyio/common";
 import { useEffect, useRef } from "react";
-import { useSubject } from "./rxjs-hooks";
+import { useSubject } from "./rxjs-hooks.js";
 
 export const useUiReady=()=>{
 

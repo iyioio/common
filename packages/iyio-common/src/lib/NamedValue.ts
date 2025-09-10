@@ -1,4 +1,4 @@
-import { ValueKeyProvider } from "./common-types";
+import { ValueKeyProvider } from "./common-types.js";
 
 export interface NamedValue<T>
 {

@@ -1,10 +1,10 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { baseLayoutFlexProps } from "@iyio/common";
 import { Text, useAlphaId } from "@iyio/react-common";
-import { AnyCompViewCtrl } from "../AnyCompViewCtrl";
-import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib";
-import { AcProp } from "../any-comp-types";
-import { getBaseLayoutInfo } from "./prop-render-lib";
+import { AnyCompViewCtrl } from "../AnyCompViewCtrl.js";
+import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib.js";
+import { AcProp } from "../any-comp-types.js";
+import { getBaseLayoutInfo } from "./prop-render-lib.js";
 
 export interface AcPrFlexProps
 {

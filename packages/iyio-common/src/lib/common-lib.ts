@@ -1,4 +1,4 @@
-import { EmptyFunction } from "./common-types";
+import { EmptyFunction } from "./common-types.js";
 
 
 export const isServerSide=typeof (globalThis as any).window === 'undefined';

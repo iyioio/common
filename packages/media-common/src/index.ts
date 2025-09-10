@@ -1,6 +1,6 @@
-export * from './lib/MediaRecording';
-export * from './lib/VideoElementMonitor';
-export * from './lib/blurhash';
-export * from './lib/media-lib';
-export * from './lib/media-types';
+export * from './lib/MediaRecording.js';
+export * from './lib/VideoElementMonitor.js';
+export * from './lib/blurhash.js';
+export * from './lib/media-lib.js';
+export * from './lib/media-types.js';
 

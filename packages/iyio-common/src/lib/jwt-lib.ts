@@ -1,7 +1,7 @@
-import { continueFunction } from "./common-lib";
-import { JwtValidators } from "./jwt.deps";
-import { rootScope } from "./scope-lib";
-import { Scope } from "./scope-types";
+import { continueFunction } from "./common-lib.js";
+import { JwtValidators } from "./jwt.deps.js";
+import { rootScope } from "./scope-lib.js";
+import { Scope } from "./scope-types.js";
 
 export interface JwtOptions
 {

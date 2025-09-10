@@ -1,7 +1,7 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
-import { getDefaultVpc } from './cdk-lib';
+import { getDefaultVpc } from './cdk-lib.js';
 
 let defaultCluster:ecs.Cluster|null=null;
 let defaultProps:DefaultClusterProps|null=null;

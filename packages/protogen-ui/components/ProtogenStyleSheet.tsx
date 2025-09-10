@@ -1,4 +1,4 @@
-import { dt } from "../lib/lib-design-tokens";
+import { dt } from "../lib/lib-design-tokens.js";
 
 
 export function ProtogenStyleSheet()

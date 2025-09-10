@@ -1,8 +1,8 @@
-import { getCodeParsingError } from "./code-parsing";
-import { CodeParser } from "./code-parsing-types";
-import { getErrorMessage } from "./error-lib";
-import { unescapeHtml } from "./html";
-import { XmlNode, XmlParsingOptions, XmlParsingResult } from "./xml-parser-types";
+import { getCodeParsingError } from "./code-parsing.js";
+import { CodeParser } from "./code-parsing-types.js";
+import { getErrorMessage } from "./error-lib.js";
+import { unescapeHtml } from "./html.js";
+import { XmlNode, XmlParsingOptions, XmlParsingResult } from "./xml-parser-types.js";
 
 const nextTagReg=/([^<]*)<\s*(\/?)\s*([^\s>/]*)/gs;
 const attReg=/\s*(?:(\/?\s*>)|(\W+)|(?:([\w-]+)\s*(=?)\s*(?:(?:"([^"]*)")|(?:'([^']*)'))?))/gs;

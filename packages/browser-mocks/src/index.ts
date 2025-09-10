@@ -1,1 +1,1 @@
-export * from './lib/browser-mocks';
+export * from './lib/browser-mocks.js';

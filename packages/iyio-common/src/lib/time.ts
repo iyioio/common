@@ -1,5 +1,5 @@
 import { addDays, addHours, addMinutes, addMonths, addSeconds, addWeeks, addYears } from "date-fns";
-import { TimeInterval } from "./time-types";
+import { TimeInterval } from "./time-types.js";
 
 export const secondMs=1000;
 export const minuteMs=secondMs*60;

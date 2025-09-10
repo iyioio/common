@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ProtoPipelineConfigurablePlugin, ProtoPipelinePlugin } from "./protogen-pipeline-types"
+import { ProtoPipelineConfigurablePlugin, ProtoPipelinePlugin } from "./protogen-pipeline-types.js"
 
 const TestPluginConfig=z.object({
     path:z.string().optional()

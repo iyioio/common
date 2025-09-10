@@ -1,7 +1,7 @@
-import { aryRemoveFirst } from "./array";
-import { getStyleSheetOrder } from "./css-order";
-import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "./shared-style-sheets";
-import { ISharedStyleSheetRenderer, SharedStyleSheet } from "./shared-style-sheets-types";
+import { aryRemoveFirst } from "./array.js";
+import { getStyleSheetOrder } from "./css-order.js";
+import { sharedStyleSheets, sharedStyleSheetsUpdateSubject } from "./shared-style-sheets.js";
+import { ISharedStyleSheetRenderer, SharedStyleSheet } from "./shared-style-sheets-types.js";
 
 export class SharedStyleSheetRenderer implements ISharedStyleSheetRenderer
 {

@@ -1,4 +1,4 @@
-import { StoreOp, StoreScope } from "./store-types";
+import { StoreOp, StoreScope } from "./store-types.js";
 
 /**
  * Checks if the key matches the scope and returns the scoped key.

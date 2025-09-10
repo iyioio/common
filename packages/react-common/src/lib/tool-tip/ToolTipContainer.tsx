@@ -1,6 +1,6 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { useEffect, useState } from "react";
-import type { ToolTipStateSubject } from "./tool-tip-lib";
+import type { ToolTipStateSubject } from "./tool-tip-lib.js";
 
 export interface ToolTipContainerProps
 {

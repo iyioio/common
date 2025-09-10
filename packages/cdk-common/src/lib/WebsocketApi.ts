@@ -4,8 +4,8 @@ import * as apigatewayIntegrations from 'aws-cdk-lib/aws-apigatewayv2-integratio
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import { addPolicyToGrantee } from './cdk-lib';
-import { Grantee } from './cdk-types';
+import { addPolicyToGrantee } from './cdk-lib.js';
+import { Grantee } from './cdk-types.js';
 
 export interface WebsocketApiProps {
     readonly name: string;

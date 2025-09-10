@@ -1,11 +1,11 @@
 import { addDays, addMonths, addWeeks, addYears } from "date-fns";
-import { asArray } from "./array";
-import { HashMap } from "./common-types";
-import { deepClone } from "./object";
-import { FuncColumn, NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types";
-import { getSeriesIntervalCtrl } from "./series-ctrls";
-import { AutoSeries, Series, SeriesData, SeriesDataQuery, SeriesRange } from "./series-types";
-import { buildQuery } from "./sql-query-builder";
+import { asArray } from "./array.js";
+import { HashMap } from "./common-types.js";
+import { deepClone } from "./object.js";
+import { FuncColumn, NamedQueryValue, Query, QueryCondition, QueryGroupCondition } from "./query-types.js";
+import { getSeriesIntervalCtrl } from "./series-ctrls.js";
+import { AutoSeries, Series, SeriesData, SeriesDataQuery, SeriesRange } from "./series-types.js";
+import { buildQuery } from "./sql-query-builder.js";
 
 export const createSeriesQuery=(
     rangeColumn:string,

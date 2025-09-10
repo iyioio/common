@@ -1,7 +1,7 @@
 import { cn } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { View, ViewProps } from "./View";
-import { UseLazyRenderOptions, useLazyRender } from "./useLazyRender";
+import { View, ViewProps } from "./View.js";
+import { UseLazyRenderOptions, useLazyRender } from "./useLazyRender.js";
 
 interface LazyViewProps extends ViewProps, UseLazyRenderOptions
 {

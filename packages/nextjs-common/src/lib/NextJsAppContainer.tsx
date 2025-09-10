@@ -1,7 +1,7 @@
 import { ScopeRegistration } from "@iyio/common";
 import { BaseAppContainer, BaseAppContainerProps } from "@iyio/react-common";
 import { useCallback, useRef } from "react";
-import { nextJsModule } from "./_modules.nextjs-common";
+import { nextJsModule } from "./_modules.nextjs-common.js";
 
 export interface NextJsAppContainerProps extends Omit<BaseAppContainerProps,'scopeInit'>
 {

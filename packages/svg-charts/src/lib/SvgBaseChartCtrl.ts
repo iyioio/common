@@ -1,7 +1,7 @@
 import { deepCompare, escapeHtml, formatNumberWithBases, ReadonlySubject, Sides, Size } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
-import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect, toSafeSvgAttValue } from "./svg-charts-lib";
-import { ChartData, ChartIntersection, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types";
+import { classNamePrefix, createEmptyChartData, generateRandomChartId, getDefaultChartSteps, getViewBoxRect, toSafeSvgAttValue } from "./svg-charts-lib.js";
+import { ChartData, ChartIntersection, ChartRenderOptions, SeriesOptions, SvgChartCtrlOptions } from "./svg-charts-types.js";
 
 export abstract class SvgBaseChartCtrl
 {
@@ -320,7 +320,7 @@ export abstract class SvgBaseChartCtrl
             for(let pass=1;pass<=2;pass++){
                 const lineCountStart=hLineCount;
                 for(let i=steps.length-1;i>=0;i--){
-                    const step=steps[i];
+                    const step=steps[i]??0;
                     if(step<1 && diff>=1){
                         break;
                     }
@@ -464,6 +464,9 @@ export abstract class SvgBaseChartCtrl
                     this.hLines.push(newLine);
                 }
                 const line=this.hLines[i];
+                if(!line){
+                    continue;
+                }
 
                 line.setAttribute('x1',toSafeSvgAttValue(hLinesFullWidth?0:left));
                 line.setAttribute('x2',toSafeSvgAttValue(hLinesFullWidth?this.viewBox.width:right));
@@ -516,6 +519,9 @@ export abstract class SvgBaseChartCtrl
                     this.vLines.push(newLine);
                 }
                 const line=this.vLines[i];
+                if(!line){
+                    continue;
+                }
 
                 const x=(width/(valueCount-1))*i+left;
                 line.setAttribute('y1',toSafeSvgAttValue(top));
@@ -571,6 +577,9 @@ export abstract class SvgBaseChartCtrl
                     this.hLabels.push(newLine);
                 }
                 const obj=this.hLabels[i];
+                if(!obj){
+                    continue;
+                }
                 const lw=left;
                 const h=hLineSpacing;
 
@@ -638,7 +647,7 @@ export abstract class SvgBaseChartCtrl
 
                 const isFirst=i===0 && renderPadding.left<20;
                 const isLast=i===valueCount-1 && renderPadding.right<20;
-                
+
                 let obj: SVGForeignObjectElement;
                 if(this.vLabels.length<=i){
                     obj=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
@@ -646,13 +655,17 @@ export abstract class SvgBaseChartCtrl
                     this.vLabelGroup.appendChild(obj);
                     this.vLabels.push(obj);
                 } else {
-                    obj = this.vLabels[i];
+                    const o = this.vLabels[i];
+                    if(!o){
+                        continue;
+                    }
+                    obj=o;
                 }
 
                 const w=(width/(valueCount-1));
                 const lw = w * (isFirst || isLast ? 3 : 3);
                 const h=viewBoxHeight-bottom;
-                
+
                 const className=`${classNamePrefix}text ${classNamePrefix}text-label ${isFirst?` ${classNamePrefix}text-first`:isLast?` ${classNamePrefix}text-last`:''}`;
                 const text=escapeHtml(labelText);
                 obj.innerHTML=`

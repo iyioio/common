@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Form } from "@iyio/react-common";
 import { useEffect, useRef, useState } from "react";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
 
 export interface CommandInputProps
 {

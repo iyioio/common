@@ -7,7 +7,7 @@ import * as gaEndpoints from "aws-cdk-lib/aws-globalaccelerator-endpoints";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
-import { getDefaultVpc } from './cdk-lib';
+import { getDefaultVpc } from './cdk-lib.js';
 
 export interface DomainRedirect
 {

@@ -2,11 +2,11 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutOuterProps, deleteUndefined } from "@iyio/common";
 import { Text, View } from "@iyio/react-common";
 import { useEffect, useState } from "react";
-import { AnyCompComment } from "./AnyCompComment";
-import { AnyCompContainer } from "./AnyCompContainer";
-import { AnyCompTreeSelector } from "./AnyCompTreeSelector";
-import { AcStyleVars, acStyle, defaultAcStyle, defaultAcStyleDarkMode } from "./any-comp-style";
-import { AcCompRegistry, AcTaggedPropRenderer } from "./any-comp-types";
+import { AnyCompComment } from "./AnyCompComment.js";
+import { AnyCompContainer } from "./AnyCompContainer.js";
+import { AnyCompTreeSelector } from "./AnyCompTreeSelector.js";
+import { AcStyleVars, acStyle, defaultAcStyle, defaultAcStyleDarkMode } from "./any-comp-style.js";
+import { AcCompRegistry, AcTaggedPropRenderer } from "./any-comp-types.js";
 
 
 export interface AnyCompBrowserProps

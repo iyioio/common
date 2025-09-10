@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps, NamedValue } from "@iyio/common";
 import { useEffect, useState } from "react";
-import { SelectBase, SelectBaseProps } from "./SelectBase";
+import { SelectBase, SelectBaseProps } from "./SelectBase.js";
 
 const defaultItemRenderer=(option:NamedValue<any>|undefined,placeholder:string)=>option?.name??placeholder;
 

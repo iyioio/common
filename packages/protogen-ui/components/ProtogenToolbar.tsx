@@ -2,11 +2,11 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { delayAsync } from "@iyio/common";
 import { useSubject, View } from "@iyio/react-common";
 import { useCallback, useState } from "react";
-import { dt } from "../lib/lib-design-tokens";
-import { UiState } from "../lib/protogen-ui-lib";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
-import { CommandInput } from "./CommandInput";
-import { ProtoButton } from "./ProtoButton";
+import { dt } from "../lib/lib-design-tokens.js";
+import { UiState } from "../lib/protogen-ui-lib.js";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
+import { CommandInput } from "./CommandInput.js";
+import { ProtoButton } from "./ProtoButton.js";
 
 const depths=[0,1,2,3]
 

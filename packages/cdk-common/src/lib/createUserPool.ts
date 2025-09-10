@@ -2,7 +2,7 @@ import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPo
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { ScopeWithParams } from './cdk-types';
+import { ScopeWithParams } from './cdk-types.js';
 // import * as ec2 from 'aws-cdk-lib/aws-ec2';
 // import * as efs from 'aws-cdk-lib/aws-efs';
 // import * as lambda from 'aws-cdk-lib/aws-lambda';

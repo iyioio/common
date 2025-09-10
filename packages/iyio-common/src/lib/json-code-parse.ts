@@ -1,5 +1,5 @@
-import { CodeParser } from "./code-parsing-types";
-import { getErrorMessage } from "./error-lib";
+import { CodeParser } from "./code-parsing-types.js";
+import { getErrorMessage } from "./error-lib.js";
 
 export const parseJsonCode:CodeParser<any>=(code,options)=>{
     if(!code?.trim()){

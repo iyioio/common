@@ -1,5 +1,5 @@
-import { ObjSyncClient, ObjSyncClientOptions } from "./ObjSyncClient";
-import { ObjSyncClientCommand, ObjSyncRemoteCommand } from "./obj-sync-types";
+import { ObjSyncClient, ObjSyncClientOptions } from "./ObjSyncClient.js";
+import { ObjSyncClientCommand, ObjSyncRemoteCommand } from "./obj-sync-types.js";
 
 export interface ObjSyncBroadcastChannelClientOptions
 {

@@ -1,10 +1,10 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { AutoLayoutType, BaseLayoutProps } from "@iyio/common";
 import { Children, useMemo } from "react";
-import { AutoLayoutCtrl } from "./AutoLayoutCtrl";
-import { AutoLayoutSlot } from "./AutoLayoutSlot";
-import { getAutoLayoutTypeComp } from "./_auto-layout-reg";
-import { AutoLayoutSlotOptions } from "./auto-layout-lib";
+import { AutoLayoutCtrl } from "./AutoLayoutCtrl.js";
+import { AutoLayoutSlot } from "./AutoLayoutSlot.js";
+import { getAutoLayoutTypeComp } from "./_auto-layout-reg.js";
+import { AutoLayoutSlotOptions } from "./auto-layout-lib.js";
 
 export interface AutoLayoutProps extends AutoLayoutSlotOptions
 {

@@ -1,6 +1,6 @@
 import { addDays, addMonths, addWeeks, addYears, endOfDay, endOfMonth, endOfWeek, endOfYear, format, startOfDay, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
-import { UnsupportedError } from "./errors";
-import { SeriesIntervalCtrl, SeriesRange, SeriesType } from "./series-types";
+import { UnsupportedError } from "./errors.js";
+import { SeriesIntervalCtrl, SeriesRange, SeriesType } from "./series-types.js";
 
 export class DaySeriesIntervalCtrl implements SeriesIntervalCtrl<Date>
 {

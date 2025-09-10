@@ -1,4 +1,4 @@
-import { RTxtTool, rTxtDocAtt, rTxtIgnoreAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types";
+import { RTxtTool, rTxtDocAtt, rTxtIgnoreAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types.js";
 
 export const getTextNode=(elem:Node|null|undefined,last=false,requireSingleChild=true):Text|null=>{
     if(!elem || (elem.childNodes.length!==1 && requireSingleChild)){

@@ -1,10 +1,10 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutInnerProps, DisposeCallback, aryRemoveItem, bcn, cn, domListener } from "@iyio/common";
 import { useEffect, useId, useRef, useState } from "react";
-import { DomPortal, DomPortalProps } from "./DomPortal";
-import { getEventCaptureProps } from "./EventCaptureContainer";
-import { Portal } from "./Portal";
-import { PortalProps } from "./portal-lib";
+import { DomPortal, DomPortalProps } from "./DomPortal.js";
+import { getEventCaptureProps } from "./EventCaptureContainer.js";
+import { Portal } from "./Portal.js";
+import { PortalProps } from "./portal-lib.js";
 
 export interface ModalOpenCloseProps
 {

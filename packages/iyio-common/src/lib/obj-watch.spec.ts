@@ -1,7 +1,7 @@
-import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, watchObjDeep, watchObjWithFilter, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib";
-import { anyProp, ObjWatchEvt, ObjWatchEvtType } from "./obj-watch-types";
-import { deepCompare } from "./object";
-import { ObjMirror } from './ObjMirror';
+import { wAryMove, wAryPush, wAryRemove, wAryRemoveAt, wArySplice, watchObj, watchObjDeep, watchObjWithFilter, wDeleteProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from "./obj-watch-lib.js";
+import { anyProp, ObjWatchEvt, ObjWatchEvtType } from "./obj-watch-types.js";
+import { deepCompare } from "./object.js";
+import { ObjMirror } from './ObjMirror.js';
 
 describe('obj-watch',()=>{
 

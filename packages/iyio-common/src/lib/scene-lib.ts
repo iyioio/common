@@ -1,4 +1,4 @@
-import { Scene, SceneAction, SceneDescriptor, SceneDescriptorProvider, SceneObj, SceneObjPartial, ScenePartial } from "./scene-types";
+import { Scene, SceneAction, SceneDescriptor, SceneDescriptorProvider, SceneObj, SceneObjPartial, ScenePartial } from "./scene-types.js";
 
 interface Ids
 {

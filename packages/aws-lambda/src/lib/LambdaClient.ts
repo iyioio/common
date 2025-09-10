@@ -1,7 +1,7 @@
 import { LambdaClient as AwsLambdaClient, InvokeCommand, LambdaClientConfig } from "@aws-sdk/client-lambda";
 import { AwsAuthProviders, awsRegionParam } from "@iyio/aws";
 import { AuthDependentClient, FnInvokeEvent, Scope, ValueCache, authService, currentBaseUser, getZodErrorMessage, isFnError } from "@iyio/common";
-import { LambdaInvokeOptions } from "./lambda-types";
+import { LambdaInvokeOptions } from "./lambda-types.js";
 
 
 

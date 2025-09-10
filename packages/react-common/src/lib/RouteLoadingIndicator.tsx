@@ -1,9 +1,9 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { cn, uiRouterService } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
-import { View } from "./View";
-import { useSubject } from "./rxjs-hooks";
-import { useDelayedValue } from "./useDelayedValue";
+import { View } from "./View.js";
+import { useSubject } from "./rxjs-hooks.js";
+import { useDelayedValue } from "./useDelayedValue.js";
 
 export interface RouteLoadingIndicatorProps
 {

@@ -1,11 +1,11 @@
 import { Subscription } from "rxjs";
 import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { DisposeCallback } from "./common-types";
-import { joinPaths } from "./fs";
-import { deepClone, deepCompare } from "./object";
-import { ReadonlySubject } from "./rxjs-types";
-import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem, getWindowLocationRouteInfo } from "./ui-lib";
-import { uuid } from "./uuid";
+import { DisposeCallback } from "./common-types.js";
+import { joinPaths } from "./fs.js";
+import { deepClone, deepCompare } from "./object.js";
+import { ReadonlySubject } from "./rxjs-types.js";
+import { IUiRouter, MatchedUiActionItem, RouteInfo, RouteQuery, UiActionRecursiveSubItem, UiRouterEvt, UiRouterEvtListener, UiRouterOpenOptions, addQueryToPath, findMatchingUiActionItem, getWindowLocationRouteInfo } from "./ui-lib.js";
+import { uuid } from "./uuid.js";
 
 export interface UiRouterBaseOptions
 {

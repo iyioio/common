@@ -1,9 +1,9 @@
 import { CancelToken, LogCallback, deleteUndefined } from "@iyio/common";
-import { getProtoExpressionCtrl } from "./protogen-expression-ctrls";
-import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult, getProtoExpressionValueByPath } from "./protogen-expression-lib";
-import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types";
-import { invokeProtoCallable } from "./protogen-lib";
-import { ProtoCallable } from "./protogen-types";
+import { getProtoExpressionCtrl } from "./protogen-expression-ctrls.js";
+import { MaxProtoExpressionEvalCountError, ProtoExpressionPauseNotAllowedError, UnableToFindProtoExpressionResumeId, createProtoExpressionControlFlowResult, getProtoExpressionValueByPath } from "./protogen-expression-lib.js";
+import { ProtoEvalContext, ProtoEvalFrame, ProtoEvalResult, ProtoEvalState, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowResult, ProtoExpressionEngineOptions, isProtoExpressionControlFlowResult } from "./protogen-expression-types.js";
+import { invokeProtoCallable } from "./protogen-lib.js";
+import { ProtoCallable } from "./protogen-types.js";
 
 
 export class ProtoExpressionEngine

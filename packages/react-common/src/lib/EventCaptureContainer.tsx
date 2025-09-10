@@ -1,6 +1,6 @@
 import { baseLayoutCn } from "@iyio/common";
 import { createElement } from "react";
-import { ViewProps } from "./View";
+import { ViewProps } from "./View.js";
 
 const cancelEventKeepDefault=(e:Partial<Event>)=>{
     try{e?.stopPropagation?.();}catch{/* */}

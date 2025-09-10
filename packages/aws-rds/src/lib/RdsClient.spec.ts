@@ -1,6 +1,6 @@
 import { awsModule } from "@iyio/aws";
 import { createScope, EnvParams, generateRandomTestStoreItem, minuteMs, parseConfigBool, shortUuid, sql, sqlClient, sqlName, SqlStoreAdapterOptions, testMountedStoreAsync, TestStoreItem } from "@iyio/common";
-import { RdsClient } from "./RdsClient";
+import { RdsClient } from "./RdsClient.js";
 
 
 const testTimeout=minuteMs*10;

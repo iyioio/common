@@ -1,2 +1,2 @@
-export * from './lib/vfs-hooks';
+export * from './lib/vfs-hooks.js';
 

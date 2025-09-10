@@ -1,6 +1,6 @@
 import { BaseLayoutProps, bcn } from "@iyio/common";
 import { CSSProperties, useState } from "react";
-import { PersistencePortalNodeOptions, useDomPortalRenderTarget } from "./dom-portal-lib";
+import { PersistencePortalNodeOptions, useDomPortalRenderTarget } from "./dom-portal-lib.js";
 
 
 export interface DomPortalRendererProps extends PersistencePortalNodeOptions

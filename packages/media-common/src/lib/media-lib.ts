@@ -1,5 +1,5 @@
 import { Size, addQueryToPath, safeParseNumberOrUndefined, uuid } from "@iyio/common";
-import { GetImageDataStatsOptions, ImageStats, MediaRecordingResult, SnapShotResult, VideoSnapShotOptions as SnapshotOptions } from "./media-types";
+import { GetImageDataStatsOptions, ImageStats, MediaRecordingResult, SnapShotResult, VideoSnapShotOptions as SnapshotOptions } from "./media-types.js";
 
 
 const getCanvas=()=>{

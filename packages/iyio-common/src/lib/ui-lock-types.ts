@@ -1,6 +1,6 @@
 import { BehaviorSubject } from "rxjs";
-import { IProgress } from "./progress-types";
-import { ReadonlySubject } from "./rxjs-types";
+import { IProgress } from "./progress-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export interface UiLockContainer
 {

@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
-import { ApiGateway, ApiGatewayProps } from "./ApiGateway";
-import { ManagedProps } from "./ManagedProps";
+import { ApiGateway, ApiGatewayProps } from "./ApiGateway.js";
+import { ManagedProps } from "./ManagedProps.js";
 
 export interface ApiGatewayInfo extends Omit<ApiGatewayProps,'accountId'|'region'>
 {

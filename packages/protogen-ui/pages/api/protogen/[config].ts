@@ -7,8 +7,8 @@ import chalk from 'chalk';
 import { readFile, writeFile } from 'fs/promises';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { dirname, join } from 'path';
-import { setApiOutput } from '../../../lib/protogen-api-lib';
-import { SaveRequest } from '../../../lib/protogen-ui-lib';
+import { setApiOutput } from '../../../lib/protogen-api-lib.js';
+import { SaveRequest } from '../../../lib/protogen-ui-lib.js';
 
 //const configPath=process.env['NX_PROTOGEN_CONFIG'];
 

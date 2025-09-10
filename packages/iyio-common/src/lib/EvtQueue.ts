@@ -1,8 +1,8 @@
 import { Subject } from "rxjs";
-import { Evt } from "./Evt";
-import { aryRemoveItem } from "./array";
-import { DisposeCallback } from "./common-types";
-import { EvtQueueListener } from "./evt-queue-lib";
+import { Evt } from "./Evt.js";
+import { aryRemoveItem } from "./array.js";
+import { DisposeCallback } from "./common-types.js";
+import { EvtQueueListener } from "./evt-queue-lib.js";
 
 export class EvtQueue
 {

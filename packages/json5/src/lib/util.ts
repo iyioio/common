@@ -1,4 +1,4 @@
-import { ID_Continue, ID_Start, Space_Separator } from "./unicode"
+import { ID_Continue, ID_Start, Space_Separator } from "./unicode.js"
 
 export const isSpaceSeparator = (c:any)=> {
     return typeof c === 'string' && Space_Separator.test(c)

@@ -1,8 +1,8 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { Direction, DisposeCallback, Point } from "@iyio/common";
 import { useEffect, useRef, useState } from "react";
-import { DirectionInputCtrl } from "./direction-input/DirectionInputCtrl";
-import { useDirectionInputCtrl } from "./direction-input/direction-input-lib";
+import { DirectionInputCtrl } from "./direction-input/DirectionInputCtrl.js";
+import { useDirectionInputCtrl } from "./direction-input/direction-input-lib.js";
 
 export type SwipeDirection=Direction;
 

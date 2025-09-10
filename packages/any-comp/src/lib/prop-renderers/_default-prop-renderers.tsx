@@ -1,19 +1,19 @@
-import { AcTaggedPropRenderer } from "../any-comp-types";
-import { AcPrAnimation } from "./AcPrAnimation";
-import { AcPrBreakpoint } from "./AcPrBreakpoint";
-import { AcPrClassName } from "./AcPrClassName";
-import { AcPrColorMap } from "./AcPrColorMap";
-import { AcPrColors } from "./AcPrColors";
-import { AcPrColumn } from "./AcPrColumn";
-import { AcPrFlex } from "./AcPrFlex";
-import { AcPrFlexLayout } from "./AcPrFlexLayout";
-import { AcPrGap } from "./AcPrGap";
-import { AcPrGrid } from "./AcPrGrid";
-import { AcPrLayout } from "./AcPrLayout";
-import { AcPrPaddingMargin } from "./AcPrPaddingMargin";
-import { AcPrSelfAlignment } from "./AcPrSelfAlignment";
-import { AcPrText } from "./AcPrText";
-import { AcPrUtil } from "./AcPrUtil";
+import { AcTaggedPropRenderer } from "../any-comp-types.js";
+import { AcPrAnimation } from "./AcPrAnimation.js";
+import { AcPrBreakpoint } from "./AcPrBreakpoint.js";
+import { AcPrClassName } from "./AcPrClassName.js";
+import { AcPrColorMap } from "./AcPrColorMap.js";
+import { AcPrColors } from "./AcPrColors.js";
+import { AcPrColumn } from "./AcPrColumn.js";
+import { AcPrFlex } from "./AcPrFlex.js";
+import { AcPrFlexLayout } from "./AcPrFlexLayout.js";
+import { AcPrGap } from "./AcPrGap.js";
+import { AcPrGrid } from "./AcPrGrid.js";
+import { AcPrLayout } from "./AcPrLayout.js";
+import { AcPrPaddingMargin } from "./AcPrPaddingMargin.js";
+import { AcPrSelfAlignment } from "./AcPrSelfAlignment.js";
+import { AcPrText } from "./AcPrText.js";
+import { AcPrUtil } from "./AcPrUtil.js";
 
 export const defaultAcPropRendererMap:Record<string,AcTaggedPropRenderer>={
     className:{

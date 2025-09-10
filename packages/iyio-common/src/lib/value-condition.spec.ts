@@ -1,5 +1,5 @@
-import { testValueCondition } from './value-condition-lib';
-import { ValueCondition } from './value-condition-types';
+import { testValueCondition } from './value-condition-lib.js';
+import { ValueCondition } from './value-condition-types.js';
 
 describe('value-conditions',()=>{
 

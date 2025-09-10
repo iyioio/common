@@ -2,9 +2,9 @@ import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, Dyn
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { AwsAuthProviders, awsRegionParam } from '@iyio/aws';
 import { AuthDependentClient, DataTableDescription, IWithStoreAdapter, Scope, ValueCache, authService, getDataTableId } from "@iyio/common";
-import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter";
-import { convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName, getQueryCommandInput, getScanCommandInput } from "./dynamo-lib";
-import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions, createUpdateExpression, isUpdateExpression } from "./dynamo-types";
+import { DynamoStoreAdapter, DynamoStoreAdapterOptions } from "./DynamoStoreAdapter.js";
+import { convertObjectToDynamoAttributes, createItemUpdateInputOrNull, formatDynamoTableName, getQueryCommandInput, getScanCommandInput } from "./dynamo-lib.js";
+import { DynamoGetOptions, ExtendedItemUpdateOptions, ItemPatch, PageResult, PatchTableItemOptions, QueryMatchTableOptions, ScanMatchTableOptions, createUpdateExpression, isUpdateExpression } from "./dynamo-types.js";
 
 
 export class DynamoClient extends AuthDependentClient<DynamoDBClient> implements IWithStoreAdapter

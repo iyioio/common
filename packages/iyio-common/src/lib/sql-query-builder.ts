@@ -1,8 +1,8 @@
-import { asArray } from "./array";
-import { asType } from "./common-lib";
-import { applyQueryShorthands } from "./query-lib";
-import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, queryConditionOpInfos, QueryConditionOrGroup, queryExpressionOperators, queryFunctions, QueryGroupCondition, QueryValue } from "./query-types";
-import { escapeSqlName, escapeSqlValue } from "./sql-lib";
+import { asArray } from "./array.js";
+import { asType } from "./common-lib.js";
+import { applyQueryShorthands } from "./query-lib.js";
+import { isQueryCondition, isQueryGroupCondition, NamedQueryValue, Query, QueryCol, queryConditionNotMap, queryConditionOpInfos, QueryConditionOrGroup, queryExpressionOperators, queryFunctions, QueryGroupCondition, QueryValue } from "./query-types.js";
+import { escapeSqlName, escapeSqlValue } from "./sql-lib.js";
 
 /**
  * Builds a SQL query string from the specified Query object.

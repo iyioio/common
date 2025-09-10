@@ -1,5 +1,5 @@
 import { DisposeContainer } from "@iyio/common";
-import { ProtogenCtrl } from "../lib/ProtogenCtrl";
+import { ProtogenCtrl } from "../lib/ProtogenCtrl.js";
 
 export class Assistant{
 

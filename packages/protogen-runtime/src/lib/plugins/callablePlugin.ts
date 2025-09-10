@@ -101,7 +101,7 @@ export const callablePlugin:ProtoPipelineConfigurablePlugin<typeof CallablePlugi
                 content:out.join('\n')
             })
 
-            mapOut.push(`import { ${name} as _${i} } from "./${name}";`);
+            mapOut.push(`import { ${name} as _${i} } from "./${name}.js";`);
             mapOutBody.push(`${tab}${call.name}:_${i},`)
 
             i++;

@@ -2,11 +2,11 @@ import { ManagedStack } from '@iyio/cdk-common';
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { createAuthFunc } from './createAuthFunc';
-import { createDbCluster } from './createDbCluster';
-import { createDynamoTables } from './createDynamoTables';
-import { createObjSyncTestResources } from './createObjSyncTestResources';
-import { createUserPool } from './createUserPool';
+import { createAuthFunc } from './createAuthFunc.js';
+import { createDbCluster } from './createDbCluster.js';
+import { createDynamoTables } from './createDynamoTables.js';
+import { createObjSyncTestResources } from './createObjSyncTestResources.js';
+import { createUserPool } from './createUserPool.js';
 
 export class TestResourcesStack extends ManagedStack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {

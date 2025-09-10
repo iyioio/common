@@ -1,4 +1,4 @@
-import { GoogleTagManagerConfig } from "./google-tag-manager-types";
+import { GoogleTagManagerConfig } from "./google-tag-manager-types.js";
 
 let scriptInserted=false;
 

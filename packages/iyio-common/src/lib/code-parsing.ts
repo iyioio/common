@@ -1,4 +1,4 @@
-import { CodeParsingError } from "./code-parsing-types";
+import { CodeParsingError } from "./code-parsing-types.js";
 
 export const getCodeParsingError=(code:string,index:number,message:string):CodeParsingError=>{
 

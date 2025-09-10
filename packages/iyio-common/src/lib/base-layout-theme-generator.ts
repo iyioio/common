@@ -1,6 +1,6 @@
-import { getBaseLayoutDefaults } from "./base-layout-defaults";
-import { BaseLayoutCssOptions, BaseLayoutVarContainer, FontFace } from "./base-layout-generator-types";
-import { deepClone } from "./object";
+import { getBaseLayoutDefaults } from "./base-layout-defaults.js";
+import { BaseLayoutCssOptions, BaseLayoutVarContainer, FontFace } from "./base-layout-generator-types.js";
+import { deepClone } from "./object.js";
 
 export const createBaseLayoutTheme=(props:BaseLayoutCssOptions):BaseLayoutCssOptions=>{
 

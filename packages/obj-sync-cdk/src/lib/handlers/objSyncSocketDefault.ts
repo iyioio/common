@@ -1,6 +1,6 @@
 import { BadRequestError, FnEvent, FnEventEventTypeDisconnect, FnEventEventTypeMessage, asArray, createFnHandler } from '@iyio/common';
 import { ObjSyncClientCommand, ObjSyncRemoteCommand } from '@iyio/obj-sync';
-import { cleanUpSocket, createClientConnectionAsync, initBackend, isSocketRegistered, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib';
+import { cleanUpSocket, createClientConnectionAsync, initBackend, isSocketRegistered, queueSyncEvtAsync, sendData, sendStateToClientAsync } from '../obj-sync-handler-lib.js';
 
 initBackend();
 

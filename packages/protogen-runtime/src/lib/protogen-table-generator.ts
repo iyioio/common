@@ -1,7 +1,7 @@
 import { DataTableColInfo, DataTableDescription, DataTableIndex, HashMap, joinPaths, safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoContext, ProtoNode, addTsImport, getProtoPluginPackAndPath, protoAddContextParam, protoFormatTsComment, protoGenerateTsIndex, protoGetChildren, protoGetChildrenByName, protoGetParamName, protoPrependTsImports } from "@iyio/protogen";
-import { TableNameParamNamePair } from "./plugins/tableCdkTemplate";
-import { SharedTsPluginConfig, getTsSchemeName } from "./sharedTsConfig";
+import { TableNameParamNamePair } from "./plugins/tableCdkTemplate.js";
+import { SharedTsPluginConfig, getTsSchemeName } from "./sharedTsConfig.js";
 
 const notWordRegex=/\W/g;
 

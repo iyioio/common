@@ -1,9 +1,9 @@
 import { getDistanceBetweenPoints, Point } from "@iyio/common";
 import { protoGetLayout, protoGetNodeCtrl, ProtoLink, ProtoNode } from "@iyio/protogen";
-import { dt } from "./lib-design-tokens";
-import { NodeCtrl } from "./NodeCtrl";
-import { getDistanceOpacity, ProtoUiLine } from "./protogen-ui-lib";
-import { ProtogenCtrl } from "./ProtogenCtrl";
+import { dt } from "./lib-design-tokens.js";
+import { NodeCtrl } from "./NodeCtrl.js";
+import { getDistanceOpacity, ProtoUiLine } from "./protogen-ui-lib.js";
+import { ProtogenCtrl } from "./ProtogenCtrl.js";
 
 export class LineCtrl
 {

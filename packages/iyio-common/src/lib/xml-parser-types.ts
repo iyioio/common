@@ -1,4 +1,4 @@
-import { CodeParsingOptions, CodeParsingResult } from "./code-parsing-types";
+import { CodeParsingOptions, CodeParsingResult } from "./code-parsing-types.js";
 
 export interface XmlNode
 {

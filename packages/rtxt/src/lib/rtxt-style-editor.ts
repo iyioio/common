@@ -1,5 +1,5 @@
 import { css } from "@iyio/common";
-import { RTxtEditorStyle, defaultRTxtClassNamePrefix } from "./rtxt-types";
+import { RTxtEditorStyle, defaultRTxtClassNamePrefix } from "./rtxt-types.js";
 
 let inserted=false;
 

@@ -1,6 +1,6 @@
 import { Point } from "@iyio/common";
 import { protoGetEmptyLayout, ProtoLayout, ProtoLink, ProtoLinkPriority } from "@iyio/protogen";
-import type { NodeCtrl } from "./NodeCtrl";
+import type { NodeCtrl } from "./NodeCtrl.js";
 
 export const anchorInset=0;
 

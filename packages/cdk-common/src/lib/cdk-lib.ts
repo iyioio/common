@@ -11,7 +11,7 @@ import { Construct } from "constructs";
 import { mkdirSync } from "fs";
 import { tmpdir } from 'os';
 import * as Path from "path";
-import { Grantee } from "./cdk-types";
+import { Grantee } from "./cdk-types.js";
 
 export const cdkUseCachedOutputs=parseConfigBool(process.env['NX_CDK_USE_CACHED_OUTPUTS']);
 

@@ -1,5 +1,5 @@
-import { HashMap } from "./common-types";
-import { Query } from "./query-types";
+import { HashMap } from "./common-types.js";
+import { Query } from "./query-types.js";
 
 export interface SeriesData
 {

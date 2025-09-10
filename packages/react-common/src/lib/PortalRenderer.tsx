@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { PortalCtrl, PortalItem, getPortalCtrl } from "./portal-lib";
-import { useSubject } from "./rxjs-hooks";
+import { PortalCtrl, PortalItem, getPortalCtrl } from "./portal-lib.js";
+import { useSubject } from "./rxjs-hooks.js";
 
 interface PortalRendererProps
 {

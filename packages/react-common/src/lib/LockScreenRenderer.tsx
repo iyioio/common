@@ -1,6 +1,6 @@
 import { UiLockContainer, uiLockContainerService } from "@iyio/common";
-import { LockScreenView } from "./LockScreenView";
-import { useSubject } from "./rxjs-hooks";
+import { LockScreenView } from "./LockScreenView.js";
+import { useSubject } from "./rxjs-hooks.js";
 
 interface LockScreenRendererProps
 {

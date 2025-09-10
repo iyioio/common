@@ -1,7 +1,7 @@
-import { HashMap } from "./common-types";
-import { applyQueryShorthands } from "./query-lib";
-import { isQueryCondition, isQueryGroupCondition, Query } from "./query-types";
-import { buildQuery } from "./sql-query-builder";
+import { HashMap } from "./common-types.js";
+import { applyQueryShorthands } from "./query-lib.js";
+import { isQueryCondition, isQueryGroupCondition, Query } from "./query-types.js";
+import { buildQuery } from "./sql-query-builder.js";
 
 describe('query-lib',()=>{
 

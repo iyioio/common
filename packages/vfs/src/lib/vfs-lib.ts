@@ -1,7 +1,7 @@
 // Convo FS is a virtual filesystem
 
 import { EvtTrigger, ValueCondition, currentBaseUser, getFileName, joinPaths, starStringTestCached } from "@iyio/common";
-import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsItem, VfsLocalFsConfig, VfsMntPt } from "./vfs-types";
+import { VfsDirReadOptions, VfsDirReadResult, VfsFilter, VfsItem, VfsLocalFsConfig, VfsMntPt } from "./vfs-types.js";
 
 
 export const vfsMntTypes={

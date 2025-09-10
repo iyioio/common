@@ -1,19 +1,19 @@
-import { BaseUser } from "./BaseUser";
-import { CancelToken } from "./CancelToken";
-import { DisposeContainer } from "./DisposeContainer";
-import { getPopupWindowMessageAsync, sendPopupWindowMessage } from "./PopupWindow";
-import { RouterStore } from "./RouterStore";
-import { ScopedSetter } from "./Setter";
-import { ValueCache } from "./ValueCache";
-import { _setUser } from "./_internal.common";
-import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types";
-import { AuthProviders, currentBaseUser } from "./auth.deps";
-import { breakFunction, continueFunction } from "./common-lib";
-import { HashMap, IDisposable, IInit } from "./common-types";
-import { ReadonlySubject } from "./rxjs-types";
-import { ProviderTypeDef, Scope, TypeDef } from "./scope-types";
-import { storeRoot } from "./store.deps";
-import { isValidEmail } from "./validation";
+import { BaseUser } from "./BaseUser.js";
+import { CancelToken } from "./CancelToken.js";
+import { DisposeContainer } from "./DisposeContainer.js";
+import { getPopupWindowMessageAsync, sendPopupWindowMessage } from "./PopupWindow.js";
+import { RouterStore } from "./RouterStore.js";
+import { ScopedSetter } from "./Setter.js";
+import { ValueCache } from "./ValueCache.js";
+import { _setUser } from "./_internal.common.js";
+import { AuthDeleteResult, AuthProvider, AuthRegisterResult, AuthSignInResult, AuthVerificationResult, PasswordResetResult, UserAuthProviderData } from "./auth-types.js";
+import { AuthProviders, currentBaseUser } from "./auth.deps.js";
+import { breakFunction, continueFunction } from "./common-lib.js";
+import { HashMap, IDisposable, IInit } from "./common-types.js";
+import { ReadonlySubject } from "./rxjs-types.js";
+import { ProviderTypeDef, Scope, TypeDef } from "./scope-types.js";
+import { storeRoot } from "./store.deps.js";
+import { isValidEmail } from "./validation.js";
 
 const providerDataKey='app-common/Auth/UserAuthProviderData';
 

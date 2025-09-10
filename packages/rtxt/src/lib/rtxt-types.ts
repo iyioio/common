@@ -1,5 +1,5 @@
-import type { RTxtEditor } from "./RTxtEditor";
-import type { RTxtRenderer } from "./RTxtRenderer";
+import type { RTxtEditor } from "./RTxtEditor.js";
+import type { RTxtRenderer } from "./RTxtRenderer.js";
 
 export const defaultRTxtNodeType='span';
 

@@ -1,11 +1,11 @@
 import { ReadonlySubject, aryRemoveItem, convertRgbToHex, escapeHtml, isDomNodeDescendantOf } from "@iyio/common";
 import { BehaviorSubject } from "rxjs";
-import { RTxtRenderer } from "./RTxtRenderer";
-import { ToolGrouping, getDeepestElem, getNodeElem, getTextNode, getToolElem, hasForeignElems } from "./rtxt-internal";
-import { elemToRTxtDoc, getRTxtNodeLine, getRTxtNodesLines, getRTxtSelection, selectRTxtSelection, shouldIgnoreRTxtLineElem, sortRTxtNodeTypes } from "./rtxt-lib";
-import { insertRTxtEditorStyleSheet } from "./rtxt-style-editor";
-import { getDefaultRTxtTools } from "./rtxt-tools";
-import { RTxtAlignment, RTxtDescriptor, RTxtEditorOptions, RTxtLine, RTxtNode, RTxtSelection, RTxtTool, RTxtToolSelection, defaultRTxtClassNamePrefix, defaultRTxtLineElem, defaultRTxtNodeType, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types";
+import { RTxtRenderer } from "./RTxtRenderer.js";
+import { ToolGrouping, getDeepestElem, getNodeElem, getTextNode, getToolElem, hasForeignElems } from "./rtxt-internal.js";
+import { elemToRTxtDoc, getRTxtNodeLine, getRTxtNodesLines, getRTxtSelection, selectRTxtSelection, shouldIgnoreRTxtLineElem, sortRTxtNodeTypes } from "./rtxt-lib.js";
+import { insertRTxtEditorStyleSheet } from "./rtxt-style-editor.js";
+import { getDefaultRTxtTools } from "./rtxt-tools.js";
+import { RTxtAlignment, RTxtDescriptor, RTxtEditorOptions, RTxtLine, RTxtNode, RTxtSelection, RTxtTool, RTxtToolSelection, defaultRTxtClassNamePrefix, defaultRTxtLineElem, defaultRTxtNodeType, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineIndexAtt, rTxtNodeAtt } from "./rtxt-types.js";
 
 
 export class RTxtEditor

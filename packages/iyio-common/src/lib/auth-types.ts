@@ -1,5 +1,5 @@
-import type { BaseUser, BaseUserOptions, BaseUserUpdate } from "./BaseUser";
-import { HashMap, IOpDisposable, IOpInit, SymStrHashMap } from "./common-types";
+import type { BaseUser, BaseUserOptions, BaseUserUpdate } from "./BaseUser.js";
+import { HashMap, IOpDisposable, IOpInit, SymStrHashMap } from "./common-types.js";
 
 export type AuthSignInResult={
     success:true;

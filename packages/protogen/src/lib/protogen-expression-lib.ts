@@ -1,7 +1,7 @@
 import { getValueByPath } from "@iyio/common";
-import { ParseProtoExpressOptions, ProtoEvalContext, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowFlag, ProtoExpressionControlFlowResult, ProtoExpressionCtrlType, builtInProtoExpressionCtrlTypes } from "./protogen-expression-types";
-import { parseProtoPrimitiveUndefined } from "./protogen-lib";
-import { ProtoNode } from "./protogen-types";
+import { ParseProtoExpressOptions, ProtoEvalContext, ProtoEvalValue, ProtoExpression, ProtoExpressionControlFlowFlag, ProtoExpressionControlFlowResult, ProtoExpressionCtrlType, builtInProtoExpressionCtrlTypes } from "./protogen-expression-types.js";
+import { parseProtoPrimitiveUndefined } from "./protogen-lib.js";
+import { ProtoNode } from "./protogen-types.js";
 
 export const parseProtoExpression=({
     node,

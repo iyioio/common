@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnyCompViewCtrl } from "./AnyCompViewCtrl";
-import { AcComp } from "./any-comp-types";
+import { AnyCompViewCtrl } from "./AnyCompViewCtrl.js";
+import { AcComp } from "./any-comp-types.js";
 
 export const useCreateAnyCompViewCtrl=(comp:AcComp|null|undefined):AnyCompViewCtrl|null=>{
     const ctrl=useMemo(()=>comp?new AnyCompViewCtrl(comp):null,[comp]);

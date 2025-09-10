@@ -1,6 +1,6 @@
 import { ZodAny, ZodArray, ZodBoolean, ZodEnum, ZodError, ZodLazy, ZodLazyDef, ZodLiteral, ZodNull, ZodNullable, ZodNumber, ZodObject, ZodOptional, ZodRecord, ZodSchema, ZodString, ZodType, ZodTypeAny, ZodUndefined, ZodUnion, z } from "zod";
-import { JsonScheme } from "./json-scheme";
-import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types";
+import { JsonScheme } from "./json-scheme.js";
+import { TsPrimitiveType, allTsPrimitiveTypes } from "./typescript-types.js";
 
 /**
  * Extracts the first error message from a ZodError instance

@@ -3,9 +3,9 @@ import * as cdk from 'aws-cdk-lib';
 import * as db from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 import { ZodTypeAny } from "zod";
-import { grantTableQueryPerms, grantTableScanPerms, isCdkEnvPatternMatch } from "./cdk-lib";
-import { AccessGranter, IAccessGrantGroup } from "./cdk-types";
-import { getDefaultManagedProps, ManagedProps } from "./ManagedProps";
+import { grantTableQueryPerms, grantTableScanPerms, isCdkEnvPatternMatch } from "./cdk-lib.js";
+import { AccessGranter, IAccessGrantGroup } from "./cdk-types.js";
+import { getDefaultManagedProps, ManagedProps } from "./ManagedProps.js";
 
 export interface TableBuilderProps
 {

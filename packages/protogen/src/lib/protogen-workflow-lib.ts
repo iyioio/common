@@ -1,8 +1,8 @@
 import { endDateSort, safeParseDateOrUndefined, safeParseNumber } from "@iyio/common";
-import { parseProtoExpression } from "./protogen-expression-lib";
-import { protoGetChildrenByName } from "./protogen-node";
-import { ProtoNode } from "./protogen-types";
-import { ProtoAction, ProtoTimeWindow, ProtoTrigger } from "./protogen-workflow-types";
+import { parseProtoExpression } from "./protogen-expression-lib.js";
+import { protoGetChildrenByName } from "./protogen-node.js";
+import { ProtoNode } from "./protogen-types.js";
+import { ProtoAction, ProtoTimeWindow, ProtoTrigger } from "./protogen-workflow-types.js";
 
 export const protoWorkerlessNodeAddress='_';
 export const protoWorkerlessGroupName='_';

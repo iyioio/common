@@ -1,4 +1,4 @@
-import { AnyCompBoolLabels } from "./any-comp-types";
+import { AnyCompBoolLabels } from "./any-comp-types.js";
 
 export const acTags={
     /**

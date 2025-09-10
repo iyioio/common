@@ -2,8 +2,8 @@ import { ApiRoute, BucketSiteContentSource, SiteInfo } from "@iyio/cdk-common";
 import { joinPaths, strFirstToUpper } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin, protoGetChildrenByName, protoMergeJson } from "@iyio/protogen";
 import { z } from "zod";
-import { nextJsAppTemplate } from "./nextJsAppTemplate";
-import { siteCdkTemplate } from "./siteCdkTemplate";
+import { nextJsAppTemplate } from "./nextJsAppTemplate.js";
+import { siteCdkTemplate } from "./siteCdkTemplate.js";
 
 const supportedTypes=['nextApp'];
 

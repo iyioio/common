@@ -1,7 +1,7 @@
 import { Direction } from "@iyio/common";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import { useSubject } from "../rxjs-hooks";
-import { DirectionInputCtrl } from "./DirectionInputCtrl";
+import { useSubject } from "../rxjs-hooks.js";
+import { DirectionInputCtrl } from "./DirectionInputCtrl.js";
 
 export const DirectionInputReactContext=createContext<DirectionInputCtrl|null>(null);
 

@@ -1,5 +1,5 @@
-import { getSortedObjStrings, getSortedObjectHash, sortedObjPrefix } from "./object-sorted";
-import { strHashBase64Fs } from "./string-hashing";
+import { getSortedObjStrings, getSortedObjectHash, sortedObjPrefix } from "./object-sorted.js";
+import { strHashBase64Fs } from "./string-hashing.js";
 
 describe('object-sorted',()=>{
 

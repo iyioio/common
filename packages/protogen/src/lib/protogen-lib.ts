@@ -1,4 +1,4 @@
-import { InvalidProtoCallableArgsError, ProtoCallable, ProtoCallableNotImplementedError, ProtoLayout, ProtoNode, ProtoTypeInfo } from "./protogen-types";
+import { InvalidProtoCallableArgsError, ProtoCallable, ProtoCallableNotImplementedError, ProtoLayout, ProtoNode, ProtoTypeInfo } from "./protogen-types.js";
 
 const layoutKey=Symbol('protoLayout');
 

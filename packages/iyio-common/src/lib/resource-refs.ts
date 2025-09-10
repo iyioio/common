@@ -1,4 +1,4 @@
-import { DisposeCallback } from "./common-types";
+import { DisposeCallback } from "./common-types.js";
 
 const allRefs:ResourceRef<any>[]=[];
 try{

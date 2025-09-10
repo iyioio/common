@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect } from "react";
-import { SurfaceCtrl } from "./SurfaceCtrl";
-import { ViewportCtrl } from "./ViewportCtrl";
+import { SurfaceCtrl } from "./SurfaceCtrl.js";
+import { ViewportCtrl } from "./ViewportCtrl.js";
 
 export const ViewportCtrlReactContext=createContext<ViewportCtrl|null>(null);
 

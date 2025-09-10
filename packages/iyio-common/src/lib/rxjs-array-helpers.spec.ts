@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { popBehaviorSubjectAry, pushBehaviorSubjectAry, pushBehaviorSubjectAryMany, removeAllBehaviorSubjectAryValue, removeAllBehaviorSubjectAryValueMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, shiftBehaviorSubjectAry, spliceBehaviorSubjectAry, unshiftBehaviorSubjectAry, unshiftBehaviorSubjectAryMany } from "./rxjs-array-helpers";
+import { popBehaviorSubjectAry, pushBehaviorSubjectAry, pushBehaviorSubjectAryMany, removeAllBehaviorSubjectAryValue, removeAllBehaviorSubjectAryValueMany, removeBehaviorSubjectAryValue, removeBehaviorSubjectAryValueMany, shiftBehaviorSubjectAry, spliceBehaviorSubjectAry, unshiftBehaviorSubjectAry, unshiftBehaviorSubjectAryMany } from "./rxjs-array-helpers.js";
 
 describe('rxjs-array-helpers',()=>{
 

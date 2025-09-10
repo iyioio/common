@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { DisposeCallback } from "./common-types";
+import { DisposeCallback } from "./common-types.js";
 
 export const incrementBehaviourSubject=(subject:BehaviorSubject<number>):number=>{
     const n=subject.value+1;

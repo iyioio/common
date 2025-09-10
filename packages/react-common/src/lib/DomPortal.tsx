@@ -1,7 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { EventCaptureContainer } from "./EventCaptureContainer";
-import { DomPortalRenderTarget, domPortalRenderers } from "./dom-portal-lib";
+import { EventCaptureContainer } from "./EventCaptureContainer.js";
+import { DomPortalRenderTarget, domPortalRenderers } from "./dom-portal-lib.js";
 
 export interface DomPortalProps
 {

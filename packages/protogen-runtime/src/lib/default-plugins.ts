@@ -1,21 +1,21 @@
 import { ProtoPipelinePluginInfo } from "@iyio/protogen";
-import { actionPlugin } from "./plugins/actionPlugin";
-import { assignPlugin } from "./plugins/assignPlugin";
-import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin";
-import { callablePlugin } from "./plugins/callablePlugin";
-import { fileReader } from "./plugins/fileReader";
-import { fileWriter } from "./plugins/fileWriter";
-import { functionPlugin } from "./plugins/functionPlugin";
-import { markdownParser } from "./plugins/markdownParser";
-import { packagePlugin } from "./plugins/packagePlugin";
-import { paramPlugin } from "./plugins/paramPlugin";
-import { reactCompPlugin } from "./plugins/reactCompPlugin";
-import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin";
-import { sqlTablePlugin } from "./plugins/sqlTablePlugin";
-import { tablePlugin } from "./plugins/tablePlugin";
-import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin";
-import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin";
-import { zodPlugin } from "./plugins/zodPlugin";
+import { actionPlugin } from "./plugins/actionPlugin.js";
+import { assignPlugin } from "./plugins/assignPlugin.js";
+import { autoPackageIndexPlugin } from "./plugins/autoPackageIndexPlugin.js";
+import { callablePlugin } from "./plugins/callablePlugin.js";
+import { fileReader } from "./plugins/fileReader.js";
+import { fileWriter } from "./plugins/fileWriter.js";
+import { functionPlugin } from "./plugins/functionPlugin.js";
+import { markdownParser } from "./plugins/markdownParser.js";
+import { packagePlugin } from "./plugins/packagePlugin.js";
+import { paramPlugin } from "./plugins/paramPlugin.js";
+import { reactCompPlugin } from "./plugins/reactCompPlugin.js";
+import { sqlMigrationsPlugin } from "./plugins/sqlMigrationsPlugin.js";
+import { sqlTablePlugin } from "./plugins/sqlTablePlugin.js";
+import { tablePlugin } from "./plugins/tablePlugin.js";
+import { tsConfigPlugin } from "./plugins/tsConfigPathsPlugin.js";
+import { tsProtoNodePlugin } from "./plugins/tsProtoNodePlugin.js";
+import { zodPlugin } from "./plugins/zodPlugin.js";
 
 export const getDefaultProtoPipelinePlugins=():ProtoPipelinePluginInfo[]=>{
     return [

@@ -2,12 +2,12 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutInnerFlexProps, baseLayoutInnerFlexProps } from "@iyio/common";
 import { SlimButton, Text, View } from "@iyio/react-common";
 import { Fragment } from "react";
-import { AnyCompBtn } from "../AnyCompBtn";
-import { AnyCompViewCtrl } from "../AnyCompViewCtrl";
-import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib";
-import { acStyle } from "../any-comp-style";
-import { AcProp } from "../any-comp-types";
-import { getBaseLayoutInfo } from "./prop-render-lib";
+import { AnyCompBtn } from "../AnyCompBtn.js";
+import { AnyCompViewCtrl } from "../AnyCompViewCtrl.js";
+import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib.js";
+import { acStyle } from "../any-comp-style.js";
+import { AcProp } from "../any-comp-types.js";
+import { getBaseLayoutInfo } from "./prop-render-lib.js";
 
 const jProps:(keyof BaseLayoutInnerFlexProps)[]=[
     'justifyStart','justifyCenter','justifyEnd','justifyEvenly','justifyAround','justifyBetween'

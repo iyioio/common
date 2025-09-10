@@ -1,4 +1,4 @@
 import { defineClient } from "@iyio/common";
-import { LambdaClient } from "./LambdaClient";
+import { LambdaClient } from "./LambdaClient.js";
 
 export const lambdaClient=defineClient<LambdaClient>('lambdaClient',scope=>LambdaClient.fromScope(scope))

@@ -1,6 +1,6 @@
-import { UnsupportedError } from "./errors";
-import { addQueryToPath, RouteQuery, shouldUseNativeNavigation } from "./ui-lib";
-import { UiRouterBase } from "./UiRouterBase";
+import { UnsupportedError } from "./errors.js";
+import { addQueryToPath, RouteQuery, shouldUseNativeNavigation } from "./ui-lib.js";
+import { UiRouterBase } from "./UiRouterBase.js";
 
 export interface BrowserUiRouterOptions
 {

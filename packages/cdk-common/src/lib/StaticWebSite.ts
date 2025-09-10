@@ -8,11 +8,11 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct, IConstruct, Node } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { ParamOutput } from "./ParamOutput";
-import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib";
-import { ApiRoute, BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types";
-import { getRegexRedirectMapAsString } from "./getRedirectMap";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { ParamOutput } from "./ParamOutput.js";
+import { cdkOutputCache, cdkUseCachedOutputs } from "./cdk-lib.js";
+import { ApiRoute, BucketSiteContentSource, NamedFn, SiteContentSource } from "./cdk-types.js";
+import { getRegexRedirectMapAsString } from "./getRedirectMap.js";
 
 export const getStackItemName=(stack:IConstruct,name:string,maxLength=64)=>{
     const n=`${name}-${Node.of(stack).addr}`;

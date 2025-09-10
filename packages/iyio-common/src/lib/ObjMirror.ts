@@ -1,6 +1,6 @@
-import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetOrMergeProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib';
-import { ObjWatchEvt, RecursiveObjWatchEvt } from "./obj-watch-types";
-import { getValueByAryPath } from './object';
+import { objWatchEvtToRecursiveObjWatchEvt, wAryMove, wArySpliceWithSource, wDeleteProp, wSetOrMergeProp, wSetProp, wTriggerChange, wTriggerEvent, wTriggerLoad } from './obj-watch-lib.js';
+import { ObjWatchEvt, RecursiveObjWatchEvt } from "./obj-watch-types.js";
+import { getValueByAryPath } from './object.js';
 
 export class ObjMirror{
 

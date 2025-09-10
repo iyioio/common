@@ -1,4 +1,4 @@
-import { RTxtDescriptor } from "./rtxt-types";
+import { RTxtDescriptor } from "./rtxt-types.js";
 
 export const getDefaultRTxtNodeDescriptors=():RTxtDescriptor[]=>[
     {

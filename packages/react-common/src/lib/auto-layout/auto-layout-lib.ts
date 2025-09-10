@@ -1,6 +1,6 @@
 import { BaseLayoutProps } from "@iyio/common";
 import { CSSProperties } from "react";
-import { AutoLayoutCtrl } from "./AutoLayoutCtrl";
+import { AutoLayoutCtrl } from "./AutoLayoutCtrl.js";
 
 export interface AutoLayoutSlotOptions
 {

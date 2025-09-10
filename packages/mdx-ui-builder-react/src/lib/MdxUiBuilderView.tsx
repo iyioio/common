@@ -6,7 +6,7 @@ import { BaseLayoutProps, getErrorMessage } from "@iyio/common";
 import { MdxUiBuilder, MdxUiBuilderError, MdxUiBuilderOptions, MdxUiDeconstructProp, MdxUiImportReplacer, MdxUiLiveComponentGenerator } from "@iyio/mdx-ui-builder";
 import { ErrorBoundary, HookCtrl, HookCtrlReactContext, Text, View, useCreateHookCtrl, useSubject } from "@iyio/react-common";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView";
+import { MdxUiBuilderErrorView } from "./MdxUiBuilderErrorView.js";
 
 
 export interface MdxUiBuilderViewProps

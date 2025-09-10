@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { Subject } from 'rxjs';
 import type { Highlighter, BundledLanguage as Lang } from 'shiki';
-import { atDotCssGrammar } from './grammar/atDotCss';
-import { convoGrammar } from './grammar/convo';
-import { mdxGrammar } from './grammar/mdx';
+import { atDotCssGrammar } from './grammar/atDotCss.js';
+import { convoGrammar } from './grammar/convo.js';
+import { mdxGrammar } from './grammar/mdx.js';
 
 let defaultHighlighter:Promise<Highlighter>|null;
 

@@ -1,7 +1,7 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutOuterProps } from "@iyio/common";
-import { anyCompIcons } from "./any-comp-icons";
-import { acStyle } from "./any-comp-style";
+import { anyCompIcons } from "./any-comp-icons.js";
+import { acStyle } from "./any-comp-style.js";
 
 export type AnyCompIconType=keyof typeof anyCompIcons;
 

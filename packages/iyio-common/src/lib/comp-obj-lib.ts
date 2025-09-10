@@ -1,4 +1,4 @@
-import { ComObJsxRenderer, CompObj, CompObjRenderOptions, compObjTypeKey, isCompObj } from "./comp-obj-types";
+import { ComObJsxRenderer, CompObj, CompObjRenderOptions, compObjTypeKey, isCompObj } from "./comp-obj-types.js";
 
 export const renderCompObj=(comp:CompObj,jsxs:ComObJsxRenderer,jsx:ComObJsxRenderer,options:CompObjRenderOptions={}):any=>{
 

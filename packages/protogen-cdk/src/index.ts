@@ -1,2 +1,2 @@
-export * from './lib/cdk-plugins';
+export * from './lib/cdk-plugins.js';
 

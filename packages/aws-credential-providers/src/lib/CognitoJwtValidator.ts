@@ -1,7 +1,7 @@
 import { awsRegionParam } from '@iyio/aws';
 import { JwtValidator, Scope } from '@iyio/common';
 import { CognitoJwtVerifier } from "aws-jwt-verify";
-import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers';
+import { cognitoIdentityPoolIdParam, cognitoUserPoolClientIdParam, cognitoUserPoolIdParam } from './_types.aws-credential-providers.js';
 
 
 export interface CognitoJwtValidatorConfig

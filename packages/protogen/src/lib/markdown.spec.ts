@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "fs";
-import { protoMarkdownParseNodes } from "./markdown";
-import { protoMergeNodes, protoRenderLines } from "./protogen-node";
+import { protoMarkdownParseNodes } from "./markdown.js";
+import { protoMergeNodes, protoRenderLines } from "./protogen-node.js";
 
 // update mdTestOutputs and mdParsed by setting NX_WRITE_PROTOGEN_TEST_OUTPUT to true
 // then copying and passing the test output files. Update mdParsed first, run the test

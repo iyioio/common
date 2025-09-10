@@ -1,8 +1,8 @@
-import { getCodeParsingError } from "./code-parsing";
-import { CodeParser } from "./code-parsing-types";
-import { unescapeHtml } from "./html";
-import { MarkdownLine, MarkdownMarkupTag, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types";
-import { isValidEmail } from "./validation";
+import { getCodeParsingError } from "./code-parsing.js";
+import { CodeParser } from "./code-parsing-types.js";
+import { unescapeHtml } from "./html.js";
+import { MarkdownLine, MarkdownMarkupTag, MarkdownNode, MarkdownParsingOptions, MarkdownParsingResult, MarkdownTag } from "./markdown-types.js";
+import { isValidEmail } from "./validation.js";
 
 const mdReg=/([\n\r]*)([ \t]*)([^\n\r]*)/g;
 

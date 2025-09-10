@@ -1,4 +1,4 @@
-import { DisposeCallback } from "./common-types";
+import { DisposeCallback } from "./common-types.js";
 
 
 export interface EvtHandle<TEvt,TListener extends ((evt:TEvt)=>void) = ((evt:TEvt)=>void)>

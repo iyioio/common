@@ -1,5 +1,5 @@
 import { defineProvider, defineStringParam } from "@iyio/common";
-import { AwsAuthProvider } from "./aws-auth";
+import { AwsAuthProvider } from "./aws-auth.js";
 
 export const AwsAuthProviders=defineProvider<AwsAuthProvider>("AwsAuthProviders");
 

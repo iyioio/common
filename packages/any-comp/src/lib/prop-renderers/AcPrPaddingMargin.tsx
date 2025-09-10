@@ -2,12 +2,12 @@ import { atDotCss } from "@iyio/at-dot-css";
 import { NamedValue, baseLayoutMarginProps, baseLayoutPaddingProps } from "@iyio/common";
 import { SelectWrapper, SlimButton, Text } from "@iyio/react-common";
 import { useState } from "react";
-import { AnyCompIcon } from "../AnyCompIcon";
-import { AnyCompViewCtrl } from "../AnyCompViewCtrl";
-import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib";
-import { acStyle } from "../any-comp-style";
-import { AcProp } from "../any-comp-types";
-import { getBaseLayoutInfo } from "./prop-render-lib";
+import { AnyCompIcon } from "../AnyCompIcon.js";
+import { AnyCompViewCtrl } from "../AnyCompViewCtrl.js";
+import { useUpdateOnAnyCompPropChange } from "../any-comp-react-lib.js";
+import { acStyle } from "../any-comp-style.js";
+import { AcProp } from "../any-comp-types.js";
+import { getBaseLayoutInfo } from "./prop-render-lib.js";
 
 type Keys=(keyof typeof baseLayoutPaddingProps)|(keyof typeof baseLayoutMarginProps);
 type Mode='uniform'|'axis'|'side';

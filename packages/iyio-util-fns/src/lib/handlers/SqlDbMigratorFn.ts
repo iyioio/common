@@ -1,5 +1,5 @@
 import { OnEventRequest } from "@iyio/aws";
-import { deleteDb, migrateDb } from "../db-migrator-lib";
+import { deleteDb, migrateDb } from "../db-migrator-lib.js";
 
 const SqlDbMigratorFn=async (event: OnEventRequest)=>{
     switch (event.RequestType) {

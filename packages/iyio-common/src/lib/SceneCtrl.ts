@@ -1,5 +1,5 @@
-import { buildScene } from "./scene-lib";
-import { Scene, SceneDescriptorProvider } from "./scene-types";
+import { buildScene } from "./scene-lib.js";
+import { Scene, SceneDescriptorProvider } from "./scene-types.js";
 
 let defaultCtrl:SceneCtrl|null=null;
 let staticIsDefault=false;

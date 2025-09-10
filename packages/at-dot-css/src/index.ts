@@ -1,2 +1,2 @@
-export * from './lib/at-dot-css';
+export * from './lib/at-dot-css.js';
 

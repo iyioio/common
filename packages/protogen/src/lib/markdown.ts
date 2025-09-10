@@ -1,5 +1,5 @@
-import { protoAddChild, protoCreateEmptyNode, protoCreateNodeAddressMap, protoEnsureUniqueAddress, protoNormalizeNodes, ProtoNormalizeNodesOptions } from "./protogen-node";
-import { ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoTypeInfo } from "./protogen-types";
+import { protoAddChild, protoCreateEmptyNode, protoCreateNodeAddressMap, protoEnsureUniqueAddress, protoNormalizeNodes, ProtoNormalizeNodesOptions } from "./protogen-node.js";
+import { ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoTypeInfo } from "./protogen-types.js";
 
 const lineReg=/^([ \t]*)(#+|-)[ \t]+(\$?\w[\w-]*)(\??)(:)?[ \t]*(.*)(?=\n|$)/;
 const lineRegSpace=1;

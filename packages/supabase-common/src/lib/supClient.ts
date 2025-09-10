@@ -1,5 +1,5 @@
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
-import { supabaseAnonKeyParam, supabaseApiUrlParam, supabaseServiceRoleKeyParam } from './supabase-common.deps';
+import { supabaseAnonKeyParam, supabaseApiUrlParam, supabaseServiceRoleKeyParam } from './supabase-common.deps.js';
 
 /**
  * Returns the service client if the service role key param is defined, otherwise the user client is returned

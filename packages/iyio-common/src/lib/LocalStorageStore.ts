@@ -1,6 +1,6 @@
-import { JsonStore, JsonStoreOptions } from "./JsonStore";
-import { defineBoolParam, defineStringParam } from "./scope-lib";
-import { Scope } from "./scope-types";
+import { JsonStore, JsonStoreOptions } from "./JsonStore.js";
+import { defineBoolParam, defineStringParam } from "./scope-lib.js";
+import { Scope } from "./scope-types.js";
 
 export const localStorageKeyPrefixParam=defineStringParam('localStorageKeyPrefix');
 export const localStorageIgnoreUndefineLocalStoageParam=defineBoolParam('localStorageIgnoreUndefineLocalStoage');

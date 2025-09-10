@@ -1,4 +1,4 @@
-import { defineStringParam } from "./scope-lib";
+import { defineStringParam } from "./scope-lib.js";
 
 export const paramsCheckParam=defineStringParam('paramsCheck');
 export const appNameParam=defineStringParam('appName','App');

@@ -2,7 +2,7 @@ import { AcCompRegistry, AcStyleVars, AnyCompViewCtrl } from "@iyio/any-comp";
 import { atDotCss } from "@iyio/at-dot-css";
 import { MdxUiBuilder, MdxUiSelectionItem } from "@iyio/mdx-ui-builder";
 import { Text, useSubject } from "@iyio/react-common";
-import { MdxUiComponentMenuViewInternal } from "./MdxUiComponentMenuViewInternal";
+import { MdxUiComponentMenuViewInternal } from "./MdxUiComponentMenuViewInternal.js";
 
 export interface MdxUiComponentMenuViewProps
 {

@@ -1,7 +1,7 @@
 import { safeParseNumberOrUndefined } from "@iyio/common";
 import { ProtoPipelineConfigurablePlugin } from "@iyio/protogen";
 import { z } from "zod";
-import { sqlClusterCdkTemplate } from "./sqlClusterCdkTemplate";
+import { sqlClusterCdkTemplate } from "./sqlClusterCdkTemplate.js";
 
 const supportedTypes=['sqlCluster'];
 

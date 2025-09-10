@@ -1,5 +1,5 @@
-import { Json5Reviver } from './json5-types';
-import * as util from './util';
+import { Json5Reviver } from './json5-types.js';
+import * as util from './util.js';
 
 let source:string;
 let parseState:any;

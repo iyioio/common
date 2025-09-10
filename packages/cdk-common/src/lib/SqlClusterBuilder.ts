@@ -1,8 +1,8 @@
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from "constructs";
-import { ManagedProps } from "./ManagedProps";
-import { SqlCluster, SqlClusterOptionsBase } from "./SqlCluster";
-import { getDefaultVpc, isCdkEnvPatternMatch } from './cdk-lib';
+import { ManagedProps } from "./ManagedProps.js";
+import { SqlCluster, SqlClusterOptionsBase } from "./SqlCluster.js";
+import { getDefaultVpc, isCdkEnvPatternMatch } from './cdk-lib.js';
 
 export interface SqlClusterBuilderCluster extends SqlClusterOptionsBase
 {

@@ -1,7 +1,7 @@
-import { HashMap } from "./common-types";
-import { HttpRequestEventVariations, HttpResponse, HttpResponseOptions, RouteConfig, RouteMap } from "./http-server-types";
-import { HttpMethod } from "./http-types";
-import { deleteUndefined } from "./object";
+import { HashMap } from "./common-types.js";
+import { HttpRequestEventVariations, HttpResponse, HttpResponseOptions, RouteConfig, RouteMap } from "./http-server-types.js";
+import { HttpMethod } from "./http-types.js";
+import { deleteUndefined } from "./object.js";
 
 
 

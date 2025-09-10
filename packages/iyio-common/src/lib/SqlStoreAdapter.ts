@@ -1,10 +1,10 @@
-import { BaseStore } from "./BaseStore";
-import { InvalidStoreKeyError } from "./errors";
-import { Query } from "./query-types";
-import { sql, sqlName } from "./sql-lib";
-import { buildQuery, convertStorePathToSelectQuery, convertStorePathToSqlPathInfo, SqlPathInfo } from "./sql-query-builder";
-import { ISqlClient } from "./sql-types";
-import { CreateStoreValueResult, StoreKeyScope } from "./store-types";
+import { BaseStore } from "./BaseStore.js";
+import { InvalidStoreKeyError } from "./errors.js";
+import { Query } from "./query-types.js";
+import { sql, sqlName } from "./sql-lib.js";
+import { buildQuery, convertStorePathToSelectQuery, convertStorePathToSqlPathInfo, SqlPathInfo } from "./sql-query-builder.js";
+import { ISqlClient } from "./sql-types.js";
+import { CreateStoreValueResult, StoreKeyScope } from "./store-types.js";
 
 
 export interface SqlStoreAdapterOptions extends StoreKeyScope

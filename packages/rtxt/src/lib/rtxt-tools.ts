@@ -1,7 +1,7 @@
-import { getRTxtIcon } from "./rtxt-icons";
-import { getRTxtNodesTypes, selectRTxtSelection } from "./rtxt-lib";
-import { RTxtDropdownOption, createRTxtToolButton, createRTxtToolDropdown, createRTxtToolInput, createRTxtToolLabel } from "./rtxt-tool-lib";
-import { RTxtFontFamily, RTxtRenderOptions, RTxtTool } from "./rtxt-types";
+import { getRTxtIcon } from "./rtxt-icons.js";
+import { getRTxtNodesTypes, selectRTxtSelection } from "./rtxt-lib.js";
+import { RTxtDropdownOption, createRTxtToolButton, createRTxtToolDropdown, createRTxtToolInput, createRTxtToolLabel } from "./rtxt-tool-lib.js";
+import { RTxtFontFamily, RTxtRenderOptions, RTxtTool } from "./rtxt-types.js";
 
 export const getDefaultRTxtTools=({
     fontFamilies,

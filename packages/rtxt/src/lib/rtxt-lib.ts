@@ -1,5 +1,5 @@
 import { aryRemoveAll, aryShallowUnorderedCompare, deepClone, getObjKeyCount, isDomNodeDescendantOf } from "@iyio/common";
-import { RTxtAlignment, RTxtDescriptor, RTxtDoc, RTxtDocAndLookup, RTxtDomSelection, RTxtLine, RTxtNode, RTxtSelection, defaultRTxtNodeType, rTxtAttPrefix, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtTypeAtt } from "./rtxt-types";
+import { RTxtAlignment, RTxtDescriptor, RTxtDoc, RTxtDocAndLookup, RTxtDomSelection, RTxtLine, RTxtNode, RTxtSelection, defaultRTxtNodeType, rTxtAttPrefix, rTxtIgnoreAtt, rTxtIndexLookupAtt, rTxtLineAlignAtt, rTxtLineIndexAtt, rTxtTypeAtt } from "./rtxt-types.js";
 
 export const getRTxtSelection=(
     domSelection:RTxtDomSelection,

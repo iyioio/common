@@ -1,6 +1,6 @@
 import { ScopeRegistration } from "@iyio/common";
 import { vfsMntPtProvider, vfsMntTypes } from "@iyio/vfs";
-import { VfsDiskMntCtrl } from "./VfsDiskMntCtrl";
+import { VfsDiskMntCtrl } from "./VfsDiskMntCtrl.js";
 
 export const useVfsNode=(scope:ScopeRegistration)=>{
 

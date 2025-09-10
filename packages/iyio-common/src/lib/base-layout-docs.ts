@@ -1,6 +1,6 @@
-import { baseLayoutAnimationProps, baseLayoutBreakpointProps, baseLayoutColorBaseProps, baseLayoutColorMappedProps, baseLayoutColumnProps, baseLayoutFlexProps, baseLayoutFontProps, baseLayoutGapProps, baseLayoutInnerFlexProps, baseLayoutInnerGridProps, baseLayoutMarginProps, baseLayoutPaddingProps, baseLayoutParentLayoutProps, baseLayoutSelfFlexProps, baseLayoutUtilProps } from "./base-layout";
-import { generateBaseLayoutBreakpointCss } from "./base-layout-generator";
-import { BaseLayoutCssGenerationOptions } from "./base-layout-generator-types";
+import { baseLayoutAnimationProps, baseLayoutBreakpointProps, baseLayoutColorBaseProps, baseLayoutColorMappedProps, baseLayoutColumnProps, baseLayoutFlexProps, baseLayoutFontProps, baseLayoutGapProps, baseLayoutInnerFlexProps, baseLayoutInnerGridProps, baseLayoutMarginProps, baseLayoutPaddingProps, baseLayoutParentLayoutProps, baseLayoutSelfFlexProps, baseLayoutUtilProps } from "./base-layout.js";
+import { generateBaseLayoutBreakpointCss } from "./base-layout-generator.js";
+import { BaseLayoutCssGenerationOptions } from "./base-layout-generator-types.js";
 
 export const getBaseLayoutDocs=(options:BaseLayoutCssGenerationOptions):string=>{
     const lines:string[]=[];

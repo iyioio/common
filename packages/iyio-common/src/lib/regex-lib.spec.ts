@@ -1,4 +1,4 @@
-import { escapeRegex } from "./regex-lib";
+import { escapeRegex } from "./regex-lib.js";
 
 describe('regex-lib',()=>{
 

@@ -1,8 +1,8 @@
-import { ObjWatcher } from "./ObjWatcher";
-import { RecursiveKeyOf } from "./common-types";
-import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal";
-import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathWatchOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types";
-import { deepClone } from "./object";
+import { ObjWatcher } from "./ObjWatcher.js";
+import { RecursiveKeyOf } from "./common-types.js";
+import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal.js";
+import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathWatchOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types.js";
+import { deepClone } from "./object.js";
 
 const watcherProp=Symbol('watcher');
 

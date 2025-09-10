@@ -1,5 +1,5 @@
 import { decode, encode } from "blurhash";
-import { imageSourceToImageDataAsync } from "./media-lib";
+import { imageSourceToImageDataAsync } from "./media-lib.js";
 
 export const defaultHashBlurWidth=32;
 export const defaultHashBlurHeight=32;

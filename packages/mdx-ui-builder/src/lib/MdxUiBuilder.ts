@@ -1,11 +1,11 @@
 import { DisposeContainer, InternalOptions, ReadonlySubject, asArray, delayAsync, escapeHtml, getErrorMessage, removeEmptyLinesAtIndex, setIndentation } from "@iyio/common";
 import { parseJson5 } from '@iyio/json5';
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter";
-import { MdxUiTextEditor } from "./MdxUiTextEditor";
-import { areMdxUiSelectionEqual, isMdxUiCachedComponentExpired, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib";
-import { MdxUiAtt, MdxUiBuilderState, MdxUiCachedComponent, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentCache, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiDragDropSource, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types";
-import { compileMdxUiAsync } from "./mdx-ui-compiler";
+import { MdxUiHighlighter, MdxUiHighlighterOptions } from "./MdxUiHighlighter.js";
+import { MdxUiTextEditor } from "./MdxUiTextEditor.js";
+import { areMdxUiSelectionEqual, isMdxUiCachedComponentExpired, isMdxUiNodeTextEditableById, mergeMdxUiSelection } from "./mdx-ui-builder-lib.js";
+import { MdxUiAtt, MdxUiBuilderState, MdxUiCachedComponent, MdxUiCodeInjections, MdxUiCompileOptions, MdxUiCompileResult, MdxUiComponentCache, MdxUiComponentFn, MdxUiComponentFnRef, MdxUiDragDropSource, MdxUiLiveComponentGenerator, MdxUiNode, MdxUiNodeMetadata, MdxUiReactImports, MdxUiSelection, MdxUiSelectionDirection, MdxUiSelectionEvt, MdxUiSelectionItem } from "./mdx-ui-builder-types.js";
+import { compileMdxUiAsync } from "./mdx-ui-compiler.js";
 
 let instId=0;
 

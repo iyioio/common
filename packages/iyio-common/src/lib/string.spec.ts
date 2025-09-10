@@ -1,4 +1,4 @@
-import { splitStringWithQuotes } from "./string";
+import { splitStringWithQuotes } from "./string.js";
 
 describe('strings',()=>{
 

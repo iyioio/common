@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
-import { Point } from "./common-types";
-import { getElementOrDescendantByClassName, isDomNodeDescendantOf } from "./dom";
-import { ReadonlySubject } from "./rxjs-types";
+import { Point } from "./common-types.js";
+import { getElementOrDescendantByClassName, isDomNodeDescendantOf } from "./dom.js";
+import { ReadonlySubject } from "./rxjs-types.js";
 
 export type ContextMenuRenderer=(clientX:number,clientY:number,ctrl:ContextMenuCtrl)=>void;
 

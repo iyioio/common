@@ -1,15 +1,15 @@
 import { ZodSchema } from "zod";
-import { CancelToken } from "./CancelToken";
-import { DisposeContainer } from "./DisposeContainer";
-import { aryRemoveItem, asArray } from "./array";
-import { NoId, ValueRef } from "./common-types";
-import { DataTableDescription } from "./data-table";
-import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib";
-import { DisposedError } from "./errors";
-import { deepCompare, objGetFirstValue } from "./object";
-import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib";
-import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlInsertOptions, SqlResult } from "./sql-types";
-import { zodCoerceNullDbValuesInObject } from "./zod-helpers";
+import { CancelToken } from "./CancelToken.js";
+import { DisposeContainer } from "./DisposeContainer.js";
+import { aryRemoveItem, asArray } from "./array.js";
+import { NoId, ValueRef } from "./common-types.js";
+import { DataTableDescription } from "./data-table.js";
+import { getDataTableColInfo, getDataTableId, getDataTableScheme } from "./data-table-lib.js";
+import { DisposedError } from "./errors.js";
+import { deepCompare, objGetFirstValue } from "./object.js";
+import { escapeSqlName, escapeSqlValue, sql, sqlName } from "./sql-lib.js";
+import { ISqlClient, ISqlMethods, ISqlTransaction, RunSqlTransactionOptions, SqlInsertOptions, SqlResult } from "./sql-types.js";
+import { zodCoerceNullDbValuesInObject } from "./zod-helpers.js";
 
 export abstract class SqlBaseMethods implements ISqlMethods
 {

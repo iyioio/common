@@ -1,6 +1,6 @@
 import { conditionalDeepClone, deleteUndefined, getSubstringCount, Point, safeParseNumber } from "@iyio/common";
-import { protoSetLayout } from "./protogen-lib";
-import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale, ProtoTypeInfo } from "./protogen-types";
+import { protoSetLayout } from "./protogen-lib.js";
+import { ProtoAddressMap, ProtoChildren, ProtoLayout, ProtoLink, ProtoNode, ProtoNodeRenderData, ProtoParsingResult, ProtoPosScale, ProtoTypeInfo } from "./protogen-types.js";
 
 const parentKey=Symbol('ProtoNodeParent');
 

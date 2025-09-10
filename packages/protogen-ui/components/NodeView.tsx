@@ -1,11 +1,11 @@
 import { cn } from "@iyio/common";
 import { useSubject } from "@iyio/react-common";
 import { Fragment, useEffect, useState } from "react";
-import { NodeCtrl } from "../lib/NodeCtrl";
-import { dt } from "../lib/lib-design-tokens";
-import { anchorInset } from "../lib/protogen-ui-lib";
-import { NodeCode } from "./NodeCode";
-import { useProtogenCtrl } from "./lib-builder-components";
+import { NodeCtrl } from "../lib/NodeCtrl.js";
+import { dt } from "../lib/lib-design-tokens.js";
+import { anchorInset } from "../lib/protogen-ui-lib.js";
+import { NodeCode } from "./NodeCode.js";
+import { useProtogenCtrl } from "./lib-builder-components.js";
 
 
 interface NodeViewProps

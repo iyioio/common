@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useShallowRef } from "./common-hooks";
+import { useShallowRef } from "./common-hooks.js";
 
 export interface UseIntersectionObserverOptions
 {

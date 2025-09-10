@@ -2,10 +2,10 @@ import { AccessRequestDescription, ParamTypeDef, PassiveAccessGrantDescription }
 import * as cdk from "aws-cdk-lib";
 import * as cf from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
-import { ManagedProps, getDefaultManagedProps } from "./ManagedProps";
-import { NodeFn, NodeFnProps } from "./NodeFn";
-import { isCdkEnvPatternMatch } from "./cdk-lib";
-import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget, SiteContentSourceDescription } from "./cdk-types";
+import { ManagedProps, getDefaultManagedProps } from "./ManagedProps.js";
+import { NodeFn, NodeFnProps } from "./NodeFn.js";
+import { isCdkEnvPatternMatch } from "./cdk-lib.js";
+import { AccessGranter, AccessRequest, EnvVarTarget, IAccessGrantGroup, IAccessRequestGroup, IPassiveAccessTargetGroup, PassiveAccessTarget, SiteContentSourceDescription } from "./cdk-types.js";
 
 export interface FnInfoAndNodeFn
 {

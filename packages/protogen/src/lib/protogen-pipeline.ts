@@ -1,6 +1,6 @@
 import { HashMap, valueIsZodObject } from "@iyio/common";
 import { ZodSchema, ZodType } from "zod";
-import { ProtoStage } from "./protogen-pipeline-types";
+import { ProtoStage } from "./protogen-pipeline-types.js";
 
 export const protoGetStageFromName=(name:string):ProtoStage|null=>{
     const match=/(\w+)(\.\w?)?$/.exec(name);

@@ -4,7 +4,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cr from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
-import { NodeFn } from "./NodeFn";
+import { NodeFn } from "./NodeFn.js";
 
 export interface JsonLambdaLayerProps{
     json:Record<string,any>;

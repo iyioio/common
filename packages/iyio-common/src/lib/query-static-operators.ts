@@ -1,5 +1,5 @@
-import { asArray } from "./array";
-import { StaticQueryOperator } from "./query-types";
+import { asArray } from "./array.js";
+import { StaticQueryOperator } from "./query-types.js";
 
 export const sortStaticQuery:StaticQueryOperator={
     orderBy:true,

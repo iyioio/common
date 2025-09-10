@@ -1,6 +1,6 @@
 import { BaseLayoutProps } from "@iyio/common";
 import { BaseLayoutView, BaseLayoutViewProps } from "@iyio/react-common";
-import { NextJsStyleSheets } from "./NextJsStyleSheets";
+import { NextJsStyleSheets } from "./NextJsStyleSheets.js";
 
 export interface NextJsBaseLayoutViewProps extends BaseLayoutViewProps
 {
