@@ -206,7 +206,7 @@ class Invoker
     public args:Record<string,string>={}
 
     public invoke(code:string){
-        (eval as any)(code);
+        (globalThis as any).eval(code);
     }
 }
 
