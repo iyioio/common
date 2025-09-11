@@ -1,9 +1,13 @@
 import { atDotCss } from "@iyio/at-dot-css";
 import { BaseLayoutProps } from "@iyio/common";
-import { View, useCreateDirectionInputCtrl, useDirectionCount, useDirectionIndex, useDirectionIndexRequest, useDirectionInput, useElementSize, useSubject, useSwipe } from "@iyio/react-common";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ViewportCtrl } from "./ViewportCtrl.js";
+import { useCreateDirectionInputCtrl, useDirectionCount, useDirectionIndex, useDirectionIndexRequest, useDirectionInput } from "../direction-input/direction-input-lib.js";
+import { useSubject } from "../rxjs-hooks.js";
+import { useElementSize } from "../useElementSize.js";
+import { useSwipe } from "../useSwipe.js";
+import { View } from "../View.js";
 import { ViewportCtrlReactContext } from "./viewport-lib.js";
+import { ViewportCtrl } from "./ViewportCtrl.js";
 
 export interface ViewportProps
 {

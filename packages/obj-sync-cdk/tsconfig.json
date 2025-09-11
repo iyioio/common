@@ -1,5 +1,38 @@
 {
     "extends": "../../tsconfig.base.json",
-    "include": ["src/**/*.ts","src/**/*.tsx"],
-    "exclude": ["jest.config.ts","src/**/*.spec.ts","src/**/*.test.ts","src/**/*.spec.tsx","src/**/*.test.tsx"]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
+    "exclude": [
+        "jest.config.ts",
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts",
+        "src/**/*.spec.tsx",
+        "src/**/*.test.tsx"
+    ],
+    "compilerOptions": {},
+    "references": [
+        {
+            "path": "../../packages/aws-credential-providers"
+        },
+        {
+            "path": "../../packages/aws-dynamo"
+        },
+        {
+            "path": "../../packages/aws-lambda"
+        },
+        {
+            "path": "../../packages/cdk-common"
+        },
+        {
+            "path": "../../packages/iyio-common"
+        },
+        {
+            "path": "../../packages/node-common"
+        },
+        {
+            "path": "../../packages/obj-sync"
+        }
+    ]
 }

@@ -1,5 +1,41 @@
 {
     "extends": "../../tsconfig.base.json",
-    "include": ["./**/*.ts","./**/*.tsx"],
-    "exclude": ["jest.config.ts","./**/*.spec.ts","./**/*.test.ts","./**/*.spec.tsx","./**/*.test.tsx"]
+    "include": [
+        "./**/*.ts",
+        "./**/*.tsx"
+    ],
+    "exclude": [
+        "jest.config.ts",
+        "./**/*.spec.ts",
+        "./**/*.test.ts",
+        "./**/*.spec.tsx",
+        "./**/*.test.tsx"
+    ],
+    "compilerOptions": {},
+    "references": [
+        {
+            "path": "../../packages/at-dot-css"
+        },
+        {
+            "path": "../../packages/iyio-common"
+        },
+        {
+            "path": "../../packages/nextjs-common"
+        },
+        {
+            "path": "../../packages/node-common"
+        },
+        {
+            "path": "../../packages/protogen"
+        },
+        {
+            "path": "../../packages/protogen-cdk"
+        },
+        {
+            "path": "../../packages/protogen-runtime"
+        },
+        {
+            "path": "../../packages/react-common"
+        }
+    ]
 }

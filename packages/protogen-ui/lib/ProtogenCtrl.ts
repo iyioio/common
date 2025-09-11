@@ -177,8 +177,12 @@ export class ProtogenCtrl
         const ctrls:NodeCtrl[]=[];
         this.clearAddressMap();
         for(let i=0;i<nodes.length;i++){
+            const n=nodes[i];
+            if(!n){
+                continue;
+            }
             const end=i===nodes.length-1;
-            const ctrl=new NodeCtrl(nodes[i],this);
+            const ctrl=new NodeCtrl(n,this);
             ctrls.push(ctrl);
             if(end){
                 if(autoFocus==='type'){

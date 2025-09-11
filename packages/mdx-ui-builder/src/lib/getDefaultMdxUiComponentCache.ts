@@ -1,5 +1,5 @@
-import { MdxUiComponentCache } from "@iyio/mdx-ui-builder";
 import { createVfsMdxUiComponentCache } from "./createVfsMdxUiComponentCache.js";
+import { MdxUiComponentCache } from "./mdx-ui-builder-types.js";
 
 let defaultCache:MdxUiComponentCache|undefined=undefined;
 

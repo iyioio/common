@@ -1,9 +1,11 @@
 import { BaseError, asArrayItem, getContentType, getErrorMessage, getUriProtocol, joinPaths, queryParamsToObject } from "@iyio/common";
-import { HttpRouterRequest, HttpServerOptions, getHttpRoute, isHttpHandlerResult, pathExistsAsync } from "@iyio/node-common";
 import { createReadStream } from "fs";
 import { ServerResponse } from "http";
 import { Readable } from "node:stream";
 import { join } from "path";
+import { pathExistsAsync } from "./fs.js";
+import { HttpRouterRequest, getHttpRoute, isHttpHandlerResult } from "./http-server-lib.js";
+import { HttpServerOptions } from "./http-server.js";
 
 const defaultCorsHeaders:Record<string,string>={
     "Access-Control-Allow-Origin":"*",

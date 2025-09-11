@@ -1,0 +1,134 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/any-comp"
+        },
+        {
+            "path": "./packages/any-comp-cli"
+        },
+        {
+            "path": "./packages/any-comp-test"
+        },
+        {
+            "path": "./packages/at-dot-css"
+        },
+        {
+            "path": "./packages/aws"
+        },
+        {
+            "path": "./packages/aws-credential-providers"
+        },
+        {
+            "path": "./packages/aws-dynamo"
+        },
+        {
+            "path": "./packages/aws-lambda"
+        },
+        {
+            "path": "./packages/aws-rds"
+        },
+        {
+            "path": "./packages/aws-s3"
+        },
+        {
+            "path": "./packages/aws-secrets"
+        },
+        {
+            "path": "./packages/aws-sqs"
+        },
+        {
+            "path": "./packages/aws-tests"
+        },
+        {
+            "path": "./packages/browser-mocks"
+        },
+        {
+            "path": "./packages/cdk"
+        },
+        {
+            "path": "./packages/cdk-common"
+        },
+        {
+            "path": "./packages/iyio-common"
+        },
+        {
+            "path": "./packages/iyio-util-fns"
+        },
+        {
+            "path": "./packages/json5"
+        },
+        {
+            "path": "./packages/mdx-ui-builder"
+        },
+        {
+            "path": "./packages/mdx-ui-builder-react"
+        },
+        {
+            "path": "./packages/media-common"
+        },
+        {
+            "path": "./packages/nextjs-common"
+        },
+        {
+            "path": "./packages/node-common"
+        },
+        {
+            "path": "./packages/obj-sync"
+        },
+        {
+            "path": "./packages/obj-sync-cdk"
+        },
+        {
+            "path": "./packages/pdf-viewer"
+        },
+        {
+            "path": "./packages/protogen"
+        },
+        {
+            "path": "./packages/protogen-cdk"
+        },
+        {
+            "path": "./packages/protogen-runtime"
+        },
+        {
+            "path": "./packages/protogen-ui"
+        },
+        {
+            "path": "./packages/react-common"
+        },
+        {
+            "path": "./packages/rtxt"
+        },
+        {
+            "path": "./packages/supabase-common"
+        },
+        {
+            "path": "./packages/svg-charts"
+        },
+        {
+            "path": "./packages/svg-charts-react"
+        },
+        {
+            "path": "./packages/syn-taxi"
+        },
+        {
+            "path": "./packages/tmpl-common"
+        },
+        {
+            "path": "./packages/tmpl-gen"
+        },
+        {
+            "path": "./packages/vfs"
+        },
+        {
+            "path": "./packages/vfs-node"
+        },
+        {
+            "path": "./packages/vfs-react"
+        },
+        {
+            "path": "./packages/vfs-supabase"
+        }
+    ]
+}

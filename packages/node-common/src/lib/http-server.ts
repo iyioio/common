@@ -1,5 +1,5 @@
-import { createHttpRouter } from "@iyio/node-common";
 import { Server, createServer } from "http";
+import { createHttpRouter } from "./http-router.js";
 import { HttpRoute, defaultHttpServerPort } from "./http-server-lib.js";
 
 const defaultCorsHeaders:Record<string,string>={

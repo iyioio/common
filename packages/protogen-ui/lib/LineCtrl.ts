@@ -103,7 +103,7 @@ export class LineCtrl
 
         for(const fromAddress in addressMap){
             const fromNode=addressMap[fromAddress];
-            if(!fromNode.links){
+            if(!fromNode?.links){
                 continue;
             }
 
@@ -258,7 +258,7 @@ export class LineCtrl
         }
         for(let i=0;i<this.lines.length;i++){
             const line=this.lines[i];
-            if(line.updateId!==updateId){
+            if(line && line.updateId!==updateId){
                 line.elem.remove();
                 line.elem2.remove();
                 this.lines.splice(i,1);

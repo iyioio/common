@@ -1,7 +1,8 @@
 import { joinPaths } from "@iyio/common";
-import { MdxUiCachedComponent, MdxUiCompileResult, MdxUiComponentCache, MdxUiComponentCacheMissEvt, isMdxUiCachedComponentExpired } from "@iyio/mdx-ui-builder";
 import { vfs } from '@iyio/vfs';
 import { Subject } from "rxjs";
+import { isMdxUiCachedComponentExpired } from "./mdx-ui-builder-lib.js";
+import { MdxUiCachedComponent, MdxUiCompileResult, MdxUiComponentCache, MdxUiComponentCacheMissEvt } from "./mdx-ui-builder-types.js";
 
 export const mdxUiVfsCachedCompExt='.compiled.json';
 

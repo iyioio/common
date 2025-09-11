@@ -15,7 +15,7 @@ export const dt=():DesignTokens=>{
 export const nextDesignVariation=():DesignTokenVariation=>{
     const next=allDesignTokenVariations[
         (allDesignTokenVariations.indexOf(designVariationSubject.value)+1)%allDesignTokenVariations.length
-    ]
+    ] as DesignTokenVariation;
     designVariationSubject.next(next);
     return next;
 }

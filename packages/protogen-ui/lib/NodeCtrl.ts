@@ -221,7 +221,7 @@ export class NodeCtrl
             lineHeight:dt().codeLineHeight,
             getOffset:this.getOffset,
             transform:viewOnly?(node,layout)=>(viewOnly.addressMap[node.address]?
-                (protoGetLayout(viewOnly.addressMap[node.address])??layout):
+                (protoGetLayout(viewOnly.addressMap[node.address] as ProtoNode)??layout):
                 {
                     ...layout,
                     y:(
@@ -313,12 +313,15 @@ export class NodeCtrl
             return;
         }
 
-        this.setNode(nodes[0],parsingResult);
+        this.setNode(nodes[0] as ProtoNode,parsingResult);
 
         if(nodes.length>1){
             const nodeLayout=getElemProtoLayout(this.viewElem.value,this.parent.pos.value.scale);
             for(let i=1;i<nodes.length;i++){
                 const newNode=nodes[i];
+                if(!newNode){
+                    continue;
+                }
                 protoSetPosScale(newNode,{
                     x:nodeLayout.left,
                     y:nodeLayout.bottom+30,
@@ -354,13 +357,16 @@ export class NodeCtrl
 
         if(autoIndent!==undefined){
             const before=lines[index];
-            code=protoMarkdownGetIndent(before)+(/^\s*#/.test(before)?'':'  ')+code;
+            if(before){
+                code=protoMarkdownGetIndent(before)+(/^\s*#/.test(before)?'':'  ')+code;
+            }
         }
 
         lines.splice(index+1,0,code);
         const r=protoMarkdownParseNodes(lines.join('\n'));
-        this.setNode(r.rootNodes[0],r);
+        this.setNode(r.rootNodes[0] as ProtoNode,r);
         this.pushNodeToCode();
+        return true;
     }
 
     public addChildToAddress(address:string,child:ProtoNode){

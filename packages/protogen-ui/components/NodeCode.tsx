@@ -40,8 +40,8 @@ export function NodeCode({
             if(!match){
                 textarea.setSelectionRange(textarea.value.length,textarea.value.length);
             }else{
-                const start=(match.index??0)+match[1].length;
-                textarea.setSelectionRange(start,start+match[3].length);
+                const start=(match.index??0)+(match[1]?.length??0);
+                textarea.setSelectionRange(start,start+(match[3]?.length??0));
             }
             textarea.focus();
         }
