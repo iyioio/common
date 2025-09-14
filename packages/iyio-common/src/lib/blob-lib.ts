@@ -7,7 +7,8 @@ export class FileBlob extends Blob
 {
     public readonly lastModified:number;
 
-    public readonly name:string;
+    //@ts-ignore
+    public override readonly name:string;
 
     public constructor(parts:BlobPart[],name:string,options:BlobPropertyBag,{
         lastModified=Date.now()

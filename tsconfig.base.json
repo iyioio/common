@@ -18,54 +18,139 @@
         "importHelpers": true,
         "target": "es2020",
         "module": "nodenext",
-        "lib": ["es2020", "dom"],
-        "types": ["node"],
+        "lib": [
+            "es2020",
+            "dom"
+        ],
+        "types": [
+            "node"
+        ],
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
-        "esModuleInterop":true,
+        "esModuleInterop": true,
         "baseUrl": ".",
         "outDir": "./dist",
         "composite": true,
         "paths": {
-            "@iyio/at-dot-css": ["packages/at-dot-css/src/index.ts"],
-            "@iyio/any-comp": ["packages/any-comp/src/index.ts"],
-            "@iyio/any-comp-cli": ["packages/any-comp-cli/src/index.ts"],
-            "@iyio/aws": ["packages/aws/src/index.ts"],
-            "@iyio/aws-secrets": ["packages/aws-secrets/src/index.ts"],
-            "@iyio/aws-credential-providers": ["packages/aws-credential-providers/src/index.ts"],
-            "@iyio/aws-dynamo": ["packages/aws-dynamo/src/index.ts"],
-            "@iyio/aws-lambda": ["packages/aws-lambda/src/index.ts"],
-            "@iyio/aws-rds": ["packages/aws-rds/src/index.ts"],
-            "@iyio/aws-s3": ["packages/aws-s3/src/index.ts"],
-            "@iyio/aws-sqs": ["packages/aws-sqs/src/index.ts"],
-            "@iyio/aws-tests": ["packages/aws-tests/src/index.ts"],
-            "@iyio/browser-mocks": ["packages/browser-mocks/src/index.ts"],
-            "@iyio/cdk-common": ["packages/cdk-common/src/index.ts"],
-            "@iyio/common": ["packages/iyio-common/src/index.ts"],
-            "@iyio/json5": ["packages/json5/src/index.ts"],
-            "@iyio/nextjs-common": ["packages/nextjs-common/src/index.ts"],
-            "@iyio/node-common": ["packages/node-common/src/index.ts"],
-            "@iyio/protogen": ["packages/protogen/src/index.ts"],
-            "@iyio/protogen-runtime": ["packages/protogen-runtime/src/index.ts"],
-            "@iyio/protogen-cdk": ["packages/protogen-cdk/src/index.ts"],
-            "@iyio/react-common": ["packages/react-common/src/index.ts"],
-            "@iyio/svg-charts": ["packages/svg-charts/src/index.ts"],
-            "@iyio/svg-charts-react": ["packages/svg-charts-react/src/index.ts"],
-            "@iyio/tmpl-gen": ["packages/tmpl-gen/src/index.ts"],
-            "@iyio/pdf-viewer": ["packages/pdf-viewer/src/index.ts"],
-            "@iyio/syn-taxi": ["packages/syn-taxi/src/index.ts"],
-            "@iyio/media-common": ["packages/media-common/src/index.ts"],
-            "@iyio/obj-sync": ["packages/obj-sync/src/index.ts"],
-            "@iyio/obj-sync-cdk": ["packages/obj-sync-cdk/src/index.ts"],
-            "@iyio/rtxt": ["packages/rtxt/src/index.ts"],
-            "@iyio/iyio-util-fns": ["packages/iyio-util-fns/src/index.ts"],
-            "@iyio/vfs": ["packages/vfs/src/index.ts"],
-            "@iyio/vfs-node": ["packages/vfs-node/src/index.ts"],
-            "@iyio/vfs-react": ["packages/vfs-react/src/index.ts"],
-            "@iyio/mdx-ui-builder": ["packages/mdx-ui-builder/src/index.ts"],
-            "@iyio/mdx-ui-builder-react": ["packages/mdx-ui-builder-react/src/index.ts"],
-            "@iyio/supabase-common": ["packages/supabase-common/src/index.ts"]
+            "@iyio/any-comp": [
+                "packages/any-comp/src/index.ts"
+            ],
+            "@iyio/any-comp-cli": [
+                "packages/any-comp-cli/src/index.ts"
+            ],
+            "@iyio/at-dot-css": [
+                "packages/at-dot-css/src/index.ts"
+            ],
+            "@iyio/aws": [
+                "packages/aws/src/index.ts"
+            ],
+            "@iyio/aws-credential-providers": [
+                "packages/aws-credential-providers/src/index.ts"
+            ],
+            "@iyio/aws-dynamo": [
+                "packages/aws-dynamo/src/index.ts"
+            ],
+            "@iyio/aws-lambda": [
+                "packages/aws-lambda/src/index.ts"
+            ],
+            "@iyio/aws-rds": [
+                "packages/aws-rds/src/index.ts"
+            ],
+            "@iyio/aws-s3": [
+                "packages/aws-s3/src/index.ts"
+            ],
+            "@iyio/aws-secrets": [
+                "packages/aws-secrets/src/index.ts"
+            ],
+            "@iyio/aws-sqs": [
+                "packages/aws-sqs/src/index.ts"
+            ],
+            "@iyio/aws-tests": [
+                "packages/aws-tests/src/index.ts"
+            ],
+            "@iyio/browser-mocks": [
+                "packages/browser-mocks/src/index.ts"
+            ],
+            "@iyio/cdk-common": [
+                "packages/cdk-common/src/index.ts"
+            ],
+            "@iyio/common": [
+                "packages/iyio-common/src/index.ts"
+            ],
+            "@iyio/iyio-util-fns": [
+                "packages/iyio-util-fns/src/index.ts"
+            ],
+            "@iyio/json5": [
+                "packages/json5/src/index.ts"
+            ],
+            "@iyio/mdx-ui-builder": [
+                "packages/mdx-ui-builder/src/index.ts"
+            ],
+            "@iyio/mdx-ui-builder-react": [
+                "packages/mdx-ui-builder-react/src/index.ts"
+            ],
+            "@iyio/media-common": [
+                "packages/media-common/src/index.ts"
+            ],
+            "@iyio/nextjs-common": [
+                "packages/nextjs-common/src/index.ts"
+            ],
+            "@iyio/node-common": [
+                "packages/node-common/src/index.ts"
+            ],
+            "@iyio/obj-sync": [
+                "packages/obj-sync/src/index.ts"
+            ],
+            "@iyio/obj-sync-cdk": [
+                "packages/obj-sync-cdk/src/index.ts"
+            ],
+            "@iyio/pdf-viewer": [
+                "packages/pdf-viewer/src/index.ts"
+            ],
+            "@iyio/protogen": [
+                "packages/protogen/src/index.ts"
+            ],
+            "@iyio/protogen-cdk": [
+                "packages/protogen-cdk/src/index.ts"
+            ],
+            "@iyio/protogen-runtime": [
+                "packages/protogen-runtime/src/index.ts"
+            ],
+            "@iyio/react-common": [
+                "packages/react-common/src/index.ts"
+            ],
+            "@iyio/rtxt": [
+                "packages/rtxt/src/index.ts"
+            ],
+            "@iyio/supabase-common": [
+                "packages/supabase-common/src/index.ts"
+            ],
+            "@iyio/svg-charts": [
+                "packages/svg-charts/src/index.ts"
+            ],
+            "@iyio/svg-charts-react": [
+                "packages/svg-charts-react/src/index.ts"
+            ],
+            "@iyio/syn-taxi": [
+                "packages/syn-taxi/src/index.ts"
+            ],
+            "@iyio/tmpl-gen": [
+                "packages/tmpl-gen/src/index.ts"
+            ],
+            "@iyio/vfs": [
+                "packages/vfs/src/index.ts"
+            ],
+            "@iyio/vfs-node": [
+                "packages/vfs-node/src/index.ts"
+            ],
+            "@iyio/vfs-react": [
+                "packages/vfs-react/src/index.ts"
+            ]
         }
     },
-    "exclude": ["node_modules", "tmp","tmpl"]
+    "exclude": [
+        "node_modules",
+        "tmp",
+        "tmpl"
+    ]
 }
