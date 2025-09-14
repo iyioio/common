@@ -65,3 +65,5 @@ venv
 /convo-crawler-*
 
 /http/*.local.http
+
+.npmrc
