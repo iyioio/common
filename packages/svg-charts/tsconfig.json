@@ -11,7 +11,9 @@
         "src/**/*.spec.tsx",
         "src/**/*.test.tsx"
     ],
-    "compilerOptions": {},
+    "compilerOptions": {
+        "composite": true
+    },
     "references": [
         {
             "path": "../../packages/iyio-common"

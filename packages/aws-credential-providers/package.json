@@ -1,6 +1,6 @@
 {
     "name": "@iyio/aws-credential-providers",
     "version": "0.7.50",
-    "type": "commonjs",
+    "type": "module",
     "sideEffects": false
 }

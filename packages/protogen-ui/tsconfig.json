@@ -11,7 +11,9 @@
         "./**/*.spec.tsx",
         "./**/*.test.tsx"
     ],
-    "compilerOptions": {},
+    "compilerOptions": {
+        "composite": true
+    },
     "references": [
         {
             "path": "../../packages/at-dot-css"

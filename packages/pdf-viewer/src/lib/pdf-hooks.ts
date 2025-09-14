@@ -1,7 +1,7 @@
 import { ElementSizeObserver, delayAsync, httpClient, isServerSide } from "@iyio/common";
 import { VfsItem } from "@iyio/vfs";
 import { PDFDocumentProxy, PDFPageProxy, PageViewport, PixelsPerInch } from "pdfjs-dist";
-import type { EventBus, PDFPageView } from "pdfjs-dist/web/pdf_viewer";
+import type { EventBus, PDFPageView } from "pdfjs-dist/web/pdf_viewer.js";
 import { useEffect, useState } from "react";
 import { PdfReader } from "./PdfReader.js";
 import { pdfReaderPool } from "./PdfReaderPool.js";

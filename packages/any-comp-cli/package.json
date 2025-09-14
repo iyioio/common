@@ -1,7 +1,7 @@
 {
     "name": "@iyio/any-comp-cli",
     "version": "0.7.50",
-    "type": "commonjs",
+    "type": "module",
     "sideEffects": false,
     "bin": {
         "watch-any-comp": "bin/watch-comp-dirs.js"
