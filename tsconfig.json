@@ -113,12 +113,6 @@
             "path": "./packages/syn-taxi"
         },
         {
-            "path": "./packages/tmpl-common"
-        },
-        {
-            "path": "./packages/tmpl-gen"
-        },
-        {
             "path": "./packages/vfs"
         },
         {
