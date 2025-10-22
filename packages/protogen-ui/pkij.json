@@ -1,3 +1,4 @@
 {
-    "type":"nextjs"
+    "type":"nextjs",
+    "disabled":true
 }
