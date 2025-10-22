@@ -93,7 +93,7 @@ export const base64Encode=(input:string,keyStr:string=defaultBase64Chars):string
 /**
  * Encodes an array of numbers into a base 64 string
  */
-export const base64EncodeAry=(input:number[],keyStr:string=defaultBase64Chars):string=>
+export const base64EncodeAry=(input:number[]|Uint8Array,keyStr:string=defaultBase64Chars):string=>
 {
     let output = "";
     let chr1, chr2, chr3, enc1, enc2, enc3, enc4;
