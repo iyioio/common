@@ -22,6 +22,9 @@ export const escapeSqlName=(value:string)=>{
             const parts=(jMatch[2] as string).split('.').map(v=>escapeSqlString(v));
             return `("${(jMatch[1] as string).replace(/`/g,'""')}"->>${parts.join('->>')})::${type}`;
         }
+    }else if(value.includes('.')){
+        const i=value.indexOf('.');
+        return '"'+value.substring(0,i).replace(/"/g,'""')+'"->>'+escapeSqlString(value.substring(i+1))
     }
     return '"'+value.replace(/"/g,'""')+'"'
 }
