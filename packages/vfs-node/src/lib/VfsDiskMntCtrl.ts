@@ -1,10 +1,10 @@
 import { NotFoundError, getContentType, getDirectoryName, getFileName, joinPaths, shortUuid } from "@iyio/common";
 import { execAsync, pathExistsAsync, spawnAsync } from "@iyio/node-common";
 import { VfsCtrl, VfsDirReadOptions, VfsDirReadResult, VfsItem, VfsItemChangeType, VfsItemGetOptions, VfsItemType, VfsMntCtrl, VfsMntCtrlOptions, VfsMntPt, VfsReadStream, VfsReadStreamWrapper, VfsShellCommand, VfsShellOutput, VfsShellPipeOutType, VfsWatchHandle, VfsWatchOptions, createNotFoundVfsDirReadResult, defaultVfsIgnoreFiles, testInclusiveVfsPathFilter, testVfsFilter, vfsMntTypes, vfsSourcePathToVirtualPath } from "@iyio/vfs";
-import { ChildProcess } from "child_process";
 import chokidar from 'chokidar';
-import { Dirent, createReadStream, createWriteStream } from "fs";
-import { appendFile, mkdir, readFile, readdir, rename, rm, stat, unlink, writeFile } from "fs/promises";
+import { ChildProcess } from "node:child_process";
+import { Dirent, createReadStream, createWriteStream } from "node:fs";
+import { appendFile, mkdir, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
 
 export interface VfsDiskMntCtrlOptions extends VfsMntCtrlOptions
 {
@@ -68,7 +68,8 @@ export class VfsDiskMntCtrl extends VfsMntCtrl
                 })
             }
 
-            watcher.on('all',(event, targetPath, stats)=>{
+
+            (watcher as any).on('all',(event:string, targetPath:string, stats:any)=>{
 
                 const path=vfsSourcePathToVirtualPath(targetPath,mnt);
                 if(!path){
