@@ -92,10 +92,10 @@ export class NodeFn extends Construct{
         createScheduledEvents,
 
         entry=handlerFileName??Path.join('src','handlers',toFileName(name)),
-        bundling={minify,sourceMap:true,target:'node18',externalModules:['@aws-sdk/*','sharp']},
+        bundling={minify,sourceMap:true,target:'node20',externalModules:['@aws-sdk/*','sharp']},
         handler,
-        logRetention=logs.RetentionDays.ONE_WEEK,
-        runtime=lambda.Runtime.NODEJS_18_X,
+        logRetention=logs.RetentionDays.ONE_MONTH,
+        runtime=lambda.Runtime.NODEJS_20_X,
         architecture=lambda.Architecture.ARM_64,
         memorySize=256,
         timeout=timeoutMs===undefined?undefined:cdk.Duration.millis(timeoutMs),
