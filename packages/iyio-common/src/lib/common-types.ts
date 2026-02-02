@@ -158,13 +158,13 @@ export type RecursiveKeyOf<T>={
             :`${TKey}`;
 }[keyof Required<NonNullable<T>>&(string|number)];
 
-export type FirstNameInPath<T extends string>=T extends `${infer Name}.${infer _Rest}`?Name:T;
+export type FirstNameInPath<T extends string|number>=T extends `${infer Name}.${infer _Rest}`?Name:T;
 
-export type PathAfterDot<T extends string>=T extends `${infer _Name}.${infer Rest}`?Rest:never;
+export type PathAfterDot<T extends string|number>=T extends `${infer _Name}.${infer Rest}`?Rest:never;
 
 export type PathValue<
     T,
-    Path extends string
+    Path extends string|number
 >=(
     Path extends keyof T?
         T[Path]

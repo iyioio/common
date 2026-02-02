@@ -15,8 +15,8 @@ export interface UseWObjOptions<T>
 
 export const useWatchPath=<
     T extends Watchable|null|undefined,
-    P=RecursiveKeyOf<T>|null|undefined,
-    R=P extends string?PathValue<T,P>:never
+    P extends RecursiveKeyOf<Exclude<T,null|undefined>>|null|undefined,
+    R=P extends string?PathValue<Exclude<T,null|undefined>,P>:never
 >(obj:T,path:P):R|undefined=>{
     const [update,setUpdate]=useState<R|undefined>(undefined);
     useEffect(()=>{
