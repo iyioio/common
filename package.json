@@ -53,7 +53,7 @@
         "ts-node": "^10.9.2",
         "tsconfig-to-swcconfig": "^2.8.1",
         "tslib": "^2.8.1",
-        "typescript": "^5.9.2",
+        "typescript": "^5.9.3",
         "unique-names-generator": "^4.7.1",
         "url-loader": "^4.1.1"
     },
