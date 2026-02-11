@@ -33,7 +33,7 @@ export interface ButtonBaseProps extends BaseLayoutOuterProps
     pop?:boolean;
     linkTarget?:string;
     openLinkInNewWindow?:boolean;
-    actionItem?:UiActionItem;
+    actionItem?:UiActionItem<any>;
     elem?:string;
     elemRef?:(elem:HTMLElement|null)=>void;
     tabIndex?:number;
