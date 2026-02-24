@@ -29,6 +29,8 @@ export const convoGrammar={
                 { "include": "#nop"},
                 { "include": "#thinkingRole"},
                 { "include": "#function"},
+                { "include": "#specialContentRoles"},
+                { "include": "#routeRoles"},
                 { "include": "#role" },
                 { "include": "#functionBody"},
                 { "include": "#functionType"},
@@ -69,8 +71,36 @@ export const convoGrammar={
                 }
             ]
         },
+        "specialContentRoles": {
+            "match": "^\\s*(>)\\s*(nodeEnd|node|goto|exitGraph)([ \\t]+[^\\n\\r]*)?",
+            "captures": {
+                "1":{
+                    "name":"keyword.control"
+                },
+                "2":{
+                    "name":"keyword.control"
+                },
+                "3":{
+                    "name":"variable"
+                }
+            }
+        },
+        "routeRoles": {
+            "match": "^\\s*(>)\\s*(exit|to|from)([ \\t]+[^\\n\\r]*)?",
+            "captures": {
+                "1":{
+                    "name":"keyword.control"
+                },
+                "2":{
+                    "name":"entity.name.function"
+                },
+                "3":{
+                    "name":"variable"
+                }
+            }
+        },
         "role": {
-            "match": "^\\s*(>)\\s*(\\w+)\\s*([\\*\\?!]*)",
+            "match": "^\\s*(>)\\s*(\\w+)([ \\t]+[^\\n\\r]*)?",
             "captures": {
                 "1":{
                     "name":"keyword.control"
@@ -79,7 +109,7 @@ export const convoGrammar={
                     "name":"storage.modifier"
                 },
                 "3":{
-                    "name":"entity.name.type"
+                    "name":"variable"
                 }
             }
         },
@@ -139,7 +169,7 @@ export const convoGrammar={
             "patterns":[{"include":"#lineExpression"}]
         },
         "topLevelStatements":{
-            "begin": "^\\s*(>)\\s*(do|thinkingResult|result|define|debug|end)",
+            "begin": "^\\s*(>)\\s*(do|thinkingResult|result|define|debug|end|target|make|stage|app|\\w+[ \\t]*(!))( |\\t|$)([ \\t]*[^\\n\\r]*)?",
             "end": "(?=\\s*>)",
             "beginCaptures": {
                 "1":{
@@ -147,6 +177,12 @@ export const convoGrammar={
                 },
                 "2":{
                     "name":"keyword.control"
+                },
+                "3":{
+                    "name":"storage.modifier"
+                },
+                "5":{
+                    "name":"variable"
                 }
             },
             "patterns": [
@@ -188,7 +224,7 @@ export const convoGrammar={
             }
         },
         "nop":{
-            "match": "^\\s*(>)\\s*(nop)(\\s*|\\s(.*))$",
+            "match": "^\\s*(>)\\s*(nop|templateEnd|template)(\\s*|\\s(.*))$",
             "captures": {
                 "1":{
                     "name":"keyword.control"
@@ -323,7 +359,7 @@ export const convoGrammar={
             ]
         },
         "functionCallOperator":{
-            "begin":"(lt|lte|eq|gt|gte|is|add|sub|mul|div|not|mod|pow|inc|dec)\\s*(\\()",
+            "begin":"(lt|lte|neq|eq|gt|gte|is|add|sub|mul|div|not|mod|pow|inc|dec)\\s*(\\()",
             "end":"\\)",
             "beginCaptures": {
                 "1":{
@@ -437,10 +473,14 @@ export const convoGrammar={
                 {"include":"#tagEvent"},
                 {"include":"#tagImport"},
                 {"include":"#tagImportMatch"},
+                {"include":"#tagMessageRef"},
+                {"include":"#tagVarRef"},
                 {"include":"#tagCondition"},
                 {"include":"#tagName"},
+                {"include":"#tagExitCondition"},
+                {"include":"#tagNodeConnection"},
                 {"include":"#tagLabeledCondition"},
-                {"include":"#tagJson"},
+                {"include":"#tagTypeValue"},
                 {"include":"#tagDefault"}
 
             ]
@@ -470,6 +510,45 @@ export const convoGrammar={
                 "1":{"name":"entity.name.tag"},
                 "2":{"name":"storage.modifier"},
                 "3":{"name":"string.regexp"}
+            }
+        },
+
+        "tagMessageRef":{
+            "match":"^\\s*(@(messageHandler))\\s+(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "3":{"patterns": [
+                    {"include":"#tagRefRole"},
+                    {"include":"#tagRefInvalid"}
+                ]}
+            }
+        },
+        "tagVarRef":{
+            "match":"^\\s*(@(dep|block|messageHandlerHeadProp))\\s+(.*)",
+            "captures":{
+                "1":{"name":"entity.name.tag"},
+                "3":{"patterns": [
+                    {"include":"#tagRefVar"},
+                    {"include":"#tagRefInvalid"}
+                ]}
+            }
+        },
+        "tagRefRole":{
+            "match":"[\\w \\t]",
+            "captures":{
+                "0":{"name":"keyword.control"}
+            }
+        },
+        "tagRefVar":{
+            "match":"[\\w \\t]",
+            "captures":{
+                "0":{"name":"variable"}
+            }
+        },
+        "tagRefInvalid":{
+            "match":".",
+            "captures":{
+                "0":{"name":"invalid"}
             }
         },
 
@@ -504,13 +583,35 @@ export const convoGrammar={
             "match":"^\\s*(@routeTo|@routeFrom)\\s+(\\w+)\\s*(.*)",
             "captures":{
                 "1":{"name":"entity.name.tag"},
-                "2":{"name":"support.function"},
+                "2":{"name":"variable"},
                 "3":{"patterns": [{"include":"#tagRequiredExpression"}]}
             }
         },
 
-        "tagJson":{
-            "match":"^\\s*(@json)\\s*(.*)",
+        "tagExitCondition":{
+            "match":"^\\s*(@exit)((\\s*(=.*))|(\\s+else[ \\t]*)|(.*))",
+            "captures":{
+                "1":{"name":"entity.name.function"},
+                "4":{"patterns": [{"include":"#tagRequiredExpression"}]},
+                "5":{"name":"keyword.control"},
+                "6":{"name":"string"}
+            }
+        },
+
+        "tagNodeConnection":{
+            "match":"^\\s*(@to|@from)\\s+(((auto|next)(.*))|((\\w+)\\s*((=.*)|(else[ \\t]*)|(.*))))",
+            "captures":{
+                "1":{"name":"entity.name.function"},
+                "2":{"name":"variable"},
+                "4":{"name":"keyword.control"},
+                "9":{"patterns": [{"include":"#tagRequiredExpression"}]},
+                "10":{"name":"keyword.control"},
+                "11":{"name":"string"}
+            }
+        },
+
+        "tagTypeValue":{
+            "match":"^\\s*(@json|@inputConversation|@inputType)\\s*(.*)",
             "captures":{
                 "1":{"name":"entity.name.tag"},
                 "2":{"patterns": [
@@ -803,7 +904,7 @@ export const convoGrammar={
             }
         },
         "operators":{
-            "match":"\\b(lt|lte|eq|gt|gte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
+            "match":"\\b(lt|lte|neq|eq|gt|gte|is|add|sub|mul|div|not|mod|pow|inc|dec)$",
             "captures":{
                 "1":{
                     "name":"keyword"
@@ -823,7 +924,7 @@ export const convoGrammar={
             "name":"entity.name.type"
         },
         "constValue":{
-            "match":"\\b(true|false|null|undefined|convo|__args|__return|__error|__debug|__disableAutoComplete)\\b",
+            "match":"\\b(true|false|null|undefined|convo|__args|__return|__error|__debug|__disableAutoComplete|__file|__cwd)\\b",
             "name":"constant.language"
         },
         "heredoc":{
