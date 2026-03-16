@@ -2,7 +2,7 @@ import { ObjWatcher } from "./ObjWatcher.js";
 import { RecursiveKeyOf } from "./common-types.js";
 import { objWatchAryMove, objWatchAryRemove, objWatchAryRemoveAt, objWatchArySplice } from "./obj-watch-internal.js";
 import { ObjRecursiveListenerOptionalEvt, ObjWatchEvt, ObjWatchEvtType, ObjWatchFilter, ObjWatchFilterValue, PathWatchOptions, RecursiveObjWatchEvt, Watchable, WatchedPath, anyProp, objWatchEvtSourceKey } from "./obj-watch-types.js";
-import { deepClone } from "./object.js";
+import { deepClone, isClassInstanceObject } from "./object.js";
 
 const watcherProp=Symbol('watcher');
 
@@ -34,7 +34,11 @@ export const stopWatchingObj=<T>(obj:T):ObjWatcher<T>|undefined=>{
 
     if(watcher.eligibleForDispose()){
         watcher.dispose();
-        delete (obj as any)[watcherProp];
+        try{
+            delete (obj as any)[watcherProp];
+        }catch(ex){
+            console.error('unable to delete watcher from watched object',obj,'error',ex);
+        }
     }
 
     return watcher;
@@ -43,26 +47,38 @@ export const stopWatchingObj=<T>(obj:T):ObjWatcher<T>|undefined=>{
 /**
  * Get the watcher of the given object and optionally creates the watcher if it does not exist
  */
-export const getObjWatcher=<T>(obj:T,autoCreate:boolean):ObjWatcher<T>|undefined=>{
-    if(obj===null || obj===undefined || (typeof obj!=='object')){
+export const getObjWatcher=<T>(obj:T,autoCreate:boolean,allClassInstances=false):ObjWatcher<T>|undefined=>{
+    if( obj===null ||
+        obj===undefined ||
+        (typeof obj!=='object') ||
+        (!allClassInstances && isClassInstanceObject(obj))
+    ){
         return undefined;
     }
     let watcher:ObjWatcher<T>|undefined=(obj as any)[watcherProp];
     if(watcher){
         if(watcher.obj!==obj){
+            if(!Object.isExtensible(obj)){
+                return undefined;
+            }
             delete (obj as any)[watcherProp];
         }else{
             return watcher;
         }
     }
-    if(!autoCreate){
+    if(!autoCreate || !Object.isExtensible(obj)){
         return undefined;
     }
 
     watcher=new ObjWatcher<T>(obj);
-    (obj as any)[watcherProp]=watcher;
-
-    return watcher;
+    try{
+        (obj as any)[watcherProp]=watcher;
+        return watcher;
+    }catch(ex){
+        console.error('Unable to set watcher symbol property for object:',obj,'error:',ex);
+        watcher.dispose();
+        return undefined;
+    }
 
 }
 
