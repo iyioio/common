@@ -92,7 +92,7 @@ export const asArrayOrEmpty=<T>(value:T[]|T|undefined,emptyValue?:T|T[]):T[] =>
 
 export const asArray=<T>(value:T[]|T): T extends undefined ? undefined : T[] =>
 {
-    if(!value){
+    if(value===undefined){
         return undefined as any;
     }
     if(Array.isArray(value)){
