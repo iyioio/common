@@ -45,6 +45,10 @@ export class NextJsUiRouter extends UiRouterBase
         this.triggerRouteChanged();
     }
 
+    public override replace(path:string,query?:RouteQuery):void|Promise<void>{
+        Router.replace(addQueryToPath(path,query));
+    }
+
     public override getCurrentRoute():RouteInfo{
         return getRouteInfo(Router);
     }
