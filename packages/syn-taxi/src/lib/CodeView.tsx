@@ -11,6 +11,7 @@ interface CodeViewProps
     language?:string;
     noBg?:boolean;
     className?:string;
+    theme?:string;
 }
 
 /**
@@ -23,6 +24,7 @@ export function CodeView({
     language,
     noBg,
     className,
+    theme='dark-plus'
 }:CodeViewProps){
 
     style.root();
@@ -36,12 +38,12 @@ export function CodeView({
         if(!elem || !sh){
             return;
         }
-        elem.innerHTML=sh.codeToHtml(code,{lang:language?sh.getLoadedLanguages().includes(language)?language:'text':'text',theme:'dark-plus'});
+        elem.innerHTML=sh.codeToHtml(code,{lang:language?sh.getLoadedLanguages().includes(language)?language:'text':'text',theme});
         if(noBg){
             elem.querySelectorAll('pre').forEach(e=>e.style.backgroundColor='transparent')
         }
 
-    },[sh,loadIndex,code,elem,language,noBg]);
+    },[sh,loadIndex,code,elem,language,noBg,theme]);
 
     return (
         <pre className={cn("CodeView",className)} style={style.vars({wrap:wrap?'pre-wrap':'pre'})}><code ref={setElem}/></pre>

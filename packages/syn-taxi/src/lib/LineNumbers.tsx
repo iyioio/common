@@ -14,29 +14,35 @@ const isLineError=(line:number,errors:(CodeParsingError|number)[]):boolean=>{
 
 export interface LineNumbersProps
 {
+    className?:string;
+    errorClassName?:string;
     count?:number;
     errors?:(CodeParsingError|number)[];
     pad?:any;
+    disableColors?:boolean;
 }
 
 /**
  * @acIgnore
  */
 export function LineNumbers({
+    className,
+    errorClassName,
     count=1,
     errors,
-    pad
+    pad,
+    disableColors,
 }:LineNumbersProps){
 
     const lines:any[]=[];
 
     for(let i=1;i<=count;i++){
-        lines.push(<span className={(errors && isLineError(i,errors))?style.error():undefined} key={i}>{i}</span>)
+        lines.push(<span className={(errors && isLineError(i,errors))?style.error(null,errorClassName):undefined} key={i}>{i}</span>)
     }
 
 
     return (
-        <div className={style.root()}>
+        <div className={style.root({colors:!disableColors},className)}>
             <span className={style.first()}>&nbsp;&nbsp;&nbsp;</span>
             {lines}
             {pad}
@@ -52,9 +58,11 @@ const style=atDotCss({name:'LineNumbers',css:`
         align-items:flex-end;
         font-size:${dt().codeFontSize}px !important;
         line-height:${dt().codeLineHeight}px !important;
-        border-right:${dt().foreground}18 1px solid;
         padding:0 0.5rem;
         font-family:Courier !important;
+    }
+    @.root.colors{
+        border-right:${dt().foreground}18 1px solid;
     }
     @.root > *{
         opacity:0.5;
@@ -64,7 +72,9 @@ const style=atDotCss({name:'LineNumbers',css:`
         max-height:0;
     }
     @.error{
-        color:${dt().dangerColor};
         opacity:1;
+    }
+    @.root.colors @.error{
+        color:${dt().dangerColor};
     }
 `});

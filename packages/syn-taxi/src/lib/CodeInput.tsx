@@ -44,7 +44,18 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
 
     highlightPrefix?:string;
     highlightSuffix?:string;
+
+    theme?:string;
+    disableColors?:boolean;
+    textareaClassName?:string;
+    errorClassName?:string;
+    errorHighlightClassName?:string;
+    lineNumberClassName?:string;
+    errorMessageClassName?:string;
 }
+
+const isInDarkMode=()=>globalThis.document?.body?.classList?.contains('dark')??false;
+const getAutoTheme=()=>isInDarkMode()?'dark-plus':'github-light';
 
 /**
  * @acIgnore
@@ -77,8 +88,47 @@ export function CodeInput<P=any>({
     fillScrollHeight,
     highlightPrefix,
     highlightSuffix,
+    theme='dark-plus',
+    disableColors,
+    textareaClassName,
+    errorClassName,
+    errorHighlightClassName,
+    lineNumberClassName,
+    errorMessageClassName,
     ...props
 }:CodeInputProps<P>){
+
+    const autoTheme=theme==='auto';
+    const [autoThemeValue,setAutoThemeValue]=useState<string>(getAutoTheme);
+    if(autoTheme){
+        theme=autoThemeValue;
+    }
+    useEffect(()=>{
+        if(!autoTheme){
+            return;
+        }
+        const elem=document.body;
+        if(!elem){
+            return;
+        }
+
+        const observer=new MutationObserver((mutations)=>{
+            mutations.forEach((mutation)=>{
+                if (mutation.attributeName==='class'){
+                    setAutoThemeValue(getAutoTheme());
+                }
+            });
+        });
+
+        observer.observe(elem,{
+            attributes:true,
+            attributeFilter:['class']
+        });
+
+        return ()=>{
+            observer.disconnect();
+        }
+    },[autoTheme]);
 
     const [language,setLanguage]=useState(_language);
     useEffect(()=>{
@@ -137,7 +187,7 @@ export function CodeInput<P=any>({
         try{
             highlighted=sh.codeToHtml(fullValue,{
                 lang:sh.getLoadedLanguages().includes(language)?language:'text',
-                theme:'dark-plus',
+                theme,
                 transformers:[{
                     line:function(elem,line){
                         for(const lo of lineOptions){
@@ -176,7 +226,7 @@ export function CodeInput<P=any>({
                     if(r.error){
                         console.info('⛔️ CodeInput parsing error',r.error);
                         console.info(r.error.near);
-                        code.innerHTML=sh.codeToHtml(fullValue,{lang:language,theme:'dark-plus',transformers:[{
+                        code.innerHTML=sh.codeToHtml(fullValue,{lang:language,theme,transformers:[{
                             line:function(elem,line){
                                 if(line===r.error?.lineNumber){
                                     this.addClassToHast(elem,'CodeInput-errorLine')
@@ -189,9 +239,9 @@ export function CodeInput<P=any>({
                             }
                         }]}).replace(
                             /class="[^"]*CodeInput-errorLine[^"]*"[^>]*>/g,
-                            v=>`${v}<div class="CodeInput-error">${
+                            v=>`${v}<div class="CodeInput-error${errorClassName?` ${errorClassName}`:''}${errorMessageClassName?` ${errorMessageClassName}`:''}">${
                                 escapeHtml(r.error?.message?.replace(/\n/g,'\\n').replace(/\r/g,'\\r')??'')
-                            }</div><div class="CodeInput-errorCol">${
+                            }</div><div class="CodeInput-errorCol${errorHighlightClassName?` ${errorHighlightClassName}`:''}">${
                                 '&nbsp;'.repeat((r.error?.col??0)-1)+'_'
                             }</div>`
                         );
@@ -216,7 +266,7 @@ export function CodeInput<P=any>({
     },[
         code,textArea,valueOverride,value,language,parser,sh,loadIndex,
         parsingDelayMs,logParsed,debugParser,parserOptions,
-        highlightPrefix,highlightSuffix
+        highlightPrefix,highlightSuffix,theme,errorClassName,errorHighlightClassName,errorMessageClassName,
     ]);
 
     useEffect(()=>{
@@ -297,13 +347,13 @@ export function CodeInput<P=any>({
     return (
         <>
             <div
-                className={style.root({tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined},null,props)}
+                className={style.root({tall,disabled,readOnly,lineNumbers:lineNumbers!==undefined,colors:!disableColors},null,props)}
                 style={{
                     minHeight:fillScrollHeight?`var(${scrollViewContainerMinHeightCssVar})`:undefined
                 }}
             >
 
-                {lineNumbers && <LineNumbers count={strLineCount(value)} errors={errors??parsingErrors} />}
+                {lineNumbers && <LineNumbers className={lineNumberClassName} errorClassName={errorClassName} disableColors={disableColors} count={strLineCount(value)} errors={errors??parsingErrors} />}
 
                 <div className="CodeInput-content">
                     <div>
@@ -315,6 +365,7 @@ export function CodeInput<P=any>({
                         />
 
                         <textarea
+                            className={textareaClassName}
                             spellCheck={false}
                             ref={setTextArea}
                             onKeyDown={onKeyDown}
@@ -337,6 +388,8 @@ const style=atDotCss({name:'CodeInput',css:`
         display:flex;
         border-radius:8px;
         transition:opacity 0.1s ease-in-out;
+    }
+    .CodeInput.colors{
         background:#1E1E1E;
     }
     .CodeInput textarea{
@@ -385,10 +438,12 @@ const style=atDotCss({name:'CodeInput',css:`
         background:none;
         resize:none;
         color:transparent;
-        caret-color: #ffffffcc;
         outline:none;
         outline-width:0;
         cursor:text;
+    }
+    .CodeInput.colors textarea{
+        caret-color: #ffffffcc;
     }
     .CodeInput.readOnly textarea{
         pointer-events:none;
@@ -423,16 +478,20 @@ const style=atDotCss({name:'CodeInput',css:`
         line-height:12px !important;
         display:flex;
         align-items:center;
-        background-color:#ff000033;
         top:-0.2rem;
         bottom:-0.2rem;
         padding:0 0.4rem;
         border-radius:4px;
     }
+    .CodeInput.colors .CodeInput-errorLine > .CodeInput-error{
+        background-color:#ff000033;
+    }
     .CodeInput-errorCol{
         position:absolute;
         left:0;
         top:0;
+    }
+    .CodeInput.colors .CodeInput-errorCol{
         color:#ff000088;
     }
     .CodeInput .hide-prefix, .CodeInput .hide-suffix{

@@ -140,7 +140,7 @@ export const getShikiAsync=async ():Promise<Highlighter>=>{
         defaultHighlighter=(async ()=>{
             const sh=await import('shiki');
             return sh.createHighlighter({
-                themes:['dark-plus'],
+                themes:['dark-plus','github-light'],
                 langs:[],
             })
         })();
