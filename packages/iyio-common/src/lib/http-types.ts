@@ -11,6 +11,30 @@ export interface BaseHttpRequest
     headers?:{[name:string]:string};
 }
 
+export interface HttpSseRequest extends Omit<HttpClientRequestOptions,'returnFetchResponse'>
+{
+    method?:HttpMethod;
+    url:string;
+    body?:any;
+    dataAsString?:boolean;
+    logStreamErrors?:boolean;
+    /**
+     * When the data value of a SSE is equal to `endDataFlag` streaming will end before
+     * the connection is closed.
+     */
+    endDataFlag?:string;
+}
+
+export interface ServerSentEvent<T=any>
+{
+    event?:string;
+    id?:string;
+    retry?:number;
+    data?:T;
+    error?:{message:string,error:any}
+    [field:string]:any;
+}
+
 export interface HttpRequestSigner
 {
     canSign(request:BaseHttpRequest):boolean;

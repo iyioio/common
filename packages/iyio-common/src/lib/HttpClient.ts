@@ -1,12 +1,14 @@
+import { CancelToken } from "./CancelToken.js";
 import { HttpDefaultFetcher } from "./HttpDefaultFetcher.js";
 import { delayAsync, unused } from "./common-lib.js";
 import { HashMap } from "./common-types.js";
+import { getErrorMessage } from "./error-lib.js";
 import { BaseError, HttpBaseUrlPrefixNotFoundError } from "./errors.js";
 import { encodeURIFormBody } from "./http-lib.js";
-import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner } from "./http-types.js";
+import { BaseHttpRequest, HttpClientRequestOptions, HttpFetcher, HttpMethod, HttpRequestSigner, HttpSseRequest, ServerSentEvent } from "./http-types.js";
 import { HttpFetchers, HttpRequestSigners, apiBaseUrlParam, httpBaseUrlMapParam, httpBaseUrlPrefixParam, httpLogRequestsParam, httpLogResponsesParam, httpMaxRetriesParam, httpRetryDelayMsParam } from "./http.deps.js";
-import { JwtProvider } from "./jwt.js";
 import { JwtProviders } from "./jwt.deps.js";
+import { JwtProvider } from "./jwt.js";
 import { deleteUndefined, deleteUndefinedOrNull } from "./object.js";
 import { Scope, TypeDef } from "./scope-types.js";
 import { getUriProtocol } from "./uri.js";
@@ -158,6 +160,90 @@ export class HttpClient
         }
 
         throw new HttpBaseUrlPrefixNotFoundError(`prefix = ${prefix}`);
+    }
+
+    public async *streamSseAsync<T=any>(
+        {
+            url,
+            body,
+            method=body?'POST':'GET',
+            dataAsString,
+            endDataFlag,
+            logStreamErrors,
+            ...options
+        }:HttpSseRequest,
+        cancel?:CancelToken
+    ):AsyncIterableIterator<ServerSentEvent<T>>{
+        const response=await this.requestAsync<Response>(method,url,body,{...options,returnFetchResponse:true});
+
+        const reader=response?.body?.getReader();
+        if(!reader){
+            throw new Error('Response body is not readable');
+        }
+
+        const decoder=new TextDecoder();
+        const decodeOptions:TextDecodeOptions={stream:true};
+        let buffer='';
+        let evt:ServerSentEvent<T>={};
+        let empty=true;
+        try {
+            readLoop: while (!cancel?.isCanceled){
+                const {done,value}=await reader.read();
+                if(done){
+                    break;
+                }
+
+                buffer+=decoder.decode(value,decodeOptions);
+
+                while(!cancel?.isCanceled){
+                    const e=buffer.indexOf('\n');
+                    if(e===-1){
+                        break;
+                    }
+                    const line=buffer.substring(0,e).trim();
+                    buffer=buffer.substring(e+1);
+                    if(!line){//flush
+                        if(!empty){
+                            yield evt;
+                            evt={}
+                            empty=true;
+                        }
+                    }else{
+                        const i=line.indexOf(':');
+                        if(i===0){//comment when line starts with ':'
+                            continue;
+                        }
+                        if(i!==-1){
+                            const key=line.substring(0,i);
+                            let value:any=line.substring(i+1).trim();
+                            if(key==='data'){
+                                if(endDataFlag!==undefined && value===endDataFlag){
+                                    break readLoop;
+                                }
+                                if(!dataAsString){
+                                    try{
+                                        value=JSON.parse(value);
+                                    }catch(ex){
+                                        evt.error={message:getErrorMessage(ex),error:ex};
+                                        if(logStreamErrors){
+                                            console.error(`SSE stream parse value error - ${evt.error.message}`);
+                                        }
+                                        yield evt;
+                                        evt={}
+                                        empty=true
+                                    }
+                                }
+                            }
+                            (evt as any)[key]=value;
+                            empty=false;
+                        }
+                    }
+
+                }
+            }
+        }finally{
+            reader.cancel();
+        }
     }
 
      /**
