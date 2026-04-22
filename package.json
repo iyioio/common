@@ -10,6 +10,7 @@
         "react-dom": ">=18 || >=19"
     },
     "devDependencies": {
+        "@types/bun": "latest",
         "@babel/core": "^7.28.4",
         "@babel/preset-react": "^7.27.1",
         "@babel/preset-typescript": "^7.27.1",

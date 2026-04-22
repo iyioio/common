@@ -23,7 +23,7 @@
             "dom"
         ],
         "types": [
-            "node"
+            "node","bun"
         ],
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
