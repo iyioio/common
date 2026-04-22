@@ -40,17 +40,17 @@ const removeNonPrintable=(value:string)=>{
  *                                       or keys object object.
  * @returns
  */
-export const getSortedObjectHash=(value:any,length=8,keyStr:string=fsBase64Chars,checkForNonPrintableCharacters=false):string=>{
-    return strHashBase64(getSortedObjStrings(value,checkForNonPrintableCharacters),length,keyStr);
+export const getSortedObjectHash=(value:any,length=8,keyStr:string=fsBase64Chars,checkForNonPrintableCharacters=false,includeUndefinedValues?:boolean):string=>{
+    return strHashBase64(getSortedObjStrings(value,checkForNonPrintableCharacters,includeUndefinedValues),length,keyStr);
 }
 
-export const getSortedObjStrings=(value:any,checkForNonPrintableCharacters=false):string[]=>{
+export const getSortedObjStrings=(value:any,checkForNonPrintableCharacters=false,includeUndefinedValues=false):string[]=>{
     const strings:string[]=[]
-    _getSortedObjStrings(value,[],strings,checkForNonPrintableCharacters);
+    _getSortedObjStrings(value,[],strings,checkForNonPrintableCharacters,includeUndefinedValues);
     return strings;
 }
 
-const _getSortedObjStrings=(value:any,objs:any[],strings:string[],rmNp:boolean):void=>{
+const _getSortedObjStrings=(value:any,objs:any[],strings:string[],rmNp:boolean,includeUndefinedValues:boolean):void=>{
     switch(typeof value){
 
         case 'string':
@@ -66,7 +66,9 @@ const _getSortedObjStrings=(value:any,objs:any[],strings:string[],rmNp:boolean):
             break;
 
         case 'undefined':
-            strings.push(sortedObjPrefix.undefined);
+            if(includeUndefinedValues){
+                strings.push(sortedObjPrefix.undefined);
+            }
             break;
 
         case 'object':
@@ -82,7 +84,7 @@ const _getSortedObjStrings=(value:any,objs:any[],strings:string[],rmNp:boolean):
                 if(Array.isArray(value)){
                     strings.push(sortedObjPrefix.array);
                     for(let i=0;i<value.length;i++){
-                        _getSortedObjStrings(value[i],objs,strings,rmNp);
+                        _getSortedObjStrings(value[i],objs,strings,rmNp,includeUndefinedValues);
                     }
 
                     strings.push(sortedObjPrefix.arrayEnd);
@@ -98,7 +100,7 @@ const _getSortedObjStrings=(value:any,objs:any[],strings:string[],rmNp:boolean):
                             continue;
                         }
                         strings.push(sortedObjPrefix.key+(rmNp?removeNonPrintable(key as string):key));
-                        _getSortedObjStrings(v,objs,strings,rmNp);
+                        _getSortedObjStrings(v,objs,strings,rmNp,includeUndefinedValues);
                     }
                     strings.push(sortedObjPrefix.objectEnd);
                 }
