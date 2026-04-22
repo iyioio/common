@@ -4,11 +4,11 @@ export type HttpMethod=typeof allHttpMethods[number];
 
 export interface BaseHttpRequest
 {
-    method:HttpMethod,
-    uri:string,
+    method:HttpMethod;
+    uri:string;
     path?:string;
-    body?:any,
-    headers?:{[name:string]:string};
+    body?:any;
+    headers?:Record<string,string>;
 }
 
 export interface HttpSseRequest extends Omit<HttpClientRequestOptions,'returnFetchResponse'>
@@ -74,6 +74,11 @@ export interface HttpClientRequestOptions
      * If true the body object of the request will be converted into a URL encoded form body
      */
     urlEncodeBody?:boolean;
+
+    /**
+     * If true the body object will be converted to a FormData instance.
+     */
+    convertBodyToFormData?:boolean;
 
     noAuth?:boolean;
 

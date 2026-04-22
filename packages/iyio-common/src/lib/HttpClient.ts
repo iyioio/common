@@ -271,7 +271,8 @@ export class HttpClient
             includeDefaultHeadersWithHeaders,
             log,
             ignoreErrors,
-            rawBody,
+            convertBodyToFormData,
+            rawBody=convertBodyToFormData,
             maxRetries,
             readErrors,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
@@ -280,6 +281,28 @@ export class HttpClient
         unused(autoLocale);
 
         uri=this.applyBaseUrl(uri);
+
+        if(convertBodyToFormData && body){
+            const form=new FormData();
+            for(const e in body){
+                let v=body[e];
+                if(v===undefined){
+                    continue;
+                }
+                if((v instanceof Blob) && !(v instanceof File)){
+                    v=new File([v],e+'.'+(v.type.split(/[/;]/)[1]??'file'),{type:v.type});
+                }
+                if(v instanceof File){
+                    form.append(e,v);
+                }else if(typeof v === 'string'){
+                    form.append(e,v);
+                }else{
+                    form.append(e,JSON.stringify(v));
+                }
+            }
+            body=form;
+            form.forEach((v,k)=>console.log('form data',k,v))
+        }
 
         if(this.options.logRequests || log){
             if(body===undefined){
@@ -304,7 +327,7 @@ export class HttpClient
                 body:rawBody?body:body===undefined?undefined:urlEncodeBody?encodeURIFormBody(body):JSON.stringify(body),
                 headers:deleteUndefined<any>((headers && !includeDefaultHeadersWithHeaders)?headers:{
                     "Authorization":jwt?'Bearer '+jwt:undefined,
-                    "Content-Type":body?urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
+                    "Content-Type":(body instanceof FormData)?undefined:body?convertBodyToFormData?undefined:urlEncodeBody?'application/x-www-form-urlencoded':'application/json':undefined,
                     ...deleteUndefinedOrNull(headers)
                 })
             }
