@@ -33,6 +33,7 @@ const langDeps:Record<string,string[]>={
     //convo:['json','xml','javascript','python'],
 }
 
+let loadedInject=false;
 
 const _loadShikiLangAsync=async (
     depth:number,
@@ -44,6 +45,10 @@ const _loadShikiLangAsync=async (
     }
 
     const sh=await getShikiAsync();
+
+    // if(!loadedInject){
+    //     sh.loadLanguage(convoInJsGrammar);
+    // }
 
     if(sh.getLoadedLanguages().includes(name as Lang)){
         return false;
@@ -141,7 +146,90 @@ export const getShikiAsync=async ():Promise<Highlighter>=>{
             const sh=await import('shiki');
             return sh.createHighlighter({
                 themes:['dark-plus','github-light'],
-                langs:[],
+                langs:[
+                    'javascript',
+                    'typescript',
+                    'tsx',
+                    'jsx',
+                    convoGrammar,
+                    {
+    "fileTypes": [
+        "js",
+        "jsx",
+        "ts",
+        "tsx"
+    ],
+    embeddedLangs: ['typescript', 'javascript'],
+    name: 'convo-js-injection',
+    "injectionSelector": "L:source -comment -string",
+    "injectTo": [
+                    'javascript',
+                    'typescript',
+                    'tsx',
+                    'jsx',
+                    "source.js",
+                    "source.ts",
+                    "source.jsx",
+                    "source.js.jsx",
+                    "source.tsx"
+                ],
+    "scopeName": "convo-js",
+    "patterns": [
+        {
+            "begin": "/\\*convo\\*/\\s*`",
+            "beginCaptures": {
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "source.ts#template-substitution-element"
+                },
+                {
+                    "include": "source.convo"
+                }
+            ]
+        },
+        {
+            "begin": "([cC]onvo\\w*)\\s*(/\\*.*\\*/\\s*)?(`)",
+            "beginCaptures": {
+                "1":{
+                    "name": "support.type"
+                },
+                "2":{
+                    "name":"comment"
+                }
+            },
+            "end": "`",
+            "endCaptures":{
+                "0":{
+                    "name": "support.type"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "source.ts#template-substitution-element"
+                },
+                {
+                    "include": "source.convo"
+                }
+            ]
+        },
+        {
+            "include": "source.ts#template-substitution-element"
+        }
+    ]
+
+} as any
+
+                ],
             })
         })();
     }
