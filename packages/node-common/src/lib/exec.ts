@@ -150,6 +150,7 @@ export interface SpawnOptions
     onExit?:(code:number)=>void;
     cancel?:CancelToken;
     logPid?:boolean;
+    discardOutput?:boolean;
 }
 
 export const spawnAsync=(
@@ -178,11 +179,14 @@ export const spawnAsync=(
         onExit,
         cancel,
         logPid,
+        discardOutput,
     }=options;
 
     return new Promise<string>((r,j)=>{
 
         let child:ChildProcessWithoutNullStreams|undefined=undefined;
+
+        const buffer:string[]=[];
 
         try{
             child=spawn(cmd,{cwd,shell:true});
@@ -220,16 +224,17 @@ export const spawnAsync=(
             onExit?.(code??0);
             if(code && throwOnError){
                 j(code);
-            }else{
-                r('');
             }
         });
         child.on('disconnect',()=>r(''));
-        child.on('close',()=>r(''));
+        child.on('close',()=>r(buffer.join('')));
         child.stdout.setEncoding('utf8');
         child.stdout.on('data',(data)=>{
             if(typeof data !== 'string'){
                 data=data?.toString()??''
+            }
+            if(!discardOutput){
+                buffer.push(data);
             }
             if(onOutput){
                 onOutput('out',data)
