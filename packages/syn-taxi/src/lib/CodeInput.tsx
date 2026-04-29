@@ -24,6 +24,7 @@ interface CodeInputProps<P=any> extends BaseLayoutOuterProps
      */
     onSubmit?:(value:string)=>void;
     onBlur?:(value:string)=>void;
+    onFocus?:(value:string)=>void;
     onNewLine?:(value:string)=>void;
     tall?:boolean;
     onElem?:(elem:HTMLElement|null)=>void;
@@ -72,6 +73,7 @@ export function CodeInput<P=any>({
     onElem,
     onTextarea,
     onBlur,
+    onFocus,
     onNewLine,
     tall,
     lineStartReg=defaultCodeLineStartReg,
@@ -371,6 +373,7 @@ export function CodeInput<P=any>({
                             onKeyDown={onKeyDown}
                             onChange={e=>onChange?.(e.target.value)}
                             onBlur={e=>onBlur?.(e.target.value)}
+                            onFocus={e=>onFocus?.(e.target.value)}
                             value={value}
                             readOnly={readOnly}
                         />
