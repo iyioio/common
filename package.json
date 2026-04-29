@@ -95,7 +95,7 @@
         "puppeteer": "^24.19.0",
         "regenerator-runtime": "^0.14.1",
         "rxjs": "^7.8.2",
-        "shiki": "^1.29.2",
+        "shiki": "4",
         "styled-jsx": "^5.1.7",
         "ts-morph": "^27.0.0",
         "turndown": "^7.2.1",
