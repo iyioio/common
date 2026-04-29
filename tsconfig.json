@@ -2,15 +2,6 @@
     "files": [],
     "references": [
         {
-            "path": "./packages/any-comp"
-        },
-        {
-            "path": "./packages/any-comp-cli"
-        },
-        {
-            "path": "./packages/any-comp-test"
-        },
-        {
             "path": "./packages/at-dot-css"
         },
         {
