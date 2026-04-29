@@ -164,7 +164,7 @@ export class NodeFn extends Construct{
                 break;
             }
             if(!func){
-                console.warn('!!!!!!!!!!!!!! No func files found in bundledHandlerFileNames. Try building all packages')
+                console.warn('!!!!!!!!!!!!!! No func files found in bundledHandlerFileNames. Try building all packages',bundledHandlerFileNames)
             }
         }
 
