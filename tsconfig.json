@@ -50,12 +50,6 @@
             "path": "./packages/json5"
         },
         {
-            "path": "./packages/mdx-ui-builder"
-        },
-        {
-            "path": "./packages/mdx-ui-builder-react"
-        },
-        {
             "path": "./packages/media-common"
         },
         {
