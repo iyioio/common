@@ -9,6 +9,7 @@ export interface BaseHttpRequest
     path?:string;
     body?:any;
     headers?:Record<string,string>;
+    duplex?:string;
 }
 
 export interface HttpSseRequest extends Omit<HttpClientRequestOptions,'returnFetchResponse'>
@@ -119,6 +120,9 @@ export interface HttpClientRequestOptions
      * If true error responses will be read and added to throw errors
      */
     readErrors?:boolean;
+
+    /** If true the request will set duplex to half */
+    halfDuplex?:boolean;
 }
 
 export interface HttpFetcher{

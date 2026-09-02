@@ -275,6 +275,7 @@ export class HttpClient
             rawBody=convertBodyToFormData,
             maxRetries,
             readErrors,
+            halfDuplex,
         }:HttpClientRequestOptions={}):Promise<T|undefined>
     {
 
@@ -331,6 +332,9 @@ export class HttpClient
                     ...deleteUndefinedOrNull(headers)
                 })
             }
+            if(halfDuplex){
+                baseRequest.duplex='half';
+            }
 
             if(!noAuth && getUriProtocol(uri)){
                 const signer=this.options.signers?.getFirst(null,p=>p.canSign(baseRequest)?p:undefined);
@@ -384,9 +388,9 @@ export class HttpClient
             if(readErrors){
                 try{
                     const txt=await response.text();
-                     throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, error=${txt}`);
+                     throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, statusText=${response.statusText}, error=${txt}`);
                 }catch{
-                    throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, error=UNABLE_TO_READ_ERROR`);
+                    throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}, statusText=${response.statusText}, error=UNABLE_TO_READ_ERROR`);
                 }
             }
             throw new BaseError(lastStatusCode,`Request failed with a status of ${response.status}. uri=${uri}`)
