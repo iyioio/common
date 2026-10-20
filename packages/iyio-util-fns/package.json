@@ -1,6 +1,6 @@
 {
     "name": "@iyio/iyio-util-fns",
-    "version": "0.9.6",
+    "version": "0.9.12",
     "type": "module",
     "sideEffects": false
 }
